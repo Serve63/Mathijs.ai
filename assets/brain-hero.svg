@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 768" role="img" aria-labelledby="title desc">
+  <title id="title">Mathijs.ai hero illustratie</title>
+  <desc id="desc">Gestileerd hoofd met hersenen op een goudgele achtergrond</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd850" />
+      <stop offset="100%" stop-color="#f5c226" />
+    </linearGradient>
+  </defs>
+  <rect x="32" y="32" width="704" height="704" rx="120" fill="url(#bg)" />
+  <g fill="none" stroke="#fff" stroke-width="32" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M440 160c-116 0-200 89-200 212 0 88 42 148 112 192l-4 68c-2 27 19 48 44 48h124c25 0 45-21 44-48l-4-96c44-30 76-78 76-142 0-118-92-234-192-234Z" />
+    <path d="M512 276c0-44-36-80-80-80s-80 36-80 80c0 26 12 50 38 64-8 14-8 38 8 50s44 10 66-8c10 10 22 16 36 16 26 0 48-24 48-54 0-16-6-30-16-41 10-14 16-32 16-47Z" />
+    <path d="M476 232c18 4 36 28 32 52" stroke-width="24" opacity="0.7" />
+    <path d="M432 224c-22 8-28 36-14 56" stroke-width="24" opacity="0.7" />
+    <path d="M384 268c-12 12-16 38 0 54" stroke-width="24" opacity="0.6" />
+    <path d="M520 332c12 12 18 32 8 52" stroke-width="24" opacity="0.6" />
+    <path d="M472 384c-18 18-48 18-66 0" stroke-width="24" opacity="0.6" />
+  </g>
+  <path d="M204 296c14-8 20-28 12-44-8-14-26-20-40-12-14 8-20 26-12 40 8 16 26 22 40 16Z" fill="#fff" opacity="0.85" />
+  <path d="M596 584c14-8 20-28 12-44-8-14-26-20-40-12-14 8-20 26-12 40 8 16 26 22 40 16Z" fill="#fff" opacity="0.6" />
+</svg>
+

@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mathijs.ai | AI Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      :root {
+        --chat-bg: #fefefe;
+        --chat-panel: rgba(255, 255, 255, 0.9);
+        --chat-accent: #ffd400;
+        --chat-muted: #5a5a64;
+        --chat-border: rgba(16, 21, 32, 0.08);
+      }
+
+      body {
+        margin: 0;
+        background: var(--chat-bg);
+        color: #1a1a1f;
+        font-family: "IBM Plex Sans", "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        display: flex;
+        min-height: 100vh;
+      }
+
+      .chat-layout {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        width: 100%;
+        height: 100vh;
+      }
+
+      .sidebar {
+        background: #f5f5f7;
+        border-right: 1px solid rgba(16, 21, 32, 0.08);
+        backdrop-filter: blur(12px);
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        gap: 20px;
+      }
+
+      .sidebar-top {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        flex: 1;
+      }
+
+      .sidebar .logo {
+        font-size: 1.08rem;
+        color: #e6c200;
+        gap: 10px;
+      }
+
+      .sidebar .logo__image {
+        width: 64px;
+        height: 64px;
+        transform: translateY(-16px);
+      }
+
+      .new-chat {
+        border: none;
+        border-radius: 14px;
+        padding: 12px 18px;
+        background: rgba(255, 212, 0, 0.25);
+        color: #7a6600;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.2s ease;
+        box-shadow: 0 18px 40px -32px rgba(124, 100, 0, 0.45);
+      }
+
+      .new-chat:hover {
+        background: rgba(255, 212, 0, 0.4);
+        transform: translateY(-1px);
+      }
+
+      .sidebar h2 {
+        margin: 0;
+        font-size: 0.9rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--chat-muted);
+      }
+
+      .session-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        overflow-y: auto;
+        padding-right: 4px;
+      }
+
+      .session {
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: transparent;
+        border: none;
+        color: #1a1a1f;
+        font-size: 0.85rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .session:hover {
+        background: rgba(255, 212, 0, 0.16);
+        border-radius: 8px;
+      }
+
+      .session span {
+        color: var(--chat-muted);
+        font-size: 0.72rem;
+      }
+
+      .profile {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 14px;
+        padding-top: 12px;
+      }
+
+      .profile-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 212, 0, 0.3);
+        color: #7a6600;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+        z-index: 10;
+      }
+
+      .profile-avatar:hover {
+        transform: translateY(-1px);
+      }
+
+      .profile-avatar__initials {
+        transition: opacity 0.2s ease;
+      }
+
+      .profile-avatar__image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: none;
+      }
+
+      .profile-avatar.has-image .profile-avatar__initials {
+        opacity: 0;
+      }
+
+      .profile-avatar.has-image .profile-avatar__image {
+        display: block;
+      }
+
+      .profile-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.88rem;
+        color: #1a1a1f;
+        white-space: nowrap;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .profile-course {
+        font-size: 0.68rem;
+        color: #1d4ed8;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        text-decoration: none;
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .profile-course:hover {
+        color: #2563eb;
+      }
+
+      .profile-menu {
+        border: none;
+        background: transparent;
+        color: var(--chat-muted);
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 8px;
+        transition: color 0.2s ease;
+        position: relative;
+        z-index: 10;
+      }
+
+      .profile-menu:hover {
+        color: #7a6600;
+      }
+
+      .profile-modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10, 12, 18, 0.58);
+        backdrop-filter: blur(8px);
+        z-index: 120;
+        padding: 24px;
+      }
+
+      .profile-modal.is-visible {
+        display: flex;
+      }
+
+      .profile-modal__dialog {
+        width: min(540px, 100%);
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 24px;
+        box-shadow: 0 40px 90px -50px rgba(16, 21, 32, 0.6);
+        border: 1px solid rgba(16, 21, 32, 0.08);
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+      }
+
+      .profile-modal__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px 28px 18px;
+        border-bottom: 1px solid rgba(16, 21, 32, 0.06);
+      }
+
+      .profile-modal__title {
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .profile-modal__close {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(26, 26, 31, 0.6);
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .profile-modal__close:hover {
+        background: rgba(16, 21, 32, 0.06);
+        color: #1a1a1f;
+      }
+
+      .profile-modal__close svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+      }
+
+      .profile-modal__body {
+        padding: 26px 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        overflow-y: auto;
+      }
+
+      .subscription-card {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        border: 1px solid rgba(16, 21, 32, 0.08);
+        background: rgba(255, 255, 255, 0.92);
+      }
+
+      .subscription-card__label {
+        font-size: 0.72rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(26, 26, 31, 0.55);
+      }
+
+      .subscription-card__value {
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .subscription-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .subscription-action {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(16, 21, 32, 0.08);
+        background: rgba(255, 255, 255, 0.95);
+      }
+
+      .subscription-action__meta {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .subscription-action__title {
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+
+      .subscription-action__caption {
+        font-size: 0.75rem;
+        color: var(--chat-muted);
+      }
+
+      .subscription-action__button {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 18px;
+        background: rgba(255, 212, 0, 0.22);
+        color: #7a6600;
+        font-weight: 600;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+
+      .subscription-action__button:hover {
+        background: rgba(255, 212, 0, 0.32);
+        transform: translateY(-1px);
+      }
+
+      .subscription-footnote {
+        font-size: 0.72rem;
+        color: var(--chat-muted);
+        text-align: center;
+      }
+
+      .chat-main {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        background: rgba(255, 255, 255, 0.94);
+        height: 100vh;
+        min-height: 100vh;
+      }
+
+      .chat-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        text-align: center;
+        padding: 18px 28px;
+        border-bottom: 1px solid var(--chat-border);
+        background: rgba(255, 255, 255, 0.98);
+      }
+
+      .chat-header h1 {
+        margin: 0;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.35rem;
+        letter-spacing: -0.01em;
+        color: #1a1a1f;
+      }
+
+      .chat-header .status {
+        width: 100%;
+        padding-top: 8px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 32px;
+      }
+
+      .status-info {
+        max-width: 420px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        text-align: left;
+      }
+
+      .status-info h2 {
+        margin: 0;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.12rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        position: relative;
+        display: inline-block;
+        padding: 0 4px 6px;
+        z-index: 0;
+      }
+
+
+      .status-info p {
+        margin: 0;
+        font-size: 0.88rem;
+        line-height: 1.55;
+        color: rgba(26, 26, 31, 0.74);
+      }
+
+      .model-controls {
+        flex: 1 1 auto;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .model-selects {
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 16px;
+        max-width: 100%;
+      }
+
+      .model-select {
+        position: relative;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+        opacity: 0.82;
+        text-align: center;
+      }
+
+      .model-select.is-active {
+        transform: translateY(-2px);
+        opacity: 1;
+      }
+
+      .model-select.is-active .model-select__trigger {
+        border-color: var(--chat-accent);
+        box-shadow: 0 18px 40px -28px rgba(255, 212, 0, 0.6);
+        background: rgba(255, 212, 0, 0.18);
+      }
+
+      .model-select.is-active .model-select__label {
+        color: #2a2a32;
+      }
+
+      .model-select__activator {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid rgba(26, 26, 31, 0.22);
+        background: transparent;
+        cursor: pointer;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 10;
+      }
+
+      .model-select__label {
+        font-size: 0.62rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(26, 26, 31, 0.55);
+      }
+
+      .model-select__activator::after {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: transparent;
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+
+      .model-select__activator:hover {
+        border-color: rgba(26, 26, 31, 0.5);
+      }
+
+      .model-select__activator:focus-visible {
+        outline: 2px solid var(--chat-accent);
+        outline-offset: 2px;
+      }
+
+      .model-select.is-active .model-select__activator {
+        border-color: var(--chat-accent);
+        box-shadow: 0 0 0 4px rgba(255, 212, 0, 0.2);
+        background: rgba(255, 212, 0, 0.18);
+      }
+
+      .model-select.is-active .model-select__activator::after {
+        background: var(--chat-accent);
+        transform: scale(1.05);
+      }
+
+      .model-select__trigger {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #2a2a32;
+        font-size: 0.78rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        border: 1px solid rgba(16, 21, 32, 0.12);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+
+      .model-select__trigger .selected-label {
+        display: inline-block;
+        white-space: nowrap;
+      }
+
+      .model-select__trigger svg {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+      }
+
+      .model-dropdown {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 16px;
+        border: 1px solid var(--chat-border);
+        box-shadow: 0 28px 60px -30px rgba(16, 21, 32, 0.5);
+        min-width: 220px;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 20;
+      }
+
+      .model-dropdown.active {
+        display: flex;
+      }
+
+      .model-group-label {
+        padding: 10px 18px 6px;
+        font-size: 0.72rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(26, 26, 31, 0.55);
+        font-weight: 600;
+      }
+
+      .model-option {
+        padding: 14px 18px;
+        font-size: 0.85rem;
+        color: #2a2a32;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+        border-bottom: 1px solid rgba(16, 21, 32, 0.12);
+      }
+
+      .model-option:hover {
+        background: rgba(255, 244, 147, 0.35);
+      }
+
+      .model-option span {
+        font-size: 0.75rem;
+        color: var(--chat-muted);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .model-option:last-child {
+        border-bottom: none;
+      }
+
+
+      .chat-log {
+        flex: 1;
+        height: 100%;
+        overflow-y: auto;
+        padding: 32px 80px 72px 80px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        background: var(--chat-bg);
+        min-height: 0;
+      }
+
+      .message {
+        display: flex;
+        max-width: 780px;
+      }
+
+      .message.user {
+        align-self: flex-end;
+      }
+
+      .bubble {
+        padding: 16px 20px;
+        border-radius: 18px;
+        border: 1px solid var(--chat-border);
+        background: rgba(255, 255, 255, 0.92);
+        color: #2a2a32;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        box-shadow: 0 18px 40px -35px rgba(16, 21, 32, 0.6);
+      }
+
+      .message.user .bubble {
+        background: rgba(255, 212, 0, 0.22);
+        border-color: rgba(255, 212, 0, 0.4);
+      }
+
+      @keyframes statusPulse {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+          opacity: 0.95;
+        }
+        50% {
+          transform: scale(1.25);
+          box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.12);
+          opacity: 0.7;
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+          opacity: 0.95;
+        }
+      }
+
+      @keyframes statusConnect {
+        0% {
+          transform: scale(0.8);
+          opacity: 0.4;
+        }
+        50% {
+          transform: scale(1.2);
+          opacity: 0.9;
+        }
+        100% {
+          transform: scale(0.8);
+          opacity: 0.4;
+        }
+      }
+
+      .chat-footer {
+        padding: 16px 32px 20px;
+        background: rgba(255, 255, 255, 0.95);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .chat-input {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+
+      .chat-input__inner {
+        width: 100%;
+        max-width: 820px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.98);
+        border: 1px solid rgba(16, 21, 32, 0.12);
+        padding: 6px 12px;
+        border-radius: 999px;
+        box-shadow: 0 12px 40px -32px rgba(16, 21, 32, 0.45);
+      }
+
+      .chat-input textarea {
+        flex: 1;
+        resize: none;
+        border: none;
+        background: transparent;
+        color: #1a1a1f;
+        font-size: 0.95rem;
+        padding: 4px 12px;
+        height: 42px;
+        line-height: 32px;
+        font-family: inherit;
+        outline: none;
+      }
+
+      .chat-input textarea::placeholder {
+        color: rgba(90, 90, 100, 0.65);
+      }
+
+      .chat-input button {
+        border: none;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--chat-accent);
+        color: #1a1600;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s ease, background 0.2s ease;
+        box-shadow: 0 18px 40px -26px rgba(255, 212, 0, 0.8);
+        outline: none;
+      }
+
+      .chat-input button svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: #1a1600;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .chat-input button:hover {
+        transform: translateY(-1px);
+        background: #ffe55a;
+      }
+      
+      .chat-disclaimer {
+        margin: 6px 0 0;
+        font-size: 0.78rem;
+        color: rgba(26, 26, 31, 0.6);
+        text-align: center;
+        letter-spacing: 0.02em;
+      }
+
+      @media (max-width: 960px) {
+        .chat-layout {
+          grid-template-columns: 1fr;
+          min-height: 100vh;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .chat-log {
+          padding: 24px 24px 80px;
+        }
+
+        .chat-header {
+          padding: 20px 24px;
+        }
+
+        .profile-modal__dialog {
+          width: 100%;
+          border-radius: 20px;
+        }
+
+        .profile-modal__body {
+          padding: 22px 20px;
+        }
+
+        .subscription-action {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+
+        .subscription-action__button {
+          align-self: flex-start;
+        }
+
+        .status-info {
+          max-width: 100%;
+        }
+
+        .chat-header .status {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 20px;
+        }
+
+        .model-controls {
+          width: 100%;
+          justify-content: flex-start;
+        }
+
+        .chat-footer {
+          padding: 14px 20px 14px;
+        }
+
+        .chat-input__inner {
+          max-width: 100%;
+          border-radius: 22px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat-layout">
+      <aside class="sidebar">
+        <div class="sidebar-top">
+          <div>
+            <div class="logo" aria-label="Mathijs dot AI">
+              <img class="logo__image" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
+              <span class="logo__text">
+                <span class="logo__word">MATHIJS</span>
+                <span class="logo__suffix">.AI</span>
+              </span>
+            </div>
+          </div>
+          <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
+            <span>＋</span>Nieuw gesprek
+          </button>
+          <h2>sessies</h2>
+          <div class="session-list">
+            <div class="session">
+              <div>Gemini strategie</div>
+              <span>15m</span>
+            </div>
+            <div class="session">
+              <div>AI governance audit</div>
+              <span>1u</span>
+            </div>
+            <div class="session">
+              <div>Realtime Edge</div>
+              <span>3u</span>
+            </div>
+          </div>
+        </div>
+        <div class="sidebar-bottom">
+          <div class="profile">
+            <div class="profile-avatar" aria-label="Upload profielfoto" title="Upload profielfoto">
+              <img class="profile-avatar__image" alt="" />
+              <span class="profile-avatar__initials">MA</span>
+            </div>
+            <input type="file" accept="image/*" id="profile-avatar-input" hidden />
+            <div class="profile-info">
+              <strong>Servé Creusen</strong>
+              <a href="course.html" class="profile-course" role="link">Bekijk cursus</a>
+            </div>
+            <button class="profile-menu" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="profile-modal">
+              ⋮
+            </button>
+          </div>
+        </div>
+      </aside>
+      <div class="profile-modal" id="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+        <div class="profile-modal__dialog">
+          <header class="profile-modal__header">
+            <h2 class="profile-modal__title" id="profile-modal-title">Instellingen · Abonnement</h2>
+            <button class="profile-modal__close" type="button" aria-label="Sluit instellingen">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6l-12 12" />
+              </svg>
+            </button>
+          </header>
+          <div class="profile-modal__body">
+            <section class="subscription-card">
+              <div class="subscription-card__label">Huidig plan</div>
+              <div class="subscription-card__value">Mathijs.ai Growth · €249 / maand</div>
+            </section>
+            <section class="subscription-actions">
+              <article class="subscription-action">
+                <div class="subscription-action__meta">
+                  <span class="subscription-action__title">Wijzig plan</span>
+                  <span class="subscription-action__caption">Upgrade naar Enterprise of downgrade naar Starter</span>
+                </div>
+                <button class="subscription-action__button" type="button">Beheer</button>
+              </article>
+              <article class="subscription-action">
+                <div class="subscription-action__meta">
+                  <span class="subscription-action__title">Facturen & credits</span>
+                  <span class="subscription-action__caption">Overzicht van betaalhistorie, credits en BTW</span>
+                </div>
+                <button class="subscription-action__button" type="button">Open overzicht</button>
+              </article>
+              <article class="subscription-action">
+                <div class="subscription-action__meta">
+                  <span class="subscription-action__title">Licenties toewijzen</span>
+                  <span class="subscription-action__caption">Beheer seats, teamtoegang en permissies</span>
+                </div>
+                <button class="subscription-action__button" type="button">Beheer seats</button>
+              </article>
+            </section>
+            <p class="subscription-footnote">Vragen over je abonnement? Neem contact op via support@mathijs.ai</p>
+          </div>
+        </div>
+      </div>
+      <main class="chat-main">
+        <header class="chat-header">
+          <div class="status">
+            <div class="status-info">
+              <h2>De Complete AI-Werkruimte</h2>
+              <p>Mathijs.ai is een onafhankelijk platform. Niet gelieerd, gesponsord of goedgekeurd door Google, Microsoft, OpenAI of andere merken.</p>
+            </div>
+            <div class="model-controls">
+              <div class="model-selects">
+                <div class="model-select" data-category="chat" data-label="Chat">
+                  <button
+                    type="button"
+                    class="model-select__activator"
+                    aria-pressed="true"
+                    aria-label="Activeer Chat"
+                  ></button>
+                  <span class="model-select__label">Chat</span>
+                  <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="selected-label">GPT-5</span>
+                    <svg viewBox="0 0 24 24">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                  <div class="model-dropdown" role="listbox" aria-label="Kies een chatmodel">
+                    <div class="model-option" data-model="GPT-5" role="option" aria-selected="true">GPT-5</div>
+                    <div class="model-option" data-model="Grok 4" role="option" aria-selected="false">Grok 4</div>
+                    <div class="model-option" data-model="Gemini 2.5 Pro" role="option" aria-selected="false">
+                      Gemini 2.5 Pro
+                    </div>
+                  </div>
+                </div>
+                <div class="model-select" data-category="foto" data-label="Foto">
+                  <button
+                    type="button"
+                    class="model-select__activator"
+                    aria-pressed="false"
+                    aria-label="Activeer Foto"
+                  ></button>
+                  <span class="model-select__label">Foto</span>
+                  <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="selected-label">DALL·E 4</span>
+                    <svg viewBox="0 0 24 24">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                  <div class="model-dropdown" role="listbox" aria-label="Kies een fotomodel">
+                    <div class="model-option" data-model="DALL·E 4" role="option" aria-selected="true">DALL·E 4</div>
+                  </div>
+                </div>
+                <div class="model-select" data-category="video" data-label="Video">
+                  <button
+                    type="button"
+                    class="model-select__activator"
+                    aria-pressed="false"
+                    aria-label="Activeer Video"
+                  ></button>
+                  <span class="model-select__label">Video</span>
+                  <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="selected-label">VEO 3</span>
+                    <svg viewBox="0 0 24 24">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                  <div class="model-dropdown" role="listbox" aria-label="Kies een videomodel">
+                    <div class="model-option" data-model="VEO 3" role="option" aria-selected="true">VEO 3</div>
+                    <div class="model-option" data-model="Sora 2" role="option" aria-selected="false">Sora 2</div>
+                  </div>
+                </div>
+                <div class="model-select" data-category="audio" data-label="Audio">
+                  <button
+                    type="button"
+                    class="model-select__activator"
+                    aria-pressed="false"
+                    aria-label="Activeer Audio"
+                  ></button>
+                  <span class="model-select__label">Audio</span>
+                  <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="selected-label">ElevenLabs</span>
+                    <svg viewBox="0 0 24 24">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                  <div class="model-dropdown" role="listbox" aria-label="Kies een audiomodel">
+                    <div class="model-option" data-model="ElevenLabs" role="option" aria-selected="true">ElevenLabs</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+        <section class="chat-log"></section>
+        <footer class="chat-footer">
+          <div class="chat-input">
+            <div class="chat-input__inner">
+              <textarea placeholder="Stuur een bericht" rows="1"></textarea>
+              <button type="button" aria-label="Stuur bericht">
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <line x1="8" y1="12.5" x2="8" y2="3.5" />
+                  <polyline points="4.5 7.5 8 3.5 11.5 7.5" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <p class="chat-disclaimer">Geen derdenverkoop. Merknamen louter ter duiding — geen gelieerdheid of goedkeuring.</p>
+        </footer>
+      </main>
+    </div>
+    <script>
+      const modelSelects = Array.from(document.querySelectorAll(".model-select"));
+      const statusIndicator = null;
+      const profileAvatar = document.querySelector(".profile-avatar");
+      const profileAvatarImage = profileAvatar ? profileAvatar.querySelector(".profile-avatar__image") : null;
+      const profileAvatarInput = document.getElementById("profile-avatar-input");
+      const profileMenuButton = document.querySelector(".profile-menu");
+      const profileModal = document.getElementById("profile-modal");
+      const profileModalClose = document.querySelector(".profile-modal__close");
+      let connectTimeout;
+      const selectionState = {};
+      let activeCategory = "chat";
+      const profileModalDialog = profileModal ? profileModal.querySelector(".profile-modal__dialog") : null;
+
+      const getCategoryLabel = (categoryKey) => {
+        const select = modelSelects.find((item) => item.getAttribute("data-category") === categoryKey);
+        return select ? select.getAttribute("data-label") || categoryKey : categoryKey;
+      };
+
+      const updateActiveSelectStyles = () => {
+        modelSelects.forEach((select) => {
+          const key = select.getAttribute("data-category") || "model";
+          const isActive = key === activeCategory;
+          select.classList.toggle("is-active", isActive);
+          const activator = select.querySelector(".model-select__activator");
+          if (activator) {
+            activator.setAttribute("aria-pressed", isActive ? "true" : "false");
+          }
+        });
+      };
+
+      const closeAllDropdowns = (exception = null) => {
+        modelSelects.forEach((select) => {
+          const dropdown = select.querySelector(".model-dropdown");
+          const trigger = select.querySelector(".model-select__trigger");
+          if (!dropdown || !trigger || dropdown === exception) return;
+          dropdown.classList.remove("active");
+          trigger.setAttribute("aria-expanded", "false");
+        });
+      };
+
+      const setStatus = (label, state = "idle") => {
+        if (!statusIndicator) return;
+      };
+
+      const setActiveCategory = (categoryKey) => {
+        if (!categoryKey) return;
+        if (categoryKey === activeCategory) {
+          updateActiveSelectStyles();
+          return;
+        }
+        activeCategory = categoryKey;
+        updateActiveSelectStyles();
+      };
+
+      const initialActiveSelect = modelSelects.find((select) => {
+        const activator = select.querySelector(".model-select__activator");
+        return activator && activator.getAttribute("aria-pressed") === "true";
+      });
+
+      if (initialActiveSelect) {
+        activeCategory = initialActiveSelect.getAttribute("data-category") || "chat";
+      } else if (modelSelects.length > 0) {
+        activeCategory = modelSelects[0].getAttribute("data-category") || "chat";
+      }
+
+      updateActiveSelectStyles();
+
+      const handleModelChange = (categoryLabel, value) => {
+        if (connectTimeout) clearTimeout(connectTimeout);
+        setStatus("Verbinding maken…", "connecting");
+
+        connectTimeout = setTimeout(() => {
+          setStatus("Verbonden", "idle");
+          appendMessage(`${categoryLabel} ${value} is verbonden en klaar voor prompts.`, "system");
+        }, 900);
+      };
+
+      modelSelects.forEach((select) => {
+        const trigger = select.querySelector(".model-select__trigger");
+        const activator = select.querySelector(".model-select__activator");
+        const dropdown = select.querySelector(".model-dropdown");
+        const options = dropdown ? Array.from(dropdown.querySelectorAll(".model-option")) : [];
+        const selectedLabel = trigger ? trigger.querySelector(".selected-label") : null;
+        const categoryKey = select.getAttribute("data-category") || "model";
+        const categoryLabel = select.getAttribute("data-label") || categoryKey;
+
+        if (!trigger || !dropdown || options.length === 0 || !selectedLabel) {
+          return;
+        }
+
+        const syncButtonLabel = (value) => {
+          selectedLabel.textContent = value;
+        };
+
+        const setActiveOption = (option) => {
+          options.forEach((opt) => opt.setAttribute("aria-selected", opt === option ? "true" : "false"));
+          const value = option.getAttribute("data-model") || "";
+          selectionState[categoryKey] = value;
+          syncButtonLabel(value);
+        };
+
+        const activeOption =
+          dropdown.querySelector(".model-option[aria-selected='true']") || options[0];
+        if (activeOption) {
+          setActiveOption(activeOption);
+        }
+
+        trigger.addEventListener("click", () => {
+          const willOpen = !dropdown.classList.contains("active");
+          closeAllDropdowns(willOpen ? dropdown : null);
+          dropdown.classList.toggle("active");
+          trigger.setAttribute("aria-expanded", dropdown.classList.contains("active") ? "true" : "false");
+        });
+
+        options.forEach((option) => {
+          option.addEventListener("click", () => {
+            const value = option.getAttribute("data-model");
+            if (selectionState[categoryKey] === value) {
+              closeAllDropdowns();
+              return;
+            }
+            setActiveOption(option);
+            setActiveCategory(categoryKey);
+            closeAllDropdowns();
+            handleModelChange(categoryLabel, value);
+          });
+        });
+
+        if (activator) {
+          activator.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            console.log("Activator clicked:", categoryKey);
+            if (categoryKey === activeCategory) {
+              closeAllDropdowns();
+              return;
+            }
+            setActiveCategory(categoryKey);
+            closeAllDropdowns();
+          });
+        }
+      });
+
+      setActiveCategory(activeCategory);
+
+      document.addEventListener("click", (event) => {
+        const insideControl =
+          event.target.closest(".model-select");
+        if (!insideControl) {
+          closeAllDropdowns();
+        }
+      });
+
+      if (profileAvatar && profileAvatarInput && profileAvatarImage) {
+        profileAvatar.addEventListener("click", () => {
+          console.log("Profile avatar clicked");
+          profileAvatarInput.click();
+        });
+
+        profileAvatarInput.addEventListener("change", (event) => {
+          const file = event.target.files && event.target.files[0];
+          if (!file || !file.type.startsWith("image/")) {
+            profileAvatarInput.value = "";
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = () => {
+            profileAvatarImage.src = reader.result;
+            profileAvatar.classList.add("has-image");
+            profileAvatar.setAttribute("aria-label", "Profielfoto wijzigen");
+            profileAvatarInput.value = "";
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      if (profileMenuButton && profileModal) {
+        const openProfileModal = () => {
+          profileModal.classList.add("is-visible");
+          profileMenuButton.setAttribute("aria-expanded", "true");
+          document.body.style.overflow = "hidden";
+        };
+
+        const closeProfileModal = () => {
+          profileModal.classList.remove("is-visible");
+          profileMenuButton.setAttribute("aria-expanded", "false");
+          document.body.style.removeProperty("overflow");
+        };
+
+        profileMenuButton.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          console.log("Profile menu clicked");
+          if (profileModal.classList.contains("is-visible")) {
+            closeProfileModal();
+          } else {
+            openProfileModal();
+          }
+        });
+
+        if (profileModalClose) {
+          profileModalClose.addEventListener("click", (event) => {
+            event.preventDefault();
+            closeProfileModal();
+          });
+        }
+
+        profileModal.addEventListener("click", (event) => {
+          if (event.target === profileModal) {
+            closeProfileModal();
+          }
+        });
+
+        if (profileModalDialog) {
+          profileModalDialog.addEventListener("click", (event) => {
+            event.stopPropagation();
+          });
+        }
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && profileModal.classList.contains("is-visible")) {
+            closeProfileModal();
+          }
+        });
+      }
+
+      const chatLog = document.querySelector(".chat-log");
+      const chatInput = document.querySelector(".chat-input textarea");
+      const sendButton = document.querySelector(".chat-input button");
+
+      const modelResponses = {
+        "GPT-5":
+          "GPT-5 adviseert een uitgewerkte workflow, inclusief voorbeeldprompts, governance-checks en een follow-up plan voor adoptie.",
+        "Grok 4":
+          "Grok 4 pakt het pragmatisch aan: realtime signalen koppelen, dashboards activeren en feedback direct naar je team streamen.",
+        "Gemini 2.5 Pro":
+          "Gemini 2.5 Pro analyseert je vraag en stelt voor om het proces stapsgewijs te automatiseren met duidelijke doelen en ownership per team.",
+        "DALL·E 4":
+          "DALL·E 4 bouwt varianten in recordtijd. Tip: voeg materiaal- en lichtomstandigheden toe voor scherpere resultaten.",
+        "VEO 3":
+          "VEO 3 synchroniseert visuals met data en zet scripts om in dynamische video’s met realtime dashboards.",
+        "Sora 2":
+          "Sora 2 brengt extra detail en beweging. Beschrijf de transities en voice-over wensen om te beginnen.",
+        "ElevenLabs":
+          "ElevenLabs levert natuurlijke voice-overs en audioclips. Beschrijf het timbre, tempo en taal voor een perfecte match.",
+      };
+
+      const appendMessage = (content, role = "system") => {
+        if (!chatLog) return;
+        const article = document.createElement("article");
+        article.className = `message ${role === "user" ? "user" : "system"}`;
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.textContent = content;
+
+        article.appendChild(bubble);
+        chatLog.appendChild(article);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      };
+
+      const getCurrentModelValue = () => {
+        const activeSelect = document.querySelector(`.model-select[data-category='${activeCategory}']`);
+        if (activeSelect) {
+          const activeOption = activeSelect.querySelector(".model-option[aria-selected='true']");
+          if (activeOption) {
+            return activeOption.getAttribute("data-model");
+          }
+        }
+        return (
+          selectionState[activeCategory] ||
+          selectionState.chat ||
+          selectionState.foto ||
+          selectionState.video ||
+          selectionState.audio ||
+          "GPT-5"
+        );
+      };
+
+      const sendMessage = () => {
+        const value = chatInput.value.trim();
+        if (!value) return;
+        appendMessage(value, "user");
+        chatInput.value = "";
+        chatInput.focus();
+
+        const currentModel = getCurrentModelValue();
+        const reply =
+          modelResponses[currentModel] ||
+          "De AI console heeft je bericht ontvangen en werkt aan een voorstel. Laat weten wat je volgende stap is.";
+
+        setTimeout(() => {
+          appendMessage(reply, "system");
+        }, 350);
+      };
+
+      if (sendButton && chatInput) {
+        sendButton.addEventListener("click", sendMessage);
+        chatInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
