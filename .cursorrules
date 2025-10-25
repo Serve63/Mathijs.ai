@@ -1,0 +1,29 @@
+DOEL: Elke opdracht die bestanden wijzigt moet automatisch syncen met GitHub (zonder terminal).
+
+VOORAF:
+- Repo = https://github.com/Serve63/Mathijs.ai.git
+- Branch = main
+- Als .git ontbreekt: init + remote set + branch main
+
+WERKSTROOM (altijd na elke uitgevoerde wijziging):
+1) git fetch origin
+2) git pull --rebase origin main
+3) git add .
+4) Bepaal een korte samenvatting op basis van wat je net hebt veranderd (max 8 woorden).
+5) git commit -m "codex(auto): <samenvatting>"
+6) git push -u origin HEAD
+
+CONFLICT-AFSPRAAK:
+- Als rebase/merge faalt:
+  a) Probeer automatisch te mergen waarbij mijn lokale wijzigingen voorkeur hebben als dat veilig kan.
+  b) Lukt het niet netjes? Maak automatisch een tijdelijke branch "autofix/<timestamp>", push die, en open een Pull Request naar main met een korte samenvatting. Zet de PR-link in deze chat.
+
+OPSTART-CHECK (1x per sessie of als repo niet klopt):
+- Als dit géén geldige git-repo is:
+  git init
+  git branch -M main
+  git remote add origin https://github.com/Serve63/Mathijs.ai.git || git remote set-url origin https://github.com/Serve63/Mathijs.ai.git
+  git pull origin main --allow-unrelated-histories
+  git add .
+  git commit -m "codex(auto): init"
+  git push -u origin main
