@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mathijs.ai | Cursusoverzicht</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      :root {
+        --fg: #1a1a1f;
+        --fg-muted: #4a4a54;
+        --bg: #fefefe;
+        --accent: #e6c200;
+        --tile-bg: #ffffff;
+        --tile-border: rgba(16, 21, 32, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      header {
+        padding: 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      header .logo {
+        font-size: 1.2rem;
+        gap: 12px;
+      }
+
+      header .logo__image {
+        width: 70px;
+        height: 70px;
+        transform: translateY(-16px);
+      }
+
+      header .logo__word {
+        color: var(--accent);
+      }
+      
+      header .logo__suffix {
+        color: var(--accent);
+      }
+
+      .back-link {
+        text-decoration: none;
+        color: var(--fg-muted);
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .back-link:hover {
+        color: #1d1d24;
+      }
+
+      main {
+        padding: 0 32px 48px;
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(2rem, 4vw, 2.6rem);
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+
+      .intro {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        color: var(--fg-muted);
+        max-width: 760px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 18px;
+      }
+
+      .lesson-tile {
+        background: var(--tile-bg);
+        border: 1px solid var(--tile-border);
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        box-shadow: 0 18px 45px -35px rgba(16, 21, 32, 0.3);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .lesson-tile:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 30px 60px -40px rgba(16, 21, 32, 0.35);
+      }
+
+      .lesson-number {
+        font-size: 0.78rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #a08c00;
+        font-weight: 600;
+      }
+
+      .lesson-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .lesson-meta {
+        font-size: 0.85rem;
+        color: var(--fg-muted);
+      }
+
+      footer {
+        padding: 32px;
+        text-align: center;
+        font-size: 0.82rem;
+        color: rgba(26, 26, 31, 0.6);
+      }
+
+      @media (max-width: 600px) {
+        header,
+        main,
+        footer {
+          padding-left: 20px;
+          padding-right: 20px;
+        }
+
+        .grid {
+          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="logo" aria-label="Mathijs dot AI">
+        <img class="logo__image" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
+        <span class="logo__text">
+          <span class="logo__word">MATHIJS</span>
+          <span class="logo__suffix">.AI</span>
+        </span>
+      </div>
+      <a class="back-link" href="chat.html">← Terug naar AI Leeromgeving</a>
+    </header>
+    <main>
+      <div class="intro">
+        <h1>Mathijs.ai Masterclass</h1>
+        <p>
+          50 lessen vol strategie, governance, automatisering en adoptie. Doorloop ze in je eigen tempo en activeer
+          stap voor stap een AI-native organisatie.
+        </p>
+      </div>
+      <div class="grid">
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 01</div>
+          <h2 class="lesson-title">AI les 1</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 02</div>
+          <h2 class="lesson-title">AI les 2</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 03</div>
+          <h2 class="lesson-title">AI les 3</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 04</div>
+          <h2 class="lesson-title">AI les 4</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 05</div>
+          <h2 class="lesson-title">AI les 5</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 06</div>
+          <h2 class="lesson-title">AI les 6</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 07</div>
+          <h2 class="lesson-title">AI les 7</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 08</div>
+          <h2 class="lesson-title">AI les 8</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 09</div>
+          <h2 class="lesson-title">AI les 9</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 10</div>
+          <h2 class="lesson-title">AI les 10</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 11</div>
+          <h2 class="lesson-title">AI les 11</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 12</div>
+          <h2 class="lesson-title">AI les 12</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 13</div>
+          <h2 class="lesson-title">AI les 13</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 14</div>
+          <h2 class="lesson-title">AI les 14</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 15</div>
+          <h2 class="lesson-title">AI les 15</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 16</div>
+          <h2 class="lesson-title">AI les 16</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 17</div>
+          <h2 class="lesson-title">AI les 17</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 18</div>
+          <h2 class="lesson-title">AI les 18</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 19</div>
+          <h2 class="lesson-title">AI les 19</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 20</div>
+          <h2 class="lesson-title">AI les 20</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 21</div>
+          <h2 class="lesson-title">AI les 21</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 22</div>
+          <h2 class="lesson-title">AI les 22</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 23</div>
+          <h2 class="lesson-title">AI les 23</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 24</div>
+          <h2 class="lesson-title">AI les 24</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 25</div>
+          <h2 class="lesson-title">AI les 25</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 26</div>
+          <h2 class="lesson-title">AI les 26</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 27</div>
+          <h2 class="lesson-title">AI les 27</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 28</div>
+          <h2 class="lesson-title">AI les 28</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 29</div>
+          <h2 class="lesson-title">AI les 29</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 30</div>
+          <h2 class="lesson-title">AI les 30</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 31</div>
+          <h2 class="lesson-title">AI les 31</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 32</div>
+          <h2 class="lesson-title">AI les 32</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 33</div>
+          <h2 class="lesson-title">AI les 33</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 34</div>
+          <h2 class="lesson-title">AI les 34</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 35</div>
+          <h2 class="lesson-title">AI les 35</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 36</div>
+          <h2 class="lesson-title">AI les 36</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 37</div>
+          <h2 class="lesson-title">AI les 37</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 38</div>
+          <h2 class="lesson-title">AI les 38</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 39</div>
+          <h2 class="lesson-title">AI les 39</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 40</div>
+          <h2 class="lesson-title">AI les 40</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 41</div>
+          <h2 class="lesson-title">AI les 41</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 42</div>
+          <h2 class="lesson-title">AI les 42</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 43</div>
+          <h2 class="lesson-title">AI les 43</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 44</div>
+          <h2 class="lesson-title">AI les 44</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 45</div>
+          <h2 class="lesson-title">AI les 45</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 46</div>
+          <h2 class="lesson-title">AI les 46</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 47</div>
+          <h2 class="lesson-title">AI les 47</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 48</div>
+          <h2 class="lesson-title">AI les 48</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 49</div>
+          <h2 class="lesson-title">AI les 49</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+        <div class="lesson-tile">
+          <div class="lesson-number">Les 50</div>
+          <h2 class="lesson-title">AI les 50</h2>
+          <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
+        </div>
+      </div>
+    </main>
+    <footer>© Mathijs.ai 2024 · Mathijs.ai Academy</footer>
+  </body>
+</html>
