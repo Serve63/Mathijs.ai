@@ -15,91 +15,94 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
 
-  <body>
-    <header class="top-nav">
-      <div class="logo" aria-label="Mathijs dot AI">
-        <img class="logo__image" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
-        <span class="logo__text">
-          <span class="logo__word">
-            MATHIJS
+  <body class="app app-bg">
+    <header class="header">
+      <div class="container top-nav">
+        <a class="logo" href="index.html" aria-label="Mathijs dot AI">
+          <img class="logo__image" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
+          <span class="logo__text">
+            <span class="logo__word">
+              MATHIJS
+            </span>
+            <span class="logo__suffix">
+              .AI
+            </span>
           </span>
-          <span class="logo__suffix">
-            .AI
+        </a>
+        <nav class="primary-nav" aria-hidden="true">
+        </nav>
+        <button class="menu-toggle" aria-expanded="false" aria-controls="mobile-nav">
+          <span>
+            Menu
           </span>
-        </span>
-      </div>
-      <nav class="primary-nav" aria-hidden="true">
-      </nav>
-      <button class="menu-toggle" aria-expanded="false" aria-controls="mobile-nav">
-        <span>
-          Menu
-        </span>
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-      <a class="cta cta--outline" href="login.html">
-        Inloggen
-      </a>
-      <nav class="mobile-nav" id="mobile-nav">
-        <a class="cta cta--solid" href="login.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <a class="btn btn--ghost" href="login.html">
           Inloggen
         </a>
-      </nav>
+        <nav class="mobile-nav" id="mobile-nav">
+          <a class="btn" href="login.html">
+            Inloggen
+          </a>
+        </nav>
+      </div>
     </header>
 
-    <main>
-      <section class="hero" id="hero">
-        <div class="hero__text">
-          <span class="eyebrow">
-            Gemini · ChatGPT-5 · Grok
-          </span>
-          <h1>
-            Alle AI-kracht.
-            <br />
-            Eén login.
-          </h1>
-          <p>
-            Mathijs.ai verenigt de best-in-class modellen in één professionele console. Houd inzicht, bescherm
-            gevoelige data en beheer toegangsrechten zonder compromissen.
-          </p>
-          <div class="hero__actions">
-            <a class="cta cta--solid" href="#course">
-              Start de bedrijfs-AI cursus
-            </a>
-          </div>
-          <div class="hero__badges">
-            <div>
-              99,99% uptime SLA
+    <main class="main">
+      <section class="hero section section--soft" id="hero">
+        <div class="container hero__layout">
+          <div class="hero__text stack">
+            <span class="eyebrow">
+              Gemini · ChatGPT-5 · Grok
+            </span>
+            <h1>
+              Alle AI-kracht.
+              <br />
+              Eén login.
+            </h1>
+            <p class="lead">
+              Mathijs.ai verenigt de best-in-class modellen in één professionele console. Houd inzicht, bescherm
+              gevoelige data en beheer toegangsrechten zonder compromissen.
+            </p>
+            <div class="hero__actions">
+              <a class="btn" href="#course">
+                Start de bedrijfs-AI cursus
+              </a>
             </div>
-            <div>
-              ISO 27001 ready
+            <div class="hero__badges">
+              <span class="badge">
+                99,99% uptime SLA
+              </span>
+              <span class="badge">
+                ISO 27001 ready
+              </span>
+              <span class="badge">
+                EU data residency
+              </span>
             </div>
-            <div>
-              EU data residency
+          </div>
+          <div class="hero__visual card" aria-hidden="true">
+            <div class="hero__image">
+              <img src="assets/brain-hero.svg" alt="" />
             </div>
-          </div>
-        </div>
-        <div class="hero__visual" aria-hidden="true">
-          <div class="hero__image">
-            <img src="assets/brain-hero.svg" alt="" />
-          </div>
-          <div class="hero__chip hero__chip--gemini">
-            <span class="chip__title">
-              Gemini Ultra
-            </span>
-            <span class="chip__subtitle">
-              Visie &amp; reasoning
-            </span>
-          </div>
-          <div class="hero__chip hero__chip--gpt">
-            <span class="chip__title">
-              ChatGPT-5
-            </span>
-            <span class="chip__subtitle">
-              Policy guardrails
-            </span>
-          </div>
+            <div class="hero__chip hero__chip--gemini">
+              <span class="chip__title">
+                Gemini Ultra
+              </span>
+              <span class="chip__subtitle">
+                Visie &amp; reasoning
+              </span>
+            </div>
+            <div class="hero__chip hero__chip--gpt">
+              <span class="chip__title">
+                ChatGPT-5
+              </span>
+              <span class="chip__subtitle">
+                Policy guardrails
+              </span>
+            </div>
           <div class="hero__chip hero__chip--grok">
             <span class="chip__title">
               Grok Enterprise
@@ -109,25 +112,26 @@
             </span>
           </div>
         </div>
+        </div>
       </section>
 
-      <section class="section section--about" id="about">
-        <div class="about">
-          <div class="about__copy">
+      <section class="section" id="about">
+        <div class="container about">
+          <div class="about__copy stack">
             <span class="eyebrow">
               Waarom Mathijs.ai
             </span>
             <h2>
               Één cockpit voor álle generatieve AI in je bedrijf.
             </h2>
-            <p>
+            <p class="lead">
               Mathijs.ai bundelt Gemini, ChatGPT-5 en Grok in één beveiligde omgeving. Je krijgt centrale
               authenticatie, kostencontrole en inzichtelijke rapportages zodat elke afdeling AI kan inzetten zonder
               risico’s of shadow IT.
             </p>
           </div>
           <div class="about__points">
-            <article>
+            <article class="card stack">
               <h3>
                 Enterprise governance
               </h3>
@@ -135,7 +139,7 @@
                 SSO, RBAC en audit trails zijn standaard. Stel guardrails in per team of use-case.
               </p>
             </article>
-            <article>
+            <article class="card stack">
               <h3>
                 Realtime inzichten
               </h3>
@@ -143,7 +147,7 @@
                 Dashboards voor adoptie, kosten en performance. Koppel eenvoudig aan je BI-stack.
               </p>
             </article>
-            <article>
+            <article class="card stack">
               <h3>
                 Uitrol in dagen
               </h3>
@@ -155,26 +159,26 @@
         </div>
       </section>
 
-      <section class="section section--course" id="course">
-        <div class="course">
-          <div class="course__intro">
+      <section class="section section--soft" id="course">
+        <div class="container course">
+          <div class="course__intro stack">
             <span class="eyebrow">
               Inbegrepen Academy
             </span>
             <h2>
               Leer precies hoe je AI inzet in elke bedrijfslaag.
             </h2>
-            <p>
+            <p class="lead">
               Elke Mathijs.ai-licentie bevat een volledig traject waarin je teams in zes weken transformeert tot
               AI-native operators. Van strategie tot implementatie, inclusief templates, live workshops en
               begeleide experimenten.
             </p>
-            <div class="course__badge">
+            <div class="badge">
               Cursuswaarde t.w.v. €2.950 inbegrepen
             </div>
           </div>
           <div class="course__modules">
-            <article class="module">
+            <article class="module card stack">
               <h3>
                 Week 1-2 · Fundamentele use-cases
               </h3>
@@ -182,7 +186,7 @@
                 Identificeer impactvolle AI-workflows voor marketing, sales, operations en support.
               </p>
             </article>
-            <article class="module">
+            <article class="module card stack">
               <h3>
                 Week 3-4 · Governance &amp; data
               </h3>
@@ -190,7 +194,7 @@
                 Richt beleid, compliance en veilige data-pijplijnen in met kant-en-klare playbooks.
               </p>
             </article>
-            <article class="module">
+            <article class="module card stack">
               <h3>
                 Week 5 · Automations &amp; integratie
               </h3>
@@ -198,7 +202,7 @@
                 Verbind Mathijs.ai met je bestaande stack (HubSpot, Atlassian, Microsoft 365, maatwerk APIs).
               </p>
             </article>
-            <article class="module">
+            <article class="module card stack">
               <h3>
                 Week 6 · AI change management
               </h3>
@@ -207,7 +211,7 @@
               </p>
             </article>
             <div class="course__cta">
-              <a class="cta cta--solid" href="#login">
+              <a class="btn" href="#login">
                 Plan intake + cursus kick-off
               </a>
             </div>
@@ -217,52 +221,56 @@
 
     </main>
 
-    <footer class="footer" id="login">
-      <div class="footer__col">
-        <div class="logo">
-          <img class="logo__image" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
-          <span class="logo__text">
-            <span class="logo__word">
-              MATHIJS
-            </span>
-            <span class="logo__suffix">
-              .AI
-            </span>
-          </span>
+    <footer class="footer section" id="login">
+      <div class="container footer__layout">
+        <div class="footer__cols">
+          <div class="footer__col stack">
+            <div class="logo">
+              <img class="logo__image" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
+              <span class="logo__text">
+                <span class="logo__word">
+                  MATHIJS
+                </span>
+                <span class="logo__suffix">
+                  .AI
+                </span>
+              </span>
+            </div>
+            <p>
+              De plek waar Gemini, ChatGPT-5 en Grok samenkomen. Eén login. Volle controle.
+            </p>
+          </div>
+          <div class="footer__col stack">
+            <h4>
+              Bedrijf
+            </h4>
+            <a href="#">
+              Contact
+            </a>
+          </div>
+          <div class="footer__col stack">
+            <h4>
+              Inloggen
+            </h4>
+            <p>
+              Toegang voor klanten via ons beveiligde portaal.
+            </p>
+            <a class="btn btn--ghost" href="#">
+              Ga naar portal
+            </a>
+          </div>
         </div>
-        <p>
-          De plek waar Gemini, ChatGPT-5 en Grok samenkomen. Eén login. Volle controle.
-        </p>
-      </div>
-      <div class="footer__col">
-        <h4>
-          Bedrijf
-        </h4>
-        <a href="#">
-          Contact
-        </a>
-      </div>
-      <div class="footer__col footer__col--cta">
-        <h4>
-          Inloggen
-        </h4>
-        <p>
-          Toegang voor klanten via ons beveiligde portaal.
-        </p>
-        <a class="cta cta--outline" href="#">
-          Ga naar portal
-        </a>
-      </div>
-      <div class="footer__meta">
-        <span>
-          © Mathijs.ai 2024
-        </span>
-        <a href="#">
-          Privacy
-        </a>
-        <a href="#">
-          Terms
-        </a>
+        <div class="footer__meta">
+          <span>
+            © Mathijs.ai 2024
+          </span>
+          <a href="#">
+            Privacy
+          </a>
+          <a href="#">
+            Terms
+          </a>
+        </div>
       </div>
     </footer>
     <script src="script.js">
