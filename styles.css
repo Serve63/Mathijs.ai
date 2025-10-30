@@ -15,9 +15,9 @@ a {
   top: 0;
   z-index: 10;
   backdrop-filter: saturate(1.1) blur(14px);
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 10px 30px rgba(15, 12, 10, 0.08);
-  border-bottom: 1px solid rgba(30, 26, 20, 0.08);
+  background: linear-gradient(135deg, #fdd154, #f4a94c);
+  box-shadow: 0 10px 30px rgba(244, 169, 76, 0.35);
+  border-bottom: 1px solid rgba(205, 143, 37, 0.4);
 }
 
 .header-inner {
