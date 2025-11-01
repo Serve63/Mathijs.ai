@@ -20,12 +20,33 @@ a {
   border-bottom: 1px solid rgba(205, 143, 37, 0.35);
 }
 
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: saturate(1.1) blur(14px);
+  background: #ffe172;
+  box-shadow: 0 8px 22px rgba(244, 200, 76, 0.22);
+  border-bottom: 1px solid rgba(205, 143, 37, 0.35);
+}
+
+.site-header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 -1px rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
 .header-inner {
-  width: 100%;
-  padding: 18px 28px;
+  position: relative;
+  width: min(100%, 1140px);
+  margin: 0 auto;
+  padding: 18px clamp(20px, 4vw, 32px);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 24px;
 }
 
 .brand {
