@@ -22,10 +22,10 @@ a {
 
 .header-inner {
   width: 100%;
-  padding: 18px 32px;
+  padding: 18px 28px;
   display: flex;
   align-items: center;
-  gap: 24px;
+  justify-content: space-between;
 }
 
 .brand {
@@ -38,7 +38,6 @@ a {
 }
 
 .header-cta {
-  margin-left: auto;
   padding: 10px 18px;
   border-radius: 999px;
   background: #ffffff;
