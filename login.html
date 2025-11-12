@@ -102,6 +102,27 @@
         transform: translateY(-1px);
       }
 
+      .login-card .google-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border: 1px solid rgba(16, 21, 32, 0.12);
+        background: #ffffff;
+        color: #1a1a1f;
+        font-weight: 500;
+      }
+
+      .login-card .google-btn:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: translateY(-1px);
+      }
+
+      .login-card .google-btn img {
+        width: 20px;
+        height: 20px;
+      }
+
       .login-meta {
         display: flex;
         justify-content: space-between;
@@ -149,6 +170,10 @@
           <input type="password" placeholder="••••••••" />
         </label>
         <button type="submit">Inloggen</button>
+        <button type="button" class="google-btn">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" />
+          Sign in with Google
+        </button>
       </form>
       <div class="login-meta">
         <a href="#">Wachtwoord vergeten?</a>
