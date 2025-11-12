@@ -86,19 +86,23 @@
       }
 
       .login-card button {
-        border: none;
         border-radius: 999px;
-        padding: 14px 20px;
+        padding: 14px 24px;
         font-weight: 600;
         font-size: 0.98rem;
-        background: var(--primary);
-        color: #1a1600;
         cursor: pointer;
         transition: background 0.2s ease, transform 0.2s ease;
       }
 
-      .login-card button:hover {
-        background: #ffe55a;
+      .login-card button[type="submit"] {
+        border: 1px solid rgba(16, 21, 32, 0.12);
+        background: #ffffff;
+        color: #1a1a1f;
+        box-shadow: 0 1px 0 rgba(16, 21, 32, 0.04);
+      }
+
+      .login-card button[type="submit"]:hover {
+        background: rgba(255, 255, 255, 0.9);
         transform: translateY(-1px);
       }
 
@@ -182,3 +186,4 @@
     </div>
   </body>
 </html>
+
