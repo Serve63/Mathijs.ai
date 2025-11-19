@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="nl">
   <head>
     <meta charset="UTF-8" />
@@ -121,9 +121,20 @@
         border-radius: 8px;
       }
 
+      .session.is-active {
+        background: rgba(255, 212, 0, 0.24);
+        font-weight: 600;
+      }
+
       .session span {
         color: var(--chat-muted);
         font-size: 0.72rem;
+      }
+
+      .session-empty {
+        font-size: 0.8rem;
+        color: var(--chat-muted);
+        margin-bottom: 6px;
       }
 
       .profile {
@@ -187,6 +198,11 @@
         max-width: 120px;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .profile-info .profile-email {
+        font-size: 0.78rem;
+        color: #6c6c76;
       }
 
       .profile-course {
@@ -632,6 +648,12 @@
         min-height: 0;
       }
 
+      .chat-log .empty-state {
+        text-align: center;
+        color: var(--chat-muted);
+        padding: 60px 20px;
+      }
+
       .message {
         display: flex;
         max-width: 780px;
@@ -852,23 +874,11 @@
             </a>
           </div>
           <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
-            <span>＋</span>Nieuw gesprek
+            <span>+</span>Nieuw gesprek
           </button>
           <h2>sessies</h2>
-          <div class="session-list">
-            <div class="session">
-              <div>Gemini strategie</div>
-              <span>15m</span>
-            </div>
-            <div class="session">
-              <div>AI governance audit</div>
-              <span>1u</span>
-            </div>
-            <div class="session">
-              <div>Realtime Edge</div>
-              <span>3u</span>
-            </div>
-          </div>
+          <p class="session-empty" id="session-empty">Nog geen gesprekken. Start je eerste chat.</p>
+          <div class="session-list" id="session-list"></div>
         </div>
         <div class="sidebar-bottom">
           <div class="profile">
@@ -878,7 +888,8 @@
             </div>
             <input type="file" accept="image/*" id="profile-avatar-input" hidden />
             <div class="profile-info">
-              <strong>Servé Creusen</strong>
+              <strong id="profile-name">Account</strong>
+              <span class="profile-email" id="profile-email">---</span>
               <a href="course.html" class="profile-course" role="link">Bekijk cursus</a>
             </div>
             <button class="profile-menu" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="profile-modal">
@@ -890,7 +901,7 @@
       <div class="profile-modal" id="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
         <div class="profile-modal__dialog">
           <header class="profile-modal__header">
-            <h2 class="profile-modal__title" id="profile-modal-title">Instellingen · Abonnement</h2>
+            <h2 class="profile-modal__title" id="profile-modal-title">Instellingen Â· Abonnement</h2>
             <button class="profile-modal__close" type="button" aria-label="Sluit instellingen">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M6 6l12 12M18 6l-12 12" />
@@ -900,13 +911,13 @@
           <div class="profile-modal__body">
             <section class="subscription-card">
               <div class="subscription-card__label">Huidig plan</div>
-              <div class="subscription-card__value">Standaard €25 P/M</div>
+              <div class="subscription-card__value">Standaard â‚¬25 P/M</div>
             </section>
             <section class="subscription-actions">
               <article class="subscription-action">
                 <div class="subscription-action__meta">
                   <span class="subscription-action__title">Abonnement opzeggen</span>
-                  <span class="subscription-action__caption">Beëindig je Standaard 25,00 plan per einde factuurperiode.</span>
+                  <span class="subscription-action__caption">BeÃ«indig je Standaard 25,00 plan per einde factuurperiode.</span>
                 </div>
                 <button class="subscription-action__button" type="button">Opzeggen</button>
               </article>
@@ -962,13 +973,13 @@
                   ></button>
                   <span class="model-select__label">Foto</span>
                   <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="selected-label">DALL·E 4</span>
+                    <span class="selected-label">DALLÂ·E 4</span>
                     <svg viewBox="0 0 24 24">
                       <path d="M6 9l6 6 6-6" />
                     </svg>
                   </button>
                   <div class="model-dropdown" role="listbox" aria-label="Kies een fotomodel">
-                    <div class="model-option" data-model="DALL·E 4" role="option" aria-selected="true">DALL·E 4</div>
+                    <div class="model-option" data-model="DALLÂ·E 4" role="option" aria-selected="true">DALLÂ·E 4</div>
                   </div>
                 </div>
                 <div class="model-select" data-category="video" data-label="Video">
@@ -1025,10 +1036,12 @@
               </button>
             </div>
           </div>
-          <p class="chat-disclaimer">Geen derdenverkoop. Merknamen louter ter duiding — geen gelieerdheid of goedkeuring.</p>
+          <p class="chat-disclaimer">Geen derdenverkoop. Merknamen louter ter duiding â€” geen gelieerdheid of goedkeuring.</p>
         </footer>
       </main>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="auth.js"></script>
     <script>
       const modelSelects = Array.from(document.querySelectorAll(".model-select"));
       const statusIndicator = null;
@@ -1099,7 +1112,7 @@
 
       const handleModelChange = (categoryLabel, value) => {
         if (connectTimeout) clearTimeout(connectTimeout);
-        setStatus("Verbinding maken…", "connecting");
+        setStatus("Verbinding makenâ€¦", "connecting");
 
         connectTimeout = setTimeout(() => {
           setStatus("Verbonden", "idle");
@@ -1259,6 +1272,12 @@
       const chatLog = document.querySelector(".chat-log");
       const chatInput = document.querySelector(".chat-input textarea");
       const sendButton = document.querySelector(".chat-input button");
+      const sessionListEl = document.getElementById("session-list");
+      const sessionEmptyEl = document.getElementById("session-empty");
+      const newChatButton = document.querySelector(".new-chat");
+      const profileNameEl = document.getElementById("profile-name");
+      const profileEmailEl = document.getElementById("profile-email");
+      const profileInitialsEl = document.querySelector(".profile-avatar__initials");
 
       const modelResponses = {
         "GPT-5":
@@ -1267,20 +1286,181 @@
           "Grok 4 pakt het pragmatisch aan: realtime signalen koppelen, dashboards activeren en feedback direct naar je team streamen.",
         "Gemini 2.5 Pro":
           "Gemini 2.5 Pro analyseert je vraag en stelt voor om het proces stapsgewijs te automatiseren met duidelijke doelen en ownership per team.",
-        "DALL·E 4":
-          "DALL·E 4 bouwt varianten in recordtijd. Tip: voeg materiaal- en lichtomstandigheden toe voor scherpere resultaten.",
+        "DALL-E 4":
+          "DALL-E 4 bouwt varianten in recordtijd. Tip: voeg materiaal- en lichtomstandigheden toe voor scherpere resultaten.",
         "VEO 3":
-          "VEO 3 synchroniseert visuals met data en zet scripts om in dynamische video’s met realtime dashboards.",
+          "VEO 3 synchroniseert visuals met data en zet scripts om in dynamische video's met realtime dashboards.",
         "Sora 2":
           "Sora 2 brengt extra detail en beweging. Beschrijf de transities en voice-over wensen om te beginnen.",
         "ElevenLabs":
           "ElevenLabs levert natuurlijke voice-overs en audioclips. Beschrijf het timbre, tempo en taal voor een perfecte match.",
       };
 
-      const appendMessage = (content, role = "system") => {
+      const supabaseClient = window.mathijsSupabase;
+      let currentUser = null;
+      let sessions = [];
+      let activeSessionId = null;
+
+      const sessionsKey = () => (currentUser ? "mathijsai:sessions:" + currentUser.id : null);
+      const activeKey = () => (currentUser ? "mathijsai:sessions-active:" + currentUser.id : null);
+
+      const formatTimeAgo = (timestamp) => {
+        if (!timestamp) return "";
+        const diff = Date.now() - timestamp;
+        const minutes = Math.floor(diff / 60000);
+        if (minutes < 1) return "nu";
+        if (minutes < 60) return minutes + "m";
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + "u";
+        const days = Math.floor(hours / 24);
+        return days + "d";
+      };
+
+      const updateProfileSidebar = (user) => {
+        if (!user) return;
+        const username = (user.user_metadata && user.user_metadata.username) || (user.email ? user.email.split("@")[0] : "Account");
+        if (profileNameEl) {
+          profileNameEl.textContent = username;
+        }
+        if (profileEmailEl) {
+          profileEmailEl.textContent = user.email || "";
+        }
+        if (profileInitialsEl) {
+          const initials = username
+            .split(" ")
+            .map((part) => part.charAt(0).toUpperCase())
+            .slice(0, 2)
+            .join("") || "MA";
+          profileInitialsEl.textContent = initials;
+        }
+      };
+
+      const persistSessions = () => {
+        if (!currentUser) return;
+        localStorage.setItem(sessionsKey(), JSON.stringify(sessions));
+      };
+
+      const persistActiveSession = () => {
+        if (!currentUser) return;
+        if (activeSessionId) {
+          localStorage.setItem(activeKey(), activeSessionId);
+        } else {
+          localStorage.removeItem(activeKey());
+        }
+      };
+
+      const readSessions = () => {
+        if (!currentUser) return [];
+        try {
+          const raw = localStorage.getItem(sessionsKey());
+          const parsed = raw ? JSON.parse(raw) : [];
+          const storedActive = localStorage.getItem(activeKey());
+          if (storedActive && parsed.some((session) => session.id === storedActive)) {
+            activeSessionId = storedActive;
+          } else if (parsed.length) {
+            activeSessionId = parsed[0].id;
+          } else {
+            activeSessionId = null;
+          }
+          persistActiveSession();
+          return parsed;
+        } catch (error) {
+          console.error("Fout bij laden van sessies", error);
+          activeSessionId = null;
+          localStorage.removeItem(sessionsKey());
+          localStorage.removeItem(activeKey());
+          return [];
+        }
+      };
+
+      const renderSessions = () => {
+        if (!sessionListEl) return;
+        sessionListEl.innerHTML = "";
+        if (!sessions.length) {
+          if (sessionEmptyEl) {
+            sessionEmptyEl.style.display = "block";
+          }
+          return;
+        }
+        if (sessionEmptyEl) {
+          sessionEmptyEl.style.display = "none";
+        }
+        sessions.forEach((session) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "session" + (session.id === activeSessionId ? " is-active" : "");
+          button.dataset.sessionId = session.id;
+          const title = document.createElement("div");
+          title.textContent = session.title || "Nieuw gesprek";
+          const time = document.createElement("span");
+          time.textContent = formatTimeAgo(session.updatedAt);
+          button.appendChild(title);
+          button.appendChild(time);
+          sessionListEl.appendChild(button);
+        });
+      };
+
+      const renderActiveSession = () => {
+        if (!chatLog) return;
+        chatLog.innerHTML = "";
+        if (!activeSessionId) {
+          const emptyState = document.createElement("div");
+          emptyState.className = "empty-state";
+          emptyState.textContent = "Start een nieuw gesprek om je AI-werkruimte te gebruiken.";
+          chatLog.appendChild(emptyState);
+          return;
+        }
+        const session = sessions.find((item) => item.id === activeSessionId);
+        if (!session || !session.messages || !session.messages.length) {
+          const emptyState = document.createElement("div");
+          emptyState.className = "empty-state";
+          emptyState.textContent = "Nog geen berichten in dit gesprek.";
+          chatLog.appendChild(emptyState);
+          return;
+        }
+        session.messages.forEach((message) => {
+          appendMessage(message.content, message.role, { persist: false });
+        });
+      };
+
+      const ensureActiveSession = () => {
+        if (activeSessionId) {
+          const session = sessions.find((item) => item.id === activeSessionId);
+          if (session) {
+            return session;
+          }
+        }
+        return createSession();
+      };
+
+      const createSession = (title = "Nieuw gesprek") => {
+        const session = {
+          id: window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : String(Date.now()),
+          title,
+          updatedAt: Date.now(),
+          messages: [],
+        };
+        sessions.unshift(session);
+        activeSessionId = session.id;
+        persistSessions();
+        persistActiveSession();
+        renderSessions();
+        renderActiveSession();
+        return session;
+      };
+
+      const setActiveSession = (sessionId) => {
+        if (!sessionId || sessionId === activeSessionId) return;
+        activeSessionId = sessionId;
+        persistActiveSession();
+        renderSessions();
+        renderActiveSession();
+      };
+
+      const appendMessage = (content, role = "system", options = {}) => {
         if (!chatLog) return;
         const article = document.createElement("article");
-        article.className = `message ${role === "user" ? "user" : "system"}`;
+        article.className = "message " + (role === "user" ? "user" : "system");
 
         const bubble = document.createElement("div");
         bubble.className = "bubble";
@@ -1289,10 +1469,22 @@
         article.appendChild(bubble);
         chatLog.appendChild(article);
         chatLog.scrollTop = chatLog.scrollHeight;
+
+        if (options.persist === false) {
+          return;
+        }
+        const session = ensureActiveSession();
+        session.messages.push({ role, content, timestamp: Date.now() });
+        session.updatedAt = Date.now();
+        if (role === "user" && session.messages.length === 1) {
+          session.title = content.length > 32 ? content.slice(0, 32) + "..." : content;
+        }
+        persistSessions();
+        renderSessions();
       };
 
       const getCurrentModelValue = () => {
-        const activeSelect = document.querySelector(`.model-select[data-category='${activeCategory}']`);
+        const activeSelect = document.querySelector(".model-select[data-category='" + activeCategory + "']");
         if (activeSelect) {
           const activeOption = activeSelect.querySelector(".model-option[aria-selected='true']");
           if (activeOption) {
@@ -1309,7 +1501,28 @@
         );
       };
 
-      const sendMessage = () => {
+      const workspaceReady = (async () => {
+        if (!supabaseClient) {
+          console.error("Supabase client ontbreekt, redirect naar login.");
+          window.location.href = "login.html";
+          return null;
+        }
+        const { data, error } = await supabaseClient.auth.getSession();
+        if (error || !data.session) {
+          window.location.href = "login.html";
+          return null;
+        }
+        currentUser = data.session.user;
+        updateProfileSidebar(currentUser);
+        sessions = readSessions();
+        renderSessions();
+        renderActiveSession();
+        return currentUser;
+      })();
+
+      const sendMessage = async () => {
+        await workspaceReady;
+        if (!chatInput) return;
         const value = chatInput.value.trim();
         if (!value) return;
         appendMessage(value, "user");
@@ -1335,6 +1548,46 @@
           }
         });
       }
+
+      if (newChatButton) {
+        newChatButton.addEventListener("click", async () => {
+          await workspaceReady;
+          createSession();
+          if (chatInput) {
+            chatInput.focus();
+          }
+        });
+      }
+
+      if (sessionListEl) {
+        sessionListEl.addEventListener("click", async (event) => {
+          const button = event.target.closest(".session");
+          if (!button) return;
+          await workspaceReady;
+          const sessionId = button.dataset.sessionId;
+          if (sessionId) {
+            setActiveSession(sessionId);
+          }
+        });
+      }
     </script>
   </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

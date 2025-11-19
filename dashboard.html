@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mathijs.ai | Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body {
+        font-family: "IBM Plex Sans", sans-serif;
+        background: radial-gradient(circle, rgba(255, 244, 147, 0.45), rgba(255, 255, 255, 0.7));
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 40px 16px;
+      }
+
+      .dashboard-card {
+        width: min(520px, 100%);
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 32px;
+        padding: 48px;
+        box-shadow: 0 34px 85px -52px rgba(16, 21, 32, 0.65);
+        border: 1px solid rgba(16, 21, 32, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        text-align: center;
+      }
+
+      .dashboard-card .logo {
+        align-self: center;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+      }
+
+      .dashboard-card h1 {
+        margin: 0;
+        font-family: "Space Grotesk", sans-serif;
+        letter-spacing: -0.01em;
+      }
+
+      .dashboard-card p {
+        margin: 0;
+        color: #4a4a54;
+      }
+
+      .user-email {
+        font-weight: 600;
+        color: #1a1a1f;
+      }
+
+      .dashboard-card button {
+        border-radius: 999px;
+        padding: 14px 24px;
+        font-weight: 600;
+        font-size: 0.98rem;
+        cursor: pointer;
+        transition: opacity 0.2s ease;
+        border: 1px solid rgba(16, 21, 32, 0.12);
+        background: #ffffff;
+        color: #1a1a1f;
+      }
+
+      .dashboard-card button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .status {
+        min-height: 20px;
+        font-size: 0.92rem;
+        color: #c0392b;
+      }
+
+      .status.success {
+        color: #1a7f37;
+      }
+
+      .redirect-note {
+        font-size: 0.92rem;
+        color: #4a4a54;
+        min-height: 20px;
+      }
+
+      @media (max-width: 520px) {
+        .dashboard-card {
+          padding: 32px 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard-card">
+      <div class="logo" aria-label="Mathijs dot AI">
+        <img class="logo__image" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" width="72" height="72" />
+        <span class="logo__text">
+          <span class="logo__word">MATHIJS</span>
+          <span class="logo__suffix">.AI</span>
+        </span>
+      </div>
+      <h1>Welkom terug</h1>
+      <p>Je bent ingelogd als <span class="user-email" id="user-email">...</span></p>
+      <div class="status" id="dashboard-status" aria-live="polite"></div>
+      <p class="redirect-note" id="dashboard-redirect-note" aria-live="polite"></p>
+      <button id="workspace-button">Ga naar AI-werkruimte</button>
+      <button id="logout-button">Uitloggen</button>
+    </div>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script defer src="auth.js"></script>
+    <script defer src="dashboard.js"></script>
+  </body>
+</html>

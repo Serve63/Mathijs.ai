@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="nl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mathijs.ai | Login</title>
+    <title>Mathijs.ai | Account aanmaken</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -92,33 +92,15 @@
         font-size: 0.98rem;
         cursor: pointer;
         transition: background 0.2s ease, transform 0.2s ease;
-      }
-
-      .login-card button[type="submit"] {
         border: 1px solid rgba(16, 21, 32, 0.12);
         background: #ffffff;
         color: #1a1a1f;
         box-shadow: 0 1px 0 rgba(16, 21, 32, 0.04);
       }
 
-      .login-card button[type="submit"]:hover {
+      .login-card button:hover {
         background: rgba(255, 255, 255, 0.9);
         transform: translateY(-1px);
-      }
-
-      .login-meta {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.82rem;
-        color: #6c6c76;
-      }
-
-      .login-meta a {
-        color: #6c6c76;
-      }
-
-      .login-meta a:hover {
-        color: #9c8500;
       }
 
       .form-feedback {
@@ -138,6 +120,22 @@
       .login-card button:disabled {
         opacity: 0.55;
         cursor: not-allowed;
+      }
+
+      .login-meta {
+        display: flex;
+        justify-content: center;
+        font-size: 0.82rem;
+        color: #6c6c76;
+        gap: 4px;
+      }
+
+      .login-meta a {
+        color: #6c6c76;
+      }
+
+      .login-meta a:hover {
+        color: #9c8500;
       }
 
       @media (max-width: 480px) {
@@ -160,38 +158,37 @@
           <span class="logo__suffix">.AI</span>
         </span>
       </div>
-      <h1>Log in op Mathijs.ai</h1>
-      <p>Gebruik je zakelijk e-mailadres en wachtwoord om toegang te krijgen tot het platform.</p>
-      <form id="login-form" novalidate>
+      <h1>Maak een account aan voor Mathijs.ai</h1>
+      <p>Vul je gegevens in om een account te registreren. Je ontvangt een bevestiging per e-mail.</p>
+      <form id="signup-form" novalidate>
         <label>
-          Zakelijk e-mail
-          <input id="login-email" name="email" type="email" placeholder="naam@bedrijf.com" required />
+          Gebruikersnaam (e-mail)
+          <input id="signup-email" name="email" type="email" placeholder="naam@bedrijf.com" required />
         </label>
         <label>
           Wachtwoord
+          <input id="signup-password" name="password" type="password" placeholder="********" required minlength="6" />
+        </label>
+        <label>
+          Herhaal wachtwoord
           <input
-            id="login-password"
-            name="password"
+            id="signup-confirm"
+            name="confirm-password"
             type="password"
             placeholder="********"
             required
             minlength="6"
           />
         </label>
-        <button type="submit" id="login-button">Inloggen</button>
+        <button type="submit" id="signup-submit">Account aanmaken</button>
       </form>
-      <p class="form-feedback" id="login-feedback" aria-live="polite"></p>
+      <p class="form-feedback" id="signup-feedback" aria-live="polite"></p>
       <div class="login-meta">
-        <a href="#">Wachtwoord vergeten?</a>
-        <a href="signup.html">Aanvragen voor toegang</a>
+        <span>Heb je al toegang?</span>
+        <a href="login.html">Log in</a>
       </div>
     </div>
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script defer src="auth.js"></script>
   </body>
 </html>
-
-
-
-
-
