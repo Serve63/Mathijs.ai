@@ -1053,6 +1053,31 @@
       const profileModalClose = document.querySelector(".profile-modal__close");
       let connectTimeout;
       const selectionState = {};
+      const createSystemMessage = () => ({
+        role: "system",
+        content: "Je bent een behulpzame AI-assistent in de AI-werkruimte Mathijs.ai.",
+      });
+      let messages = [createSystemMessage()];
+
+      const modelEngineMap = {
+        gpt5: "gpt-4.1-mini",
+      };
+      let selectedModel = "gpt5";
+
+      const updateSelectedModel = (label) => {
+        if (label === "Grok 4") {
+          selectedModel = "grok4";
+          console.log("Grok 4 integratie wordt later toegevoegd.");
+          return;
+        }
+        if (label === "Gemini 2.5 Pro") {
+          selectedModel = "gemini25pro";
+          console.log("Gemini 2.5 Pro integratie wordt later toegevoegd.");
+          return;
+        }
+        selectedModel = "gpt5";
+      };
+
       let activeCategory = "chat";
       const profileModalDialog = profileModal ? profileModal.querySelector(".profile-modal__dialog") : null;
 
@@ -1142,6 +1167,9 @@
           const value = option.getAttribute("data-model") || "";
           selectionState[categoryKey] = value;
           syncButtonLabel(value);
+          if (categoryKey === "chat") {
+            updateSelectedModel(value);
+          }
         };
 
         const activeOption =
@@ -1279,21 +1307,17 @@
       const profileEmailEl = document.getElementById("profile-email");
       const profileInitialsEl = document.querySelector(".profile-avatar__initials");
 
-      const modelResponses = {
-        "GPT-5":
-          "GPT-5 adviseert een uitgewerkte workflow, inclusief voorbeeldprompts, governance-checks en een follow-up plan voor adoptie.",
-        "Grok 4":
-          "Grok 4 pakt het pragmatisch aan: realtime signalen koppelen, dashboards activeren en feedback direct naar je team streamen.",
-        "Gemini 2.5 Pro":
-          "Gemini 2.5 Pro analyseert je vraag en stelt voor om het proces stapsgewijs te automatiseren met duidelijke doelen en ownership per team.",
-        "DALL-E 4":
-          "DALL-E 4 bouwt varianten in recordtijd. Tip: voeg materiaal- en lichtomstandigheden toe voor scherpere resultaten.",
-        "VEO 3":
-          "VEO 3 synchroniseert visuals met data en zet scripts om in dynamische video's met realtime dashboards.",
-        "Sora 2":
-          "Sora 2 brengt extra detail en beweging. Beschrijf de transities en voice-over wensen om te beginnen.",
-        "ElevenLabs":
-          "ElevenLabs levert natuurlijke voice-overs en audioclips. Beschrijf het timbre, tempo en taal voor een perfecte match.",
+      const syncMessagesFromSession = (session) => {
+        messages = [createSystemMessage()];
+        if (!session || !Array.isArray(session.messages)) {
+          return;
+        }
+        session.messages.forEach((message) => {
+          const normalizedRole = message.role === "system" ? "assistant" : message.role;
+          if (normalizedRole === "user" || normalizedRole === "assistant") {
+            messages.push({ role: normalizedRole, content: message.content });
+          }
+        });
       };
 
       const supabaseClient = window.mathijsSupabase;
@@ -1404,6 +1428,7 @@
         if (!chatLog) return;
         chatLog.innerHTML = "";
         if (!activeSessionId) {
+          syncMessagesFromSession(null);
           const emptyState = document.createElement("div");
           emptyState.className = "empty-state";
           emptyState.textContent = "Start een nieuw gesprek om je AI-werkruimte te gebruiken.";
@@ -1412,12 +1437,14 @@
         }
         const session = sessions.find((item) => item.id === activeSessionId);
         if (!session || !session.messages || !session.messages.length) {
+          syncMessagesFromSession(session);
           const emptyState = document.createElement("div");
           emptyState.className = "empty-state";
           emptyState.textContent = "Nog geen berichten in dit gesprek.";
           chatLog.appendChild(emptyState);
           return;
         }
+        syncMessagesFromSession(session);
         session.messages.forEach((message) => {
           appendMessage(message.content, message.role, { persist: false });
         });
@@ -1442,6 +1469,7 @@
         };
         sessions.unshift(session);
         activeSessionId = session.id;
+        syncMessagesFromSession(session);
         persistSessions();
         persistActiveSession();
         renderSessions();
@@ -1457,7 +1485,7 @@
         renderActiveSession();
       };
 
-      const appendMessage = (content, role = "system", options = {}) => {
+      const appendMessage = (content, role = "assistant", options = {}) => {
         if (!chatLog) return;
         const article = document.createElement("article");
         article.className = "message " + (role === "user" ? "user" : "system");
@@ -1474,31 +1502,20 @@
           return;
         }
         const session = ensureActiveSession();
-        session.messages.push({ role, content, timestamp: Date.now() });
+        if (!session) {
+          return;
+        }
+        const entry = { role, content, timestamp: Date.now() };
+        session.messages.push(entry);
         session.updatedAt = Date.now();
         if (role === "user" && session.messages.length === 1) {
           session.title = content.length > 32 ? content.slice(0, 32) + "..." : content;
         }
         persistSessions();
         renderSessions();
-      };
-
-      const getCurrentModelValue = () => {
-        const activeSelect = document.querySelector(".model-select[data-category='" + activeCategory + "']");
-        if (activeSelect) {
-          const activeOption = activeSelect.querySelector(".model-option[aria-selected='true']");
-          if (activeOption) {
-            return activeOption.getAttribute("data-model");
-          }
+        if (role === "user" || role === "assistant") {
+          messages.push({ role, content });
         }
-        return (
-          selectionState[activeCategory] ||
-          selectionState.chat ||
-          selectionState.foto ||
-          selectionState.video ||
-          selectionState.audio ||
-          "GPT-5"
-        );
       };
 
       const workspaceReady = (async () => {
@@ -1525,18 +1542,45 @@
         if (!chatInput) return;
         const value = chatInput.value.trim();
         if (!value) return;
+
+        if (selectedModel === "grok4") {
+          alert("Grok 4 is nog niet gekoppeld. Kies GPT-5 om verder te chatten.");
+          console.log("Grok 4 chat is nog niet geïmplementeerd.");
+          return;
+        }
+        if (selectedModel === "gemini25pro") {
+          alert("Gemini 2.5 Pro is nog niet gekoppeld. Kies GPT-5 om verder te chatten.");
+          console.log("Gemini 2.5 Pro chat is nog niet geïmplementeerd.");
+          return;
+        }
+
         appendMessage(value, "user");
         chatInput.value = "";
         chatInput.focus();
 
-        const currentModel = getCurrentModelValue();
-        const reply =
-          modelResponses[currentModel] ||
-          "De AI console heeft je bericht ontvangen en werkt aan een voorstel. Laat weten wat je volgende stap is.";
-
-        setTimeout(() => {
-          appendMessage(reply, "system");
-        }, 350);
+        try {
+          const engine = modelEngineMap[selectedModel] || "gpt-4.1-mini";
+          const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              messages,
+              model: engine,
+            }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || data.error) {
+            appendMessage("Er ging iets mis bij het ophalen van een antwoord. Probeer het later opnieuw.", "assistant");
+            return;
+          }
+          const content = (data.content || "").trim();
+          appendMessage(content || "Ik heb even geen antwoord. Probeer het later nog eens.", "assistant");
+        } catch (error) {
+          console.error("Chat request failed", error);
+          appendMessage("De AI-request mislukte. Controleer je verbinding en probeer opnieuw.", "assistant");
+        }
       };
 
       if (sendButton && chatInput) {
