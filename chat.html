@@ -1060,7 +1060,7 @@
       let messages = [createSystemMessage()];
 
       const modelEngineMap = {
-        gpt5: "gpt-4.1-mini",
+        gpt5: "gpt-4o",
       };
       let selectedModel = "gpt5";
 
@@ -1559,7 +1559,7 @@
         chatInput.focus();
 
         try {
-          const engine = modelEngineMap[selectedModel] || "gpt-4.1-mini";
+          const engine = modelEngineMap[selectedModel] || "gpt-4o";
           const response = await fetch("/api/chat", {
             method: "POST",
             headers: {

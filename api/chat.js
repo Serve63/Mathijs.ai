@@ -26,7 +26,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: model || "gpt-4.1-mini",
+        model: model || "gpt-4o",
         messages,
         stream: false,
       }),
