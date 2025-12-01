@@ -651,7 +651,60 @@
       .chat-log .empty-state {
         text-align: center;
         color: var(--chat-muted);
-        padding: 60px 20px;
+        padding: 80px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 28px;
+      }
+
+      .empty-hero__title {
+        margin: 0;
+        font-size: clamp(1.4rem, 2vw, 2rem);
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: #111;
+      }
+
+      .empty-hero__subtitle {
+        margin: 0;
+        font-size: 0.95rem;
+        color: rgba(17, 17, 17, 0.6);
+      }
+
+      .empty-hero__bar {
+        width: min(720px, 100%);
+        border-radius: 18px;
+        border: 1px solid rgba(16, 21, 32, 0.12);
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 20px 40px -36px rgba(16, 21, 32, 0.5);
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .empty-hero__input {
+        flex: 1;
+        text-align: left;
+        color: rgba(17, 17, 17, 0.6);
+        font-size: 1rem;
+      }
+
+      .empty-hero__addon {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(17, 17, 17, 0.7);
+        font-size: 0.9rem;
+      }
+
+      .empty-hero__addon svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        stroke-width: 1.6;
+        fill: none;
       }
 
       .message {
@@ -1415,6 +1468,16 @@
         }
       };
 
+      const getGreetingName = () => {
+        if (!currentUser) return "daar";
+        const username =
+          (currentUser.user_metadata && currentUser.user_metadata.username) ||
+          (currentUser.email ? currentUser.email.split("@")[0] : "");
+        if (!username) return "daar";
+        const first = username.split(/[\s._-]+/)[0] || username;
+        return first.charAt(0).toUpperCase() + first.slice(1);
+      };
+
       const persistSessions = () => {
         if (!currentUser) return;
         localStorage.setItem(sessionsKey(), JSON.stringify(sessions));
@@ -1488,7 +1551,28 @@
           syncMessagesFromSession(null);
           const emptyState = document.createElement("div");
           emptyState.className = "empty-state";
-          emptyState.textContent = "Start een nieuw gesprek om je AI-werkruimte te gebruiken.";
+          const greeting = document.createElement("h2");
+          greeting.className = "empty-hero__title";
+          greeting.textContent = `Leuk je weer te zien, ${getGreetingName()}.`;
+          const subtitle = document.createElement("p");
+          subtitle.className = "empty-hero__subtitle";
+          subtitle.textContent = "Stel een vraag of start een nieuw onderwerp.";
+          const bar = document.createElement("div");
+          bar.className = "empty-hero__bar";
+          const prompt = document.createElement("div");
+          prompt.className = "empty-hero__input";
+          prompt.textContent = "Stel een vraag";
+          const addon = document.createElement("div");
+          addon.className = "empty-hero__addon";
+          addon.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v5l3 2"></path></svg>
+            <span>Langer nadenken</span>
+          `;
+          bar.appendChild(prompt);
+          bar.appendChild(addon);
+          emptyState.appendChild(greeting);
+          emptyState.appendChild(bar);
+          emptyState.appendChild(subtitle);
           chatLog.appendChild(emptyState);
           return;
         }
@@ -1497,7 +1581,28 @@
           syncMessagesFromSession(session);
           const emptyState = document.createElement("div");
           emptyState.className = "empty-state";
-          emptyState.textContent = "Nog geen berichten in dit gesprek.";
+          const greeting = document.createElement("h2");
+          greeting.className = "empty-hero__title";
+          greeting.textContent = `Leuk je weer te zien, ${getGreetingName()}.`;
+          const subtitle = document.createElement("p");
+          subtitle.className = "empty-hero__subtitle";
+          subtitle.textContent = "Stel een vraag of start een nieuw onderwerp.";
+          const bar = document.createElement("div");
+          bar.className = "empty-hero__bar";
+          const prompt = document.createElement("div");
+          prompt.className = "empty-hero__input";
+          prompt.textContent = "Stel een vraag";
+          const addon = document.createElement("div");
+          addon.className = "empty-hero__addon";
+          addon.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v5l3 2"></path></svg>
+            <span>Langer nadenken</span>
+          `;
+          bar.appendChild(prompt);
+          bar.appendChild(addon);
+          emptyState.appendChild(greeting);
+          emptyState.appendChild(bar);
+          emptyState.appendChild(subtitle);
           chatLog.appendChild(emptyState);
           return;
         }
@@ -1723,10 +1828,6 @@
     </script>
   </body>
 </html>
-
-
-
-
 
 
 
