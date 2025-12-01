@@ -655,7 +655,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 28px;
+        gap: 16px;
       }
 
       .empty-hero__title {
@@ -670,41 +670,6 @@
         margin: 0;
         font-size: 0.95rem;
         color: rgba(17, 17, 17, 0.6);
-      }
-
-      .empty-hero__bar {
-        width: min(720px, 100%);
-        border-radius: 18px;
-        border: 1px solid rgba(16, 21, 32, 0.12);
-        background: rgba(255, 255, 255, 0.96);
-        box-shadow: 0 20px 40px -36px rgba(16, 21, 32, 0.5);
-        padding: 18px 20px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-      }
-
-      .empty-hero__input {
-        flex: 1;
-        text-align: left;
-        color: rgba(17, 17, 17, 0.6);
-        font-size: 1rem;
-      }
-
-      .empty-hero__addon {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        color: rgba(17, 17, 17, 0.7);
-        font-size: 0.9rem;
-      }
-
-      .empty-hero__addon svg {
-        width: 18px;
-        height: 18px;
-        stroke: currentColor;
-        stroke-width: 1.6;
-        fill: none;
       }
 
       .message {
@@ -1557,21 +1522,7 @@
           const subtitle = document.createElement("p");
           subtitle.className = "empty-hero__subtitle";
           subtitle.textContent = "Stel een vraag of start een nieuw onderwerp.";
-          const bar = document.createElement("div");
-          bar.className = "empty-hero__bar";
-          const prompt = document.createElement("div");
-          prompt.className = "empty-hero__input";
-          prompt.textContent = "Stel een vraag";
-          const addon = document.createElement("div");
-          addon.className = "empty-hero__addon";
-          addon.innerHTML = `
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v5l3 2"></path></svg>
-            <span>Langer nadenken</span>
-          `;
-          bar.appendChild(prompt);
-          bar.appendChild(addon);
           emptyState.appendChild(greeting);
-          emptyState.appendChild(bar);
           emptyState.appendChild(subtitle);
           chatLog.appendChild(emptyState);
           return;
@@ -1587,21 +1538,7 @@
           const subtitle = document.createElement("p");
           subtitle.className = "empty-hero__subtitle";
           subtitle.textContent = "Stel een vraag of start een nieuw onderwerp.";
-          const bar = document.createElement("div");
-          bar.className = "empty-hero__bar";
-          const prompt = document.createElement("div");
-          prompt.className = "empty-hero__input";
-          prompt.textContent = "Stel een vraag";
-          const addon = document.createElement("div");
-          addon.className = "empty-hero__addon";
-          addon.innerHTML = `
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v5l3 2"></path></svg>
-            <span>Langer nadenken</span>
-          `;
-          bar.appendChild(prompt);
-          bar.appendChild(addon);
           emptyState.appendChild(greeting);
-          emptyState.appendChild(bar);
           emptyState.appendChild(subtitle);
           chatLog.appendChild(emptyState);
           return;
@@ -1828,8 +1765,6 @@
     </script>
   </body>
 </html>
-
-
 
 
 
