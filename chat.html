@@ -1443,6 +1443,13 @@
         return first.charAt(0).toUpperCase() + first.slice(1);
       };
 
+      const getTimeGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Goedemorgen";
+        if (hour < 18) return "Goedemiddag";
+        return "Goedeavond";
+      };
+
       const persistSessions = () => {
         if (!currentUser) return;
         localStorage.setItem(sessionsKey(), JSON.stringify(sessions));
@@ -1518,7 +1525,7 @@
           emptyState.className = "empty-state";
           const greeting = document.createElement("h2");
           greeting.className = "empty-hero__title";
-          greeting.textContent = `Leuk je weer te zien, ${getGreetingName()}.`;
+          greeting.textContent = `${getTimeGreeting()}, ${getGreetingName()}.`;
           emptyState.appendChild(greeting);
           chatLog.appendChild(emptyState);
           return;
@@ -1530,7 +1537,7 @@
           emptyState.className = "empty-state";
           const greeting = document.createElement("h2");
           greeting.className = "empty-hero__title";
-          greeting.textContent = `Leuk je weer te zien, ${getGreetingName()}.`;
+          greeting.textContent = `${getTimeGreeting()}, ${getGreetingName()}.`;
           emptyState.appendChild(greeting);
           chatLog.appendChild(emptyState);
           return;
