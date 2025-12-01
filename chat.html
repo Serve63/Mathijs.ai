@@ -1542,6 +1542,14 @@
         renderActiveSession();
       };
 
+      const clearEmptyState = () => {
+        if (!chatLog) return;
+        const empty = chatLog.querySelector(".empty-state");
+        if (empty) {
+          empty.remove();
+        }
+      };
+
       const showThinkingIndicator = () => {
         if (!chatLog || thinkingIndicator) return;
         const article = document.createElement("article");
@@ -1580,6 +1588,7 @@
 
       const appendMessage = (content, role = "assistant", options = {}) => {
         if (!chatLog) return;
+        clearEmptyState();
         const article = document.createElement("article");
         article.className = "message " + (role === "user" ? "user" : "system");
 
@@ -1714,7 +1723,6 @@
     </script>
   </body>
 </html>
-
 
 
 
