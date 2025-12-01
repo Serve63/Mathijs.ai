@@ -679,6 +679,59 @@
         border-color: rgba(255, 212, 0, 0.4);
       }
 
+      .message.thinking .bubble {
+        color: var(--chat-muted);
+      }
+
+      .bubble.thinking-bubble {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .thinking-dots {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .thinking-dots .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--chat-accent);
+        opacity: 0.35;
+        animation: thinkingDot 1.2s infinite ease-in-out;
+      }
+
+      .thinking-dots .dot:nth-child(2) {
+        animation-delay: 0.16s;
+      }
+
+      .thinking-dots .dot:nth-child(3) {
+        animation-delay: 0.32s;
+      }
+
+      .thinking-label {
+        font-size: 0.88rem;
+        letter-spacing: 0.01em;
+      }
+
+      @keyframes thinkingDot {
+        0% {
+          opacity: 0.15;
+          transform: translateY(0);
+        }
+        50% {
+          opacity: 0.95;
+          transform: translateY(-3px);
+        }
+        100% {
+          opacity: 0.15;
+          transform: translateY(0);
+        }
+      }
+
       @keyframes statusPulse {
         0% {
           transform: scale(1);
@@ -1063,8 +1116,11 @@
         gpt5: "gpt-4o",
       };
       let selectedModel = "gpt5";
+      let selectedModelLabel = "GPT-5";
+      let thinkingIndicator = null;
 
       const updateSelectedModel = (label) => {
+        selectedModelLabel = label || "GPT-5";
         if (label === "Grok 4") {
           selectedModel = "grok4";
           console.log("Grok 4 integratie wordt later toegevoegd.");
@@ -1427,6 +1483,7 @@
       const renderActiveSession = () => {
         if (!chatLog) return;
         chatLog.innerHTML = "";
+        hideThinkingIndicator();
         if (!activeSessionId) {
           syncMessagesFromSession(null);
           const emptyState = document.createElement("div");
@@ -1483,6 +1540,42 @@
         persistActiveSession();
         renderSessions();
         renderActiveSession();
+      };
+
+      const showThinkingIndicator = () => {
+        if (!chatLog || thinkingIndicator) return;
+        const article = document.createElement("article");
+        article.className = "message system thinking";
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble thinking-bubble";
+
+        const dots = document.createElement("div");
+        dots.className = "thinking-dots";
+        for (let i = 0; i < 3; i++) {
+          const dot = document.createElement("span");
+          dot.className = "dot";
+          dots.appendChild(dot);
+        }
+
+        const label = document.createElement("span");
+        label.className = "thinking-label";
+        const currentModel = selectedModelLabel || "AI";
+        label.textContent = `${currentModel} is aan het nadenken...`;
+
+        bubble.appendChild(dots);
+        bubble.appendChild(label);
+        article.appendChild(bubble);
+        chatLog.appendChild(article);
+        chatLog.scrollTop = chatLog.scrollHeight;
+        thinkingIndicator = article;
+      };
+
+      const hideThinkingIndicator = () => {
+        if (thinkingIndicator && thinkingIndicator.parentElement) {
+          thinkingIndicator.parentElement.removeChild(thinkingIndicator);
+        }
+        thinkingIndicator = null;
       };
 
       const appendMessage = (content, role = "assistant", options = {}) => {
@@ -1557,6 +1650,7 @@
         appendMessage(value, "user");
         chatInput.value = "";
         chatInput.focus();
+        showThinkingIndicator();
 
         try {
           const engine = modelEngineMap[selectedModel] || "gpt-4o";
@@ -1572,13 +1666,16 @@
           });
           const data = await response.json().catch(() => ({}));
           if (!response.ok || data.error) {
+            hideThinkingIndicator();
             appendMessage("Er ging iets mis bij het ophalen van een antwoord. Probeer het later opnieuw.", "assistant");
             return;
           }
           const content = (data.content || "").trim();
+          hideThinkingIndicator();
           appendMessage(content || "Ik heb even geen antwoord. Probeer het later nog eens.", "assistant");
         } catch (error) {
           console.error("Chat request failed", error);
+          hideThinkingIndicator();
           appendMessage("De AI-request mislukte. Controleer je verbinding en probeer opnieuw.", "assistant");
         }
       };
@@ -1617,12 +1714,6 @@
     </script>
   </body>
 </html>
-
-
-
-
-
-
 
 
 
