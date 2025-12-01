@@ -1519,11 +1519,7 @@
           const greeting = document.createElement("h2");
           greeting.className = "empty-hero__title";
           greeting.textContent = `Leuk je weer te zien, ${getGreetingName()}.`;
-          const subtitle = document.createElement("p");
-          subtitle.className = "empty-hero__subtitle";
-          subtitle.textContent = "Stel een vraag of start een nieuw onderwerp.";
           emptyState.appendChild(greeting);
-          emptyState.appendChild(subtitle);
           chatLog.appendChild(emptyState);
           return;
         }
@@ -1535,11 +1531,7 @@
           const greeting = document.createElement("h2");
           greeting.className = "empty-hero__title";
           greeting.textContent = `Leuk je weer te zien, ${getGreetingName()}.`;
-          const subtitle = document.createElement("p");
-          subtitle.className = "empty-hero__subtitle";
-          subtitle.textContent = "Stel een vraag of start een nieuw onderwerp.";
           emptyState.appendChild(greeting);
-          emptyState.appendChild(subtitle);
           chatLog.appendChild(emptyState);
           return;
         }
@@ -1765,7 +1757,6 @@
     </script>
   </body>
 </html>
-
 
 
 
