@@ -1379,6 +1379,208 @@
 
       const supabaseClient = window.mathijsSupabase;
       let currentUser = null;
+      const syncMessagesFromSession = () => {
+        const active = getActiveSession();
+        const history = active && Array.isArray(active.messages) ? active.messages : [];
+        messages = [createSystemMessage(), ...history];
+      };
+
+      const renderSessionList = () => {
+        if (!sessionListEl) return;
+        sessionListEl.innerHTML = "";
+        if (!sessionState.list.length) {
+          if (sessionEmptyEl) {
+            sessionEmptyEl.style.removeProperty("display");
+          }
+          return;
+        }
+        if (sessionEmptyEl) {
+          sessionEmptyEl.style.display = "none";
+        }
+        sessionState.list.forEach((session) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `session${session.id === sessionState.activeId ? " is-active" : ""}`;
+          button.textContent = session.title;
+          button.setAttribute("data-session-id", session.id);
+          button.addEventListener("click", () => setActiveSession(session.id));
+          sessionListEl.appendChild(button);
+        });
+      };
+
+      const renderSessionMessages = () => {
+        if (!chatLog) return;
+        chatLog.innerHTML = "";
+        const active = getActiveSession();
+        if (!active || !active.messages.length) {
+          renderEmptyState();
+          syncMessagesFromSession();
+          return;
+        }
+        active.messages.forEach((entry) => {
+          appendMessage(entry.content, entry.role, { persist: false });
+        });
+        syncMessagesFromSession();
+      };
+
+      const bumpSessionToTop = (sessionId) => {
+        const index = sessionState.list.findIndex((session) => session.id === sessionId);
+        if (index > 0) {
+          const [session] = sessionState.list.splice(index, 1);
+          sessionState.list.unshift(session);
+        }
+      };
+
+      const setActiveSession = (sessionId) => {
+        if (!sessionId || sessionId === sessionState.activeId) {
+          renderSessionMessages();
+          return;
+        }
+        sessionState.activeId = sessionId;
+        bumpSessionToTop(sessionId);
+        persistSessions();
+        renderSessionList();
+        renderSessionMessages();
+        if (chatInput) {
+          chatInput.focus();
+        }
+      };
+
+      const generateDefaultSessionTitle = () => {
+        const counter = sessionState.list.length + 1;
+        return `Nieuw gesprek ${counter}`;
+      };
+
+      const generateSessionTitleFromPrompt = (text) => {
+        if (!text) return "";
+        const sanitized = text
+          .trim()
+          .replace(/\s+/g, " ");
+        if (!sanitized) return "";
+        const normalized = sanitized.toLowerCase().replace(/[^a-z0-9\s]/gi, "");
+        const words = normalized.split(" ").filter(Boolean);
+        if (!words.length) return "";
+        const questionWords = ["wat", "hoe", "waarom", "wanneer", "welke", "wie", "waar", "kan", "mag", "is"];
+        const prefix = sanitized.includes("?") || questionWords.includes(words[0]) ? "vraag" : "chat";
+        const snippet = words.slice(0, 5).join(" ");
+        return `${prefix} ${snippet}`.trim();
+      };
+
+      const maybeUpdateSessionTitleFromPrompt = (session, text) => {
+        if (!session || session.hasCustomTitle) {
+          return;
+        }
+        const generated = generateSessionTitleFromPrompt(text);
+        if (generated) {
+          session.title = generated;
+          session.hasCustomTitle = true;
+          renderSessionList();
+        }
+      };
+
+      const createSession = (title = null) => {
+        const session = {
+          id: generateSessionId(),
+          title: title || generateDefaultSessionTitle(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          hasCustomTitle: Boolean(title),
+          messages: [],
+        };
+        sessionState.list.unshift(session);
+        sessionState.activeId = session.id;
+        persistSessions();
+        renderSessionList();
+        renderSessionMessages();
+        syncMessagesFromSession();
+        if (chatInput) {
+          chatInput.value = "";
+        }
+        return session;
+      };
+
+      const initializeSessionsForUser = (userId) => {
+        if (!userId) return;
+        const stored = loadStoredSessions(userId);
+        if (stored) {
+          sessionState.list = stored.list
+            .filter((session) => session && session.id && Array.isArray(session.messages))
+            .map((session, index) => ({
+              id: session.id || generateSessionId(),
+              title: session.title || `Gesprek ${index + 1}`,
+              createdAt: session.createdAt || new Date().toISOString(),
+              updatedAt: session.updatedAt || session.createdAt || new Date().toISOString(),
+              hasCustomTitle: Boolean(session.hasCustomTitle),
+              messages: session.messages,
+            }));
+          sessionState.activeId = stored.activeId || (sessionState.list[0] ? sessionState.list[0].id : null);
+        }
+        if (!sessionState.list.length) {
+          createSession();
+          return;
+        }
+        if (!sessionState.activeId) {
+          sessionState.activeId = sessionState.list[0].id;
+        }
+        renderSessionList();
+        renderSessionMessages();
+        syncMessagesFromSession();
+      };
+      const sessionListEl = document.getElementById("session-list");
+      const sessionEmptyEl = document.getElementById("session-empty");
+      const SESSION_STORAGE_PREFIX = "mathijs_sessions_";
+      const sessionState = {
+        list: [],
+        activeId: null,
+      };
+
+      const getSessionStorageKey = (userId) => `${SESSION_STORAGE_PREFIX}${userId}`;
+
+      const loadStoredSessions = (userId) => {
+        if (!userId) return null;
+        try {
+          const raw = localStorage.getItem(getSessionStorageKey(userId));
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (!parsed || !Array.isArray(parsed.list)) {
+            return null;
+          }
+          return {
+            list: parsed.list,
+            activeId: parsed.activeId || null,
+          };
+        } catch (error) {
+          console.error("Opgeslagen sessies konden niet geladen worden", error);
+          return null;
+        }
+      };
+
+      const persistSessions = () => {
+        if (!currentUser) return;
+        try {
+          localStorage.setItem(
+            getSessionStorageKey(currentUser.id),
+            JSON.stringify({
+              list: sessionState.list,
+              activeId: sessionState.activeId,
+            })
+          );
+        } catch (error) {
+          console.error("Sessies konden niet opgeslagen worden", error);
+        }
+      };
+
+      const generateSessionId = () => {
+        if (window.crypto && crypto.randomUUID) {
+          return crypto.randomUUID();
+        }
+        return `session-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      };
+
+      const getActiveSession = () => {
+        if (!sessionState.activeId) return null;
+        return sessionState.list.find((session) => session.id === sessionState.activeId) || null;
+      };
 
       const updateProfileSidebar = (user) => {
         if (!user) return;
@@ -1456,60 +1658,6 @@
         return currentUser;
       };
 
-      const loadMessages = async () => {
-        const user = await requireAuthenticatedUser();
-        if (!user || !chatLog) {
-          return;
-        }
-        try {
-          const { data, error } = await supabaseClient
-            .from("messages")
-            .select("id, role, message_text, created_at")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: true });
-
-          chatLog.innerHTML = "";
-          messages = [createSystemMessage()];
-
-          if (error) {
-            console.error("Berichten ophalen mislukt", error);
-            appendMessage("Berichten konden niet geladen worden. Probeer het later opnieuw.", "assistant", { persist: false });
-            return;
-          }
-
-          if (!data || !data.length) {
-            renderEmptyState();
-            return;
-          }
-
-          const history = [];
-          data.forEach((entry) => {
-            const normalizedRole = entry.role === "user" ? "user" : "assistant";
-            appendMessage(entry.message_text, normalizedRole, { persist: false });
-            history.push({ role: normalizedRole, content: entry.message_text });
-          });
-          messages = [createSystemMessage(), ...history];
-        } catch (error) {
-          console.error("Onverwachte fout bij het laden van berichten", error);
-          appendMessage("Berichten konden niet geladen worden. Controleer je verbinding en probeer het opnieuw.", "assistant", { persist: false });
-        }
-      };
-
-      const resetConversation = async () => {
-        const user = await requireAuthenticatedUser();
-        if (!user) return;
-        try {
-          const { error } = await supabaseClient.from("messages").delete().eq("user_id", user.id);
-          if (error) {
-            throw error;
-          }
-          messages = [createSystemMessage()];
-          renderEmptyState();
-        } catch (error) {
-          console.error("Kon chatgeschiedenis niet wissen", error);
-          alert("Het leegmaken van de chat is niet gelukt. Probeer het opnieuw.");
-        }
-      };
 
       const showThinkingIndicator = () => {
         if (!chatLog || thinkingIndicator) return;
@@ -1564,9 +1712,19 @@
         if (options.persist === false) {
           return;
         }
-        if (role === "user" || role === "assistant") {
-          messages.push({ role, content });
+        const activeSession = getActiveSession();
+        if (!activeSession) {
+          return;
         }
+        activeSession.messages.push({ role, content });
+        activeSession.updatedAt = new Date().toISOString();
+        if (role === "user") {
+          maybeUpdateSessionTitleFromPrompt(activeSession, content);
+        }
+        bumpSessionToTop(activeSession.id);
+        persistSessions();
+        syncMessagesFromSession();
+        renderSessionList();
       };
 
       const workspaceReady = (async () => {
@@ -1574,7 +1732,7 @@
         if (!user) {
           return null;
         }
-        await loadMessages();
+        initializeSessionsForUser(user.id);
         return user;
       })();
 
@@ -1600,28 +1758,13 @@
           alert("Je moet ingelogd zijn om een bericht te sturen.");
           return;
         }
-
+        let activeSession = getActiveSession();
+        if (!activeSession) {
+          activeSession = createSession();
+        }
         appendMessage(value, "user");
         chatInput.value = "";
         chatInput.focus();
-
-        try {
-          const { error: userMessageError } = await supabaseClient.from("messages").insert([
-            {
-              user_id: user.id,
-              role: "user",
-              message_text: value,
-            },
-          ]);
-          if (userMessageError) {
-            throw userMessageError;
-          }
-        } catch (error) {
-          console.error("Gebruikersbericht opslaan mislukt", error);
-          alert("Je bericht kon niet opgeslagen worden. Probeer het opnieuw.");
-          await loadMessages();
-          return;
-        }
 
         showThinkingIndicator();
 
@@ -1643,16 +1786,6 @@
           }
           const content = (data.content || "").trim() || "Ik heb even geen antwoord. Probeer het later nog eens.";
           appendMessage(content, "assistant");
-          const { error: assistantMessageError } = await supabaseClient.from("messages").insert([
-            {
-              user_id: user.id,
-              role: "assistant",
-              message_text: content,
-            },
-          ]);
-          if (assistantMessageError) {
-            console.error("AI-antwoord opslaan mislukt", assistantMessageError);
-          }
         } catch (error) {
           console.error("Chat request failed", error);
           appendMessage("De AI-request mislukte. Controleer je verbinding en probeer opnieuw.", "assistant");
@@ -1674,7 +1807,7 @@
       if (newChatButton) {
         newChatButton.addEventListener("click", async () => {
           await workspaceReady;
-          await resetConversation();
+          createSession();
           if (chatInput) {
             chatInput.focus();
           }
