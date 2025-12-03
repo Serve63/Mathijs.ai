@@ -1,8 +1,8 @@
 export default async function handler(req, res) {
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.open_ai_key || process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      throw new Error("Missing OPENAI_API_KEY environment variable");
+      throw new Error("Missing OpenAI API key (set open_ai_key or OPENAI_API_KEY)");
     }
 
     if (req.method !== "POST") {
