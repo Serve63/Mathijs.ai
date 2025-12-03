@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="nl">
   <head>
     <meta charset="UTF-8" />
@@ -1379,10 +1379,52 @@
 
       const supabaseClient = window.mathijsSupabase;
       let currentUser = null;
-      const syncMessagesFromSession = () => {
-        const active = getActiveSession();
-        const history = active && Array.isArray(active.messages) ? active.messages : [];
-        messages = [createSystemMessage(), ...history];
+      const sessionListEl = document.getElementById("session-list");
+      const sessionEmptyEl = document.getElementById("session-empty");
+      const sessionState = {
+        list: [],
+        activeId: null,
+        untitledCount: 0,
+      };
+      const LEGACY_SESSION_ID = "__legacy_session__";
+
+      const generateSessionId = () => {
+        if (window.crypto && crypto.randomUUID) {
+          return crypto.randomUUID();
+        }
+        return `session-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      };
+
+      const getActiveSessionEntry = () => {
+        if (!sessionState.activeId) return null;
+        return sessionState.list.find((session) => session.id === sessionState.activeId) || null;
+      };
+
+      const generateDefaultSessionTitle = () => {
+        sessionState.untitledCount += 1;
+        return `Nieuw gesprek ${sessionState.untitledCount}`;
+      };
+
+      const generateSessionTitleFromPrompt = (text) => {
+        if (!text) return "";
+        const sanitized = text.trim().replace(/\s+/g, " ");
+        if (!sanitized) return "";
+        const normalized = sanitized.toLowerCase().replace(/[^a-z0-9\s]/gi, "");
+        const words = normalized.split(" ").filter(Boolean);
+        if (!words.length) return "";
+        const questionWords = ["wat", "hoe", "waarom", "wanneer", "welke", "wie", "waar", "kan", "mag", "is"];
+        const prefix = sanitized.includes("?") || questionWords.includes(words[0]) ? "vraag" : "chat";
+        const snippet = words.slice(0, 5).join(" ");
+        return `${prefix} ${snippet}`.trim();
+      };
+
+      const upsertSessionEntry = (session) => {
+        const existingIndex = sessionState.list.findIndex((item) => item.id === session.id);
+        if (existingIndex >= 0) {
+          sessionState.list[existingIndex] = { ...sessionState.list[existingIndex], ...session };
+        } else {
+          sessionState.list.unshift(session);
+        }
       };
 
       const renderSessionList = () => {
@@ -1403,24 +1445,14 @@
           button.className = `session${session.id === sessionState.activeId ? " is-active" : ""}`;
           button.textContent = session.title;
           button.setAttribute("data-session-id", session.id);
-          button.addEventListener("click", () => setActiveSession(session.id));
+          button.addEventListener("click", async () => {
+            await setActiveSession(session.id);
+            if (chatInput) {
+              chatInput.focus();
+            }
+          });
           sessionListEl.appendChild(button);
         });
-      };
-
-      const renderSessionMessages = () => {
-        if (!chatLog) return;
-        chatLog.innerHTML = "";
-        const active = getActiveSession();
-        if (!active || !active.messages.length) {
-          renderEmptyState();
-          syncMessagesFromSession();
-          return;
-        }
-        active.messages.forEach((entry) => {
-          appendMessage(entry.content, entry.role, { persist: false });
-        });
-        syncMessagesFromSession();
       };
 
       const bumpSessionToTop = (sessionId) => {
@@ -1431,155 +1463,193 @@
         }
       };
 
-      const setActiveSession = (sessionId) => {
-        if (!sessionId || sessionId === sessionState.activeId) {
-          renderSessionMessages();
+      const updateSessionMetaAfterMessage = (role, content) => {
+        const session = getActiveSessionEntry();
+        if (!session) {
           return;
         }
-        sessionState.activeId = sessionId;
-        bumpSessionToTop(sessionId);
-        persistSessions();
+        session.updatedAt = new Date().toISOString();
+        if (role === "user" && !session.firstUserMessage) {
+          const generated = generateSessionTitleFromPrompt(content);
+          if (generated) {
+            session.title = generated;
+            session.firstUserMessage = content;
+          }
+        }
+        bumpSessionToTop(session.id);
         renderSessionList();
-        renderSessionMessages();
+      };
+
+      const renderEmptySessionMessage = () => {
+        if (!sessionEmptyEl) return;
+        sessionEmptyEl.style.removeProperty("display");
+        if (sessionListEl) {
+          sessionListEl.innerHTML = "";
+        }
+      };
+
+      const createLocalSession = () => {
+        const session = {
+          id: generateSessionId(),
+          title: generateDefaultSessionTitle(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          firstUserMessage: "",
+          isLegacy: false,
+        };
+        upsertSessionEntry(session);
+        sessionState.activeId = session.id;
+        renderSessionList();
         if (chatInput) {
-          chatInput.focus();
+          chatInput.value = "";
         }
+        renderEmptyState();
+        messages = [createSystemMessage()];
+        return session;
       };
 
-      const generateDefaultSessionTitle = () => {
-        const counter = sessionState.list.length + 1;
-        return `Nieuw gesprek ${counter}`;
-      };
-
-      const generateSessionTitleFromPrompt = (text) => {
-        if (!text) return "";
-        const sanitized = text
-          .trim()
-          .replace(/\s+/g, " ");
-        if (!sanitized) return "";
-        const normalized = sanitized.toLowerCase().replace(/[^a-z0-9\s]/gi, "");
-        const words = normalized.split(" ").filter(Boolean);
-        if (!words.length) return "";
-        const questionWords = ["wat", "hoe", "waarom", "wanneer", "welke", "wie", "waar", "kan", "mag", "is"];
-        const prefix = sanitized.includes("?") || questionWords.includes(words[0]) ? "vraag" : "chat";
-        const snippet = words.slice(0, 5).join(" ");
-        return `${prefix} ${snippet}`.trim();
-      };
-
-      const maybeUpdateSessionTitleFromPrompt = (session, text) => {
-        if (!session || session.hasCustomTitle) {
-          return;
+      const ensureActiveSessionId = () => {
+        if (sessionState.activeId) {
+          return sessionState.activeId;
         }
-        const generated = generateSessionTitleFromPrompt(text);
-        if (generated) {
-          session.title = generated;
-          session.hasCustomTitle = true;
+        const session = createLocalSession();
+        return session.id;
+      };
+
+      const saveMessageToSupabase = async (userId, sessionId, role, content) => {
+        const payloadSessionId = sessionId === LEGACY_SESSION_ID ? null : sessionId;
+        return supabaseClient.from("messages").insert([
+          {
+            user_id: userId,
+            session_id: payloadSessionId,
+            role,
+            message_text: content,
+          },
+        ]);
+      };
+
+      const refreshSessionsFromSupabase = async (options = {}) => {
+        const { goToLatest = false } = options;
+        const user = await requireAuthenticatedUser();
+        if (!user) return;
+        try {
+          const { data, error } = await supabaseClient
+            .from("messages")
+            .select("session_id, role, message_text, created_at")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: true });
+
+          if (error) {
+            throw error;
+          }
+
+          if (!data || !data.length) {
+            sessionState.list = [];
+            sessionState.activeId = null;
+            sessionState.untitledCount = 0;
+            renderSessionList();
+            renderEmptySessionMessage();
+            return;
+          }
+
+          const sessionMap = new Map();
+          data.forEach((entry) => {
+            const sessionId = entry.session_id || LEGACY_SESSION_ID;
+            const existing = sessionMap.get(sessionId);
+            if (!existing) {
+              sessionMap.set(sessionId, {
+                id: sessionId,
+                createdAt: entry.created_at,
+                updatedAt: entry.created_at,
+                firstUserMessage: entry.role === "user" ? entry.message_text : "",
+                isLegacy: !entry.session_id,
+              });
+            } else {
+              existing.updatedAt = entry.created_at;
+              if (!existing.firstUserMessage && entry.role === "user") {
+                existing.firstUserMessage = entry.message_text;
+              }
+            }
+          });
+
+          const derivedSessions = Array.from(sessionMap.values()).map((session, index) => ({
+            ...session,
+            title:
+              generateSessionTitleFromPrompt(session.firstUserMessage) ||
+              `Gesprek ${index + 1}`,
+          }));
+
+          derivedSessions.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+          sessionState.list = derivedSessions;
+          sessionState.untitledCount = derivedSessions.length;
+          const hasActiveSession = derivedSessions.some((session) => session.id === sessionState.activeId);
+          if (goToLatest || !sessionState.activeId || !hasActiveSession) {
+            sessionState.activeId = derivedSessions[0] ? derivedSessions[0].id : null;
+          }
+          renderSessionList();
+        } catch (error) {
+          console.error("Sessies ophalen mislukt", error);
           renderSessionList();
         }
       };
 
-      const createSession = (title = null) => {
-        const session = {
-          id: generateSessionId(),
-          title: title || generateDefaultSessionTitle(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          hasCustomTitle: Boolean(title),
-          messages: [],
-        };
-        sessionState.list.unshift(session);
-        sessionState.activeId = session.id;
-        persistSessions();
-        renderSessionList();
-        renderSessionMessages();
-        syncMessagesFromSession();
-        if (chatInput) {
-          chatInput.value = "";
-        }
-        return session;
-      };
-
-      const initializeSessionsForUser = (userId) => {
-        if (!userId) return;
-        const stored = loadStoredSessions(userId);
-        if (stored) {
-          sessionState.list = stored.list
-            .filter((session) => session && session.id && Array.isArray(session.messages))
-            .map((session, index) => ({
-              id: session.id || generateSessionId(),
-              title: session.title || `Gesprek ${index + 1}`,
-              createdAt: session.createdAt || new Date().toISOString(),
-              updatedAt: session.updatedAt || session.createdAt || new Date().toISOString(),
-              hasCustomTitle: Boolean(session.hasCustomTitle),
-              messages: session.messages,
-            }));
-          sessionState.activeId = stored.activeId || (sessionState.list[0] ? sessionState.list[0].id : null);
-        }
-        if (!sessionState.list.length) {
-          createSession();
+      const loadMessagesForSession = async (sessionId) => {
+        const user = await requireAuthenticatedUser();
+        if (!user || !sessionId || !chatLog) {
           return;
         }
-        if (!sessionState.activeId) {
-          sessionState.activeId = sessionState.list[0].id;
+        chatLog.innerHTML = "";
+        messages = [createSystemMessage()];
+        try {
+          const activeSession = sessionState.list.find((session) => session.id === sessionId);
+          let query = supabaseClient
+            .from("messages")
+            .select("role, message_text, created_at")
+            .eq("user_id", user.id);
+
+          if (activeSession && activeSession.isLegacy) {
+            query = query.is("session_id", null);
+          } else {
+            query = query.eq("session_id", sessionId);
+          }
+
+          const { data, error } = await query.order("created_at", { ascending: true });
+
+          if (error) {
+            throw error;
+          }
+
+          if (!data || !data.length) {
+            renderEmptyState();
+            return;
+          }
+
+          const history = [];
+          data.forEach((entry) => {
+            const normalizedRole = entry.role === "user" ? "user" : "assistant";
+            appendMessage(entry.message_text, normalizedRole, { persist: false });
+            history.push({ role: normalizedRole, content: entry.message_text });
+          });
+          messages = [createSystemMessage(), ...history];
+        } catch (error) {
+          console.error("Berichten ophalen mislukt", error);
+          appendMessage(
+            "Berichten konden niet geladen worden. Controleer je verbinding en probeer het opnieuw.",
+            "assistant",
+            { persist: false }
+          );
+        }
+      };
+
+      const setActiveSession = async (sessionId) => {
+        if (!sessionId) {
+          return;
+        }
+        if (sessionId !== sessionState.activeId) {
+          sessionState.activeId = sessionId;
         }
         renderSessionList();
-        renderSessionMessages();
-        syncMessagesFromSession();
-      };
-      const sessionListEl = document.getElementById("session-list");
-      const sessionEmptyEl = document.getElementById("session-empty");
-      const SESSION_STORAGE_PREFIX = "mathijs_sessions_";
-      const sessionState = {
-        list: [],
-        activeId: null,
-      };
-
-      const getSessionStorageKey = (userId) => `${SESSION_STORAGE_PREFIX}${userId}`;
-
-      const loadStoredSessions = (userId) => {
-        if (!userId) return null;
-        try {
-          const raw = localStorage.getItem(getSessionStorageKey(userId));
-          if (!raw) return null;
-          const parsed = JSON.parse(raw);
-          if (!parsed || !Array.isArray(parsed.list)) {
-            return null;
-          }
-          return {
-            list: parsed.list,
-            activeId: parsed.activeId || null,
-          };
-        } catch (error) {
-          console.error("Opgeslagen sessies konden niet geladen worden", error);
-          return null;
-        }
-      };
-
-      const persistSessions = () => {
-        if (!currentUser) return;
-        try {
-          localStorage.setItem(
-            getSessionStorageKey(currentUser.id),
-            JSON.stringify({
-              list: sessionState.list,
-              activeId: sessionState.activeId,
-            })
-          );
-        } catch (error) {
-          console.error("Sessies konden niet opgeslagen worden", error);
-        }
-      };
-
-      const generateSessionId = () => {
-        if (window.crypto && crypto.randomUUID) {
-          return crypto.randomUUID();
-        }
-        return `session-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-      };
-
-      const getActiveSession = () => {
-        if (!sessionState.activeId) return null;
-        return sessionState.list.find((session) => session.id === sessionState.activeId) || null;
+        await loadMessagesForSession(sessionId);
       };
 
       const updateProfileSidebar = (user) => {
@@ -1712,19 +1782,8 @@
         if (options.persist === false) {
           return;
         }
-        const activeSession = getActiveSession();
-        if (!activeSession) {
-          return;
-        }
-        activeSession.messages.push({ role, content });
-        activeSession.updatedAt = new Date().toISOString();
-        if (role === "user") {
-          maybeUpdateSessionTitleFromPrompt(activeSession, content);
-        }
-        bumpSessionToTop(activeSession.id);
-        persistSessions();
-        syncMessagesFromSession();
-        renderSessionList();
+        messages.push({ role, content });
+        updateSessionMetaAfterMessage(role, content);
       };
 
       const workspaceReady = (async () => {
@@ -1732,7 +1791,12 @@
         if (!user) {
           return null;
         }
-        initializeSessionsForUser(user.id);
+        await refreshSessionsFromSupabase({ goToLatest: true });
+        if (sessionState.activeId) {
+          await loadMessagesForSession(sessionState.activeId);
+        } else {
+          createLocalSession();
+        }
         return user;
       })();
 
@@ -1758,13 +1822,23 @@
           alert("Je moet ingelogd zijn om een bericht te sturen.");
           return;
         }
-        let activeSession = getActiveSession();
-        if (!activeSession) {
-          activeSession = createSession();
-        }
+        const sessionId = ensureActiveSessionId();
         appendMessage(value, "user");
         chatInput.value = "";
         chatInput.focus();
+
+        try {
+          const { error: userInsertError } = await saveMessageToSupabase(user.id, sessionId, "user", value);
+          if (userInsertError) {
+            throw userInsertError;
+          }
+        } catch (error) {
+          console.error("Gebruikersbericht opslaan mislukt", error);
+          appendMessage("Je bericht kon niet opgeslagen worden. Probeer het opnieuw.", "assistant");
+          await refreshSessionsFromSupabase();
+          await loadMessagesForSession(sessionId);
+          return;
+        }
 
         showThinkingIndicator();
 
@@ -1781,16 +1855,21 @@
             }),
           });
           const data = await response.json().catch(() => ({}));
-          if (!response.ok || data.error) {
-            throw new Error(data.error || "Er ging iets mis bij het ophalen van een antwoord.");
-          }
-          const content = (data.content || "").trim() || "Ik heb even geen antwoord. Probeer het later nog eens.";
-          appendMessage(content, "assistant");
-        } catch (error) {
-          console.error("Chat request failed", error);
-          appendMessage("De AI-request mislukte. Controleer je verbinding en probeer opnieuw.", "assistant");
-        } finally {
-          hideThinkingIndicator();
+            if (!response.ok || data.error) {
+              throw new Error(data.error || "Er ging iets mis bij het ophalen van een antwoord.");
+            }
+            const content = (data.content || "").trim() || "Ik heb even geen antwoord. Probeer het later nog eens.";
+            appendMessage(content, "assistant");
+            const { error: assistantInsertError } = await saveMessageToSupabase(user.id, sessionId, "assistant", content);
+            if (assistantInsertError) {
+              console.error("AI-antwoord opslaan mislukt", assistantInsertError);
+            }
+            await refreshSessionsFromSupabase();
+          } catch (error) {
+            console.error("Chat request failed", error);
+            appendMessage("De AI-request mislukte. Controleer je verbinding en probeer opnieuw.", "assistant");
+          } finally {
+            hideThinkingIndicator();
         }
       };
 
@@ -1807,7 +1886,7 @@
       if (newChatButton) {
         newChatButton.addEventListener("click", async () => {
           await workspaceReady;
-          createSession();
+          createLocalSession();
           if (chatInput) {
             chatInput.focus();
           }
