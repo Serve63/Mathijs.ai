@@ -1,3 +1,27 @@
+const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
+
+let cachedSupabaseClient = null;
+
+const initializeSupabaseClient = () => {
+  if (cachedSupabaseClient) {
+    return cachedSupabaseClient;
+  }
+  if (!window.supabase || typeof window.supabase.createClient !== "function") {
+    console.warn("Supabase library is niet beschikbaar op deze pagina.");
+    return null;
+  }
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.warn("Supabase configuratie ontbreekt, vul je URL en anon key in.");
+    return null;
+  }
+  cachedSupabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window.mathijsSupabase = cachedSupabaseClient;
+  return cachedSupabaseClient;
+};
+
+initializeSupabaseClient();
+
 const header = document.querySelector(".top-nav");
 const menuToggle = document.querySelector(".menu-toggle");
 const mobileNav = document.querySelector(".mobile-nav");

@@ -1372,45 +1372,13 @@
       const chatLog = document.querySelector(".chat-log");
       const chatInput = document.querySelector(".chat-input textarea");
       const sendButton = document.querySelector(".chat-input button");
-      const sessionListEl = document.getElementById("session-list");
-      const sessionEmptyEl = document.getElementById("session-empty");
       const newChatButton = document.querySelector(".new-chat");
       const profileNameEl = document.getElementById("profile-name");
       const profileEmailEl = document.getElementById("profile-email");
       const profileInitialsEl = document.querySelector(".profile-avatar__initials");
 
-      const syncMessagesFromSession = (session) => {
-        messages = [createSystemMessage()];
-        if (!session || !Array.isArray(session.messages)) {
-          return;
-        }
-        session.messages.forEach((message) => {
-          const normalizedRole = message.role === "system" ? "assistant" : message.role;
-          if (normalizedRole === "user" || normalizedRole === "assistant") {
-            messages.push({ role: normalizedRole, content: message.content });
-          }
-        });
-      };
-
       const supabaseClient = window.mathijsSupabase;
       let currentUser = null;
-      let sessions = [];
-      let activeSessionId = null;
-
-      const sessionsKey = () => (currentUser ? "mathijsai:sessions:" + currentUser.id : null);
-      const activeKey = () => (currentUser ? "mathijsai:sessions-active:" + currentUser.id : null);
-
-      const formatTimeAgo = (timestamp) => {
-        if (!timestamp) return "";
-        const diff = Date.now() - timestamp;
-        const minutes = Math.floor(diff / 60000);
-        if (minutes < 1) return "nu";
-        if (minutes < 60) return minutes + "m";
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return hours + "u";
-        const days = Math.floor(hours / 24);
-        return days + "d";
-      };
 
       const updateProfileSidebar = (user) => {
         if (!user) return;
@@ -1448,137 +1416,16 @@
         return "Goedeavond";
       };
 
-      const persistSessions = () => {
-        if (!currentUser) return;
-        localStorage.setItem(sessionsKey(), JSON.stringify(sessions));
-      };
-
-      const persistActiveSession = () => {
-        if (!currentUser) return;
-        if (activeSessionId) {
-          localStorage.setItem(activeKey(), activeSessionId);
-        } else {
-          localStorage.removeItem(activeKey());
-        }
-      };
-
-      const readSessions = () => {
-        if (!currentUser) return [];
-        try {
-          const raw = localStorage.getItem(sessionsKey());
-          const parsed = raw ? JSON.parse(raw) : [];
-          const storedActive = localStorage.getItem(activeKey());
-          if (storedActive && parsed.some((session) => session.id === storedActive)) {
-            activeSessionId = storedActive;
-          } else if (parsed.length) {
-            activeSessionId = parsed[0].id;
-          } else {
-            activeSessionId = null;
-          }
-          persistActiveSession();
-          return parsed;
-        } catch (error) {
-          console.error("Fout bij laden van sessies", error);
-          activeSessionId = null;
-          localStorage.removeItem(sessionsKey());
-          localStorage.removeItem(activeKey());
-          return [];
-        }
-      };
-
-      const renderSessions = () => {
-        if (!sessionListEl) return;
-        sessionListEl.innerHTML = "";
-        if (!sessions.length) {
-          if (sessionEmptyEl) {
-            sessionEmptyEl.style.display = "block";
-          }
-          return;
-        }
-        if (sessionEmptyEl) {
-          sessionEmptyEl.style.display = "none";
-        }
-        sessions.forEach((session) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "session" + (session.id === activeSessionId ? " is-active" : "");
-          button.dataset.sessionId = session.id;
-          const title = document.createElement("div");
-          title.textContent = session.title || "Nieuw gesprek";
-          const time = document.createElement("span");
-          time.textContent = formatTimeAgo(session.updatedAt);
-          button.appendChild(title);
-          button.appendChild(time);
-          sessionListEl.appendChild(button);
-        });
-      };
-
-      const renderActiveSession = () => {
+      const renderEmptyState = () => {
         if (!chatLog) return;
         chatLog.innerHTML = "";
-        hideThinkingIndicator();
-        if (!activeSessionId) {
-          syncMessagesFromSession(null);
-          const emptyState = document.createElement("div");
-          emptyState.className = "empty-state";
-          const greeting = document.createElement("h2");
-          greeting.className = "empty-hero__title";
-          greeting.textContent = `${getTimeGreeting()}, ${getGreetingName()}.`;
-          emptyState.appendChild(greeting);
-          chatLog.appendChild(emptyState);
-          return;
-        }
-        const session = sessions.find((item) => item.id === activeSessionId);
-        if (!session || !session.messages || !session.messages.length) {
-          syncMessagesFromSession(session);
-          const emptyState = document.createElement("div");
-          emptyState.className = "empty-state";
-          const greeting = document.createElement("h2");
-          greeting.className = "empty-hero__title";
-          greeting.textContent = `${getTimeGreeting()}, ${getGreetingName()}.`;
-          emptyState.appendChild(greeting);
-          chatLog.appendChild(emptyState);
-          return;
-        }
-        syncMessagesFromSession(session);
-        session.messages.forEach((message) => {
-          appendMessage(message.content, message.role, { persist: false });
-        });
-      };
-
-      const ensureActiveSession = () => {
-        if (activeSessionId) {
-          const session = sessions.find((item) => item.id === activeSessionId);
-          if (session) {
-            return session;
-          }
-        }
-        return createSession();
-      };
-
-      const createSession = (title = "Nieuw gesprek") => {
-        const session = {
-          id: window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : String(Date.now()),
-          title,
-          updatedAt: Date.now(),
-          messages: [],
-        };
-        sessions.unshift(session);
-        activeSessionId = session.id;
-        syncMessagesFromSession(session);
-        persistSessions();
-        persistActiveSession();
-        renderSessions();
-        renderActiveSession();
-        return session;
-      };
-
-      const setActiveSession = (sessionId) => {
-        if (!sessionId || sessionId === activeSessionId) return;
-        activeSessionId = sessionId;
-        persistActiveSession();
-        renderSessions();
-        renderActiveSession();
+        const emptyState = document.createElement("div");
+        emptyState.className = "empty-state";
+        const greeting = document.createElement("h2");
+        greeting.className = "empty-hero__title";
+        greeting.textContent = `${getTimeGreeting()}, ${getGreetingName()}.`;
+        emptyState.appendChild(greeting);
+        chatLog.appendChild(emptyState);
       };
 
       const clearEmptyState = () => {
@@ -1586,6 +1433,81 @@
         const empty = chatLog.querySelector(".empty-state");
         if (empty) {
           empty.remove();
+        }
+      };
+
+      const requireAuthenticatedUser = async () => {
+        if (!supabaseClient) {
+          alert("Supabase is niet beschikbaar. Log opnieuw in.");
+          return null;
+        }
+        if (currentUser) {
+          return currentUser;
+        }
+        const { data, error } = await supabaseClient.auth.getUser();
+        if (error || !data || !data.user) {
+          console.error("Geen actieve gebruiker gevonden", error);
+          alert("Je bent niet ingelogd. Log opnieuw in om je chat te bekijken.");
+          window.location.href = "login.html";
+          return null;
+        }
+        currentUser = data.user;
+        updateProfileSidebar(currentUser);
+        return currentUser;
+      };
+
+      const loadMessages = async () => {
+        const user = await requireAuthenticatedUser();
+        if (!user || !chatLog) {
+          return;
+        }
+        try {
+          const { data, error } = await supabaseClient
+            .from("messages")
+            .select("id, role, message_text, created_at")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: true });
+
+          chatLog.innerHTML = "";
+          messages = [createSystemMessage()];
+
+          if (error) {
+            console.error("Berichten ophalen mislukt", error);
+            appendMessage("Berichten konden niet geladen worden. Probeer het later opnieuw.", "assistant", { persist: false });
+            return;
+          }
+
+          if (!data || !data.length) {
+            renderEmptyState();
+            return;
+          }
+
+          const history = [];
+          data.forEach((entry) => {
+            const normalizedRole = entry.role === "user" ? "user" : "assistant";
+            appendMessage(entry.message_text, normalizedRole, { persist: false });
+            history.push({ role: normalizedRole, content: entry.message_text });
+          });
+          messages = [createSystemMessage(), ...history];
+        } catch (error) {
+          console.error("Onverwachte fout bij het laden van berichten", error);
+          appendMessage("Berichten konden niet geladen worden. Controleer je verbinding en probeer het opnieuw.", "assistant", { persist: false });
+        }
+      };
+
+      const resetConversation = async () => {
+        const user = await requireAuthenticatedUser();
+        if (!user) return;
+        try {
+          const { error } = await supabaseClient.from("messages").delete().eq("user_id", user.id);
+          if (error) {
+            throw error;
+          }
+          messages = [createSystemMessage()];
+          renderEmptyState();
+        } catch (error) {
+          console.error("Kon chatgeschiedenis niet wissen", error);
+          alert("Het leegmaken van de chat is niet gelukt. Probeer het opnieuw.");
         }
       };
 
@@ -1626,7 +1548,7 @@
       };
 
       const appendMessage = (content, role = "assistant", options = {}) => {
-        if (!chatLog) return;
+        if (!chatLog || !content) return;
         clearEmptyState();
         const article = document.createElement("article");
         article.className = "message " + (role === "user" ? "user" : "system");
@@ -1642,40 +1564,18 @@
         if (options.persist === false) {
           return;
         }
-        const session = ensureActiveSession();
-        if (!session) {
-          return;
-        }
-        const entry = { role, content, timestamp: Date.now() };
-        session.messages.push(entry);
-        session.updatedAt = Date.now();
-        if (role === "user" && session.messages.length === 1) {
-          session.title = content.length > 32 ? content.slice(0, 32) + "..." : content;
-        }
-        persistSessions();
-        renderSessions();
         if (role === "user" || role === "assistant") {
           messages.push({ role, content });
         }
       };
 
       const workspaceReady = (async () => {
-        if (!supabaseClient) {
-          console.error("Supabase client ontbreekt, redirect naar login.");
-          window.location.href = "login.html";
+        const user = await requireAuthenticatedUser();
+        if (!user) {
           return null;
         }
-        const { data, error } = await supabaseClient.auth.getSession();
-        if (error || !data.session) {
-          window.location.href = "login.html";
-          return null;
-        }
-        currentUser = data.session.user;
-        updateProfileSidebar(currentUser);
-        sessions = readSessions();
-        renderSessions();
-        renderActiveSession();
-        return currentUser;
+        await loadMessages();
+        return user;
       })();
 
       const sendMessage = async () => {
@@ -1695,9 +1595,34 @@
           return;
         }
 
+        const user = await requireAuthenticatedUser();
+        if (!user) {
+          alert("Je moet ingelogd zijn om een bericht te sturen.");
+          return;
+        }
+
         appendMessage(value, "user");
         chatInput.value = "";
         chatInput.focus();
+
+        try {
+          const { error: userMessageError } = await supabaseClient.from("messages").insert([
+            {
+              user_id: user.id,
+              role: "user",
+              message_text: value,
+            },
+          ]);
+          if (userMessageError) {
+            throw userMessageError;
+          }
+        } catch (error) {
+          console.error("Gebruikersbericht opslaan mislukt", error);
+          alert("Je bericht kon niet opgeslagen worden. Probeer het opnieuw.");
+          await loadMessages();
+          return;
+        }
+
         showThinkingIndicator();
 
         try {
@@ -1714,17 +1639,25 @@
           });
           const data = await response.json().catch(() => ({}));
           if (!response.ok || data.error) {
-            hideThinkingIndicator();
-            appendMessage("Er ging iets mis bij het ophalen van een antwoord. Probeer het later opnieuw.", "assistant");
-            return;
+            throw new Error(data.error || "Er ging iets mis bij het ophalen van een antwoord.");
           }
-          const content = (data.content || "").trim();
-          hideThinkingIndicator();
-          appendMessage(content || "Ik heb even geen antwoord. Probeer het later nog eens.", "assistant");
+          const content = (data.content || "").trim() || "Ik heb even geen antwoord. Probeer het later nog eens.";
+          appendMessage(content, "assistant");
+          const { error: assistantMessageError } = await supabaseClient.from("messages").insert([
+            {
+              user_id: user.id,
+              role: "assistant",
+              message_text: content,
+            },
+          ]);
+          if (assistantMessageError) {
+            console.error("AI-antwoord opslaan mislukt", assistantMessageError);
+          }
         } catch (error) {
           console.error("Chat request failed", error);
-          hideThinkingIndicator();
           appendMessage("De AI-request mislukte. Controleer je verbinding en probeer opnieuw.", "assistant");
+        } finally {
+          hideThinkingIndicator();
         }
       };
 
@@ -1741,24 +1674,15 @@
       if (newChatButton) {
         newChatButton.addEventListener("click", async () => {
           await workspaceReady;
-          createSession();
+          await resetConversation();
           if (chatInput) {
             chatInput.focus();
-          }
-        });
-      }
-
-      if (sessionListEl) {
-        sessionListEl.addEventListener("click", async (event) => {
-          const button = event.target.closest(".session");
-          if (!button) return;
-          await workspaceReady;
-          const sessionId = button.dataset.sessionId;
-          if (sessionId) {
-            setActiveSession(sessionId);
           }
         });
       }
     </script>
   </body>
 </html>
+
+
+
