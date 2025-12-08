@@ -1015,6 +1015,12 @@
       .chat-plus__item:hover {
         background: rgba(0, 0, 0, 0.05);
       }
+
+      .chat-plus__item.is-active {
+        background: rgba(255, 212, 0, 0.16);
+        font-weight: 700;
+        color: #1f1c18;
+      }
       
       .chat-disclaimer {
         margin: 0;
@@ -1481,6 +1487,9 @@
           event.stopPropagation();
           webSearchEnabled = !webSearchEnabled;
           webSearchState.textContent = webSearchEnabled ? "Web zoeken aan" : "Web zoeken uit";
+          webSearchState.style.fontWeight = webSearchEnabled ? "700" : "400";
+          webSearchState.style.color = webSearchEnabled ? "#1f1c18" : "#5f574f";
+          toggleWebSearch.classList.toggle("is-active", webSearchEnabled);
           chatPlusMenu.classList.remove("is-open");
           chatPlus.setAttribute("aria-expanded", "false");
         });
