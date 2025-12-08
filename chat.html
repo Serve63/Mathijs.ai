@@ -114,6 +114,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 6px;
       }
 
       .session:hover {
@@ -129,6 +130,80 @@
       .session span {
         color: var(--chat-muted);
         font-size: 0.72rem;
+      }
+
+      .session-title {
+        flex: 1;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .session-menu {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .session-menu:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      .session-menu__icon {
+        width: 16px;
+        height: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #1a1a1f;
+      }
+
+      .session-actions {
+        position: absolute;
+        top: 110%;
+        right: 0;
+        min-width: 160px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 18px 40px -24px rgba(16, 21, 32, 0.35);
+        border: 1px solid rgba(16, 21, 32, 0.08);
+        display: none;
+        flex-direction: column;
+        padding: 6px;
+        z-index: 30;
+      }
+
+      .session-actions.is-open {
+        display: flex;
+      }
+
+      .session-actions button {
+        border: none;
+        background: transparent;
+        padding: 8px 10px;
+        border-radius: 10px;
+        text-align: left;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .session-actions button:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      .session-actions button.danger {
+        color: #c92c2c;
       }
 
       .session-empty {
@@ -1444,7 +1519,66 @@
           const button = document.createElement("button");
           button.type = "button";
           button.className = `session${session.id === sessionState.activeId ? " is-active" : ""}`;
-          button.textContent = session.title;
+          const titleSpan = document.createElement("span");
+          titleSpan.className = "session-title";
+          titleSpan.textContent = getDisplayTitle(session);
+
+          const menuButton = document.createElement("button");
+          menuButton.type = "button";
+          menuButton.className = "session-menu";
+          menuButton.setAttribute("aria-label", "Sessiemenu");
+          menuButton.innerHTML = `<span class="session-menu__icon">⋯</span>`;
+
+          const actions = document.createElement("div");
+          actions.className = "session-actions";
+          actions.innerHTML = `
+            <button type="button" class="rename-session">Naam wijzigen</button>
+            <button type="button" class="share-session">Delen</button>
+            <button type="button" class="delete-session danger">Verwijderen</button>
+          `;
+
+          menuButton.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const isOpen = actions.classList.contains("is-open");
+            document.querySelectorAll(".session-actions.is-open").forEach((el) => el.classList.remove("is-open"));
+            if (!isOpen) actions.classList.add("is-open");
+          });
+
+          actions.querySelector(".rename-session").addEventListener("click", (event) => {
+            event.stopPropagation();
+            actions.classList.remove("is-open");
+            const newTitle = prompt("Nieuwe naam voor dit gesprek:", getDisplayTitle(session));
+            if (newTitle && newTitle.trim()) {
+              const trimmed = newTitle.trim();
+              titleOverrides[session.id] = trimmed;
+              saveTitleOverride(currentUser?.id || "anon", session.id, trimmed);
+              session.title = trimmed;
+              renderSessionList();
+            }
+          });
+
+          actions.querySelector(".delete-session").addEventListener("click", async (event) => {
+            event.stopPropagation();
+            actions.classList.remove("is-open");
+            const confirmDelete = confirm("Weet je zeker dat je dit gesprek wilt verwijderen?");
+            if (!confirmDelete) return;
+            await deleteSession(session.id, session.isLegacy);
+          });
+
+          actions.querySelector(".share-session").addEventListener("click", async (event) => {
+            event.stopPropagation();
+            actions.classList.remove("is-open");
+            const shareText = `${window.location.origin}/chat.html?session=${session.id}`;
+            try {
+              await navigator.clipboard.writeText(shareText);
+              alert("Link gekopieerd naar klembord.");
+            } catch (e) {
+              alert("Kon link niet kopiëren. Kopieer handmatig:\n" + shareText);
+            }
+          });
+
+          document.addEventListener("click", () => actions.classList.remove("is-open"));
+
           button.setAttribute("data-session-id", session.id);
           button.addEventListener("click", async () => {
             await setActiveSession(session.id);
@@ -1452,6 +1586,10 @@
               chatInput.focus();
             }
           });
+
+          button.appendChild(titleSpan);
+          button.appendChild(menuButton);
+          button.appendChild(actions);
           sessionListEl.appendChild(button);
         });
       };
@@ -1487,6 +1625,53 @@
         if (sessionListEl) {
           sessionListEl.innerHTML = "";
         }
+      };
+
+      const SESSION_TITLE_KEY = "mathijs_session_titles_v1";
+      const loadTitleOverrides = (userId) => {
+        try {
+          const raw = localStorage.getItem(SESSION_TITLE_KEY);
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          return parsed[userId] || {};
+        } catch (e) {
+          console.warn("Kon sessietitels niet laden", e);
+          return {};
+        }
+      };
+
+      const saveTitleOverride = (userId, sessionId, title) => {
+        try {
+          const raw = localStorage.getItem(SESSION_TITLE_KEY);
+          const parsed = raw ? JSON.parse(raw) : {};
+          parsed[userId] = parsed[userId] || {};
+          parsed[userId][sessionId] = title;
+          localStorage.setItem(SESSION_TITLE_KEY, JSON.stringify(parsed));
+        } catch (e) {
+          console.warn("Kon sessietitel niet opslaan", e);
+        }
+      };
+
+      const deleteTitleOverride = (userId, sessionId) => {
+        try {
+          const raw = localStorage.getItem(SESSION_TITLE_KEY);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (parsed[userId]) {
+            delete parsed[userId][sessionId];
+            localStorage.setItem(SESSION_TITLE_KEY, JSON.stringify(parsed));
+          }
+        } catch (e) {
+          console.warn("Kon sessietitel niet verwijderen", e);
+        }
+      };
+
+      let titleOverrides = {};
+
+      const getDisplayTitle = (session) => {
+        if (!session) return "";
+        if (titleOverrides[session.id]) return titleOverrides[session.id];
+        return session.title || "Gesprek";
       };
 
       const createLocalSession = () => {
@@ -1527,6 +1712,27 @@
             message_text: content,
           },
         ]);
+      };
+
+      const deleteSession = async (sessionId, isLegacy) => {
+        const user = await requireAuthenticatedUser();
+        if (!user) return;
+        try {
+          let query = supabaseClient.from("messages").delete().eq("user_id", user.id);
+          query = isLegacy ? query.is("session_id", null) : query.eq("session_id", sessionId);
+          const { error } = await query;
+          if (error) {
+            throw error;
+          }
+        } catch (err) {
+          console.error("Verwijderen van sessie mislukt", err);
+          alert("Kon het gesprek niet verwijderen. Probeer later opnieuw.");
+          return;
+        }
+        deleteTitleOverride(user.id, sessionId);
+        titleOverrides = loadTitleOverrides(user.id);
+        await refreshSessionsFromSupabase({ goToLatest: true });
+        renderEmptyState();
       };
 
       const refreshSessionsFromSupabase = async (options = {}) => {
@@ -1581,6 +1787,7 @@
           const derivedSessions = Array.from(sessionMap.values()).map((session, index) => ({
             ...session,
             title:
+              titleOverrides[session.id] ||
               generateSessionTitleFromPrompt(session.firstUserMessage) ||
               `Gesprek ${index + 1}`,
           }));
@@ -1731,6 +1938,7 @@
           return null;
         }
         currentUser = data.user;
+        titleOverrides = loadTitleOverrides(currentUser.id);
         updateProfileSidebar(currentUser);
         return currentUser;
       };
