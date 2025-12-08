@@ -1,18 +1,18 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 :root {
-  --sand: #f8f7f4;
+  --sand: #fffaf0;
   --text: #1f1c18;
-  --accent: #f45b23;
-  --accent-dark: #c7430b;
+  --accent: #1f6feb;
+  --accent-dark: #174ea6;
   --amber: #ffe172;
   --muted: #5f574f;
   --card: #ffffff;
   --border: rgba(17, 14, 9, 0.08);
   --shadow: 0 18px 45px rgba(15, 11, 6, 0.12);
-  --gradient: radial-gradient(circle at 20% 20%, rgba(255, 225, 114, 0.35), transparent 45%),
-    radial-gradient(circle at 80% 0%, rgba(244, 91, 35, 0.18), transparent 40%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(248, 247, 244, 0.9));
+  --gradient: radial-gradient(circle at 20% 20%, rgba(255, 225, 114, 0.4), transparent 50%),
+    radial-gradient(circle at 82% 0%, rgba(31, 111, 235, 0.18), transparent 45%),
+    linear-gradient(180deg, rgba(255, 253, 243, 0.92), rgba(248, 247, 244, 0.94));
 }
 
 *,
@@ -28,8 +28,8 @@ body {
   color: var(--text);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  background-image: radial-gradient(circle at 10% 20%, rgba(244, 91, 35, 0.05), transparent 35%),
-    radial-gradient(circle at 80% 0%, rgba(255, 225, 114, 0.08), transparent 40%);
+  background-image: radial-gradient(circle at 12% 18%, rgba(255, 225, 114, 0.28), transparent 38%),
+    radial-gradient(circle at 82% 4%, rgba(31, 111, 235, 0.12), transparent 42%);
 }
 
 img {
@@ -105,7 +105,7 @@ section {
 .btn.primary {
   background: var(--accent);
   color: #fff;
-  box-shadow: 0 15px 35px rgba(244, 91, 35, 0.35);
+  box-shadow: 0 15px 35px rgba(31, 111, 235, 0.35);
 }
 
 .btn.primary:hover {
@@ -130,7 +130,7 @@ section {
 }
 
 .btn.ghost:hover {
-  background: rgba(244, 91, 35, 0.1);
+  background: rgba(31, 111, 235, 0.1);
 }
 
 .site-header {
@@ -147,7 +147,7 @@ section {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(244, 91, 35, 0.06), transparent 30%, rgba(255, 225, 114, 0.08));
+  background: linear-gradient(90deg, rgba(31, 111, 235, 0.08), transparent 30%, rgba(255, 225, 114, 0.12));
   pointer-events: none;
 }
 
@@ -187,7 +187,7 @@ section {
 
 .main-nav a:hover {
   color: var(--text);
-  background: rgba(244, 91, 35, 0.08);
+  background: rgba(31, 111, 235, 0.08);
   transform: translateY(-1px);
 }
 
@@ -242,7 +242,7 @@ section {
   position: absolute;
   width: 420px;
   height: 420px;
-  background: radial-gradient(circle, rgba(244, 91, 35, 0.18), transparent 55%);
+  background: radial-gradient(circle, rgba(31, 111, 235, 0.22), transparent 55%);
   top: -80px;
   right: -60px;
   filter: blur(6px);
@@ -283,7 +283,7 @@ section {
   padding: 10px 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(244, 91, 35, 0.15);
+  border: 1px solid rgba(31, 111, 235, 0.18);
   box-shadow: 0 10px 26px rgba(15, 11, 6, 0.08);
   margin-bottom: 10px;
   backdrop-filter: blur(6px);
@@ -555,7 +555,7 @@ section {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f45b23, #f6c74d);
+  background: linear-gradient(135deg, #1f6feb, #ffd54f);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -624,7 +624,7 @@ summary::-webkit-details-marker {
 }
 
 .cta-banner {
-  background: linear-gradient(120deg, #f45b23, #f6c74d);
+  background: linear-gradient(120deg, #1f6feb, #ffd54f);
   color: #1b1005;
 }
 
@@ -674,9 +674,9 @@ summary::-webkit-details-marker {
 
 .auth-body {
   min-height: 100vh;
-  background: radial-gradient(circle at 20% 20%, rgba(255, 225, 114, 0.3), transparent 35%),
-    radial-gradient(circle at 80% 0%, rgba(244, 91, 35, 0.12), transparent 35%),
-    #fffef8;
+  background: radial-gradient(circle at 20% 20%, rgba(255, 225, 114, 0.35), transparent 38%),
+    radial-gradient(circle at 82% 6%, rgba(31, 111, 235, 0.14), transparent 38%),
+    #fffaf0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -773,8 +773,8 @@ summary::-webkit-details-marker {
 
 .auth-form input:focus {
   outline: none;
-  border-color: rgba(244, 91, 35, 0.6);
-  box-shadow: 0 0 0 4px rgba(244, 91, 35, 0.12);
+  border-color: rgba(31, 111, 235, 0.6);
+  box-shadow: 0 0 0 4px rgba(31, 111, 235, 0.12);
 }
 
 .full-width {
