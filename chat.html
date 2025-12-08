@@ -752,14 +752,18 @@
 
       .message {
         display: flex;
-        max-width: 780px;
+        max-width: 100%;
+        align-items: flex-start;
+        background: transparent;
+        padding: 0;
+        margin: 0 0 16px 0;
       }
 
       .message.user {
         align-self: flex-end;
       }
 
-      .bubble {
+      .chat-log .bubble {
         padding: 0;
         border-radius: 0;
         border: none;
@@ -770,7 +774,7 @@
         box-shadow: none;
       }
 
-      .message.user .bubble {
+      .chat-log .message.user .bubble {
         background: transparent;
         border: none;
         color: #1f1c18;
