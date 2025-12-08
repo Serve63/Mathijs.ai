@@ -733,6 +733,11 @@
         gap: 14px;
         align-items: center;
         background: var(--chat-bg);
+        scrollbar-width: none; /* Firefox */
+      }
+
+      .chat-log::-webkit-scrollbar {
+        display: none;
       }
 
       .chat-log .empty-state {
