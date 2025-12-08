@@ -4,171 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mathijs.ai | Login</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
     <link rel="stylesheet" href="styles.css" />
-    <style>
-      body {
-        background: linear-gradient(160deg, rgba(255, 244, 147, 0.45), rgba(255, 255, 255, 0.9));
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 40px 16px;
-      }
-
-      .login-card {
-        width: min(420px, 100%);
-        background: rgba(255, 255, 255, 0.92);
-        border-radius: 28px;
-        padding: 40px 44px;
-        box-shadow: 0 34px 85px -52px rgba(16, 21, 32, 0.65);
-        border: 1px solid rgba(16, 21, 32, 0.08);
-        display: flex;
-        flex-direction: column;
-        gap: 28px;
-      }
-
-      .login-card .logo {
-        font-size: 1.18rem;
-        align-self: center;
-        justify-content: center;
-        gap: 12px;
-      }
-
-      .login-card .logo__image {
-        width: 68px;
-        height: 68px;
-        transform: translateY(-16px);
-      }
-
-      .login-card h1 {
-        margin: 0;
-        text-align: center;
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 1.9rem;
-        letter-spacing: -0.01em;
-      }
-
-      .login-card p {
-        margin: 0;
-        color: #4a4a54;
-        text-align: center;
-        font-size: 0.95rem;
-      }
-
-      .login-card form {
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-      }
-
-      .login-card label {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        font-size: 0.9rem;
-        color: #4a4a54;
-      }
-
-      .login-card input {
-        border-radius: 12px;
-        border: 1px solid rgba(16, 21, 32, 0.12);
-        padding: 12px 14px;
-        font-size: 0.96rem;
-        font-family: "IBM Plex Sans", sans-serif;
-        color: #1a1a1f;
-        background: rgba(255, 255, 255, 0.95);
-      }
-
-      .login-card button {
-        border-radius: 999px;
-        padding: 14px 24px;
-        font-weight: 600;
-        font-size: 0.98rem;
-        cursor: pointer;
-        transition: background 0.2s ease, transform 0.2s ease;
-      }
-
-      .login-card button[type="submit"] {
-        border: 1px solid rgba(16, 21, 32, 0.12);
-        background: #ffffff;
-        color: #1a1a1f;
-        box-shadow: 0 1px 0 rgba(16, 21, 32, 0.04);
-      }
-
-      .login-card button[type="submit"]:hover {
-        background: rgba(255, 255, 255, 0.9);
-        transform: translateY(-1px);
-      }
-
-      .login-meta {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.82rem;
-        color: #6c6c76;
-      }
-
-      .login-meta a {
-        color: #6c6c76;
-      }
-
-      .login-meta a:hover {
-        color: #9c8500;
-      }
-
-      .form-feedback {
-        min-height: 18px;
-        text-align: center;
-        font-size: 0.88rem;
-      }
-
-      .form-feedback.error {
-        color: #c0392b;
-      }
-
-      .form-feedback.success {
-        color: #1a7f37;
-      }
-
-      .login-card button:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-      }
-
-      @media (max-width: 480px) {
-        body {
-          padding: 24px 12px;
-        }
-
-        .login-card {
-          padding: 32px 24px;
-        }
-      }
-    </style>
   </head>
-  <body>
-    <div class="login-card">
-      <div class="logo" aria-label="Mathijs dot AI">
-        <img class="logo__image" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
-        <span class="logo__text">
-          <span class="logo__word">MATHIJS</span>
-          <span class="logo__suffix">.AI</span>
-        </span>
-      </div>
-      <h1>Log in op Mathijs.ai</h1>
-      <p>Gebruik je zakelijk e-mailadres en wachtwoord om toegang te krijgen tot het platform.</p>
-      <form id="login-form" novalidate>
-        <label>
-          Zakelijk e-mail
+  <body class="auth-body">
+    <div class="auth-shell">
+      <div class="auth-card">
+        <div class="auth-brand" aria-label="Mathijs dot AI">
+          <img class="auth-avatar" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
+          <div class="auth-brand-text">
+            <span class="auth-brand-word">MATHIJS</span>
+            <span class="auth-brand-dot">.AI</span>
+          </div>
+        </div>
+        <div class="auth-headline">
+          <p class="eyebrow">Welkom terug</p>
+          <h1>Log in op Mathijs.ai</h1>
+          <p class="auth-sub">
+            Gebruik je zakelijk e-mailadres en wachtwoord om toegang te krijgen tot het platform.
+          </p>
+        </div>
+        <form id="login-form" class="auth-form" novalidate>
+          <label for="login-email">Zakelijk e-mail</label>
           <input id="login-email" name="email" type="email" placeholder="naam@bedrijf.com" required />
-        </label>
-        <label>
-          Wachtwoord
+
+          <label for="login-password">Wachtwoord</label>
           <input
             id="login-password"
             name="password"
@@ -177,13 +36,14 @@
             required
             minlength="6"
           />
-        </label>
-        <button type="submit" id="login-button">Inloggen</button>
-      </form>
-      <p class="form-feedback" id="login-feedback" aria-live="polite"></p>
-      <div class="login-meta">
-        <a href="#">Wachtwoord vergeten?</a>
-        <a href="signup.html">Aanvragen voor toegang</a>
+
+          <button type="submit" id="login-button" class="btn primary full-width">Inloggen</button>
+        </form>
+        <p class="form-feedback" id="login-feedback" aria-live="polite"></p>
+        <div class="auth-meta">
+          <a href="#">Wachtwoord vergeten?</a>
+          <a href="signup.html">Aanvragen voor toegang</a>
+        </div>
       </div>
     </div>
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
