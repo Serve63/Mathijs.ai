@@ -94,6 +94,18 @@
     const confirmInput = signupForm.querySelector("#signup-confirm");
     const feedbackEl = document.querySelector("#signup-feedback");
     const submitButton = signupForm.querySelector('button[type="submit"]');
+    const upsertProfile = async (userId, email) => {
+      try {
+        const { error } = await supabase
+          .from("profiles")
+          .upsert({ id: userId, email, plan: "free", updated_at: new Date().toISOString() }, { onConflict: "id" });
+        if (error) {
+          console.warn("Profile upsert warning", error);
+        }
+      } catch (err) {
+        console.warn("Profile upsert failed (ignored)", err);
+      }
+    };
 
     signupForm.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -122,7 +134,7 @@
 
       toggleButtonLoading(submitButton, true, "Account aanmaken...");
       try {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -138,12 +150,27 @@
           return;
         }
 
-        setFeedback(
-          feedbackEl,
-          "Account aangemaakt! Controleer je inbox voor bevestiging en log daarna in.",
-          "success"
-        );
+        const userId = data?.user?.id;
+        if (userId) {
+          await upsertProfile(userId, email);
+        }
+
+        // Direct inloggen zodat de gebruiker meteen kan starten.
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        if (loginError) {
+          console.error("Auto-login na signup mislukt", loginError);
+          setFeedback(
+            feedbackEl,
+            "Account aangemaakt. Check je mail voor bevestiging en log daarna in.",
+            "success"
+          );
+          signupForm.reset();
+          return;
+        }
+
+        setFeedback(feedbackEl, "Account aangemaakt! Je wordt doorgestuurd...", "success");
         signupForm.reset();
+        window.location.href = "dashboard.html?next=chat";
       } catch (err) {
         console.error("Onverwachte fout tijdens signup", err);
         setFeedback(feedbackEl, "Er ging iets mis, probeer het opnieuw.");
