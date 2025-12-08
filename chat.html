@@ -469,6 +469,15 @@
         text-align: center;
       }
 
+      body {
+        overflow-y: auto;
+        scrollbar-width: none; /* Firefox */
+      }
+
+      body::-webkit-scrollbar {
+        display: none;
+      }
+
       .chat-main {
         display: grid;
         grid-template-rows: auto 1fr auto;
@@ -477,12 +486,6 @@
         min-height: 100vh;
         row-gap: 0;
         padding: 0 12px 32px;
-        overflow-y: auto;
-        scrollbar-width: none; /* Firefox */
-      }
-
-      .chat-main::-webkit-scrollbar {
-        display: none;
       }
 
       .chat-log,
