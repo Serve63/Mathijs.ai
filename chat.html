@@ -1772,6 +1772,20 @@
         thinkingIndicator = null;
       };
 
+      const formatMessageContent = (text) => {
+        if (!text) return "";
+        const escapeHtml = (value) =>
+          value
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        const escaped = escapeHtml(text);
+        const withBold = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+        return withBold.replace(/\n/g, "<br>");
+      };
+
       const appendMessage = (content, role = "assistant", options = {}) => {
         if (!chatLog || !content) return;
         clearEmptyState();
@@ -1780,7 +1794,7 @@
 
         const bubble = document.createElement("div");
         bubble.className = "bubble";
-        bubble.textContent = content;
+        bubble.innerHTML = formatMessageContent(content);
 
         article.appendChild(bubble);
         chatLog.appendChild(article);
