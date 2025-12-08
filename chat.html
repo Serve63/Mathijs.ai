@@ -1537,7 +1537,7 @@
             .from("messages")
             .select("session_id, role, message_text, created_at")
             .eq("user_id", user.id)
-            .order("created_at", { ascending: true });
+            .order("created_at", { ascending: false });
 
           if (error) {
             throw error;
@@ -1555,17 +1555,22 @@
           const sessionMap = new Map();
           data.forEach((entry) => {
             const sessionId = entry.session_id || LEGACY_SESSION_ID;
+            const createdAt = entry.created_at;
             const existing = sessionMap.get(sessionId);
             if (!existing) {
               sessionMap.set(sessionId, {
                 id: sessionId,
-                createdAt: entry.created_at,
-                updatedAt: entry.created_at,
+                createdAt,
+                updatedAt: createdAt,
                 firstUserMessage: entry.role === "user" ? entry.message_text : "",
                 isLegacy: !entry.session_id,
               });
             } else {
-              existing.updatedAt = entry.created_at;
+              // Data is sorted newest->oldest; preserve earliest createdAt and latest updatedAt
+              existing.updatedAt = existing.updatedAt || createdAt;
+              if (!existing.createdAt || new Date(createdAt) < new Date(existing.createdAt)) {
+                existing.createdAt = createdAt;
+              }
               if (!existing.firstUserMessage && entry.role === "user") {
                 existing.firstUserMessage = entry.message_text;
               }
@@ -1595,19 +1600,20 @@
 
       const loadMessagesForSession = async (sessionId) => {
         const user = await requireAuthenticatedUser();
-        if (!user || !sessionId || !chatLog) {
+        const activeSession = sessionState.list.find((session) => session.id === sessionId);
+        if (!user || !sessionId || !chatLog || !activeSession) {
+          renderEmptyState();
           return;
         }
         chatLog.innerHTML = "";
         messages = [createSystemMessage()];
         try {
-          const activeSession = sessionState.list.find((session) => session.id === sessionId);
           let query = supabaseClient
             .from("messages")
             .select("role, message_text, created_at")
             .eq("user_id", user.id);
 
-          if (activeSession && activeSession.isLegacy) {
+          if (activeSession.isLegacy) {
             query = query.is("session_id", null);
           } else {
             query = query.eq("session_id", sessionId);
