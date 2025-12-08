@@ -104,45 +104,42 @@
         padding-right: 4px;
       }
 
-      .session {
+      .session-row {
         padding: 8px 10px;
         border-radius: 8px;
-        background: transparent;
-        border: none;
-        color: #1a1a1f;
-        font-size: 0.85rem;
         display: flex;
-        justify-content: space-between;
         align-items: center;
         gap: 6px;
+        background: transparent;
+        transition: background 0.2s ease;
       }
 
-      .session:hover {
+      .session-row:hover {
         background: rgba(255, 212, 0, 0.16);
-        border-radius: 8px;
       }
 
-      .session.is-active {
+      .session-row.is-active {
         background: rgba(255, 212, 0, 0.24);
         font-weight: 600;
       }
 
-      .session span {
-        color: var(--chat-muted);
-        font-size: 0.72rem;
-      }
-
-      .session-title {
+      .session-select {
         flex: 1;
         text-align: left;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        border: none;
+        background: transparent;
+        padding: 0;
+        color: #1a1a1f;
+        font-size: 0.85rem;
+        cursor: pointer;
       }
 
       .session-menu {
         position: relative;
-        display: inline-flex;
+        display: none;
         align-items: center;
         justify-content: center;
         width: 26px;
@@ -151,6 +148,10 @@
         border-radius: 6px;
         background: transparent;
         cursor: pointer;
+      }
+
+      .session-row.is-active .session-menu {
+        display: inline-flex;
       }
 
       .session-menu:hover {
@@ -1516,12 +1517,14 @@
           sessionEmptyEl.style.display = "none";
         }
         sessionState.list.forEach((session) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = `session${session.id === sessionState.activeId ? " is-active" : ""}`;
-          const titleSpan = document.createElement("span");
-          titleSpan.className = "session-title";
-          titleSpan.textContent = getDisplayTitle(session);
+          const row = document.createElement("div");
+          row.className = `session-row${session.id === sessionState.activeId ? " is-active" : ""}`;
+          row.setAttribute("data-session-id", session.id);
+
+          const selectBtn = document.createElement("button");
+          selectBtn.type = "button";
+          selectBtn.className = "session-select";
+          selectBtn.textContent = getDisplayTitle(session);
 
           const menuButton = document.createElement("button");
           menuButton.type = "button";
@@ -1537,11 +1540,23 @@
             <button type="button" class="delete-session danger">Verwijderen</button>
           `;
 
+          const closeAllMenus = () => {
+            document.querySelectorAll(".session-actions.is-open").forEach((el) => el.classList.remove("is-open"));
+          };
+
           menuButton.addEventListener("click", (event) => {
             event.stopPropagation();
             const isOpen = actions.classList.contains("is-open");
-            document.querySelectorAll(".session-actions.is-open").forEach((el) => el.classList.remove("is-open"));
+            closeAllMenus();
             if (!isOpen) actions.classList.add("is-open");
+          });
+
+          selectBtn.addEventListener("click", async () => {
+            await setActiveSession(session.id);
+            closeAllMenus();
+            if (chatInput) {
+              chatInput.focus();
+            }
           });
 
           actions.querySelector(".rename-session").addEventListener("click", (event) => {
@@ -1577,20 +1592,12 @@
             }
           });
 
-          document.addEventListener("click", () => actions.classList.remove("is-open"));
+          document.addEventListener("click", closeAllMenus);
 
-          button.setAttribute("data-session-id", session.id);
-          button.addEventListener("click", async () => {
-            await setActiveSession(session.id);
-            if (chatInput) {
-              chatInput.focus();
-            }
-          });
-
-          button.appendChild(titleSpan);
-          button.appendChild(menuButton);
-          button.appendChild(actions);
-          sessionListEl.appendChild(button);
+          row.appendChild(selectBtn);
+          row.appendChild(menuButton);
+          row.appendChild(actions);
+          sessionListEl.appendChild(row);
         });
       };
 
