@@ -112,6 +112,7 @@
         gap: 6px;
         background: transparent;
         transition: background 0.2s ease;
+        position: relative;
       }
 
       .session-row:hover {
@@ -1590,6 +1591,10 @@
             } catch (e) {
               alert("Kon link niet kopiëren. Kopieer handmatig:\n" + shareText);
             }
+          });
+
+          actions.addEventListener("click", (event) => {
+            event.stopPropagation();
           });
 
           document.addEventListener("click", closeAllMenus);
