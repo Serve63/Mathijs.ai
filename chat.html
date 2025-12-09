@@ -1032,9 +1032,25 @@
         color: #0b6bff;
         font-weight: 600;
         font-size: 0.9rem;
+        position: relative;
       }
 
       .chat-search-pill.visible {
+        display: inline-flex;
+      }
+
+      .chat-search-pill .close-icon {
+        display: none;
+        width: 16px;
+        height: 16px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: #0b6bff;
+        cursor: pointer;
+      }
+
+      .chat-search-pill:hover .close-icon {
         display: inline-flex;
       }
       
@@ -1287,6 +1303,7 @@
                   <line x1="16" y1="16" x2="20" y2="20" />
                 </svg>
                 <span>Zoek</span>
+                <span class="close-icon" id="chat-search-close" aria-label="Web zoeken uit">✕</span>
               </span>
               <textarea placeholder="Stuur een bericht" rows="1"></textarea>
               <button type="button" aria-label="Stuur bericht">
@@ -1317,6 +1334,7 @@
       const toggleWebSearch = document.getElementById("toggle-web-search");
       const webSearchState = document.getElementById("web-search-state");
       const chatSearchIndicator = document.getElementById("chat-search-indicator");
+      const chatSearchClose = document.getElementById("chat-search-close");
       let connectTimeout;
       const selectionState = {};
       const createSystemMessage = () => ({
@@ -1519,6 +1537,18 @@
           }
           chatPlusMenu.classList.remove("is-open");
           chatPlus.setAttribute("aria-expanded", "false");
+        });
+      }
+
+      if (chatSearchClose) {
+        chatSearchClose.addEventListener("click", (event) => {
+          event.stopPropagation();
+          webSearchEnabled = false;
+          webSearchState.textContent = "Web zoeken uit";
+          webSearchState.style.fontWeight = "400";
+          webSearchState.style.color = "#5f574f";
+          toggleWebSearch?.classList.remove("is-active");
+          chatSearchIndicator?.classList.remove("visible");
         });
       }
 
