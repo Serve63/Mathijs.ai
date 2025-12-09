@@ -993,8 +993,9 @@
         padding: 8px;
         display: none;
         z-index: 40;
-        gap: 4px;
+        gap: 6px;
         flex-direction: column;
+        overflow: hidden;
       }
 
       .chat-plus__menu.is-open {
@@ -1011,8 +1012,12 @@
         cursor: pointer;
         font-size: 0.95rem;
         display: flex;
-        align-items: flex-start;
-        gap: 8px;
+        align-items: center;
+        gap: 10px;
+        white-space: normal;
+        word-break: break-word;
+        min-height: 44px;
+        transition: background 0.15s ease;
       }
 
       .chat-plus__item-body {
@@ -1026,16 +1031,21 @@
         color: #6b6b75;
         font-weight: 400;
         font-size: 0.82rem;
+        line-height: 1.2;
       }
 
-      .chat-plus__item .icon {
+      .chat-plus__item:hover {
+        background: #f7f7f8;
+      }
+
+      .chat-plus__item .chat-plus__icon {
         width: 22px;
         height: 22px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
-        line-height: 1;
+        color: #1c1c1c;
+        flex-shrink: 0;
       }
 
       .chat-plus__item .arrow {
@@ -1048,6 +1058,7 @@
         position: absolute;
         top: 0;
         left: 100%;
+        margin-left: 8px;
         min-width: 240px;
         max-width: 300px;
         background: rgba(255, 255, 255, 0.98);
@@ -1057,8 +1068,9 @@
         padding: 8px;
         display: none;
         z-index: 45;
-        gap: 4px;
+        gap: 6px;
         flex-direction: column;
+        overflow: hidden;
       }
 
       .chat-plus__submenu.is-open {
@@ -1346,42 +1358,79 @@
                 <span>+</span>
                 <div class="chat-plus__menu" id="chat-plus-menu">
                   <button type="button" class="chat-plus__item" id="action-upload">
-                    <span class="icon">📎</span>
+                    <span class="chat-plus__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10v7a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-7" />
+                        <path d="M12 3v14" />
+                        <path d="M16 7l-4-4-4 4" />
+                      </svg>
+                    </span>
                     <div class="chat-plus__item-body">
                       <span>Foto's en bestanden toevoegen</span>
                       <small>Upload een document of afbeelding</small>
                     </div>
                   </button>
                   <button type="button" class="chat-plus__item" id="action-deep">
-                    <span class="icon">🔍</span>
+                    <span class="chat-plus__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="7" />
+                        <line x1="16" y1="16" x2="21" y2="21" />
+                      </svg>
+                    </span>
                     <div class="chat-plus__item-body">
                       <span>Diepgaand onderzoek</span>
                       <small>Vraag om een uitgebreide analyse</small>
                     </div>
                   </button>
                   <button type="button" class="chat-plus__item" id="action-shopping">
-                    <span class="icon">🛒</span>
+                    <span class="chat-plus__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="20" r="1" />
+                        <circle cx="17" cy="20" r="1" />
+                        <path d="M3 4h2l1 7h12l1.2-5H6.5" />
+                      </svg>
+                    </span>
                     <div class="chat-plus__item-body">
                       <span>Winkelonderzoek</span>
                       <small>Vergelijk producten en prijzen</small>
                     </div>
                   </button>
                   <button type="button" class="chat-plus__item" id="action-image">
-                    <span class="icon">🖼️</span>
+                    <span class="chat-plus__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                        <circle cx="9" cy="10" r="2" />
+                        <path d="M21 15l-5-5L5 21" />
+                      </svg>
+                    </span>
                     <div class="chat-plus__item-body">
                       <span>Maak een afbeelding</span>
                       <small>Genereer een beeld met AI</small>
                     </div>
                   </button>
                   <button type="button" class="chat-plus__item" id="action-agent">
-                    <span class="icon">🤖</span>
+                    <span class="chat-plus__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="7" y="9" width="10" height="7" rx="2" />
+                        <path d="M10 9V5h4v4" />
+                        <path d="M8 16v2" />
+                        <path d="M16 16v2" />
+                        <path d="M9 6h6" />
+                      </svg>
+                    </span>
                     <div class="chat-plus__item-body">
                       <span>Agentmodus</span>
                       <small>Start een gespecialiseerde agent</small>
                     </div>
                   </button>
                   <button type="button" class="chat-plus__item" id="action-more">
-                    <span class="icon">⋯</span>
+                    <span class="chat-plus__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="6" cy="12" r="1.2" />
+                        <circle cx="12" cy="12" r="1.2" />
+                        <circle cx="18" cy="12" r="1.2" />
+                      </svg>
+                    </span>
                     <div class="chat-plus__item-body">
                       <span>Meer</span>
                       <small>Extra tools en onderzoek</small>
@@ -1390,7 +1439,13 @@
                   </button>
                   <div class="chat-plus__submenu" id="chat-more-menu">
                     <button type="button" class="chat-plus__item" id="action-study">
-                      <span class="icon">📚</span>
+                      <span class="chat-plus__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                          <path d="M4 4.5A2.5 2.5 0 0 1 6.5 7H20v12" />
+                          <path d="M4 4.5v15" />
+                        </svg>
+                      </span>
                       <div class="chat-plus__item-body">
                         <span>Studeren en leren</span>
                         <small>Toegang tot leerhulpmiddelen</small>
@@ -1399,14 +1454,29 @@
                     </button>
                     <div class="chat-plus__submenu" id="chat-study-menu">
                       <button type="button" class="chat-plus__item" id="toggle-web-search">
-                        <span class="icon">🌐</span>
+                        <span class="chat-plus__icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M3 12h18" />
+                            <path d="M12 3a15 15 0 0 1 0 18" />
+                            <path d="M12 3a15 15 0 0 0 0 18" />
+                          </svg>
+                        </span>
                         <div class="chat-plus__item-body">
                           <span id="web-search-state">Web zoeken uit</span>
                           <small id="web-search-hint">Gebruik Bing resultaten als context</small>
                         </div>
                       </button>
                       <button type="button" class="chat-plus__item" id="action-canvas">
-                        <span class="icon">🎨</span>
+                        <span class="chat-plus__icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16v12H4z" />
+                            <path d="M4 16l4 4h8l4-4" />
+                            <circle cx="8" cy="10" r="1" />
+                            <circle cx="12" cy="10" r="1" />
+                            <circle cx="16" cy="10" r="1" />
+                          </svg>
+                        </span>
                         <div class="chat-plus__item-body">
                           <span>Canvas</span>
                           <small>Visuele schets of mindmap</small>
