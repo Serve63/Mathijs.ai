@@ -1024,6 +1024,38 @@
         font-weight: 400;
       }
 
+      .chat-plus__item .icon {
+        width: 18px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+      }
+
+      .chat-plus__item .arrow {
+        margin-left: auto;
+        color: #9a9aa3;
+      }
+
+      .chat-plus__submenu {
+        position: absolute;
+        top: 0;
+        right: 102%;
+        min-width: 220px;
+        background: #fff;
+        border: 1px solid rgba(16, 21, 32, 0.12);
+        border-radius: 12px;
+        box-shadow: 0 18px 30px -20px rgba(16, 21, 32, 0.35);
+        padding: 6px;
+        display: none;
+        z-index: 21;
+      }
+
+      .chat-plus__submenu.is-open {
+        display: block;
+      }
+
       .chat-plus__item:hover {
         background: rgba(0, 0, 0, 0.05);
       }
@@ -1304,16 +1336,75 @@
               <div class="chat-plus" id="chat-plus" aria-haspopup="true" aria-expanded="false">
                 <span>+</span>
                 <div class="chat-plus__menu" id="chat-plus-menu">
-                  <button type="button" class="chat-plus__item" id="toggle-web-search">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                      <circle cx="11" cy="11" r="6" />
-                      <line x1="16" y1="16" x2="20" y2="20" />
-                    </svg>
+                  <button type="button" class="chat-plus__item" id="action-upload">
+                    <span class="icon">📎</span>
                     <div class="chat-plus__item-body">
-                      <span id="web-search-state">Web zoeken uit</span>
-                      <small id="web-search-hint">Gebruik Bing resultaten als context</small>
+                      <span>Foto's en bestanden toevoegen</span>
+                      <small>Upload een document of afbeelding</small>
                     </div>
                   </button>
+                  <button type="button" class="chat-plus__item" id="action-deep">
+                    <span class="icon">🔍</span>
+                    <div class="chat-plus__item-body">
+                      <span>Diepgaand onderzoek</span>
+                      <small>Vraag om een uitgebreide analyse</small>
+                    </div>
+                  </button>
+                  <button type="button" class="chat-plus__item" id="action-shopping">
+                    <span class="icon">🛒</span>
+                    <div class="chat-plus__item-body">
+                      <span>Winkelonderzoek</span>
+                      <small>Vergelijk producten en prijzen</small>
+                    </div>
+                  </button>
+                  <button type="button" class="chat-plus__item" id="action-image">
+                    <span class="icon">🖼️</span>
+                    <div class="chat-plus__item-body">
+                      <span>Maak een afbeelding</span>
+                      <small>Genereer een beeld met AI</small>
+                    </div>
+                  </button>
+                  <button type="button" class="chat-plus__item" id="action-agent">
+                    <span class="icon">🤖</span>
+                    <div class="chat-plus__item-body">
+                      <span>Agentmodus</span>
+                      <small>Start een gespecialiseerde agent</small>
+                    </div>
+                  </button>
+                  <button type="button" class="chat-plus__item" id="action-more">
+                    <span class="icon">⋯</span>
+                    <div class="chat-plus__item-body">
+                      <span>Meer</span>
+                      <small>Extra tools en onderzoek</small>
+                    </div>
+                    <span class="arrow">›</span>
+                  </button>
+                  <div class="chat-plus__submenu" id="chat-more-menu">
+                    <button type="button" class="chat-plus__item" id="action-study">
+                      <span class="icon">📚</span>
+                      <div class="chat-plus__item-body">
+                        <span>Studeren en leren</span>
+                        <small>Toegang tot leerhulpmiddelen</small>
+                      </div>
+                      <span class="arrow">›</span>
+                    </button>
+                    <div class="chat-plus__submenu" id="chat-study-menu">
+                      <button type="button" class="chat-plus__item" id="toggle-web-search">
+                        <span class="icon">🌐</span>
+                        <div class="chat-plus__item-body">
+                          <span id="web-search-state">Web zoeken uit</span>
+                          <small id="web-search-hint">Gebruik Bing resultaten als context</small>
+                        </div>
+                      </button>
+                      <button type="button" class="chat-plus__item" id="action-canvas">
+                        <span class="icon">🎨</span>
+                        <div class="chat-plus__item-body">
+                          <span>Canvas</span>
+                          <small>Visuele schets of mindmap</small>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
               <span class="chat-search-pill" id="chat-search-indicator" title="Web zoeken">
@@ -1348,6 +1439,28 @@
       const profileMenuButton = document.querySelector(".profile-menu");
       const profileModal = document.getElementById("profile-modal");
       const profileModalClose = document.querySelector(".profile-modal__close");
+      const profileModalDialog = profileModal ? profileModal.querySelector(".profile-modal__dialog") : null;
+      const chatPlus = document.getElementById("chat-plus");
+      const chatPlusMenu = document.getElementById("chat-plus-menu");
+      const chatMoreMenu = document.getElementById("chat-more-menu");
+      const chatStudyMenu = document.getElementById("chat-study-menu");
+      const toggleWebSearch = document.getElementById("toggle-web-search");
+      const webSearchState = document.getElementById("web-search-state");
+      const webSearchHint = document.getElementById("web-search-hint");
+      const chatSearchIndicator = document.getElementById("chat-search-indicator");
+      const chatSearchClose = document.getElementById("chat-search-close");
+      const actionMore = document.getElementById("action-more");
+      const actionStudy = document.getElementById("action-study");
+      const actionUpload = document.getElementById("action-upload");
+      const actionDeep = document.getElementById("action-deep");
+      const actionShopping = document.getElementById("action-shopping");
+      const actionImage = document.getElementById("action-image");
+      const actionAgent = document.getElementById("action-agent");
+      const actionCanvas = document.getElementById("action-canvas");
+      const hiddenFileInput = document.createElement("input");
+      hiddenFileInput.type = "file";
+      hiddenFileInput.style.display = "none";
+      document.body.appendChild(hiddenFileInput);
       const chatPlus = document.getElementById("chat-plus");
       const chatPlusMenu = document.getElementById("chat-plus-menu");
       const toggleWebSearch = document.getElementById("toggle-web-search");
@@ -1386,7 +1499,6 @@
       };
 
       let activeCategory = "chat";
-      const profileModalDialog = profileModal ? profileModal.querySelector(".profile-modal__dialog") : null;
 
       const getCategoryLabel = (categoryKey) => {
         const select = modelSelects.find((item) => item.getAttribute("data-category") === categoryKey);
@@ -1413,6 +1525,12 @@
           dropdown.classList.remove("active");
           trigger.setAttribute("aria-expanded", "false");
         });
+        if (chatMoreMenu && exception !== chatMoreMenu) {
+          chatMoreMenu.classList.remove("is-open");
+        }
+        if (chatStudyMenu && exception !== chatStudyMenu) {
+          chatStudyMenu.classList.remove("is-open");
+        }
         if (chatPlusMenu && exception !== chatPlusMenu) {
           chatPlusMenu.classList.remove("is-open");
           if (chatPlus) chatPlus.setAttribute("aria-expanded", "false");
@@ -1535,6 +1653,24 @@
         }
       });
 
+      const toggleWebBadge = (state) => {
+        if (chatSearchIndicator) {
+          chatSearchIndicator.classList.toggle("visible", state);
+        }
+        if (webSearchState) {
+          webSearchState.textContent = state ? "Web zoeken aan" : "Web zoeken uit";
+          webSearchState.style.fontWeight = state ? "700" : "400";
+          webSearchState.style.color = state ? "#1f1c18" : "#5f574f";
+        }
+        if (webSearchHint) {
+          webSearchHint.textContent = "Gebruik Bing resultaten als context";
+        }
+        if (toggleWebSearch) {
+          toggleWebSearch.classList.toggle("is-active", state);
+        }
+        webSearchEnabled = state;
+      };
+
       if (chatPlus && chatPlusMenu && toggleWebSearch && webSearchState) {
         chatPlus.addEventListener("click", (event) => {
           event.stopPropagation();
@@ -1546,14 +1682,7 @@
 
         toggleWebSearch.addEventListener("click", (event) => {
           event.stopPropagation();
-          webSearchEnabled = !webSearchEnabled;
-          webSearchState.textContent = webSearchEnabled ? "Web zoeken aan" : "Web zoeken uit";
-          webSearchState.style.fontWeight = webSearchEnabled ? "700" : "400";
-          webSearchState.style.color = webSearchEnabled ? "#1f1c18" : "#5f574f";
-          toggleWebSearch.classList.toggle("is-active", webSearchEnabled);
-          if (chatSearchIndicator) {
-            chatSearchIndicator.classList.toggle("visible", webSearchEnabled);
-          }
+          toggleWebBadge(!webSearchEnabled);
           chatPlusMenu.classList.remove("is-open");
           chatPlus.setAttribute("aria-expanded", "false");
         });
@@ -1562,14 +1691,77 @@
       if (chatSearchClose) {
         chatSearchClose.addEventListener("click", (event) => {
           event.stopPropagation();
-          webSearchEnabled = false;
-          webSearchState.textContent = "Web zoeken uit";
-          webSearchState.style.fontWeight = "400";
-          webSearchState.style.color = "#5f574f";
-          toggleWebSearch?.classList.remove("is-active");
-          chatSearchIndicator?.classList.remove("visible");
+          toggleWebBadge(false);
         });
       }
+
+      if (actionMore && chatMoreMenu) {
+        actionMore.addEventListener("mouseenter", () => {
+          chatMoreMenu.classList.add("is-open");
+        });
+        actionMore.addEventListener("mouseleave", () => {
+          chatMoreMenu.classList.remove("is-open");
+        });
+      }
+
+      if (actionStudy && chatStudyMenu) {
+        actionStudy.addEventListener("mouseenter", () => {
+          chatStudyMenu.classList.add("is-open");
+          chatMoreMenu?.classList.add("is-open");
+        });
+        actionStudy.addEventListener("mouseleave", () => {
+          chatStudyMenu.classList.remove("is-open");
+        });
+      }
+
+      const placeholderAction = (msg) => () => {
+        alert(msg);
+        closeAllDropdowns();
+      };
+
+      if (actionUpload) {
+        actionUpload.addEventListener("click", (event) => {
+          event.stopPropagation();
+          hiddenFileInput.click();
+          closeAllDropdowns();
+        });
+      }
+
+      hiddenFileInput.addEventListener("change", () => {
+        if (hiddenFileInput.files && hiddenFileInput.files.length) {
+          alert(`Bestand geselecteerd: ${hiddenFileInput.files[0].name}`);
+        }
+      });
+
+      actionDeep?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        alert("Diepgaand onderzoek wordt later toegevoegd.");
+        closeAllDropdowns();
+      });
+
+      actionShopping?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        alert("Winkelonderzoek wordt later toegevoegd.");
+        closeAllDropdowns();
+      });
+
+      actionImage?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        alert("Afbeelding genereren wordt later toegevoegd.");
+        closeAllDropdowns();
+      });
+
+      actionAgent?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        alert("Agentmodus wordt later toegevoegd.");
+        closeAllDropdowns();
+      });
+
+      actionCanvas?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        alert("Canvas wordt later toegevoegd.");
+        closeAllDropdowns();
+      });
 
       if (profileAvatar && profileAvatarInput && profileAvatarImage) {
         profileAvatar.addEventListener("click", () => {
