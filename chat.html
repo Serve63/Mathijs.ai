@@ -982,20 +982,17 @@
 
       .chat-plus__menu {
         position: absolute;
-        bottom: 110%;
-        right: 0;
-        min-width: 240px;
-        max-width: 320px;
-        background: rgba(255, 255, 255, 0.98);
-        border: 1px solid rgba(16, 21, 32, 0.12);
-        border-radius: 14px;
-        box-shadow: 0 18px 30px -20px rgba(16, 21, 32, 0.35);
-        padding: 8px;
+        bottom: calc(100% + 8px);
+        left: 0;
+        width: 280px;
+        background: #fff;
+        border: 1px solid #e5e5e5;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+        padding: 8px 0;
         display: none;
-        z-index: 40;
-        gap: 6px;
         flex-direction: column;
-        overflow: hidden;
+        z-index: 100;
       }
 
       .chat-plus__menu.is-open {
@@ -1003,88 +1000,81 @@
       }
 
       .chat-plus__item {
-        border: none;
-        background: transparent;
-        width: 100%;
-        text-align: left;
-        padding: 10px 12px;
-        border-radius: 12px;
-        cursor: pointer;
-        font-size: 0.95rem;
         display: flex;
         align-items: center;
-        gap: 10px;
-        white-space: normal;
-        word-break: break-word;
-        min-height: 44px;
-        transition: background 0.15s ease;
+        gap: 12px;
+        padding: 12px 16px;
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        font-size: 14px;
+        color: #1a1a1a;
+        transition: background 0.15s;
+      }
+
+      .chat-plus__item:hover {
+        background: #f5f5f5;
+      }
+
+      .chat-plus__item.is-active {
+        background: rgba(255, 212, 0, 0.15);
+      }
+
+      .chat-plus__icon {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+      }
+
+      .chat-plus__icon svg {
+        width: 20px;
+        height: 20px;
       }
 
       .chat-plus__item-body {
         display: flex;
         flex-direction: column;
         gap: 2px;
-        line-height: 1.3;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .chat-plus__item-body span {
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .chat-plus__item-body small {
-        color: #6b6b75;
+        font-size: 12px;
+        color: #888;
         font-weight: 400;
-        font-size: 0.82rem;
-        line-height: 1.2;
-      }
-
-      .chat-plus__item:hover {
-        background: #f7f7f8;
-      }
-
-      .chat-plus__item .chat-plus__icon {
-        width: 22px;
-        height: 22px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #1c1c1c;
-        flex-shrink: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .chat-plus__item .arrow {
         margin-left: auto;
-        color: #9a9aa3;
-        line-height: 1.2;
+        color: #999;
+        font-size: 16px;
+      }
+
+      .chat-plus__divider {
+        height: 1px;
+        background: #e5e5e5;
+        margin: 8px 0;
       }
 
       .chat-plus__submenu {
-        position: absolute;
-        top: 0;
-        left: 100%;
-        margin-left: 8px;
-        min-width: 240px;
-        max-width: 300px;
-        background: rgba(255, 255, 255, 0.98);
-        border: 1px solid rgba(16, 21, 32, 0.12);
-        border-radius: 14px;
-        box-shadow: 0 18px 30px -20px rgba(16, 21, 32, 0.35);
-        padding: 8px;
         display: none;
-        z-index: 45;
-        gap: 6px;
-        flex-direction: column;
-        overflow: hidden;
-      }
-
-      .chat-plus__submenu.is-open {
-        display: flex;
-      }
-
-      .chat-plus__item:hover {
-        background: rgba(0, 0, 0, 0.05);
-      }
-
-      .chat-plus__item.is-active {
-        background: rgba(255, 212, 0, 0.16);
-        font-weight: 700;
-        color: #1f1c18;
       }
 
       .chat-search-pill {
@@ -1358,132 +1348,38 @@
                 <span>+</span>
                 <div class="chat-plus__menu" id="chat-plus-menu">
                   <button type="button" class="chat-plus__item" id="action-upload">
-                    <span class="chat-plus__icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 10v7a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-7" />
-                        <path d="M12 3v14" />
-                        <path d="M16 7l-4-4-4 4" />
-                      </svg>
-                    </span>
-                    <div class="chat-plus__item-body">
-                      <span>Foto's en bestanden toevoegen</span>
-                      <small>Upload een document of afbeelding</small>
-                    </div>
+                    <span class="chat-plus__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
+                    <span>Foto's en bestanden toevoegen</span>
                   </button>
                   <button type="button" class="chat-plus__item" id="action-deep">
-                    <span class="chat-plus__icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="7" />
-                        <line x1="16" y1="16" x2="21" y2="21" />
-                      </svg>
-                    </span>
-                    <div class="chat-plus__item-body">
-                      <span>Diepgaand onderzoek</span>
-                      <small>Vraag om een uitgebreide analyse</small>
-                    </div>
+                    <span class="chat-plus__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+                    <span>Doe diepgaand onderzoek</span>
                   </button>
                   <button type="button" class="chat-plus__item" id="action-shopping">
-                    <span class="chat-plus__icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="9" cy="20" r="1" />
-                        <circle cx="17" cy="20" r="1" />
-                        <path d="M3 4h2l1 7h12l1.2-5H6.5" />
-                      </svg>
-                    </span>
-                    <div class="chat-plus__item-body">
-                      <span>Winkelonderzoek</span>
-                      <small>Vergelijk producten en prijzen</small>
-                    </div>
+                    <span class="chat-plus__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span>
+                    <span>Winkelonderzoek</span>
                   </button>
                   <button type="button" class="chat-plus__item" id="action-image">
-                    <span class="chat-plus__icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="5" width="18" height="14" rx="2" />
-                        <circle cx="9" cy="10" r="2" />
-                        <path d="M21 15l-5-5L5 21" />
-                      </svg>
-                    </span>
-                    <div class="chat-plus__item-body">
-                      <span>Maak een afbeelding</span>
-                      <small>Genereer een beeld met AI</small>
-                    </div>
+                    <span class="chat-plus__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
+                    <span>Maak een afbeelding</span>
                   </button>
                   <button type="button" class="chat-plus__item" id="action-agent">
-                    <span class="chat-plus__icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="7" y="9" width="10" height="7" rx="2" />
-                        <path d="M10 9V5h4v4" />
-                        <path d="M8 16v2" />
-                        <path d="M16 16v2" />
-                        <path d="M9 6h6" />
-                      </svg>
-                    </span>
-                    <div class="chat-plus__item-body">
-                      <span>Agentmodus</span>
-                      <small>Start een gespecialiseerde agent</small>
-                    </div>
+                    <span class="chat-plus__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="3"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/></svg></span>
+                    <span>Agentmodus</span>
                   </button>
-                  <button type="button" class="chat-plus__item" id="action-more">
-                    <span class="chat-plus__icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="6" cy="12" r="1.2" />
-                        <circle cx="12" cy="12" r="1.2" />
-                        <circle cx="18" cy="12" r="1.2" />
-                      </svg>
-                    </span>
-                    <div class="chat-plus__item-body">
-                      <span>Meer</span>
-                      <small>Extra tools en onderzoek</small>
-                    </div>
-                    <span class="arrow">›</span>
+                  <div class="chat-plus__divider"></div>
+                  <button type="button" class="chat-plus__item" id="action-study">
+                    <span class="chat-plus__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
+                    <span>Studeren en leren</span>
                   </button>
-                  <div class="chat-plus__submenu" id="chat-more-menu">
-                    <button type="button" class="chat-plus__item" id="action-study">
-                      <span class="chat-plus__icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                          <path d="M4 4.5A2.5 2.5 0 0 1 6.5 7H20v12" />
-                          <path d="M4 4.5v15" />
-                        </svg>
-                      </span>
-                      <div class="chat-plus__item-body">
-                        <span>Studeren en leren</span>
-                        <small>Toegang tot leerhulpmiddelen</small>
-                      </div>
-                      <span class="arrow">›</span>
-                    </button>
-                    <div class="chat-plus__submenu" id="chat-study-menu">
-                      <button type="button" class="chat-plus__item" id="toggle-web-search">
-                        <span class="chat-plus__icon" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="9" />
-                            <path d="M3 12h18" />
-                            <path d="M12 3a15 15 0 0 1 0 18" />
-                            <path d="M12 3a15 15 0 0 0 0 18" />
-                          </svg>
-                        </span>
-                        <div class="chat-plus__item-body">
-                          <span id="web-search-state">Web zoeken uit</span>
-                          <small id="web-search-hint">Gebruik Bing resultaten als context</small>
-                        </div>
-                      </button>
-                      <button type="button" class="chat-plus__item" id="action-canvas">
-                        <span class="chat-plus__icon" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 4h16v12H4z" />
-                            <path d="M4 16l4 4h8l4-4" />
-                            <circle cx="8" cy="10" r="1" />
-                            <circle cx="12" cy="10" r="1" />
-                            <circle cx="16" cy="10" r="1" />
-                          </svg>
-                        </span>
-                        <div class="chat-plus__item-body">
-                          <span>Canvas</span>
-                          <small>Visuele schets of mindmap</small>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
+                  <button type="button" class="chat-plus__item" id="toggle-web-search">
+                    <span class="chat-plus__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+                    <span id="web-search-state">Zoeken op internet</span>
+                  </button>
+                  <button type="button" class="chat-plus__item" id="action-canvas">
+                    <span class="chat-plus__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg></span>
+                    <span>Canvas</span>
+                  </button>
                 </div>
               </div>
               <span class="chat-search-pill" id="chat-search-indicator" title="Web zoeken">
@@ -1521,14 +1417,10 @@
       const profileModalDialog = profileModal ? profileModal.querySelector(".profile-modal__dialog") : null;
       const chatPlus = document.getElementById("chat-plus");
       const chatPlusMenu = document.getElementById("chat-plus-menu");
-      const chatMoreMenu = document.getElementById("chat-more-menu");
-      const chatStudyMenu = document.getElementById("chat-study-menu");
       const toggleWebSearch = document.getElementById("toggle-web-search");
       const webSearchState = document.getElementById("web-search-state");
-      const webSearchHint = document.getElementById("web-search-hint");
       const chatSearchIndicator = document.getElementById("chat-search-indicator");
       const chatSearchClose = document.getElementById("chat-search-close");
-      const actionMore = document.getElementById("action-more");
       const actionStudy = document.getElementById("action-study");
       const actionUpload = document.getElementById("action-upload");
       const actionDeep = document.getElementById("action-deep");
@@ -1598,12 +1490,6 @@
           dropdown.classList.remove("active");
           trigger.setAttribute("aria-expanded", "false");
         });
-        if (chatMoreMenu && exception !== chatMoreMenu) {
-          chatMoreMenu.classList.remove("is-open");
-        }
-        if (chatStudyMenu && exception !== chatStudyMenu) {
-          chatStudyMenu.classList.remove("is-open");
-        }
         if (chatPlusMenu && exception !== chatPlusMenu) {
           chatPlusMenu.classList.remove("is-open");
           if (chatPlus) chatPlus.setAttribute("aria-expanded", "false");
@@ -1730,12 +1616,7 @@
           chatSearchIndicator.classList.toggle("visible", state);
         }
         if (webSearchState) {
-          webSearchState.textContent = state ? "Web zoeken aan" : "Web zoeken uit";
-          webSearchState.style.fontWeight = state ? "700" : "400";
-          webSearchState.style.color = state ? "#1f1c18" : "#5f574f";
-        }
-        if (webSearchHint) {
-          webSearchHint.textContent = "Gebruik Bing resultaten als context";
+          webSearchState.textContent = state ? "Zoeken op internet ✓" : "Zoeken op internet";
         }
         if (toggleWebSearch) {
           toggleWebSearch.classList.toggle("is-active", state);
@@ -1743,7 +1624,7 @@
         webSearchEnabled = state;
       };
 
-      if (chatPlus && chatPlusMenu && toggleWebSearch && webSearchState) {
+      if (chatPlus && chatPlusMenu) {
         chatPlus.addEventListener("click", (event) => {
           event.stopPropagation();
           const isOpen = chatPlusMenu.classList.contains("is-open");
@@ -1751,12 +1632,13 @@
           chatPlusMenu.classList.toggle("is-open", !isOpen);
           chatPlus.setAttribute("aria-expanded", !isOpen ? "true" : "false");
         });
+      }
 
+      if (toggleWebSearch) {
         toggleWebSearch.addEventListener("click", (event) => {
           event.stopPropagation();
           toggleWebBadge(!webSearchEnabled);
-          chatPlusMenu.classList.remove("is-open");
-          chatPlus.setAttribute("aria-expanded", "false");
+          closeAllDropdowns();
         });
       }
 
@@ -1767,29 +1649,11 @@
         });
       }
 
-      if (actionMore && chatMoreMenu) {
-        actionMore.addEventListener("mouseenter", () => {
-          chatMoreMenu.classList.add("is-open");
-        });
-        actionMore.addEventListener("mouseleave", () => {
-          chatMoreMenu.classList.remove("is-open");
-        });
-      }
-
-      if (actionStudy && chatStudyMenu) {
-        actionStudy.addEventListener("mouseenter", () => {
-          chatStudyMenu.classList.add("is-open");
-          chatMoreMenu?.classList.add("is-open");
-        });
-        actionStudy.addEventListener("mouseleave", () => {
-          chatStudyMenu.classList.remove("is-open");
-        });
-      }
-
-      if (chatPlusMenu) {
-        chatPlusMenu.addEventListener("mouseleave", () => {
-          chatMoreMenu?.classList.remove("is-open");
-          chatStudyMenu?.classList.remove("is-open");
+      if (actionStudy) {
+        actionStudy.addEventListener("click", (event) => {
+          event.stopPropagation();
+          alert("Studeren en leren wordt later toegevoegd.");
+          closeAllDropdowns();
         });
       }
 
