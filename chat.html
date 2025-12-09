@@ -1022,16 +1022,19 @@
         color: #1f1c18;
       }
 
-      .chat-search-indicator {
+      .chat-search-pill {
         display: none;
-        width: 22px;
-        height: 22px;
         align-items: center;
-        justify-content: center;
-        color: #1a1600;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 12px;
+        background: #eef3ff;
+        color: #0b6bff;
+        font-weight: 600;
+        font-size: 0.9rem;
       }
 
-      .chat-search-indicator.visible {
+      .chat-search-pill.visible {
         display: inline-flex;
       }
       
@@ -1278,11 +1281,12 @@
                   </button>
                 </div>
               </div>
-              <span class="chat-search-indicator" id="chat-search-indicator" title="Web zoeken aan">
+              <span class="chat-search-pill" id="chat-search-indicator" title="Web zoeken">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="11" cy="11" r="6" />
                   <line x1="16" y1="16" x2="20" y2="20" />
                 </svg>
+                <span>Zoek</span>
               </span>
               <textarea placeholder="Stuur een bericht" rows="1"></textarea>
               <button type="button" aria-label="Stuur bericht">
