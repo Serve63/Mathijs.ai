@@ -1461,12 +1461,6 @@
       hiddenFileInput.type = "file";
       hiddenFileInput.style.display = "none";
       document.body.appendChild(hiddenFileInput);
-      const chatPlus = document.getElementById("chat-plus");
-      const chatPlusMenu = document.getElementById("chat-plus-menu");
-      const toggleWebSearch = document.getElementById("toggle-web-search");
-      const webSearchState = document.getElementById("web-search-state");
-      const chatSearchIndicator = document.getElementById("chat-search-indicator");
-      const chatSearchClose = document.getElementById("chat-search-close");
       let connectTimeout;
       const selectionState = {};
       const createSystemMessage = () => ({
@@ -1646,8 +1640,7 @@
       setActiveCategory(activeCategory);
 
       document.addEventListener("click", (event) => {
-        const insideControl =
-          event.target.closest(".model-select");
+        const insideControl = event.target.closest(".model-select, .chat-plus");
         if (!insideControl) {
           closeAllDropdowns();
         }
