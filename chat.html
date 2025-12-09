@@ -1012,6 +1012,18 @@
         gap: 8px;
       }
 
+      .chat-plus__item-body {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        line-height: 1.2;
+      }
+
+      .chat-plus__item-body small {
+        color: #6b6b75;
+        font-weight: 400;
+      }
+
       .chat-plus__item:hover {
         background: rgba(0, 0, 0, 0.05);
       }
@@ -1293,7 +1305,14 @@
                 <span>+</span>
                 <div class="chat-plus__menu" id="chat-plus-menu">
                   <button type="button" class="chat-plus__item" id="toggle-web-search">
-                    <span id="web-search-state">Web zoeken uit</span>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="11" cy="11" r="6" />
+                      <line x1="16" y1="16" x2="20" y2="20" />
+                    </svg>
+                    <div class="chat-plus__item-body">
+                      <span id="web-search-state">Web zoeken uit</span>
+                      <small id="web-search-hint">Gebruik Bing resultaten als context</small>
+                    </div>
                   </button>
                 </div>
               </div>
