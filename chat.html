@@ -1021,6 +1021,19 @@
         font-weight: 700;
         color: #1f1c18;
       }
+
+      .chat-search-indicator {
+        display: none;
+        width: 22px;
+        height: 22px;
+        align-items: center;
+        justify-content: center;
+        color: #1a1600;
+      }
+
+      .chat-search-indicator.visible {
+        display: inline-flex;
+      }
       
       .chat-disclaimer {
         margin: 0;
@@ -1265,6 +1278,12 @@
                   </button>
                 </div>
               </div>
+              <span class="chat-search-indicator" id="chat-search-indicator" title="Web zoeken aan">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="6" />
+                  <line x1="16" y1="16" x2="20" y2="20" />
+                </svg>
+              </span>
               <textarea placeholder="Stuur een bericht" rows="1"></textarea>
               <button type="button" aria-label="Stuur bericht">
                 <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -1293,6 +1312,7 @@
       const chatPlusMenu = document.getElementById("chat-plus-menu");
       const toggleWebSearch = document.getElementById("toggle-web-search");
       const webSearchState = document.getElementById("web-search-state");
+      const chatSearchIndicator = document.getElementById("chat-search-indicator");
       let connectTimeout;
       const selectionState = {};
       const createSystemMessage = () => ({
@@ -1490,6 +1510,9 @@
           webSearchState.style.fontWeight = webSearchEnabled ? "700" : "400";
           webSearchState.style.color = webSearchEnabled ? "#1f1c18" : "#5f574f";
           toggleWebSearch.classList.toggle("is-active", webSearchEnabled);
+          if (chatSearchIndicator) {
+            chatSearchIndicator.classList.toggle("visible", webSearchEnabled);
+          }
           chatPlusMenu.classList.remove("is-open");
           chatPlus.setAttribute("aria-expanded", "false");
         });
