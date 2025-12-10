@@ -668,13 +668,17 @@
 
       .model-dropdown {
         position: absolute;
-        right: 0;
         top: calc(100% + 8px);
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
         background: rgba(255, 255, 255, 0.96);
         border-radius: 16px;
         border: 1px solid var(--chat-border);
         box-shadow: 0 28px 60px -30px rgba(16, 21, 32, 0.5);
         min-width: 220px;
+        width: max-content;
+        max-width: min(340px, calc(100vw - 32px));
         display: none;
         flex-direction: column;
         overflow: visible;
