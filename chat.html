@@ -2386,6 +2386,20 @@
         updateSessionMetaAfterMessage(role, content);
       };
 
+      const createAssistantStreamMessage = () => {
+        if (!chatLog) return null;
+        clearEmptyState();
+        const article = document.createElement("article");
+        article.className = "message system";
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.innerHTML = "";
+        article.appendChild(bubble);
+        chatLog.appendChild(article);
+        chatLog.scrollTop = chatLog.scrollHeight;
+        return { article, bubble };
+      };
+
       const workspaceReady = (async () => {
         const user = await requireAuthenticatedUser();
         if (!user) {
@@ -2442,6 +2456,9 @@
 
         showThinkingIndicator();
 
+        let assistantStreamMessage = null;
+        let assistantResponseBuffer = "";
+
         try {
           const engine = modelEngineMap[selectedModel] || "gpt-4o";
           const response = await fetch("/api/chat", {
@@ -2455,22 +2472,74 @@
               model: engine,
             }),
           });
-          const data = await response.json().catch(() => ({}));
-            if (!response.ok || data.error) {
-              throw new Error(data.error || "Er ging iets mis bij het ophalen van een antwoord.");
+
+          if (!response.ok || !response.body) {
+            let errorMessage = "Er ging iets mis bij het ophalen van een antwoord.";
+            try {
+              const errorPayload = await response.json();
+              if (errorPayload && errorPayload.error) {
+                errorMessage = errorPayload.error;
+              }
+            } catch (jsonError) {
+              try {
+                errorMessage = (await response.text()) || errorMessage;
+              } catch (textError) {
+                /* ignore */
+              }
             }
-            const content = (data.content || "").trim() || "Ik heb even geen antwoord. Probeer het later nog eens.";
-            appendMessage(content, "assistant");
-            const { error: assistantInsertError } = await saveMessageToSupabase(user.id, sessionId, "assistant", content);
-            if (assistantInsertError) {
-              console.error("AI-antwoord opslaan mislukt", assistantInsertError);
+            throw new Error(errorMessage);
+          }
+
+          hideThinkingIndicator();
+          assistantStreamMessage = createAssistantStreamMessage();
+          const targetBubble = assistantStreamMessage?.bubble || null;
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunkText = decoder.decode(value, { stream: true });
+            if (!chunkText) continue;
+            assistantResponseBuffer += chunkText;
+            if (targetBubble) {
+              targetBubble.innerHTML = formatMessageContent(assistantResponseBuffer);
+              chatLog.scrollTop = chatLog.scrollHeight;
             }
-            await refreshSessionsFromSupabase();
-          } catch (error) {
-            console.error("Chat request failed", error);
-            appendMessage("De AI-request mislukte. Controleer je verbinding en probeer opnieuw.", "assistant");
-          } finally {
-            hideThinkingIndicator();
+          }
+
+          const finalContent =
+            (assistantResponseBuffer || "").trim() || "Ik heb even geen antwoord. Probeer het later nog eens.";
+
+          if (targetBubble) {
+            targetBubble.innerHTML = formatMessageContent(finalContent);
+          } else {
+            appendMessage(finalContent, "assistant");
+          }
+
+          messages.push({ role: "assistant", content: finalContent });
+          updateSessionMetaAfterMessage("assistant", finalContent);
+
+          const { error: assistantInsertError } = await saveMessageToSupabase(
+            user.id,
+            sessionId,
+            "assistant",
+            finalContent,
+          );
+          if (assistantInsertError) {
+            console.error("AI-antwoord opslaan mislukt", assistantInsertError);
+          }
+          await refreshSessionsFromSupabase();
+        } catch (error) {
+          console.error("Chat request failed", error);
+          const fallbackMessage = "De AI-request mislukte. Controleer je verbinding en probeer opnieuw.";
+          if (assistantStreamMessage?.bubble) {
+            assistantStreamMessage.bubble.innerHTML = formatMessageContent(fallbackMessage);
+          } else {
+            appendMessage(fallbackMessage, "assistant");
+          }
+        } finally {
+          hideThinkingIndicator();
         }
       };
 
