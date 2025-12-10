@@ -677,7 +677,7 @@
         min-width: 220px;
         display: none;
         flex-direction: column;
-        overflow: hidden;
+        overflow: visible;
         z-index: 20;
       }
 
@@ -719,6 +719,80 @@
 
       .model-option:last-child {
         border-bottom: none;
+      }
+
+      .model-option.has-sub:hover .model-option-sub {
+        display: flex;
+      }
+
+      .model-option-sub {
+        display: none;
+        position: absolute;
+        left: 100%;
+        top: 0;
+        margin-left: 8px;
+        background: #fff;
+        border: 1px solid #e5e5e5;
+        border-radius: 10px;
+        box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.25);
+        flex-direction: column;
+        min-width: 160px;
+        z-index: 30;
+      }
+
+      .model-option-sub .model-suboption {
+        border: none;
+        background: transparent;
+        padding: 10px 12px;
+        text-align: left;
+        font-size: 0.95rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f1f1f1;
+      }
+
+      .model-option-sub .model-suboption:last-child {
+        border-bottom: none;
+      }
+
+      .model-option-sub .model-suboption:hover {
+        background: #f6f6f6;
+      }
+
+      .model-option.has-sub:hover .model-option-sub {
+        display: flex;
+      }
+
+      .model-option-sub {
+        display: none;
+        position: absolute;
+        left: 100%;
+        top: 0;
+        margin-left: 8px;
+        background: #fff;
+        border: 1px solid #e5e5e5;
+        border-radius: 10px;
+        box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.25);
+        flex-direction: column;
+        min-width: 160px;
+        z-index: 30;
+      }
+
+      .model-option-sub button {
+        border: none;
+        background: transparent;
+        padding: 10px 12px;
+        text-align: left;
+        font-size: 0.95rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f1f1f1;
+      }
+
+      .model-option-sub button:last-child {
+        border-bottom: none;
+      }
+
+      .model-option-sub button:hover {
+        background: #f6f6f6;
       }
 
 
@@ -1274,10 +1348,16 @@
                     </svg>
                   </button>
                   <div class="model-dropdown" role="listbox" aria-label="Kies een model">
-                    <div class="model-option" data-model="ChatGPT 5.1" role="option" aria-selected="true">ChatGPT 5.1</div>
+                    <div class="model-option has-sub" data-model="ChatGPT 5.1" role="option" aria-selected="true">
+                      ChatGPT 5.1
+                      <div class="model-option-sub">
+                        <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Instant)">Instant</button>
+                        <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Thinking)">Thinking</button>
+                    </div>
+                  </div>
                     <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">Gemini 3</div>
                     <div class="model-option" data-model="DeepSeek V2" role="option" aria-selected="false">DeepSeek V2</div>
-                  </div>
+                </div>
                 </div>
               </div>
             </div>
@@ -1481,6 +1561,7 @@
         const activator = select.querySelector(".model-select__activator");
         const dropdown = select.querySelector(".model-dropdown");
         const options = dropdown ? Array.from(dropdown.querySelectorAll(".model-option")) : [];
+        const subOptions = dropdown ? Array.from(dropdown.querySelectorAll(".model-suboption")) : [];
         const selectedLabel = trigger ? trigger.querySelector(".selected-label") : null;
         const categoryKey = select.getAttribute("data-category") || "model";
         const categoryLabel = select.getAttribute("data-label") || categoryKey;
@@ -1524,6 +1605,20 @@
               return;
             }
             setActiveOption(option);
+            setActiveCategory(categoryKey);
+            closeAllDropdowns();
+            handleModelChange(categoryLabel, value);
+          });
+        });
+
+        subOptions.forEach((btn) => {
+          btn.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const value = btn.getAttribute("data-model") || "";
+            selectionState[categoryKey] = value;
+            if (selectedLabel) selectedLabel.textContent = value;
+            updateSelectedModel(value);
             setActiveCategory(categoryKey);
             closeAllDropdowns();
             handleModelChange(categoryLabel, value);
