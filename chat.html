@@ -1259,81 +1259,24 @@
             </div>
             <div class="model-controls">
               <div class="model-selects">
-                <div class="model-select" data-category="chat" data-label="Chat">
+                <div class="model-select" data-category="chat" data-label="Model">
                   <button
                     type="button"
                     class="model-select__activator"
                     aria-pressed="true"
-                    aria-label="Activeer Chat"
+                    aria-label="Activeer model"
                   ></button>
-                  <span class="model-select__label">Chat</span>
+                  <span class="model-select__label">Model</span>
                   <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="selected-label">GPT-5</span>
+                    <span class="selected-label">ChatGPT 5.1</span>
                     <svg viewBox="0 0 24 24">
                       <path d="M6 9l6 6 6-6" />
                     </svg>
                   </button>
-                  <div class="model-dropdown" role="listbox" aria-label="Kies een chatmodel">
-                    <div class="model-option" data-model="GPT-5" role="option" aria-selected="true">GPT-5</div>
-                    <div class="model-option" data-model="Grok 4" role="option" aria-selected="false">Grok 4</div>
-                    <div class="model-option" data-model="Gemini 2.5 Pro" role="option" aria-selected="false">
-                      Gemini 2.5 Pro
-                    </div>
-                  </div>
-                </div>
-                <div class="model-select" data-category="foto" data-label="Foto">
-                  <button
-                    type="button"
-                    class="model-select__activator"
-                    aria-pressed="false"
-                    aria-label="Activeer Foto"
-                  ></button>
-                  <span class="model-select__label">Foto</span>
-                  <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="selected-label">DALLÂ·E 4</span>
-                    <svg viewBox="0 0 24 24">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </button>
-                  <div class="model-dropdown" role="listbox" aria-label="Kies een fotomodel">
-                    <div class="model-option" data-model="DALLÂ·E 4" role="option" aria-selected="true">DALLÂ·E 4</div>
-                  </div>
-                </div>
-                <div class="model-select" data-category="video" data-label="Video">
-                  <button
-                    type="button"
-                    class="model-select__activator"
-                    aria-pressed="false"
-                    aria-label="Activeer Video"
-                  ></button>
-                  <span class="model-select__label">Video</span>
-                  <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="selected-label">VEO 3</span>
-                    <svg viewBox="0 0 24 24">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </button>
-                  <div class="model-dropdown" role="listbox" aria-label="Kies een videomodel">
-                    <div class="model-option" data-model="VEO 3" role="option" aria-selected="true">VEO 3</div>
-                    <div class="model-option" data-model="Sora 2" role="option" aria-selected="false">Sora 2</div>
-                  </div>
-                </div>
-                <div class="model-select" data-category="audio" data-label="Audio">
-                  <button
-                    type="button"
-                    class="model-select__activator"
-                    aria-pressed="false"
-                    aria-label="Activeer Audio"
-                  ></button>
-                  <span class="model-select__label">Audio</span>
-                  <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="selected-label">ElevenLabs</span>
-                    <svg viewBox="0 0 24 24">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </button>
-                  <div class="model-dropdown" role="listbox" aria-label="Kies een audiomodel">
-                    <div class="model-option" data-model="ElevenLabs" role="option" aria-selected="true">ElevenLabs</div>
+                  <div class="model-dropdown" role="listbox" aria-label="Kies een model">
+                    <div class="model-option" data-model="ChatGPT 5.1" role="option" aria-selected="true">ChatGPT 5.1</div>
+                    <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">Gemini 3</div>
+                    <div class="model-option" data-model="DeepSeek V2" role="option" aria-selected="false">DeepSeek V2</div>
                   </div>
                 </div>
               </div>
@@ -1442,25 +1385,25 @@
       let webSearchEnabled = false;
 
       const modelEngineMap = {
-        gpt5: "gpt-4o",
+        chatgpt51: "gpt-4o",
+        gemini3: "gemini-3",
+        deepseekv2: "deepseek-v2",
       };
-      let selectedModel = "gpt5";
-      let selectedModelLabel = "GPT-5";
+      let selectedModel = "chatgpt51";
+      let selectedModelLabel = "ChatGPT 5.1";
       let thinkingIndicator = null;
 
       const updateSelectedModel = (label) => {
-        selectedModelLabel = label || "GPT-5";
-        if (label === "Grok 4") {
-          selectedModel = "grok4";
-          console.log("Grok 4 integratie wordt later toegevoegd.");
+        selectedModelLabel = label || "ChatGPT 5.1";
+        if (label === "Gemini 3") {
+          selectedModel = "gemini3";
           return;
         }
-        if (label === "Gemini 2.5 Pro") {
-          selectedModel = "gemini25pro";
-          console.log("Gemini 2.5 Pro integratie wordt later toegevoegd.");
+        if (label === "DeepSeek V2") {
+          selectedModel = "deepseekv2";
           return;
         }
-        selectedModel = "gpt5";
+        selectedModel = "chatgpt51";
       };
 
       let activeCategory = "chat";
