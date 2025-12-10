@@ -726,7 +726,13 @@
         border-bottom: none;
       }
 
-      .model-option.has-sub:hover .model-option-sub {
+      .model-option.has-sub {
+        padding-bottom: 20px;
+        margin-bottom: -6px;
+      }
+
+      .model-option.has-sub:hover .model-option-sub,
+      .model-option-sub:hover {
         display: flex;
       }
 
@@ -734,28 +740,27 @@
         display: none;
         position: absolute;
         left: 0;
-        right: 0;
-        top: calc(100% + 6px);
-        margin-left: 0;
+        top: 100%;
+        margin-top: 0;
         background: #fff;
         border: 1px solid #e5e5e5;
         border-radius: 10px;
         box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.25);
         flex-direction: column;
-        min-width: 160px;
+        min-width: 140px;
         width: max-content;
-        max-width: min(260px, calc(100vw - 32px));
-        z-index: 30;
+        z-index: 50;
       }
 
       .model-option-sub .model-suboption {
         border: none;
         background: transparent;
-        padding: 10px 12px;
+        padding: 12px 16px;
         text-align: left;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         cursor: pointer;
         border-bottom: 1px solid #f1f1f1;
+        color: #1a1a1f;
       }
 
       .model-option-sub .model-suboption:last-child {
@@ -763,47 +768,7 @@
       }
 
       .model-option-sub .model-suboption:hover {
-        background: #f6f6f6;
-      }
-
-      .model-option.has-sub:hover .model-option-sub {
-        display: flex;
-      }
-
-      .model-option-sub {
-        display: none;
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: calc(100% + 6px);
-        margin-left: 0;
-        background: #fff;
-        border: 1px solid #e5e5e5;
-        border-radius: 10px;
-        box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.25);
-        flex-direction: column;
-        min-width: 160px;
-        width: max-content;
-        max-width: min(260px, calc(100vw - 32px));
-        z-index: 30;
-      }
-
-      .model-option-sub button {
-        border: none;
-        background: transparent;
-        padding: 10px 12px;
-        text-align: left;
-        font-size: 0.95rem;
-        cursor: pointer;
-        border-bottom: 1px solid #f1f1f1;
-      }
-
-      .model-option-sub button:last-child {
-        border-bottom: none;
-      }
-
-      .model-option-sub button:hover {
-        background: #f6f6f6;
+        background: rgba(255, 212, 0, 0.18);
       }
 
 
