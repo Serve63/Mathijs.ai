@@ -3,21 +3,771 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mathijs.ai</title>
-    <link rel="stylesheet" href="styles.css" />
+    <title>Mathijs.ai | De Complete AI-Leeromgeving</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #fafafa;
+        --fg: #1a1a1f;
+        --fg-muted: #6b6b76;
+        --accent: #e6c200;
+        --accent-dark: #c9a900;
+        --hero-1: #1a1a2e;
+        --hero-2: #16213e;
+        --hero-3: #0f3460;
+        --card-bg: #ffffff;
+        --border: rgba(0, 0, 0, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      /* Header */
+      .site-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        padding: 20px 40px;
+      }
+
+      .header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #fff;
+      }
+
+      .brand-logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+      }
+
+      .brand-text {
+        letter-spacing: 0.02em;
+      }
+
+      .brand-dot {
+        color: var(--accent);
+      }
+
+      .main-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .main-nav a {
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.75);
+        transition: all 0.2s ease;
+      }
+
+      .main-nav a:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .link-ghost {
+        padding: 10px 18px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.8);
+        transition: color 0.2s ease;
+      }
+
+      .link-ghost:hover {
+        color: #fff;
+      }
+
+      .header-cta {
+        padding: 10px 20px;
+        background: var(--accent);
+        color: #1a1600;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+      }
+
+      .header-cta:hover {
+        background: var(--accent-dark);
+        transform: translateY(-1px);
+      }
+
+      /* Hero */
+      .hero {
+        background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 50%, var(--hero-3) 100%);
+        position: relative;
+        overflow: hidden;
+        padding: 140px 40px 100px;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+      }
+
+      .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+          radial-gradient(ellipse 80% 50% at 20% 30%, rgba(230, 194, 0, 0.12) 0%, transparent 50%),
+          radial-gradient(ellipse 60% 40% at 85% 70%, rgba(230, 194, 0, 0.08) 0%, transparent 50%);
+        pointer-events: none;
+      }
+
+      .hero::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      .hero-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 60px;
+        align-items: center;
+      }
+
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(230, 194, 0, 0.15);
+        border: 1px solid rgba(230, 194, 0, 0.3);
+        color: var(--accent);
+        padding: 8px 16px;
+        border-radius: 100px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 24px;
+      }
+
+      .hero-badge svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .hero h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(2.4rem, 4.5vw, 3.2rem);
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: #fff;
+        margin: 0 0 20px;
+      }
+
+      .hero-subtitle {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0 0 32px;
+        max-width: 520px;
+      }
+
+      .hero-cta {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 40px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+      }
+
+      .btn.primary {
+        background: var(--accent);
+        color: #1a1600;
+      }
+
+      .btn.primary:hover {
+        background: var(--accent-dark);
+        transform: translateY(-2px);
+      }
+
+      .btn.secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .btn.secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .hero-stats {
+        display: flex;
+        gap: 40px;
+        flex-wrap: wrap;
+      }
+
+      .hero-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .hero-stat__value {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--accent);
+        line-height: 1;
+      }
+
+      .hero-stat__label {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .hero-visual {
+        position: relative;
+      }
+
+      .hero-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 32px;
+        color: #fff;
+      }
+
+      .hero-card__header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .hero-card__avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        border: 2px solid var(--accent);
+      }
+
+      .hero-card__title {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .hero-card__subtitle {
+        margin: 0;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .hero-card__text {
+        margin: 0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .hero-features {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .hero-feature {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .hero-feature svg {
+        width: 20px;
+        height: 20px;
+        color: var(--accent);
+        flex-shrink: 0;
+      }
+
+      /* Trust Bar */
+      .trust-bar {
+        background: var(--hero-1);
+        padding: 32px 40px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .trust-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 48px;
+        flex-wrap: wrap;
+      }
+
+      .trust-label {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .trust-logos {
+        display: flex;
+        gap: 32px;
+        flex-wrap: wrap;
+      }
+
+      .trust-logos span {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      /* Sections */
+      .section {
+        padding: 100px 40px;
+      }
+
+      .section-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .section-header {
+        text-align: center;
+        max-width: 700px;
+        margin: 0 auto 60px;
+      }
+
+      .section-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--accent);
+        margin-bottom: 16px;
+      }
+
+      .section-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(1.8rem, 3vw, 2.4rem);
+        font-weight: 700;
+        margin: 0 0 16px;
+        letter-spacing: -0.01em;
+      }
+
+      .section-subtitle {
+        font-size: 1.05rem;
+        color: var(--fg-muted);
+        margin: 0;
+        line-height: 1.7;
+      }
+
+      /* Features */
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 24px;
+      }
+
+      .feature-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 32px;
+        transition: all 0.3s ease;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.15);
+        border-color: rgba(230, 194, 0, 0.3);
+      }
+
+      .feature-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 100%);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
+      .feature-icon svg {
+        width: 24px;
+        height: 24px;
+        color: var(--accent);
+      }
+
+      .feature-card h3 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 0 0 12px;
+      }
+
+      .feature-card p {
+        color: var(--fg-muted);
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      /* How it works */
+      .section.dark {
+        background: linear-gradient(180deg, var(--hero-1) 0%, var(--hero-2) 100%);
+        color: #fff;
+      }
+
+      .section.dark .section-subtitle {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 32px;
+      }
+
+      .step {
+        text-align: center;
+        padding: 32px;
+      }
+
+      .step-number {
+        width: 64px;
+        height: 64px;
+        background: var(--accent);
+        color: #1a1600;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 auto 20px;
+      }
+
+      .step h3 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 0 0 12px;
+      }
+
+      .step p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      /* Testimonials */
+      .testimonials-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+      }
+
+      .testimonial-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 32px;
+      }
+
+      .testimonial-card p {
+        font-size: 1rem;
+        line-height: 1.7;
+        margin: 0 0 20px;
+        color: var(--fg);
+      }
+
+      .testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .testimonial-avatar {
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      .testimonial-name {
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .testimonial-role {
+        font-size: 0.85rem;
+        color: var(--fg-muted);
+        margin: 0;
+      }
+
+      /* CTA */
+      .cta-section {
+        background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 50%, var(--hero-3) 100%);
+        padding: 80px 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .cta-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(230, 194, 0, 0.1) 0%, transparent 60%);
+        pointer-events: none;
+      }
+
+      .cta-inner {
+        max-width: 700px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+      }
+
+      .cta-section h2 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(1.8rem, 3vw, 2.4rem);
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 16px;
+      }
+
+      .cta-section p {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0 0 32px;
+      }
+
+      /* Footer */
+      .site-footer {
+        background: var(--hero-1);
+        padding: 48px 40px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .footer-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 24px;
+      }
+
+      .footer-brand {
+        color: #fff;
+      }
+
+      .footer-brand .brand-text {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .footer-brand p {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.5);
+        margin: 0;
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 24px;
+      }
+
+      .footer-links a {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.6);
+        transition: color 0.2s ease;
+      }
+
+      .footer-links a:hover {
+        color: var(--accent);
+      }
+
+      .footer-copy {
+        width: 100%;
+        text-align: center;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.4);
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      /* Responsive */
+      @media (max-width: 960px) {
+        .main-nav {
+          display: none;
+        }
+
+        .hero-inner {
+          grid-template-columns: 1fr;
+          text-align: center;
+        }
+
+        .hero-subtitle {
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .hero-cta {
+          justify-content: center;
+        }
+
+        .hero-stats {
+          justify-content: center;
+        }
+
+        .hero-visual {
+          max-width: 500px;
+          margin: 0 auto;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .site-header {
+          padding: 16px 20px;
+        }
+
+        .hero {
+          padding: 120px 20px 60px;
+        }
+
+        .section {
+          padding: 60px 20px;
+        }
+
+        .trust-bar {
+          padding: 24px 20px;
+        }
+
+        .cta-section {
+          padding: 60px 20px;
+        }
+
+        .site-footer {
+          padding: 40px 20px;
+        }
+
+        .hero-stats {
+          gap: 24px;
+        }
+
+        .hero-stat__value {
+          font-size: 1.6rem;
+        }
+      }
+    </style>
   </head>
   <body>
     <header class="site-header">
       <div class="header-inner">
         <a href="index.html" class="brand">
-          <span class="brand-text">Mathijs.ai</span>
+          <img src="assets/mathijs-avatar.png" alt="Mathijs.ai" class="brand-logo" />
+          <span class="brand-text">MATHIJS<span class="brand-dot">.AI</span></span>
         </a>
         <nav class="main-nav">
-          <a href="#why">Waarom</a>
-          <a href="#course">Cursus</a>
+          <a href="#features">Waarom</a>
           <a href="#how">Werking</a>
           <a href="#reviews">Reviews</a>
-          <a href="#faq">FAQ</a>
         </nav>
         <div class="header-actions">
           <a class="link-ghost" href="signup.html">Aanmelden</a>
@@ -25,76 +775,83 @@
         </div>
       </div>
     </header>
+
     <main>
-      <section class="hero" id="top">
-        <div class="section-inner hero-layout">
+      <section class="hero">
+        <div class="hero-inner">
           <div class="hero-content">
             <div class="hero-badge">
-              <span class="pill">Nieuw</span>
-              <p>AI-leeromgeving voor ondernemers & teams</p>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              AI-Leeromgeving
             </div>
-            <p class="eyebrow">Test · Kies · Pas toe</p>
-            <h1>De complete AI-leeromgeving voor jouw bedrijf</h1>
-            <p class="lead">
-              Stop met model-chaos. Test GPT, Gemini, Grok en ElevenLabs in één omgeving,
-              leer wanneer je welk model inzet en krijg kant-en-klare workflows voor marketing,
-              sales en operations.
+            <h1>De Complete AI-Leeromgeving voor Jouw Bedrijf</h1>
+            <p class="hero-subtitle">
+              Stop met model-chaos. Test GPT, Gemini, Grok en meer in één omgeving, 
+              leer wanneer je welk model inzet en krijg kant-en-klare workflows voor 
+              marketing, sales en operations.
             </p>
             <div class="hero-cta">
-              <a class="btn primary" href="chat.html">Probeer alle modellen</a>
-              <a class="btn secondary" href="course.html">Bekijk het programma</a>
+              <a class="btn primary" href="chat.html">Probeer Alle Modellen</a>
+              <a class="btn secondary" href="course.html">Bekijk de Cursus</a>
             </div>
-            <p class="hero-note">Geen creditcard nodig · live binnen 60 seconden</p>
-            <ul class="hero-tags">
-              <li>Vergelijk GPT, Gemini, Grok, ElevenLabs</li>
-              <li>Gebruiksklare prompts voor business cases</li>
-              <li>Video’s en workshops per model</li>
-            </ul>
-            <ul class="hero-metrics">
-              <li>
-                <span class="metric">1.2k+</span>
-                <span class="label">teams testen modellen</span>
-              </li>
-              <li>
-                <span class="metric">25+</span>
-                <span class="label">curated prompts & flows</span>
-              </li>
-              <li>
-                <span class="metric">92%</span>
-                <span class="label">ziet directe tijdswinst</span>
-              </li>
-            </ul>
+            <div class="hero-stats">
+              <div class="hero-stat">
+                <span class="hero-stat__value">1.2k+</span>
+                <span class="hero-stat__label">Teams actief</span>
+              </div>
+              <div class="hero-stat">
+                <span class="hero-stat__value">50+</span>
+                <span class="hero-stat__label">Video lessen</span>
+              </div>
+              <div class="hero-stat">
+                <span class="hero-stat__value">92%</span>
+                <span class="hero-stat__label">Tijdswinst</span>
+              </div>
+            </div>
           </div>
-          <div class="hero-media">
-            <img
-              src="assets/brain-hero.svg"
-              alt="Illustratie van het Mathijs.ai brein"
-              class="hero-illustration"
-            />
-            <div class="floating-card">
-              <div class="floating-header">
-                <img
-                  src="assets/mathijs-avatar.png"
-                  alt="Avatar Mathijs"
-                  class="avatar"
-                />
+          <div class="hero-visual">
+            <div class="hero-card">
+              <div class="hero-card__header">
+                <img src="assets/mathijs-avatar.png" alt="Mathijs.ai" class="hero-card__avatar" />
                 <div>
-                  <p class="floating-title">Mathijs.ai</p>
-                <p class="floating-subtitle">Coach voor modellen & workflows</p>
+                  <p class="hero-card__title">Mathijs.ai</p>
+                  <p class="hero-card__subtitle">Jouw AI-coach</p>
                 </div>
               </div>
-              <p>
-              “Laten we helder maken welke taak je hebt en welk model daarbij past.
-              Wil je copy testen met GPT-5 of audio bouwen met ElevenLabs?”
+              <p class="hero-card__text">
+                "Laten we helder maken welke taak je hebt en welk model daarbij past.
+                Wil je copy testen met GPT-5 of audio bouwen met ElevenLabs?"
               </p>
+              <div class="hero-features">
+                <div class="hero-feature">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span>Vergelijk GPT, Gemini, Grok & meer</span>
+                </div>
+                <div class="hero-feature">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span>Kant-en-klare prompts voor business</span>
+                </div>
+                <div class="hero-feature">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span>Video's en workshops per model</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <section class="trust-bar">
-        <div class="section-inner trust-layout">
-          <p>Vertrouwd door teams bij</p>
+        <div class="trust-inner">
+          <span class="trust-label">Vertrouwd door</span>
           <div class="trust-logos">
             <span>Scale-ups</span>
             <span>Agencies</span>
@@ -105,189 +862,154 @@
         </div>
       </section>
 
-      <section class="features" id="why">
+      <section class="section" id="features">
         <div class="section-inner">
-          <div class="section-heading">
-            <p class="eyebrow">Waarom Mathijs.ai</p>
-            <h2>De plek waar je modellen kiest én toepast</h2>
-            <p class="subcopy">
-              Eén omgeving om GPT, Gemini, Grok en ElevenLabs te testen, met richtlijnen per use case
+          <div class="section-header">
+            <span class="section-eyebrow">Waarom Mathijs.ai</span>
+            <h2 class="section-title">De plek waar je modellen kiest én toepast</h2>
+            <p class="section-subtitle">
+              Eén omgeving om GPT, Gemini, Grok en meer te testen, met richtlijnen per use case
               en kant-en-klare workflows voor jouw business.
             </p>
           </div>
-          <div class="feature-grid">
-            <article>
+          <div class="features-grid">
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
               <h3>Model-keuze zonder ruis</h3>
-              <p>Krijg per taak advies welk model het best past en waarom: GPT voor lange copy, Gemini voor context, Grok voor snelheid, ElevenLabs voor audio.</p>
+              <p>Krijg per taak advies welk model het best past: GPT voor lange copy, Gemini voor context, Grok voor snelheid.</p>
             </article>
-            <article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+              </div>
               <h3>Kant-en-klare workflows</h3>
               <p>Gebruik prompts en flows voor marketing, sales en operations. Pas ze aan in de chat en zet ze direct in je proces.</p>
             </article>
-            <article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="23 7 16 12 23 17 23 7"/>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+              </div>
               <h3>Blijf leren met video</h3>
-              <p>Korte video’s per model: wat kan het, wanneer gebruik je het en hoe prompt je het slimst voor jouw casus.</p>
+              <p>Korte video's per model: wat kan het, wanneer gebruik je het en hoe prompt je het slimst voor jouw casus.</p>
             </article>
           </div>
         </div>
       </section>
 
-      <section class="course-highlight" id="course">
-        <div class="section-inner highlight-layout">
-          <div>
-            <p class="eyebrow">Nieuwe module</p>
-            <h2>De AI-keuzecursus voor ondernemers</h2>
-            <p>
-              Leer wanneer je GPT, Gemini, Grok of ElevenLabs inzet. Bouw praktische flows voor content, klantcontact en interne processen met live sessies en on-demand video.
-            </p>
-            <ul class="bullet-list">
-              <li>4 weken gerichte business-cases</li>
-              <li>Voorbeelden per model & kanaal</li>
-              <li>Direct toepasbare promptbibliotheek</li>
-            </ul>
-            <a class="btn ghost" href="course.html">Ontdek het programma</a>
-          </div>
-          <div class="highlight-card">
-            <p class="label">Preview les 2</p>
-            <h3>Prompten voor kwantitatieve analyses</h3>
-            <p>
-              Mathijs.ai laat zien hoe je GPT en Gemini samen inzet: datastructuren valideren, hypotheses testen en resultaten presenteren in duidelijke bullets.
-            </p>
-            <a href="course.html">Bekijk lesmateriaal →</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="ai-explainer" id="how">
-        <div class="section-inner explainer-layout">
-          <div>
-            <p class="eyebrow">Hoe het werkt</p>
-            <h2>Van model-keuze naar werkende flow</h2>
-            <p>
-              Mathijs.ai combineert meerdere modellen in één interface: je test, vergelijkt en past direct toe
-              met voorbeelden die bij je business passen.
-            </p>
-          </div>
-          <ul class="explainer-steps">
-            <li>
-              <span>1</span>
-              <div>
-                <h3>Diagnose</h3>
-                <p>Geef je taak en kanaal (mail, ads, audio, datastructuur). Wij matchen het juiste model.</p>
-              </div>
-            </li>
-            <li>
-              <span>2</span>
-              <div>
-                <h3>Dialoog</h3>
-                <p>Experimenteer live met prompts per model: GPT, Gemini, Grok of ElevenLabs.</p>
-              </div>
-            </li>
-            <li>
-              <span>3</span>
-              <div>
-                <h3>Implementatie</h3>
-                <p>Neem de beste prompt of flow over in je proces en bewaar hem als sjabloon.</p>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="testimonials" id="reviews">
+      <section class="section dark" id="how">
         <div class="section-inner">
-          <div class="section-heading">
-            <p class="eyebrow">Ervaringen</p>
-            <h2>Studenten voelen zich zekerder in de tentamenzaal</h2>
+          <div class="section-header">
+            <span class="section-eyebrow">Hoe het werkt</span>
+            <h2 class="section-title" style="color: #fff;">Van model-keuze naar werkende flow</h2>
+            <p class="section-subtitle">
+              Mathijs.ai combineert meerdere modellen in één interface: je test, vergelijkt en past direct toe.
+            </p>
           </div>
-          <div class="testimonial-grid">
-            <article>
-              <p>
-                “Mathijs legt uit zoals mijn favoriete docent, maar dan 24/7
-                beschikbaar. Ik snap nu eindelijk waarom mijn bewijs stokte.”
-              </p>
-              <div class="author">
-                <p class="name">Sara, BSc AI</p>
-                <p class="meta">Vrije Universiteit</p>
-              </div>
-            </article>
-            <article>
-              <p>
-                “Tijdens projectweken gebruik ik Mathijs als sparringpartner. Ik
-                krijg geen kant-en-klare antwoorden maar wel betere vragen.”
-              </p>
-              <div class="author">
-                <p class="name">Youssef, HBO-ICT</p>
-                <p class="meta">HAN</p>
-              </div>
-            </article>
-            <article>
-              <p>
-                “De reflectiekaartjes helpen me gefocust te blijven. Ik combineer
-                ze met mijn notities in Notion en zie mijn progressie.”
-              </p>
-              <div class="author">
-                <p class="name">Mila, MSc Data Science</p>
-                <p class="meta">TU Delft</p>
-              </div>
-            </article>
+          <div class="steps">
+            <div class="step">
+              <div class="step-number">1</div>
+              <h3>Diagnose</h3>
+              <p>Geef je taak en kanaal (mail, ads, audio). Wij matchen het juiste model.</p>
+            </div>
+            <div class="step">
+              <div class="step-number">2</div>
+              <h3>Dialoog</h3>
+              <p>Experimenteer live met prompts per model: GPT, Gemini, Grok of andere.</p>
+            </div>
+            <div class="step">
+              <div class="step-number">3</div>
+              <h3>Implementatie</h3>
+              <p>Neem de beste prompt over in je proces en bewaar hem als sjabloon.</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="faq" id="faq">
+      <section class="section" id="reviews">
         <div class="section-inner">
-          <div class="section-heading">
-            <p class="eyebrow">Veelgestelde vragen</p>
-            <h2>Alles wat je moet weten voor je start</h2>
+          <div class="section-header">
+            <span class="section-eyebrow">Ervaringen</span>
+            <h2 class="section-title">Wat onze gebruikers zeggen</h2>
+            <p class="section-subtitle">
+              Teams en ondernemers delen hun ervaringen met Mathijs.ai.
+            </p>
           </div>
-          <div class="faq-items">
-            <details open>
-              <summary>Is Mathijs.ai gratis te proberen?</summary>
+          <div class="testimonials-grid">
+            <article class="testimonial-card">
               <p>
-                Ja, je krijgt 20 gratis vragen per maand. Voor onbeperkte toegang tot alle modellen kies je voor Mathijs Plus of een teamlicentie.
+                "Mathijs.ai heeft ons team uren per week bespaard. We weten nu exact welk model we moeten gebruiken voor elke taak."
               </p>
-            </details>
-            <details>
-              <summary>Werkt Mathijs alleen voor content?</summary>
+              <div class="testimonial-author">
+                <div class="testimonial-avatar">S</div>
+                <div>
+                  <p class="testimonial-name">Sara, Marketing Lead</p>
+                  <p class="testimonial-role">Scale-up Amsterdam</p>
+                </div>
+              </div>
+            </article>
+            <article class="testimonial-card">
               <p>
-                Nee, we richten ons op bedrijfscases: content, klantcontact, sales, data-analyse en audio. Je kiest per taak het juiste model.
+                "De kant-en-klare workflows zijn goud waard. Ik gebruik ze dagelijks voor content creatie en klantcommunicatie."
               </p>
-            </details>
-            <details>
-              <summary>Kan ik samenwerken met mijn team?</summary>
+              <div class="testimonial-author">
+                <div class="testimonial-avatar">Y</div>
+                <div>
+                  <p class="testimonial-name">Youssef, Founder</p>
+                  <p class="testimonial-role">Digital Agency</p>
+                </div>
+              </div>
+            </article>
+            <article class="testimonial-card">
               <p>
-                Nodig collega’s uit via een teamlink, deel prompts en workflows en houd één gedeelde bibliotheek bij.
+                "Eindelijk een plek waar ik alle AI-modellen kan vergelijken zonder 10 verschillende tools te openen."
               </p>
-            </details>
+              <div class="testimonial-author">
+                <div class="testimonial-avatar">M</div>
+                <div>
+                  <p class="testimonial-name">Mila, Operations</p>
+                  <p class="testimonial-role">E-commerce</p>
+                </div>
+              </div>
+            </article>
           </div>
         </div>
       </section>
 
-      <section class="cta-banner">
-        <div class="section-inner banner-layout">
-          <div>
-            <p class="eyebrow">Klaar voor je volgende launch?</p>
-            <h2>Test alle AI-modellen in één omgeving en kies wat werkt</h2>
-            <p>Start nu gratis, bewaar je sessies en zet de beste prompts door naar je team.</p>
-          </div>
-          <a class="btn primary" href="chat.html">Ga naar de chat</a>
+      <section class="cta-section">
+        <div class="cta-inner">
+          <h2>Klaar om te starten?</h2>
+          <p>Test alle AI-modellen in één omgeving en ontdek wat werkt voor jouw business.</p>
+          <a class="btn primary" href="chat.html">Start Nu Gratis</a>
         </div>
       </section>
     </main>
+
     <footer class="site-footer">
-      <div class="section-inner footer-layout">
-        <div>
-          <p class="brand-text">Mathijs.ai</p>
-          <p class="meta">Leren met AI, maar dan menselijk.</p>
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <p class="brand-text">MATHIJS<span class="brand-dot">.AI</span></p>
+          <p>Leren met AI, maar dan menselijk.</p>
         </div>
         <div class="footer-links">
-          <a href="course.html">Cursussen</a>
+          <a href="course.html">Cursus</a>
           <a href="chat.html">Chat</a>
           <a href="login.html">Account</a>
         </div>
+        <p class="footer-copy">© 2024 Mathijs.ai · Alle rechten voorbehouden</p>
       </div>
     </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   </body>
 </html>
