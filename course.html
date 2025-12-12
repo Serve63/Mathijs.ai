@@ -33,51 +33,78 @@
       }
 
       header {
-        padding: 32px;
+        padding: 24px 32px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border-bottom: 1px solid rgba(16, 21, 32, 0.08);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 100;
       }
 
       header .logo {
-        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
         gap: 12px;
+        text-decoration: none;
+        color: inherit;
+        font-size: 1.1rem;
+        font-weight: 600;
       }
 
       header .logo__image {
-        width: 70px;
-        height: 70px;
-        transform: translateY(-16px);
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
+
+      header .logo__text {
+        display: flex;
+        align-items: baseline;
+        gap: 2px;
       }
 
       header .logo__word {
         color: var(--accent);
+        letter-spacing: 0.02em;
       }
       
       header .logo__suffix {
         color: var(--accent);
+        font-size: 0.9em;
       }
 
       .back-link {
         text-decoration: none;
         color: var(--fg-muted);
-        font-size: 0.9rem;
+        font-size: 0.88rem;
+        font-weight: 500;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
       }
 
       .back-link:hover {
-        color: #1d1d24;
+        color: #1a1a1f;
+        background: rgba(16, 21, 32, 0.04);
+        border-color: rgba(16, 21, 32, 0.08);
       }
 
       main {
-        padding: 0 32px 48px;
+        padding: 48px 32px;
         max-width: 1200px;
         margin: 0 auto;
         display: flex;
         flex-direction: column;
-        gap: 32px;
+        gap: 40px;
       }
 
       h1 {
@@ -85,14 +112,22 @@
         font-size: clamp(2rem, 4vw, 2.6rem);
         margin: 0;
         letter-spacing: -0.01em;
+        font-weight: 700;
+        color: var(--fg);
       }
 
       .intro {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
         color: var(--fg-muted);
         max-width: 760px;
+      }
+
+      .intro p {
+        font-size: 1.05rem;
+        line-height: 1.6;
+        margin: 0;
       }
 
       .grid {
@@ -161,14 +196,19 @@
   </head>
   <body>
     <header>
-      <div class="logo" aria-label="Mathijs dot AI">
+      <a class="logo" href="index.html" aria-label="Mathijs dot AI">
         <img class="logo__image" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
         <span class="logo__text">
           <span class="logo__word">MATHIJS</span>
           <span class="logo__suffix">.AI</span>
         </span>
-      </div>
-      <a class="back-link" href="chat.html">← Terug naar AI Leeromgeving</a>
+      </a>
+      <a class="back-link" href="chat.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Terug naar AI Leeromgeving
+      </a>
     </header>
     <main>
       <div class="intro">
