@@ -1727,6 +1727,27 @@
           closeAllDropdowns(isOpen ? null : chatPlusMenu);
           chatPlusMenu.style.display = isOpen ? "none" : "block";
           chatPlus.setAttribute("aria-expanded", !isOpen ? "true" : "false");
+          
+          // Adjust position to keep menu fully visible
+          if (!isOpen) {
+            setTimeout(() => {
+              const menuRect = chatPlusMenu.getBoundingClientRect();
+              const viewportHeight = window.innerHeight;
+              const minSpaceFromBottom = 20;
+              
+              // If menu extends below viewport, move it up
+              if (menuRect.bottom > viewportHeight - minSpaceFromBottom) {
+                const chatPlusRect = chatPlus.getBoundingClientRect();
+                const menuHeight = menuRect.height;
+                // Position menu so bottom edge is 20px from viewport bottom
+                const newBottom = viewportHeight - chatPlusRect.top - menuHeight - minSpaceFromBottom;
+                chatPlusMenu.style.bottom = `${Math.max(newBottom, 10)}px`;
+              } else {
+                // Reset to default position
+                chatPlusMenu.style.bottom = "calc(100% + 10px)";
+              }
+            }, 0);
+          }
         });
       }
 
