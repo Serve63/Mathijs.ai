@@ -35,47 +35,15 @@
       header {
         padding: 20px 40px;
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: center;
+        gap: 12px;
         background: transparent;
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         z-index: 100;
-      }
-
-      header .logo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        text-decoration: none;
-        color: inherit;
-        font-size: 1.1rem;
-        font-weight: 600;
-      }
-
-      header .logo__image {
-        width: 44px;
-        height: 44px;
-        object-fit: contain;
-        flex-shrink: 0;
-      }
-
-      header .logo__text {
-        display: flex;
-        align-items: baseline;
-        gap: 2px;
-      }
-
-      header .logo__word {
-        color: #fff;
-        letter-spacing: 0.02em;
-      }
-      
-      header .logo__suffix {
-        color: var(--accent);
-        font-size: 0.9em;
       }
 
       .back-link {
@@ -376,22 +344,13 @@
           gap: 12px;
         }
 
-        .back-link span {
-          display: none;
-        }
+        /* back-link blijft links boven */
       }
     </style>
   </head>
   <body>
     <section class="hero">
     <header>
-        <a class="logo" href="index.html" aria-label="Mathijs dot AI">
-        <img class="logo__image" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
-        <span class="logo__text">
-          <span class="logo__word">MATHIJS</span>
-          <span class="logo__suffix">.AI</span>
-        </span>
-        </a>
         <a class="back-link" href="chat.html">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
