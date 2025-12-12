@@ -880,8 +880,15 @@
         max-width: 880px;
         display: flex;
         align-items: flex-start;
-        justify-content: space-between;
+        justify-content: flex-start;
         gap: 24px;
+      }
+
+      .chat-model-selector {
+        padding: 16px 24px 0;
+        max-width: 880px;
+        margin: 0 auto;
+        width: 100%;
       }
 
       .status-info {
@@ -909,16 +916,10 @@
         color: rgba(255, 255, 255, 0.7);
       }
 
-      .model-controls {
-        flex: 1 1 auto;
-        display: flex;
-        justify-content: flex-end;
-      }
-
       .model-selects {
         display: flex;
-        align-items: flex-end;
-        justify-content: flex-end;
+        align-items: flex-start;
+        justify-content: flex-start;
         flex-wrap: wrap;
         gap: 16px;
         max-width: 100%;
@@ -942,13 +943,13 @@
       }
 
       .model-select.is-active .model-select__trigger {
-        border-color: rgba(255, 255, 255, 0.3);
-        box-shadow: none;
-        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--chat-accent);
+        box-shadow: 0 8px 24px -12px rgba(230, 194, 0, 0.5);
+        background: rgba(230, 194, 0, 0.2);
       }
 
       .model-select.is-active .model-select__label {
-        color: rgba(255, 255, 255, 0.95);
+        color: #1a1a1f;
       }
 
       .model-select__activator {
@@ -972,7 +973,7 @@
         font-size: 0.56rem;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.6);
+        color: var(--chat-muted);
       }
 
       .model-select__activator::after {
@@ -985,46 +986,45 @@
       }
 
       .model-select__activator:hover {
-        border-color: rgba(255, 255, 255, 0.4);
+        border-color: rgba(26, 26, 31, 0.5);
       }
 
       .model-select__activator:focus-visible {
-        outline: 2px solid rgba(255, 255, 255, 0.5);
+        outline: 2px solid var(--chat-accent);
         outline-offset: 2px;
       }
 
       .model-select.is-active .model-select__activator {
-        border-color: rgba(255, 255, 255, 0.5);
-        box-shadow: none;
-        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--chat-accent);
+        box-shadow: 0 0 0 4px rgba(230, 194, 0, 0.18);
+        background: rgba(230, 194, 0, 0.16);
       }
 
       .model-select.is-active .model-select__activator::after {
-        background: rgba(255, 255, 255, 0.7);
+        background: var(--chat-accent);
         transform: scale(1.05);
       }
 
       .model-select__trigger {
         padding: 6px 12px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
+        background: #fff;
+        color: #1a1a1f;
         font-size: 0.75rem;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid var(--chat-border);
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         gap: 6px;
         white-space: nowrap;
         transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        backdrop-filter: blur(8px);
       }
 
       .model-select__trigger:hover {
-        background: rgba(255, 255, 255, 0.18);
-        border-color: rgba(255, 255, 255, 0.3);
+        background: #f5f5f5;
+        border-color: rgba(0, 0, 0, 0.15);
       }
 
       .model-select__trigger .selected-label {
@@ -1620,9 +1620,8 @@
           gap: 20px;
         }
 
-        .model-controls {
-          width: 100%;
-          justify-content: flex-start;
+        .chat-model-selector {
+          padding: 12px 20px 0;
         }
 
         .chat-footer {
@@ -1776,57 +1775,57 @@
               <h2>De Complete AI-Leeromgeving</h2>
               <p>Test en vergelijk AI-modellen zonder keuzestress en ontdek welke het beste past bij jouw business en workflow.</p>
             </div>
-            <div class="model-controls">
-              <div class="model-selects">
-                <div class="model-select" data-category="chat" data-label="Model">
-                  <button
-                    type="button"
-                    class="model-select__activator"
-                    aria-pressed="true"
-                    aria-label="Activeer model"
-                  ></button>
-                  <span class="model-select__label">Model</span>
-                  <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="selected-label">ChatGPT 5.1 (Instant)</span>
-                    <svg viewBox="0 0 24 24">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </button>
-                  <div class="model-dropdown" role="listbox" aria-label="Kies een model">
-                    <div class="model-option has-sub" data-model="ChatGPT 5.1" role="option" aria-selected="false">
-                      ChatGPT 5.1
-                      <div class="model-option-sub">
-                        <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Instant)">Instant</button>
-                        <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Thinking)">Thinking</button>
-                    </div>
+          </div>
+        </header>
+        <div class="chat-model-selector">
+          <div class="model-selects">
+            <div class="model-select" data-category="chat" data-label="Model">
+              <button
+                type="button"
+                class="model-select__activator"
+                aria-pressed="true"
+                aria-label="Activeer model"
+              ></button>
+              <span class="model-select__label">Model</span>
+              <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
+                <span class="selected-label">ChatGPT 5.1 (Instant)</span>
+                <svg viewBox="0 0 24 24">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              <div class="model-dropdown" role="listbox" aria-label="Kies een model">
+                <div class="model-option has-sub" data-model="ChatGPT 5.1" role="option" aria-selected="false">
+                  ChatGPT 5.1
+                  <div class="model-option-sub">
+                    <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Instant)">Instant</button>
+                    <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Thinking)">Thinking</button>
                   </div>
-                    <div class="model-option has-sub" data-model="Gemini 3" role="option" aria-selected="false">
-                      Gemini 3
-                      <div class="model-option-sub">
-                        <button type="button" class="model-suboption" data-model="Gemini 3 (Snel)">Snel</button>
-                        <button type="button" class="model-suboption" data-model="Gemini 3 (Nadenken)">Nadenken</button>
                 </div>
+                <div class="model-option has-sub" data-model="Gemini 3" role="option" aria-selected="false">
+                  Gemini 3
+                  <div class="model-option-sub">
+                    <button type="button" class="model-suboption" data-model="Gemini 3 (Snel)">Snel</button>
+                    <button type="button" class="model-suboption" data-model="Gemini 3 (Nadenken)">Nadenken</button>
+                  </div>
                 </div>
-                    <div class="model-option has-sub" data-model="DeepSeek V2" role="option" aria-selected="false">
-                      DeepSeek V2
-                      <div class="model-option-sub">
-                        <button type="button" class="model-suboption" data-model="DeepSeek V2 (Snel)">Snel</button>
-                        <button type="button" class="model-suboption" data-model="DeepSeek V2 (Diepdenken)">Diepdenken</button>
-                      </div>
-                    </div>
-                    <div class="model-option has-sub" data-model="Grok" role="option" aria-selected="false">
-                      Grok
-                      <div class="model-option-sub">
-                        <button type="button" class="model-suboption" data-model="Grok (Expert)">Expert</button>
-                        <button type="button" class="model-suboption" data-model="Grok (Snel)">Snel</button>
-                      </div>
-                    </div>
+                <div class="model-option has-sub" data-model="DeepSeek V2" role="option" aria-selected="false">
+                  DeepSeek V2
+                  <div class="model-option-sub">
+                    <button type="button" class="model-suboption" data-model="DeepSeek V2 (Snel)">Snel</button>
+                    <button type="button" class="model-suboption" data-model="DeepSeek V2 (Diepdenken)">Diepdenken</button>
+                  </div>
                 </div>
+                <div class="model-option has-sub" data-model="Grok" role="option" aria-selected="false">
+                  Grok
+                  <div class="model-option-sub">
+                    <button type="button" class="model-suboption" data-model="Grok (Expert)">Expert</button>
+                    <button type="button" class="model-suboption" data-model="Grok (Snel)">Snel</button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </header>
+        </div>
         <section class="chat-log"></section>
         <footer class="chat-footer">
           <div class="chat-input">
