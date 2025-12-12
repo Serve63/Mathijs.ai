@@ -1960,104 +1960,126 @@
 
       // Profile name editing
       const profileNameEditBtn = document.querySelector(".profile-name-edit");
-      if (profileNameEl && profileNameEditBtn && supabaseClient) {
-        profileNameEditBtn.addEventListener("click", async (event) => {
-          event.stopPropagation();
-          const currentName = profileNameEl.textContent.trim();
-          const newName = prompt("Voer je nieuwe naam in:", currentName);
-          
-          if (newName && newName.trim() && newName.trim() !== currentName) {
-            try {
-              const { data: { user } } = await supabaseClient.auth.getUser();
-              if (!user) return;
+      if (profileNameEl && profileNameEditBtn) {
+        const initProfileNameEdit = () => {
+          const client = window.mathijsSupabase || supabaseClient;
+          if (!client) return;
+          profileNameEditBtn.addEventListener("click", async (event) => {
+            event.stopPropagation();
+            const currentName = profileNameEl.textContent.trim();
+            const newName = prompt("Voer je nieuwe naam in:", currentName);
+            
+            if (newName && newName.trim() && newName.trim() !== currentName) {
+              try {
+                const { data: { user } } = await client.auth.getUser();
+                if (!user) return;
 
-              // Update user metadata
-              const { error } = await supabaseClient.auth.updateUser({
-                data: { username: newName.trim() }
-              });
+                // Update user metadata
+                const { error } = await client.auth.updateUser({
+                  data: { username: newName.trim() }
+                });
 
-              if (error) throw error;
+                if (error) throw error;
 
-              // Update local display
-              profileNameEl.textContent = newName.trim();
-              if (currentUser) {
-                currentUser.user_metadata = { ...currentUser.user_metadata, username: newName.trim() };
-                updateProfileSidebar(currentUser);
+                // Update local display
+                profileNameEl.textContent = newName.trim();
+                if (currentUser) {
+                  currentUser.user_metadata = { ...currentUser.user_metadata, username: newName.trim() };
+                  updateProfileSidebar(currentUser);
+                }
+              } catch (error) {
+                console.error("Error updating name:", error);
+                alert("Er is een fout opgetreden bij het bijwerken van je naam.");
               }
-            } catch (error) {
-              console.error("Error updating name:", error);
-              alert("Er is een fout opgetreden bij het bijwerken van je naam.");
             }
-          }
-        });
+          });
+        };
+        
+        // Wait for supabase client to be available
+        if (window.mathijsSupabase || supabaseClient) {
+          initProfileNameEdit();
+        } else {
+          setTimeout(initProfileNameEdit, 100);
+        }
       }
 
       // Profile avatar upload
-      if (profileAvatar && profileAvatarInput && supabaseClient) {
-        profileAvatar.addEventListener("click", () => {
-          profileAvatarInput.click();
-        });
+      if (profileAvatar && profileAvatarInput) {
+        const initProfileAvatarUpload = () => {
+          const client = window.mathijsSupabase || supabaseClient;
+          if (!client) return;
+          profileAvatar.addEventListener("click", () => {
+            profileAvatarInput.click();
+          });
 
-        profileAvatarInput.addEventListener("change", async (event) => {
-          const file = event.target.files?.[0];
-          if (!file) return;
+          profileAvatarInput.addEventListener("change", async (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
 
-          // Validate file type
-          if (!file.type.startsWith("image/")) {
-            alert("Selecteer een afbeelding.");
-            return;
-          }
+            // Validate file type
+            if (!file.type.startsWith("image/")) {
+              alert("Selecteer een afbeelding.");
+              return;
+            }
 
-          // Validate file size (max 5MB)
-          if (file.size > 5 * 1024 * 1024) {
-            alert("Afbeelding is te groot. Maximum 5MB.");
-            return;
-          }
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+              alert("Afbeelding is te groot. Maximum 5MB.");
+              return;
+            }
 
-          try {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (!user) return;
+            try {
+              const { data: { user } } = await client.auth.getUser();
+              if (!user) return;
 
-            // Create file name
-            const fileExt = file.name.split(".").pop();
-            const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-            const filePath = `avatars/${fileName}`;
+              // Create file name
+              const fileExt = file.name.split(".").pop();
+              const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+              const filePath = `avatars/${fileName}`;
 
-            // Upload to Supabase storage
-            const { error: uploadError } = await supabaseClient.storage
-              .from("profile-images")
-              .upload(filePath, file, {
-                cacheControl: "3600",
-                upsert: true
+              // Upload to Supabase storage
+              const { error: uploadError } = await client.storage
+                .from("profile-images")
+                .upload(filePath, file, {
+                  cacheControl: "3600",
+                  upsert: true
+                });
+
+              if (uploadError) throw uploadError;
+
+              // Get public URL
+              const { data: { publicUrl } } = client.storage
+                .from("profile-images")
+                .getPublicUrl(filePath);
+
+              // Update user metadata with avatar URL
+              const { error: updateError } = await client.auth.updateUser({
+                data: { avatar_url: publicUrl }
               });
 
-            if (uploadError) throw uploadError;
+              if (updateError) throw updateError;
 
-            // Get public URL
-            const { data: { publicUrl } } = supabaseClient.storage
-              .from("profile-images")
-              .getPublicUrl(filePath);
-
-            // Update user metadata with avatar URL
-            const { error: updateError } = await supabaseClient.auth.updateUser({
-              data: { avatar_url: publicUrl }
-            });
-
-            if (updateError) throw updateError;
-
-            // Update local display
-            if (profileAvatarImage) {
-              profileAvatarImage.src = publicUrl;
-              profileAvatar.classList.add("has-image");
+              // Update local display
+              if (profileAvatarImage) {
+                profileAvatarImage.src = publicUrl;
+                profileAvatar.classList.add("has-image");
+              }
+              if (currentUser) {
+                currentUser.user_metadata = { ...currentUser.user_metadata, avatar_url: publicUrl };
+              }
+            } catch (error) {
+              console.error("Error uploading avatar:", error);
+              alert("Er is een fout opgetreden bij het uploaden van je profielfoto.");
             }
-            if (currentUser) {
-              currentUser.user_metadata = { ...currentUser.user_metadata, avatar_url: publicUrl };
-            }
-          } catch (error) {
-            console.error("Error uploading avatar:", error);
-            alert("Er is een fout opgetreden bij het uploaden van je profielfoto.");
-          }
-        });
+          });
+        };
+        
+        // Wait for supabase client to be available
+        if (window.mathijsSupabase || supabaseClient) {
+          initProfileAvatarUpload();
+        } else {
+          setTimeout(initProfileAvatarUpload, 100);
+        }
       }
 
       const chatLog = document.querySelector(".chat-log");
