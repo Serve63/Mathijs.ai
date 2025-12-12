@@ -729,6 +729,11 @@
       .model-option.has-sub {
         padding-bottom: 20px;
         margin-bottom: -6px;
+        cursor: default;
+      }
+
+      .model-option.has-sub:hover {
+        background: rgba(255, 244, 147, 0.35);
       }
 
       .model-option.has-sub:hover .model-option-sub,
@@ -1320,13 +1325,13 @@
                   ></button>
                   <span class="model-select__label">Model</span>
                   <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="selected-label">ChatGPT 5.1</span>
+                    <span class="selected-label">ChatGPT 5.1 (Instant)</span>
                     <svg viewBox="0 0 24 24">
                       <path d="M6 9l6 6 6-6" />
                     </svg>
                   </button>
                   <div class="model-dropdown" role="listbox" aria-label="Kies een model">
-                    <div class="model-option has-sub" data-model="ChatGPT 5.1" role="option" aria-selected="true">
+                    <div class="model-option has-sub" data-model="ChatGPT 5.1" role="option" aria-selected="false">
                       ChatGPT 5.1
                       <div class="model-option-sub">
                         <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Instant)">Instant</button>
@@ -1468,7 +1473,7 @@
         grok: "grok",
       };
       let selectedModel = "chatgpt51";
-      let selectedModelLabel = "ChatGPT 5.1";
+      let selectedModelLabel = "ChatGPT 5.1 (Instant)";
       let thinkingIndicator = null;
 
       const updateSelectedModel = (label) => {
@@ -1586,9 +1591,21 @@
           }
         };
 
-        const activeOption =
-          dropdown.querySelector(".model-option[aria-selected='true']") || options[0];
-        if (activeOption) {
+        // Find first non-has-sub option, or first suboption if all have submenus
+        let activeOption = dropdown.querySelector(".model-option[aria-selected='true']:not(.has-sub)");
+        if (!activeOption) {
+          activeOption = options.find(opt => !opt.classList.contains("has-sub"));
+        }
+        // If all options have submenus, select the first suboption
+        if (!activeOption && subOptions.length > 0) {
+          const firstSubOption = subOptions[0];
+          const value = firstSubOption.getAttribute("data-model") || "";
+          selectionState[categoryKey] = value;
+          syncButtonLabel(value);
+          if (categoryKey === "chat") {
+            updateSelectedModel(value);
+          }
+        } else if (activeOption) {
           setActiveOption(activeOption);
         }
 
@@ -1600,7 +1617,12 @@
         });
 
         options.forEach((option) => {
-          option.addEventListener("click", () => {
+          option.addEventListener("click", (event) => {
+            // Prevent selection of items with submenu - users must select a suboption
+            if (option.classList.contains("has-sub")) {
+              event.stopPropagation();
+              return;
+            }
             const value = option.getAttribute("data-model");
             if (selectionState[categoryKey] === value) {
               closeAllDropdowns();
