@@ -1333,7 +1333,13 @@
                         <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Thinking)">Thinking</button>
                     </div>
                   </div>
-                    <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">Gemini 3</div>
+                    <div class="model-option has-sub" data-model="Gemini 3" role="option" aria-selected="false">
+                      Gemini 3
+                      <div class="model-option-sub">
+                        <button type="button" class="model-suboption" data-model="Gemini 3 (Snel)">Snel</button>
+                        <button type="button" class="model-suboption" data-model="Gemini 3 (Nadenken)">Nadenken</button>
+                      </div>
+                    </div>
                     <div class="model-option" data-model="DeepSeek V2" role="option" aria-selected="false">DeepSeek V2</div>
                 </div>
                 </div>
@@ -1453,7 +1459,7 @@
 
       const updateSelectedModel = (label) => {
         selectedModelLabel = label || "ChatGPT 5.1";
-        if (label === "Gemini 3") {
+        if (label && label.startsWith("Gemini 3")) {
           selectedModel = "gemini3";
           return;
         }
