@@ -10,182 +10,341 @@
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
     <style>
+      :root {
+        --accent: #e6c200;
+        --accent-dark: #c9a900;
+        --hero-1: #1a1a2e;
+        --hero-2: #16213e;
+        --hero-3: #0f3460;
+        --fg: #1a1a1f;
+        --fg-muted: #6b6b76;
+        --border: rgba(0, 0, 0, 0.08);
+        --error: #dc3545;
+        --success: #28a745;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
-        background: linear-gradient(160deg, rgba(255, 244, 147, 0.45), rgba(255, 255, 255, 0.9));
+        margin: 0;
         min-height: 100vh;
+        font-family: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 50%, var(--hero-3) 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 40px 16px;
+        padding: 40px 20px;
+        position: relative;
+        overflow-x: hidden;
       }
 
-      .login-card {
-        width: min(420px, 100%);
-        background: rgba(255, 255, 255, 0.92);
-        border-radius: 28px;
-        padding: 40px 44px;
-        box-shadow: 0 34px 85px -52px rgba(16, 21, 32, 0.65);
-        border: 1px solid rgba(16, 21, 32, 0.08);
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+          radial-gradient(ellipse 80% 50% at 20% 30%, rgba(230, 194, 0, 0.1) 0%, transparent 50%),
+          radial-gradient(ellipse 60% 40% at 85% 70%, rgba(230, 194, 0, 0.08) 0%, transparent 50%);
+        pointer-events: none;
+      }
+
+      body::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      .auth-container {
+        width: 100%;
+        max-width: 440px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .auth-card {
+        background: #fff;
+        border-radius: 24px;
+        padding: 48px 40px;
+        box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.4);
+      }
+
+      .auth-brand {
         display: flex;
         flex-direction: column;
-        gap: 28px;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 32px;
       }
 
-      .login-card .logo {
-        font-size: 1.18rem;
-        align-self: center;
-        justify-content: center;
-        gap: 12px;
+      .auth-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        border: 3px solid var(--accent);
+        box-shadow: 0 8px 24px -8px rgba(230, 194, 0, 0.4);
       }
 
-      .login-card .logo__image {
-        width: 68px;
-        height: 68px;
-        transform: translateY(-16px);
-      }
-
-      .login-card h1 {
-        margin: 0;
-        text-align: center;
+      .auth-brand-text {
         font-family: "Space Grotesk", sans-serif;
-        font-size: 1.9rem;
-        letter-spacing: -0.01em;
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        display: flex;
+        align-items: center;
+        gap: 2px;
       }
 
-      .login-card p {
-        margin: 0;
-        color: #4a4a54;
+      .auth-brand-word {
+        color: var(--fg);
+      }
+
+      .auth-brand-dot {
+        color: var(--accent);
+      }
+
+      .auth-headline {
         text-align: center;
-        font-size: 0.95rem;
+        margin-bottom: 32px;
       }
 
-      .login-card form {
+      .auth-eyebrow {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--accent);
+        margin: 0 0 12px;
+      }
+
+      .auth-headline h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 12px;
+        color: var(--fg);
+      }
+
+      .auth-subtitle {
+        font-size: 0.95rem;
+        color: var(--fg-muted);
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .auth-form {
         display: flex;
         flex-direction: column;
-        gap: 18px;
+        gap: 20px;
       }
 
-      .login-card label {
+      .form-group {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        font-size: 0.9rem;
-        color: #4a4a54;
       }
 
-      .login-card input {
-        border-radius: 12px;
-        border: 1px solid rgba(16, 21, 32, 0.12);
-        padding: 12px 14px;
-        font-size: 0.96rem;
-        font-family: "IBM Plex Sans", sans-serif;
-        color: #1a1a1f;
-        background: rgba(255, 255, 255, 0.95);
-      }
-
-      .login-card button {
-        border-radius: 999px;
-        padding: 14px 24px;
+      .auth-form label {
+        font-size: 0.85rem;
         font-weight: 600;
-        font-size: 0.98rem;
-        cursor: pointer;
-        transition: background 0.2s ease, transform 0.2s ease;
-        border: 1px solid rgba(16, 21, 32, 0.12);
-        background: #ffffff;
-        color: #1a1a1f;
-        box-shadow: 0 1px 0 rgba(16, 21, 32, 0.04);
+        color: var(--fg);
       }
 
-      .login-card button:hover {
-        background: rgba(255, 255, 255, 0.9);
-        transform: translateY(-1px);
+      .auth-form input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: var(--fg);
+        background: #fafafa;
+        transition: all 0.2s ease;
+      }
+
+      .auth-form input::placeholder {
+        color: #a0a0a8;
+      }
+
+      .auth-form input:focus {
+        outline: none;
+        border-color: var(--accent);
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(230, 194, 0, 0.15);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+      }
+
+      .btn.primary {
+        background: var(--accent);
+        color: #1a1600;
+      }
+
+      .btn.primary:hover {
+        background: var(--accent-dark);
+        transform: translateY(-2px);
+      }
+
+      .btn.primary:active {
+        transform: translateY(0);
+      }
+
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
       }
 
       .form-feedback {
-        min-height: 18px;
+        min-height: 20px;
+        font-size: 0.85rem;
         text-align: center;
-        font-size: 0.88rem;
+        margin: 8px 0 0;
       }
 
       .form-feedback.error {
-        color: #c0392b;
+        color: var(--error);
       }
 
       .form-feedback.success {
-        color: #1a7f37;
+        color: var(--success);
       }
 
-      .login-card button:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-      }
-
-      .login-meta {
+      .auth-meta {
         display: flex;
         justify-content: center;
-        font-size: 0.82rem;
-        color: #6c6c76;
-        gap: 4px;
+        gap: 8px;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+        font-size: 0.9rem;
+        color: var(--fg-muted);
       }
 
-      .login-meta a {
-        color: #6c6c76;
+      .auth-meta a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s ease;
       }
 
-      .login-meta a:hover {
-        color: #9c8500;
+      .auth-meta a:hover {
+        color: var(--accent-dark);
+      }
+
+      .back-link {
+        position: absolute;
+        top: -48px;
+        left: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .back-link:hover {
+        color: #fff;
+      }
+
+      .back-link svg {
+        width: 18px;
+        height: 18px;
       }
 
       @media (max-width: 480px) {
         body {
-          padding: 24px 12px;
+          padding: 60px 16px 40px;
         }
 
-        .login-card {
-          padding: 32px 24px;
+        .auth-card {
+          padding: 36px 24px;
+        }
+
+        .auth-headline h1 {
+          font-size: 1.3rem;
         }
       }
     </style>
   </head>
   <body>
-    <div class="login-card">
-      <div class="logo" aria-label="Mathijs dot AI">
-        <img class="logo__image" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
-        <span class="logo__text">
-          <span class="logo__word">MATHIJS</span>
-          <span class="logo__suffix">.AI</span>
-        </span>
+    <div class="auth-container">
+      <a href="index.html" class="back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Terug naar home
+      </a>
+      <div class="auth-card">
+        <div class="auth-brand" aria-label="Mathijs dot AI">
+          <img class="auth-avatar" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
+          <div class="auth-brand-text">
+            <span class="auth-brand-word">MATHIJS</span>
+            <span class="auth-brand-dot">.AI</span>
+          </div>
+        </div>
+        <div class="auth-headline">
+          <p class="auth-eyebrow">Aan de slag</p>
+          <h1>Maak een account aan</h1>
+          <p class="auth-subtitle">
+            Vul je gegevens in om een account te registreren. Je ontvangt een bevestiging per e-mail.
+          </p>
       </div>
-      <h1>Maak een account aan voor Mathijs.ai</h1>
-      <p>Vul je gegevens in om een account te registreren. Je ontvangt een bevestiging per e-mail.</p>
-      <form id="signup-form" novalidate>
-        <label>
-          Gebruikersnaam (e-mail)
+        <form id="signup-form" class="auth-form" novalidate>
+          <div class="form-group">
+            <label for="signup-email">E-mailadres</label>
           <input id="signup-email" name="email" type="email" placeholder="naam@bedrijf.com" required />
-        </label>
-        <label>
-          Wachtwoord
-          <input id="signup-password" name="password" type="password" placeholder="********" required minlength="6" />
-        </label>
-        <label>
-          Herhaal wachtwoord
+          </div>
+
+          <div class="form-group">
+            <label for="signup-password">Wachtwoord</label>
+            <input id="signup-password" name="password" type="password" placeholder="••••••••" required minlength="6" />
+          </div>
+
+          <div class="form-group">
+            <label for="signup-confirm">Herhaal wachtwoord</label>
           <input
             id="signup-confirm"
             name="confirm-password"
             type="password"
-            placeholder="********"
+              placeholder="••••••••"
             required
             minlength="6"
           />
-        </label>
-        <button type="submit" id="signup-submit">Account aanmaken</button>
+          </div>
+
+          <button type="submit" id="signup-submit" class="btn primary">Account aanmaken</button>
       </form>
       <p class="form-feedback" id="signup-feedback" aria-live="polite"></p>
-      <div class="login-meta">
+        <div class="auth-meta">
         <span>Heb je al toegang?</span>
         <a href="login.html">Log in</a>
+        </div>
       </div>
     </div>
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>

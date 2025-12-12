@@ -4,10 +4,296 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mathijs.ai | Login</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --accent: #e6c200;
+        --accent-dark: #c9a900;
+        --hero-1: #1a1a2e;
+        --hero-2: #16213e;
+        --hero-3: #0f3460;
+        --fg: #1a1a1f;
+        --fg-muted: #6b6b76;
+        --border: rgba(0, 0, 0, 0.08);
+        --error: #dc3545;
+        --success: #28a745;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 50%, var(--hero-3) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+          radial-gradient(ellipse 80% 50% at 20% 30%, rgba(230, 194, 0, 0.1) 0%, transparent 50%),
+          radial-gradient(ellipse 60% 40% at 85% 70%, rgba(230, 194, 0, 0.08) 0%, transparent 50%);
+        pointer-events: none;
+      }
+
+      body::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      .auth-container {
+        width: 100%;
+        max-width: 440px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .auth-card {
+        background: #fff;
+        border-radius: 24px;
+        padding: 48px 40px;
+        box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.4);
+      }
+
+      .auth-brand {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+
+      .auth-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        border: 3px solid var(--accent);
+        box-shadow: 0 8px 24px -8px rgba(230, 194, 0, 0.4);
+      }
+
+      .auth-brand-text {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+
+      .auth-brand-word {
+        color: var(--fg);
+      }
+
+      .auth-brand-dot {
+        color: var(--accent);
+      }
+
+      .auth-headline {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+
+      .auth-eyebrow {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--accent);
+        margin: 0 0 12px;
+      }
+
+      .auth-headline h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin: 0 0 12px;
+        color: var(--fg);
+      }
+
+      .auth-subtitle {
+        font-size: 0.95rem;
+        color: var(--fg-muted);
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .auth-form label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--fg);
+      }
+
+      .auth-form input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: var(--fg);
+        background: #fafafa;
+        transition: all 0.2s ease;
+      }
+
+      .auth-form input::placeholder {
+        color: #a0a0a8;
+      }
+
+      .auth-form input:focus {
+        outline: none;
+        border-color: var(--accent);
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(230, 194, 0, 0.15);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+      }
+
+      .btn.primary {
+        background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 100%);
+        color: #fff;
+      }
+
+      .btn.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px -8px rgba(22, 33, 62, 0.5);
+      }
+
+      .btn.primary:active {
+        transform: translateY(0);
+      }
+
+      .form-feedback {
+        min-height: 20px;
+        font-size: 0.85rem;
+        text-align: center;
+        margin: 8px 0 0;
+      }
+
+      .form-feedback.error {
+        color: var(--error);
+      }
+
+      .form-feedback.success {
+        color: var(--success);
+      }
+
+      .auth-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+      }
+
+      .auth-meta a {
+        font-size: 0.85rem;
+        color: var(--fg-muted);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .auth-meta a:hover {
+        color: var(--accent);
+      }
+
+      .back-link {
+        position: absolute;
+        top: -48px;
+        left: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .back-link:hover {
+        color: #fff;
+      }
+
+      .back-link svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 60px 16px 40px;
+        }
+
+        .auth-card {
+          padding: 36px 24px;
+        }
+
+        .auth-meta {
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+        }
+      }
+    </style>
   </head>
-  <body class="auth-body">
-    <div class="auth-shell">
+  <body>
+    <div class="auth-container">
+      <a href="index.html" class="back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Terug naar home
+      </a>
       <div class="auth-card">
         <div class="auth-brand" aria-label="Mathijs dot AI">
           <img class="auth-avatar" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
@@ -17,27 +303,31 @@
           </div>
         </div>
         <div class="auth-headline">
-          <p class="eyebrow">Welkom terug</p>
+          <p class="auth-eyebrow">Welkom terug</p>
           <h1>Log in op Mathijs.ai</h1>
-          <p class="auth-sub">
+          <p class="auth-subtitle">
             Gebruik je zakelijk e-mailadres en wachtwoord om toegang te krijgen tot het platform.
           </p>
         </div>
         <form id="login-form" class="auth-form" novalidate>
+          <div class="form-group">
           <label for="login-email">Zakelijk e-mail</label>
           <input id="login-email" name="email" type="email" placeholder="naam@bedrijf.com" required />
+          </div>
 
+          <div class="form-group">
           <label for="login-password">Wachtwoord</label>
           <input
             id="login-password"
             name="password"
             type="password"
-            placeholder="********"
+              placeholder="••••••••"
             required
             minlength="6"
           />
+          </div>
 
-          <button type="submit" id="login-button" class="btn primary full-width">Inloggen</button>
+          <button type="submit" id="login-button" class="btn primary">Inloggen</button>
         </form>
         <p class="form-feedback" id="login-feedback" aria-live="polite"></p>
         <div class="auth-meta">
@@ -50,8 +340,3 @@
     <script defer src="auth.js"></script>
   </body>
 </html>
-
-
-
-
-
