@@ -520,6 +520,151 @@
         text-align: center;
       }
 
+      .edit-name-modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10, 12, 18, 0.58);
+        backdrop-filter: blur(8px);
+        z-index: 130;
+        padding: 24px;
+      }
+
+      .edit-name-modal.is-visible {
+        display: flex;
+      }
+
+      .edit-name-modal__dialog {
+        width: min(420px, 100%);
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 24px;
+        box-shadow: 0 40px 90px -50px rgba(16, 21, 32, 0.6);
+        border: 1px solid rgba(16, 21, 32, 0.08);
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+      }
+
+      .edit-name-modal__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px 28px 18px;
+        border-bottom: 1px solid rgba(16, 21, 32, 0.06);
+      }
+
+      .edit-name-modal__title {
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .edit-name-modal__close {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(26, 26, 31, 0.6);
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .edit-name-modal__close:hover {
+        background: rgba(16, 21, 32, 0.06);
+        color: #1a1a1f;
+      }
+
+      .edit-name-modal__close svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+      }
+
+      .edit-name-modal__body {
+        padding: 26px 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .edit-name-modal__label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #1a1a1f;
+        margin-bottom: -4px;
+      }
+
+      .edit-name-modal__input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid rgba(16, 21, 32, 0.12);
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: #1a1a1f;
+        background: #fff;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .edit-name-modal__input:focus {
+        outline: none;
+        border-color: var(--chat-accent);
+        box-shadow: 0 0 0 3px rgba(255, 212, 0, 0.15);
+      }
+
+      .edit-name-modal__actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 4px;
+      }
+
+      .edit-name-modal__cancel,
+      .edit-name-modal__save {
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(16, 21, 32, 0.12);
+      }
+
+      .edit-name-modal__cancel {
+        background: #fff;
+        color: #1a1a1f;
+      }
+
+      .edit-name-modal__cancel:hover {
+        background: rgba(16, 21, 32, 0.04);
+      }
+
+      .edit-name-modal__save {
+        background: var(--chat-accent);
+        color: #1a1600;
+        border-color: var(--chat-accent);
+      }
+
+      .edit-name-modal__save:hover {
+        background: #ffe55a;
+        transform: translateY(-1px);
+      }
+
+      .edit-name-modal__save:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
       .chat-main {
         display: grid;
         grid-template-rows: auto 1fr auto;
@@ -1392,6 +1537,26 @@
           </div>
         </div>
       </div>
+      <div class="edit-name-modal" id="edit-name-modal" role="dialog" aria-modal="true" aria-labelledby="edit-name-modal-title">
+        <div class="edit-name-modal__dialog">
+          <header class="edit-name-modal__header">
+            <h2 class="edit-name-modal__title" id="edit-name-modal-title">Naam aanpassen</h2>
+            <button class="edit-name-modal__close" type="button" aria-label="Sluit">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6l-12 12" />
+              </svg>
+            </button>
+          </header>
+          <div class="edit-name-modal__body">
+            <label for="edit-name-input" class="edit-name-modal__label">Nieuwe naam</label>
+            <input type="text" id="edit-name-input" class="edit-name-modal__input" placeholder="Voer je naam in" maxlength="50" />
+            <div class="edit-name-modal__actions">
+              <button type="button" class="edit-name-modal__cancel">Annuleren</button>
+              <button type="button" class="edit-name-modal__save">Opslaan</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <main class="chat-main">
         <header class="chat-header">
           <div class="status">
@@ -1996,16 +2161,42 @@
 
         // Name edit (stored in Supabase Auth user_metadata.username)
         if (profileNameEditBtn && profileNameEl) {
-          profileNameEditBtn.addEventListener("click", async (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            try {
-              const existingName = (currentUser?.user_metadata?.username || profileNameEl.textContent || "").trim();
-              const nextName = window.prompt("Nieuwe naam:", existingName);
-              if (!nextName) return;
-              const trimmed = nextName.trim();
-              if (!trimmed || trimmed === existingName) return;
+          const editNameModal = document.getElementById("edit-name-modal");
+          const editNameInput = document.getElementById("edit-name-input");
+          const editNameClose = document.querySelector(".edit-name-modal__close");
+          const editNameCancel = document.querySelector(".edit-name-modal__cancel");
+          const editNameSave = document.querySelector(".edit-name-modal__save");
 
+          const openEditNameModal = () => {
+            if (!editNameModal || !editNameInput) return;
+            const existingName = (currentUser?.user_metadata?.username || profileNameEl.textContent || "").trim();
+            editNameInput.value = existingName;
+            editNameModal.classList.add("is-visible");
+            document.body.style.overflow = "hidden";
+            setTimeout(() => editNameInput.focus(), 100);
+          };
+
+          const closeEditNameModal = () => {
+            if (!editNameModal) return;
+            editNameModal.classList.remove("is-visible");
+            document.body.style.removeProperty("overflow");
+            editNameInput.value = "";
+          };
+
+          const saveName = async () => {
+            if (!editNameInput || !editNameModal) return;
+            const trimmed = editNameInput.value.trim();
+            const existingName = (currentUser?.user_metadata?.username || profileNameEl.textContent || "").trim();
+            
+            if (!trimmed || trimmed === existingName) {
+              closeEditNameModal();
+              return;
+            }
+
+            editNameSave.disabled = true;
+            editNameSave.textContent = "Opslaan...";
+
+            try {
               const { error } = await supabaseClient.auth.updateUser({ data: { username: trimmed } });
               if (error) throw error;
 
@@ -2018,9 +2209,57 @@
               }
               await safeUpsertProfile({ username: trimmed });
               updateProfileSidebar(currentUser);
+              closeEditNameModal();
             } catch (error) {
               console.error("Naam bijwerken mislukt:", error);
               alert("Naam aanpassen mislukt. Probeer het opnieuw.");
+            } finally {
+              editNameSave.disabled = false;
+              editNameSave.textContent = "Opslaan";
+            }
+          };
+
+          profileNameEditBtn.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openEditNameModal();
+          });
+
+          if (editNameClose) {
+            editNameClose.addEventListener("click", closeEditNameModal);
+          }
+
+          if (editNameCancel) {
+            editNameCancel.addEventListener("click", closeEditNameModal);
+          }
+
+          if (editNameSave) {
+            editNameSave.addEventListener("click", saveName);
+          }
+
+          if (editNameModal) {
+            editNameModal.addEventListener("click", (event) => {
+              if (event.target === editNameModal) {
+                closeEditNameModal();
+              }
+            });
+
+            if (editNameInput) {
+              editNameInput.addEventListener("keydown", (event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  saveName();
+                } else if (event.key === "Escape") {
+                  event.preventDefault();
+                  closeEditNameModal();
+                }
+              });
+            }
+          }
+
+          document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && editNameModal?.classList.contains("is-visible")) {
+              closeEditNameModal();
             }
           });
         }
