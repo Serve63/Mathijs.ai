@@ -1340,7 +1340,13 @@
                         <button type="button" class="model-suboption" data-model="Gemini 3 (Nadenken)">Nadenken</button>
                       </div>
                     </div>
-                    <div class="model-option" data-model="DeepSeek V2" role="option" aria-selected="false">DeepSeek V2</div>
+                    <div class="model-option has-sub" data-model="DeepSeek V2" role="option" aria-selected="false">
+                      DeepSeek V2
+                      <div class="model-option-sub">
+                        <button type="button" class="model-suboption" data-model="DeepSeek V2 (Snel)">Snel</button>
+                        <button type="button" class="model-suboption" data-model="DeepSeek V2 (Diepdenken)">Diepdenken</button>
+                      </div>
+                    </div>
                 </div>
                 </div>
               </div>
@@ -1463,7 +1469,7 @@
           selectedModel = "gemini3";
           return;
         }
-        if (label === "DeepSeek V2") {
+        if (label && label.startsWith("DeepSeek V2")) {
           selectedModel = "deepseekv2";
           return;
         }
