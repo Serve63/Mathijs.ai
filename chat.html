@@ -68,6 +68,14 @@
         flex-direction: column;
         gap: 24px;
         flex: 1;
+        overflow: hidden;
+      }
+
+      .sidebar-bottom {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        flex-shrink: 0;
       }
 
       .sidebar .logo {
@@ -1664,11 +1672,11 @@
           <h2>sessies</h2>
           <p class="session-empty" id="session-empty">Nog geen gesprekken. Start je eerste chat.</p>
           <div class="session-list" id="session-list"></div>
+        </div>
+        <div class="sidebar-bottom">
           <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
             <span>+</span>Nieuw gesprek
           </button>
-        </div>
-        <div class="sidebar-bottom">
           <div class="profile">
             <div class="profile-avatar" aria-label="Upload profielfoto" title="Upload profielfoto">
               <img class="profile-avatar__image" alt="" />
