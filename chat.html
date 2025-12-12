@@ -1347,6 +1347,13 @@
                         <button type="button" class="model-suboption" data-model="DeepSeek V2 (Diepdenken)">Diepdenken</button>
                       </div>
                     </div>
+                    <div class="model-option has-sub" data-model="Grok" role="option" aria-selected="false">
+                      Grok
+                      <div class="model-option-sub">
+                        <button type="button" class="model-suboption" data-model="Grok (Expert)">Expert</button>
+                        <button type="button" class="model-suboption" data-model="Grok (Snel)">Snel</button>
+                      </div>
+                    </div>
                 </div>
                 </div>
               </div>
@@ -1458,6 +1465,7 @@
         chatgpt51: "gpt-4o",
         gemini3: "gemini-3",
         deepseekv2: "deepseek-v2",
+        grok: "grok",
       };
       let selectedModel = "chatgpt51";
       let selectedModelLabel = "ChatGPT 5.1";
@@ -1471,6 +1479,10 @@
         }
         if (label && label.startsWith("DeepSeek V2")) {
           selectedModel = "deepseekv2";
+          return;
+        }
+        if (label && label.startsWith("Grok")) {
+          selectedModel = "grok";
           return;
         }
         selectedModel = "chatgpt51";
