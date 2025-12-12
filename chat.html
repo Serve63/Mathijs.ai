@@ -1397,7 +1397,7 @@
             <div class="chat-input__inner">
               <div class="chat-plus" id="chat-plus" aria-haspopup="true" aria-expanded="false">
                 <span>+</span>
-                <div id="chat-plus-menu" style="display:none;position:absolute;bottom:calc(100% + 10px);left:0;width:260px;background:#fff;border:1px solid #dedede;border-radius:14px;box-shadow:0 16px 32px rgba(0,0,0,0.12);padding:10px 0;z-index:9999;">
+                <div id="chat-plus-menu" style="display:none;position:absolute;bottom:calc(100% + 10px);left:0;width:260px;background:#fff;border:1px solid #dedede;border-radius:14px;box-shadow:0 16px 32px rgba(0,0,0,0.12);padding:10px 0;z-index:9999;max-height:calc(100vh - 120px);overflow-y:auto;">
                   <button type="button" id="action-upload" style="display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:#161616;font-weight:600;line-height:1.4;text-align:left;min-height:44px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     <span style="flex:1 1 auto;text-align:left;white-space:nowrap;">Foto's en bestanden toevoegen</span>
@@ -1727,6 +1727,21 @@
           closeAllDropdowns(isOpen ? null : chatPlusMenu);
           chatPlusMenu.style.display = isOpen ? "none" : "block";
           chatPlus.setAttribute("aria-expanded", !isOpen ? "true" : "false");
+          
+          // Adjust position if menu doesn't fit in viewport
+          if (!isOpen) {
+            setTimeout(() => {
+              const rect = chatPlusMenu.getBoundingClientRect();
+              const viewportHeight = window.innerHeight;
+              const spaceBelow = viewportHeight - rect.bottom;
+              
+              // If menu extends below viewport, adjust position
+              if (spaceBelow < 0) {
+                const currentBottom = parseInt(chatPlusMenu.style.bottom) || 0;
+                chatPlusMenu.style.bottom = `${currentBottom + Math.abs(spaceBelow) + 10}px`;
+              }
+            }, 0);
+          }
         });
       }
 
