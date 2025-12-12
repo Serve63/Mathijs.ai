@@ -1937,8 +1937,8 @@
       const modelEngineMap = {
         chatgpt51: "gpt-4o",
         gemini3: "gemini-3",
-        deepseekv2: "deepseek-v2",
-        grok: "grok",
+        deepseekv2: "gpt-4o", // Fallback to OpenAI until DeepSeek API is implemented
+        grok: "gpt-4o", // Fallback to OpenAI until Grok API is implemented
       };
       let selectedModel = "chatgpt51";
       let selectedModelLabel = "ChatGPT 5.1 (Instant)";
@@ -3425,7 +3425,10 @@
           await refreshSessionsFromSupabase();
         } catch (error) {
           console.error("Chat request failed", error);
-          const fallbackMessage = "De AI-request mislukte. Controleer je verbinding en probeer opnieuw.";
+          console.error("Selected model:", selectedModel);
+          console.error("Engine:", modelEngineMap[selectedModel] || "gpt-4o");
+          console.error("Error details:", error.message, error.stack);
+          const fallbackMessage = `De AI-request mislukte: ${error.message || "Onbekende fout"}. Controleer je verbinding en probeer opnieuw.`;
           if (assistantStreamMessage?.bubble) {
             assistantStreamMessage.bubble.innerHTML = formatMessageContent(fallbackMessage);
           } else {
