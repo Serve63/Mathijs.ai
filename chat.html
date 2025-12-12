@@ -271,15 +271,66 @@
         gap: 4px;
         font-size: 0.88rem;
         color: #1a1a1f;
-        white-space: nowrap;
-        max-width: 120px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .profile-name-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .profile-name-row strong {
+        min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .profile-name-edit {
+        display: none;
+        border: none;
+        background: transparent;
+        color: var(--chat-muted);
+        cursor: pointer;
+        padding: 3px;
+        border-radius: 6px;
+        line-height: 0;
+        flex-shrink: 0;
+        opacity: 0.6;
+        transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+      }
+
+      .profile:hover .profile-name-edit {
+        display: inline-flex;
+      }
+
+      .profile-name-edit:hover {
+        opacity: 1;
+        color: #7a6600;
+        background: rgba(0, 0, 0, 0.04);
+      }
+
+      .profile-name-edit svg {
+        width: 14px;
+        height: 14px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
       .profile-info .profile-email {
         font-size: 0.78rem;
         color: #6c6c76;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        word-break: break-all;
+        line-height: 1.2;
       }
 
       .profile-course {
@@ -1288,7 +1339,15 @@
             </div>
             <input type="file" accept="image/*" id="profile-avatar-input" hidden />
             <div class="profile-info">
+              <div class="profile-name-row">
               <strong id="profile-name">Account</strong>
+                <button class="profile-name-edit" type="button" aria-label="Naam aanpassen" title="Naam aanpassen">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" />
+                  </svg>
+                </button>
+              </div>
               <span class="profile-email" id="profile-email">---</span>
               <a href="course.html" class="profile-course" role="link">Bekijk cursus</a>
             </div>
@@ -1912,9 +1971,135 @@
       const profileNameEl = document.getElementById("profile-name");
       const profileEmailEl = document.getElementById("profile-email");
       const profileInitialsEl = document.querySelector(".profile-avatar__initials");
+      const profileNameEditBtn = document.querySelector(".profile-name-edit");
 
       const supabaseClient = window.mathijsSupabase;
       let currentUser = null;
+      let profileEnhancementsInitialized = false;
+
+      const safeUpsertProfile = async (fields = {}) => {
+        if (!supabaseClient || !currentUser?.id) return;
+        try {
+          await supabaseClient
+            .from("profiles")
+            .upsert({ id: currentUser.id, ...fields, updated_at: new Date().toISOString() }, { onConflict: "id" });
+        } catch (error) {
+          // profiles schema differs per environment; ignore to avoid breaking chat
+          console.warn("Profile upsert skipped:", error?.message || error);
+        }
+      };
+
+      const initProfileEnhancements = () => {
+        if (profileEnhancementsInitialized) return;
+        if (!supabaseClient || !currentUser) return;
+        profileEnhancementsInitialized = true;
+
+        // Name edit (stored in Supabase Auth user_metadata.username)
+        if (profileNameEditBtn && profileNameEl) {
+          profileNameEditBtn.addEventListener("click", async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            try {
+              const existingName = (currentUser?.user_metadata?.username || profileNameEl.textContent || "").trim();
+              const nextName = window.prompt("Nieuwe naam:", existingName);
+              if (!nextName) return;
+              const trimmed = nextName.trim();
+              if (!trimmed || trimmed === existingName) return;
+
+              const { error } = await supabaseClient.auth.updateUser({ data: { username: trimmed } });
+              if (error) throw error;
+
+              // refresh local user
+              const refreshed = await supabaseClient.auth.getUser();
+              if (refreshed?.data?.user) {
+                currentUser = refreshed.data.user;
+              } else {
+                currentUser.user_metadata = { ...(currentUser.user_metadata || {}), username: trimmed };
+              }
+              await safeUpsertProfile({ username: trimmed });
+              updateProfileSidebar(currentUser);
+            } catch (error) {
+              console.error("Naam bijwerken mislukt:", error);
+              alert("Naam aanpassen mislukt. Probeer het opnieuw.");
+            }
+          });
+        }
+
+        // Avatar upload (stored in Supabase Storage + user_metadata.avatar_url)
+        if (profileAvatar && profileAvatarInput) {
+          profileAvatar.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            profileAvatarInput.click();
+          });
+
+          profileAvatarInput.addEventListener("change", async () => {
+            const file = profileAvatarInput.files?.[0];
+            if (!file) return;
+
+            const resetInput = () => {
+              try {
+                profileAvatarInput.value = "";
+              } catch (_) {}
+            };
+
+            try {
+              if (!file.type.startsWith("image/")) {
+                alert("Kies een afbeelding (jpg/png/webp).");
+                resetInput();
+                return;
+              }
+              if (file.size > 5 * 1024 * 1024) {
+                alert("Afbeelding te groot (max 5MB).");
+                resetInput();
+                return;
+              }
+
+              const fileExt = (file.name.split(".").pop() || "jpg").toLowerCase();
+              const safeExt = fileExt.replace(/[^a-z0-9]/g, "") || "jpg";
+              const filePath = `avatars/${currentUser.id}-${Date.now()}.${safeExt}`;
+
+              const uploadToBucket = async (bucketName) => {
+                const { error: uploadError } = await supabaseClient.storage.from(bucketName).upload(filePath, file, {
+                  cacheControl: "3600",
+                  upsert: true,
+                });
+                if (uploadError) throw uploadError;
+                const { data } = supabaseClient.storage.from(bucketName).getPublicUrl(filePath);
+                if (!data?.publicUrl) throw new Error("Geen public URL ontvangen.");
+                return data.publicUrl;
+              };
+
+              let publicUrl = null;
+              try {
+                publicUrl = await uploadToBucket("profile-images");
+              } catch (firstError) {
+                console.warn("Upload naar profile-images faalde, probeer avatars:", firstError?.message || firstError);
+                publicUrl = await uploadToBucket("avatars");
+              }
+
+              const { error: updateError } = await supabaseClient.auth.updateUser({ data: { avatar_url: publicUrl } });
+              if (updateError) throw updateError;
+
+              const refreshed = await supabaseClient.auth.getUser();
+              if (refreshed?.data?.user) {
+                currentUser = refreshed.data.user;
+              } else {
+                currentUser.user_metadata = { ...(currentUser.user_metadata || {}), avatar_url: publicUrl };
+              }
+              await safeUpsertProfile({ avatar_url: publicUrl });
+              updateProfileSidebar(currentUser);
+              resetInput();
+            } catch (error) {
+              console.error("Profielfoto upload mislukt:", error);
+              alert(
+                "Profielfoto uploaden mislukt. Check of er een Supabase Storage bucket bestaat (bijv. 'profile-images' of 'avatars') en dat je sessie rechten heeft."
+              );
+              resetInput();
+            }
+          });
+        }
+      };
       const sessionListEl = document.getElementById("session-list");
       const sessionEmptyEl = document.getElementById("session-empty");
       const sessionState = {
@@ -2344,6 +2529,7 @@
         }
         if (profileEmailEl) {
           profileEmailEl.textContent = user.email || "";
+          profileEmailEl.title = user.email || "";
         }
         if (profileInitialsEl) {
           const initials = username
@@ -2352,6 +2538,16 @@
             .slice(0, 2)
             .join("") || "MA";
           profileInitialsEl.textContent = initials;
+        }
+        if (profileAvatar && profileAvatarImage) {
+          const avatarUrl = user.user_metadata && user.user_metadata.avatar_url;
+          if (avatarUrl) {
+            profileAvatarImage.src = avatarUrl;
+            profileAvatar.classList.add("has-image");
+          } else {
+            profileAvatarImage.removeAttribute("src");
+            profileAvatar.classList.remove("has-image");
+          }
         }
       };
 
@@ -2410,6 +2606,7 @@
         currentUser = data.user;
         titleOverrides = loadTitleOverrides(currentUser.id);
         updateProfileSidebar(currentUser);
+        initProfileEnhancements();
         return currentUser;
       };
 
