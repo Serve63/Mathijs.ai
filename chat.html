@@ -96,7 +96,6 @@
         cursor: pointer;
         transition: background 0.2s ease, transform 0.2s ease;
         box-shadow: 0 8px 24px -8px rgba(230, 194, 0, 0.4);
-        margin-top: 220px;
       }
 
       .new-chat:hover {
@@ -118,6 +117,7 @@
         gap: 4px;
         overflow-y: auto;
         padding-right: 4px;
+        flex: 1;
       }
 
       .session-row {
@@ -1661,12 +1661,12 @@
     <div class="chat-layout">
       <aside class="sidebar">
         <div class="sidebar-top">
-          <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
-            <span>+</span>Nieuw gesprek
-          </button>
           <h2>sessies</h2>
           <p class="session-empty" id="session-empty">Nog geen gesprekken. Start je eerste chat.</p>
           <div class="session-list" id="session-list"></div>
+          <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
+            <span>+</span>Nieuw gesprek
+          </button>
         </div>
         <div class="sidebar-bottom">
           <div class="profile">
