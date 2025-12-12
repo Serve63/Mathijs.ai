@@ -42,7 +42,7 @@
         border-right: 1px solid rgba(255, 255, 255, 0.08);
         display: flex;
         flex-direction: column;
-        padding: 20px;
+        padding: 100px 20px 20px 20px;
         gap: 20px;
         position: relative;
       }
@@ -1669,6 +1669,9 @@
     <div class="chat-layout">
       <aside class="sidebar">
         <div class="sidebar-top">
+          <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
+            <span>+</span>Nieuw gesprek
+          </button>
           <h2>sessies</h2>
           <p class="session-empty" id="session-empty">Nog geen gesprekken. Start je eerste chat.</p>
           <div class="session-list" id="session-list"></div>
@@ -1696,9 +1699,6 @@
               ⋮
             </button>
           </div>
-          <button class="new-chat" type="button" aria-label="Start nieuw gesprek" style="margin-top: 20px;">
-            <span>+</span>Nieuw gesprek
-          </button>
         </div>
       </aside>
       <div class="profile-modal" id="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
