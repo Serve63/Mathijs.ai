@@ -879,8 +879,8 @@
       .chat-header .status {
         width: 100%;
         display: flex;
-        align-items: flex-start;
-        justify-content: flex-start;
+        align-items: center;
+        justify-content: space-between;
         gap: 24px;
       }
 
@@ -913,6 +913,28 @@
         font-size: 0.9rem;
         line-height: 1.6;
         color: rgba(255, 255, 255, 0.7);
+      }
+
+      .header-course-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 24px;
+        background: var(--chat-accent);
+        color: #1a1600;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .header-course-btn:hover {
+        background: #ffe55a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px -4px rgba(230, 194, 0, 0.4);
       }
 
       .model-selects {
@@ -1774,6 +1796,7 @@
               <h2>De Complete AI-Leeromgeving</h2>
               <p>Test en vergelijk AI-modellen zonder keuzestress en ontdek welke het beste past bij jouw business en workflow.</p>
             </div>
+            <a href="course.html" class="header-course-btn">Bekijk Cursus</a>
           </div>
         </header>
         <div class="chat-model-selector">
