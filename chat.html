@@ -852,11 +852,11 @@
       .chat-header {
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         gap: 12px;
         text-align: left;
-        padding: 28px 32px 24px;
+        padding: 28px 40px 24px;
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
         position: relative;
         overflow: hidden;
@@ -878,7 +878,6 @@
 
       .chat-header .status {
         width: 100%;
-        max-width: 880px;
         display: flex;
         align-items: flex-start;
         justify-content: flex-start;
@@ -893,7 +892,6 @@
       }
 
       .status-info {
-        max-width: 480px;
         display: flex;
         flex-direction: column;
         gap: 8px;
