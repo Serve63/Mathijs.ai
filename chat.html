@@ -863,24 +863,7 @@
         max-width: 100%;
         margin: 0;
         width: 100%;
-      }
-
-      .chat-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: 
-          radial-gradient(ellipse 80% 50% at 20% 40%, rgba(230, 194, 0, 0.15) 0%, transparent 50%),
-          radial-gradient(ellipse 60% 40% at 80% 60%, rgba(230, 194, 0, 0.1) 0%, transparent 50%);
-        pointer-events: none;
-      }
-
-      .chat-header > * {
-        position: relative;
-        z-index: 1;
+        margin-left: -1px;
       }
 
       .chat-header h1 {
@@ -959,9 +942,9 @@
       }
 
       .model-select.is-active .model-select__trigger {
-        border-color: var(--chat-accent);
-        box-shadow: 0 8px 24px -12px rgba(230, 194, 0, 0.5);
-        background: rgba(230, 194, 0, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow: none;
+        background: rgba(255, 255, 255, 0.15);
       }
 
       .model-select.is-active .model-select__label {
@@ -1002,22 +985,22 @@
       }
 
       .model-select__activator:hover {
-        border-color: rgba(26, 26, 31, 0.5);
+        border-color: rgba(255, 255, 255, 0.4);
       }
 
       .model-select__activator:focus-visible {
-        outline: 2px solid var(--chat-accent);
+        outline: 2px solid rgba(255, 255, 255, 0.5);
         outline-offset: 2px;
       }
 
       .model-select.is-active .model-select__activator {
-        border-color: var(--chat-accent);
-        box-shadow: 0 0 0 4px rgba(230, 194, 0, 0.18);
-        background: rgba(230, 194, 0, 0.16);
+        border-color: rgba(255, 255, 255, 0.5);
+        box-shadow: none;
+        background: rgba(255, 255, 255, 0.1);
       }
 
       .model-select.is-active .model-select__activator::after {
-        background: var(--chat-accent);
+        background: rgba(255, 255, 255, 0.7);
         transform: scale(1.05);
       }
 
