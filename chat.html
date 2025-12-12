@@ -665,6 +665,157 @@
         transform: none;
       }
 
+      .edit-credentials-modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10, 12, 18, 0.58);
+        backdrop-filter: blur(8px);
+        z-index: 130;
+        padding: 24px;
+      }
+
+      .edit-credentials-modal.is-visible {
+        display: flex;
+      }
+
+      .edit-credentials-modal__dialog {
+        width: min(480px, 100%);
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 24px;
+        box-shadow: 0 40px 90px -50px rgba(16, 21, 32, 0.6);
+        border: 1px solid rgba(16, 21, 32, 0.08);
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+      }
+
+      .edit-credentials-modal__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px 28px 18px;
+        border-bottom: 1px solid rgba(16, 21, 32, 0.06);
+      }
+
+      .edit-credentials-modal__title {
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .edit-credentials-modal__close {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(26, 26, 31, 0.6);
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .edit-credentials-modal__close:hover {
+        background: rgba(16, 21, 32, 0.06);
+        color: #1a1a1f;
+      }
+
+      .edit-credentials-modal__close svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+      }
+
+      .edit-credentials-modal__body {
+        padding: 26px 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .edit-credentials-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .edit-credentials-modal__label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #1a1a1f;
+        margin-bottom: -4px;
+      }
+
+      .edit-credentials-modal__input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid rgba(16, 21, 32, 0.12);
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: #1a1a1f;
+        background: #fff;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .edit-credentials-modal__input:focus {
+        outline: none;
+        border-color: var(--chat-accent);
+        box-shadow: 0 0 0 3px rgba(255, 212, 0, 0.15);
+      }
+
+      .edit-credentials-modal__actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 4px;
+      }
+
+      .edit-credentials-modal__cancel,
+      .edit-credentials-modal__save {
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(16, 21, 32, 0.12);
+      }
+
+      .edit-credentials-modal__cancel {
+        background: #fff;
+        color: #1a1a1f;
+      }
+
+      .edit-credentials-modal__cancel:hover {
+        background: rgba(16, 21, 32, 0.04);
+      }
+
+      .edit-credentials-modal__save {
+        background: var(--chat-accent);
+        color: #1a1600;
+        border-color: var(--chat-accent);
+      }
+
+      .edit-credentials-modal__save:hover {
+        background: #ffe55a;
+        transform: translateY(-1px);
+      }
+
+      .edit-credentials-modal__save:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
       .chat-main {
         display: grid;
         grid-template-rows: auto 1fr auto;
@@ -1532,6 +1683,13 @@
                 </div>
                 <button class="subscription-action__button" type="button">Bekijken</button>
               </article>
+              <article class="subscription-action">
+                <div class="subscription-action__meta">
+                  <span class="subscription-action__title">Inloggegevens wijzigen</span>
+                  <span class="subscription-action__caption">Wijzig je e-mailadres of wachtwoord</span>
+                </div>
+                <button class="subscription-action__button" type="button" id="edit-credentials-button">Wijzigen</button>
+              </article>
             </section>
             <p class="subscription-footnote">Vragen over je abonnement? Neem contact op via support@mathijs.ai</p>
           </div>
@@ -1553,6 +1711,35 @@
             <div class="edit-name-modal__actions">
               <button type="button" class="edit-name-modal__cancel">Annuleren</button>
               <button type="button" class="edit-name-modal__save">Opslaan</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="edit-credentials-modal" id="edit-credentials-modal" role="dialog" aria-modal="true" aria-labelledby="edit-credentials-modal-title">
+        <div class="edit-credentials-modal__dialog">
+          <header class="edit-credentials-modal__header">
+            <h2 class="edit-credentials-modal__title" id="edit-credentials-modal-title">Inloggegevens wijzigen</h2>
+            <button class="edit-credentials-modal__close" type="button" aria-label="Sluit">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6l-12 12" />
+              </svg>
+            </button>
+          </header>
+          <div class="edit-credentials-modal__body">
+            <div class="edit-credentials-form">
+              <label for="edit-email-input" class="edit-credentials-modal__label">Nieuw e-mailadres</label>
+              <input type="email" id="edit-email-input" class="edit-credentials-modal__input" placeholder="naam@voorbeeld.nl" />
+              
+              <label for="edit-password-input" class="edit-credentials-modal__label">Nieuw wachtwoord (laat leeg om niet te wijzigen)</label>
+              <input type="password" id="edit-password-input" class="edit-credentials-modal__input" placeholder="Minimaal 6 tekens" minlength="6" />
+              
+              <label for="edit-password-confirm-input" class="edit-credentials-modal__label">Bevestig wachtwoord</label>
+              <input type="password" id="edit-password-confirm-input" class="edit-credentials-modal__input" placeholder="Herhaal wachtwoord" minlength="6" />
+              
+              <div class="edit-credentials-modal__actions">
+                <button type="button" class="edit-credentials-modal__cancel">Annuleren</button>
+                <button type="button" class="edit-credentials-modal__save">Opslaan</button>
+              </div>
             </div>
           </div>
         </div>
@@ -2127,6 +2314,150 @@
             closeProfileModal();
           }
         });
+      }
+
+      // Edit credentials modal
+      const editCredentialsButton = document.getElementById("edit-credentials-button");
+      const editCredentialsModal = document.getElementById("edit-credentials-modal");
+      if (editCredentialsButton && editCredentialsModal) {
+        const editEmailInput = document.getElementById("edit-email-input");
+        const editPasswordInput = document.getElementById("edit-password-input");
+        const editPasswordConfirmInput = document.getElementById("edit-password-confirm-input");
+        const editCredentialsClose = document.querySelector(".edit-credentials-modal__close");
+        const editCredentialsCancel = document.querySelector(".edit-credentials-modal__cancel");
+        const editCredentialsSave = document.querySelector(".edit-credentials-modal__save");
+
+        const openEditCredentialsModal = () => {
+          if (!editCredentialsModal) return;
+          if (currentUser?.email && editEmailInput) {
+            editEmailInput.value = currentUser.email;
+          }
+          if (editPasswordInput) editPasswordInput.value = "";
+          if (editPasswordConfirmInput) editPasswordConfirmInput.value = "";
+          editCredentialsModal.classList.add("is-visible");
+          document.body.style.overflow = "hidden";
+          setTimeout(() => {
+            if (editEmailInput) editEmailInput.focus();
+          }, 100);
+        };
+
+        const closeEditCredentialsModal = () => {
+          if (!editCredentialsModal) return;
+          editCredentialsModal.classList.remove("is-visible");
+          document.body.style.removeProperty("overflow");
+          if (editEmailInput) editEmailInput.value = "";
+          if (editPasswordInput) editPasswordInput.value = "";
+          if (editPasswordConfirmInput) editPasswordConfirmInput.value = "";
+        };
+
+        const saveCredentials = async () => {
+          if (!supabaseClient || !currentUser) {
+            alert("Je moet ingelogd zijn om je gegevens te wijzigen.");
+            return;
+          }
+
+          const newEmail = editEmailInput?.value.trim();
+          const newPassword = editPasswordInput?.value;
+          const confirmPassword = editPasswordConfirmInput?.value;
+
+          // Validate email
+          if (!newEmail || !newEmail.includes("@")) {
+            alert("Voer een geldig e-mailadres in.");
+            if (editEmailInput) editEmailInput.focus();
+            return;
+          }
+
+          // Validate password if provided
+          if (newPassword) {
+            if (newPassword.length < 6) {
+              alert("Wachtwoord moet minimaal 6 tekens lang zijn.");
+              if (editPasswordInput) editPasswordInput.focus();
+              return;
+            }
+            if (newPassword !== confirmPassword) {
+              alert("Wachtwoorden komen niet overeen.");
+              if (editPasswordConfirmInput) editPasswordConfirmInput.focus();
+              return;
+            }
+          }
+
+          if (editCredentialsSave) {
+            editCredentialsSave.disabled = true;
+            editCredentialsSave.textContent = "Opslaan...";
+          }
+
+          try {
+            const updateData = {};
+            if (newEmail && newEmail !== currentUser.email) {
+              updateData.email = newEmail;
+            }
+            if (newPassword) {
+              updateData.password = newPassword;
+            }
+
+            if (Object.keys(updateData).length === 0) {
+              alert("Geen wijzigingen om op te slaan.");
+              if (editCredentialsSave) {
+                editCredentialsSave.disabled = false;
+                editCredentialsSave.textContent = "Opslaan";
+              }
+              return;
+            }
+
+            const { error } = await supabaseClient.auth.updateUser(updateData);
+            if (error) throw error;
+
+            // Refresh user data
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (user) {
+              currentUser = user;
+              updateProfileSidebar(currentUser);
+            }
+
+            alert("Inloggegevens succesvol bijgewerkt!");
+            closeEditCredentialsModal();
+          } catch (error) {
+            console.error("Inloggegevens bijwerken mislukt:", error);
+            alert(error.message || "Inloggegevens bijwerken mislukt. Probeer het opnieuw.");
+          } finally {
+            if (editCredentialsSave) {
+              editCredentialsSave.disabled = false;
+              editCredentialsSave.textContent = "Opslaan";
+            }
+          }
+        };
+
+        editCredentialsButton.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          openEditCredentialsModal();
+        });
+
+        if (editCredentialsClose) {
+          editCredentialsClose.addEventListener("click", closeEditCredentialsModal);
+        }
+
+        if (editCredentialsCancel) {
+          editCredentialsCancel.addEventListener("click", closeEditCredentialsModal);
+        }
+
+        if (editCredentialsSave) {
+          editCredentialsSave.addEventListener("click", saveCredentials);
+        }
+
+        if (editCredentialsModal) {
+          editCredentialsModal.addEventListener("click", (event) => {
+            if (event.target === editCredentialsModal) {
+              closeEditCredentialsModal();
+            }
+          });
+
+          document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && editCredentialsModal.classList.contains("is-visible")) {
+              closeEditCredentialsModal();
+            }
+          });
+        }
       }
 
       const chatLog = document.querySelector(".chat-log");
