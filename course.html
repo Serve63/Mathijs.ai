@@ -33,15 +33,15 @@
       }
 
       header {
-        padding: 24px 32px;
+        padding: 20px 40px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid rgba(16, 21, 32, 0.08);
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(12px);
-        position: sticky;
+        background: transparent;
+        position: absolute;
         top: 0;
+        left: 0;
+        right: 0;
         z-index: 100;
       }
 
@@ -56,8 +56,8 @@
       }
 
       header .logo__image {
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
         object-fit: contain;
         flex-shrink: 0;
       }
@@ -69,7 +69,7 @@
       }
 
       header .logo__word {
-        color: var(--accent);
+        color: #fff;
         letter-spacing: 0.02em;
       }
       
@@ -80,54 +80,178 @@
 
       .back-link {
         text-decoration: none;
-        color: var(--fg-muted);
+        color: rgba(255,255,255,0.8);
         font-size: 0.88rem;
         font-weight: 500;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 8px 16px;
+        padding: 10px 18px;
         border-radius: 10px;
         transition: all 0.2s ease;
-        border: 1px solid transparent;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.15);
+        backdrop-filter: blur(8px);
       }
 
       .back-link:hover {
-        color: #1a1a1f;
-        background: rgba(16, 21, 32, 0.04);
-        border-color: rgba(16, 21, 32, 0.08);
+        color: #fff;
+        background: rgba(255,255,255,0.18);
+        border-color: rgba(255,255,255,0.25);
+      }
+
+      /* Hero Section */
+      .hero {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        position: relative;
+        overflow: hidden;
+        padding: 120px 40px 80px;
+      }
+
+      .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+          radial-gradient(ellipse 80% 50% at 20% 40%, rgba(230, 194, 0, 0.15) 0%, transparent 50%),
+          radial-gradient(ellipse 60% 40% at 80% 60%, rgba(230, 194, 0, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+      }
+
+      .hero::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      .hero-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(230, 194, 0, 0.15);
+        border: 1px solid rgba(230, 194, 0, 0.3);
+        color: var(--accent);
+        padding: 8px 16px;
+        border-radius: 100px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 24px;
+      }
+
+      .hero-badge svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .hero h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(2.4rem, 5vw, 3.5rem);
+        margin: 0 0 20px;
+        letter-spacing: -0.02em;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.1;
+      }
+
+      .hero-subtitle {
+        font-size: 1.15rem;
+        line-height: 1.7;
+        color: rgba(255,255,255,0.7);
+        max-width: 600px;
+        margin: 0 0 40px;
+      }
+
+      .hero-stats {
+        display: flex;
+        gap: 40px;
+        flex-wrap: wrap;
+      }
+
+      .hero-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .hero-stat__value {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--accent);
+        line-height: 1;
+      }
+
+      .hero-stat__label {
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
       }
 
       main {
-        padding: 48px 32px;
+        padding: 48px 40px;
         max-width: 1200px;
         margin: 0 auto;
         display: flex;
         flex-direction: column;
-        gap: 40px;
+        gap: 32px;
       }
 
-      h1 {
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .section-title {
         font-family: "Space Grotesk", sans-serif;
-        font-size: clamp(2rem, 4vw, 2.6rem);
+        font-size: 1.4rem;
+        font-weight: 600;
         margin: 0;
-        letter-spacing: -0.01em;
-        font-weight: 700;
         color: var(--fg);
       }
 
-      .intro {
+      .section-filter {
         display: flex;
-        flex-direction: column;
-        gap: 16px;
-        color: var(--fg-muted);
-        max-width: 760px;
+        gap: 8px;
       }
 
-      .intro p {
-        font-size: 1.05rem;
-        line-height: 1.6;
-        margin: 0;
+      .filter-btn {
+        padding: 8px 16px;
+        border: 1px solid var(--tile-border);
+        background: var(--tile-bg);
+        border-radius: 8px;
+        font-size: 0.85rem;
+        color: var(--fg-muted);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .filter-btn:hover,
+      .filter-btn.active {
+        background: var(--fg);
+        color: #fff;
+        border-color: var(--fg);
       }
 
       .grid {
@@ -139,18 +263,38 @@
       .lesson-tile {
         background: var(--tile-bg);
         border: 1px solid var(--tile-border);
-        border-radius: 16px;
-        padding: 20px;
+        border-radius: 14px;
+        padding: 22px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        box-shadow: 0 18px 45px -35px rgba(16, 21, 32, 0.3);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        gap: 10px;
+        box-shadow: 0 4px 20px -8px rgba(16, 21, 32, 0.12);
+        transition: all 0.25s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .lesson-tile::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--accent);
+        transform: scaleY(0);
+        transition: transform 0.25s ease;
       }
 
       .lesson-tile:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 30px 60px -40px rgba(16, 21, 32, 0.35);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px -12px rgba(16, 21, 32, 0.2);
+        border-color: rgba(230, 194, 0, 0.3);
+      }
+
+      .lesson-tile:hover::before {
+        transform: scaleY(1);
       }
 
       .lesson-number {
@@ -174,49 +318,125 @@
       }
 
       footer {
-        padding: 32px;
+        padding: 40px;
         text-align: center;
         font-size: 0.82rem;
-        color: rgba(26, 26, 31, 0.6);
+        color: rgba(26, 26, 31, 0.5);
+        border-top: 1px solid var(--tile-border);
+        margin-top: 40px;
       }
 
-      @media (max-width: 600px) {
-        header,
-        main,
-        footer {
-          padding-left: 20px;
-          padding-right: 20px;
+      @media (max-width: 768px) {
+        header {
+          padding: 16px 20px;
+        }
+
+        .hero {
+          padding: 100px 20px 60px;
+        }
+
+        .hero h1 {
+          font-size: 2rem;
+        }
+
+        .hero-subtitle {
+          font-size: 1rem;
+        }
+
+        .hero-stats {
+          gap: 24px;
+        }
+
+        .hero-stat__value {
+          font-size: 1.6rem;
+        }
+
+        main {
+          padding: 32px 20px;
+        }
+
+        .section-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .section-filter {
+          width: 100%;
+          overflow-x: auto;
+          padding-bottom: 8px;
+        }
+
+        .filter-btn {
+          white-space: nowrap;
+          flex-shrink: 0;
         }
 
         .grid {
-          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+          gap: 12px;
+        }
+
+        .back-link span {
+          display: none;
         }
       }
     </style>
   </head>
   <body>
+    <section class="hero">
     <header>
-      <a class="logo" href="index.html" aria-label="Mathijs dot AI">
+        <a class="logo" href="index.html" aria-label="Mathijs dot AI">
         <img class="logo__image" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
         <span class="logo__text">
           <span class="logo__word">MATHIJS</span>
           <span class="logo__suffix">.AI</span>
         </span>
-      </a>
-      <a class="back-link" href="chat.html">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-        Terug naar AI Leeromgeving
-      </a>
-    </header>
-    <main>
-      <div class="intro">
-        <h1>Mathijs.ai Masterclass</h1>
-        <p>
-          50 lessen vol strategie, governance, automatisering en adoptie. Doorloop ze in je eigen tempo en activeer
-          stap voor stap een AI-native organisatie.
+        </a>
+        <a class="back-link" href="chat.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          Terug naar Chat
+        </a>
+      </header>
+      <div class="hero-content">
+        <div class="hero-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          Masterclass
+        </div>
+        <h1>Word een AI-Expert<br>in 50 Lessen</h1>
+        <p class="hero-subtitle">
+          Van strategie tot implementatie. Leer alles over governance, automatisering en adoptie. 
+          Doorloop de lessen in je eigen tempo en transformeer naar een AI-native organisatie.
         </p>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <span class="hero-stat__value">50</span>
+            <span class="hero-stat__label">Lessen</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat__value">10+</span>
+            <span class="hero-stat__label">Uur content</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat__value">Pro</span>
+            <span class="hero-stat__label">Niveau</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main>
+      <div class="section-header">
+        <h2 class="section-title">Alle lessen</h2>
+        <div class="section-filter">
+          <button class="filter-btn active">Alles</button>
+          <button class="filter-btn">Strategie</button>
+          <button class="filter-btn">Governance</button>
+          <button class="filter-btn">Automatisering</button>
+        </div>
       </div>
       <div class="grid">
         <div class="lesson-tile">
