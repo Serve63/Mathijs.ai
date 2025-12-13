@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mathijs.ai | Personeel login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --accent: #e6c200;
+        --accent-dark: #c9a900;
+        --hero-1: #1a1a2e;
+        --hero-2: #16213e;
+        --hero-3: #0f3460;
+        --fg: #1a1a1f;
+        --fg-muted: #6b6b76;
+        --border: rgba(0, 0, 0, 0.08);
+        --error: #dc3545;
+        --success: #28a745;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 50%, var(--hero-3) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 80% 50% at 20% 30%, rgba(230, 194, 0, 0.1) 0%, transparent 50%),
+          radial-gradient(ellipse 60% 40% at 85% 70%, rgba(230, 194, 0, 0.08) 0%, transparent 50%);
+        pointer-events: none;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      .auth-container {
+        width: 100%;
+        max-width: 440px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .auth-card {
+        background: #fff;
+        border-radius: 24px;
+        padding: 44px 40px;
+        box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.4);
+      }
+
+      .back-link {
+        position: absolute;
+        top: -48px;
+        left: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .back-link:hover {
+        color: #fff;
+      }
+
+      .back-link svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .auth-headline {
+        text-align: center;
+        margin-bottom: 28px;
+      }
+
+      .auth-eyebrow {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--accent);
+        margin: 0 0 12px;
+      }
+
+      .auth-headline h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin: 0 0 8px;
+        color: var(--fg);
+      }
+
+      .auth-subtitle {
+        font-size: 0.95rem;
+        color: var(--fg-muted);
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .auth-form label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--fg);
+      }
+
+      .auth-form input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: var(--fg);
+        background: #fafafa;
+        transition: all 0.2s ease;
+      }
+
+      .auth-form input:focus {
+        outline: none;
+        border-color: var(--accent);
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(230, 194, 0, 0.15);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+      }
+
+      .btn.primary {
+        background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 100%);
+        color: #fff;
+      }
+
+      .btn.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px -8px rgba(22, 33, 62, 0.5);
+      }
+
+      .btn.primary:active {
+        transform: translateY(0);
+      }
+
+      .form-feedback {
+        min-height: 20px;
+        font-size: 0.85rem;
+        text-align: center;
+        margin: 10px 0 0;
+      }
+
+      .form-feedback.error {
+        color: var(--error);
+      }
+
+      .form-feedback.success {
+        color: var(--success);
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 60px 16px 40px;
+        }
+        .auth-card {
+          padding: 36px 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auth-container">
+      <a href="index.html" class="back-link" aria-label="Terug naar home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+        Terug naar home
+      </a>
+      <div class="auth-card">
+        <div class="auth-headline">
+          <p class="auth-eyebrow">Personeel</p>
+          <h1>Inloggen personeel</h1>
+          <p class="auth-subtitle">Alleen voor medewerkers.</p>
+        </div>
+        <form id="staff-login-form" class="auth-form" novalidate>
+          <div class="form-group">
+            <label for="staff-email">E-mail</label>
+            <input id="staff-email" name="email" type="email" placeholder="naam@bedrijf.com" required />
+          </div>
+          <div class="form-group">
+            <label for="staff-password">Wachtwoord</label>
+            <input id="staff-password" name="password" type="password" placeholder="••••••••" required minlength="6" />
+          </div>
+          <button type="submit" class="btn primary" id="staff-login-btn">Inloggen</button>
+        </form>
+        <p class="form-feedback" id="staff-login-feedback" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+      (() => {
+        const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
+
+        const STAFF_EMAIL_ALLOWLIST = [
+          // Voeg hier staff emails toe (exacte matches)
+          // "staff@mathijs.ai",
+        ];
+
+        const isStaffEmail = (email) => {
+          const e = (email || "").toLowerCase().trim();
+          if (!e) return false;
+          if (STAFF_EMAIL_ALLOWLIST.includes(e)) return true;
+          // alternatief: alle @mathijs.ai emails toestaan
+          return e.endsWith("@mathijs.ai");
+        };
+
+        const setFeedback = (el, msg = "", type = "error") => {
+          if (!el) return;
+          el.textContent = msg;
+          el.classList.remove("error", "success");
+          if (msg) el.classList.add(type);
+        };
+
+        const init = async () => {
+          const form = document.getElementById("staff-login-form");
+          const emailEl = document.getElementById("staff-email");
+          const passEl = document.getElementById("staff-password");
+          const feedbackEl = document.getElementById("staff-login-feedback");
+          const btn = document.getElementById("staff-login-btn");
+
+          if (!form || !window.supabase?.createClient) return;
+          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            setFeedback(feedbackEl, "");
+
+            const email = emailEl?.value?.trim();
+            const password = passEl?.value?.trim();
+            if (!email || !password) {
+              setFeedback(feedbackEl, "Vul je e-mail en wachtwoord in.");
+              return;
+            }
+
+            btn.disabled = true;
+            const original = btn.textContent;
+            btn.textContent = "Bezig met inloggen...";
+
+            try {
+              const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+              if (error) {
+                setFeedback(feedbackEl, error.message || "Inloggen mislukt.");
+                return;
+              }
+
+              const userEmail = data?.user?.email || email;
+              if (!isStaffEmail(userEmail)) {
+                await supabase.auth.signOut();
+                setFeedback(feedbackEl, "Geen toegang: alleen personeel.", "error");
+                return;
+              }
+
+              setFeedback(feedbackEl, "Inloggen gelukt. Doorsturen...", "success");
+              window.location.href = "staff-dashboard.html";
+            } catch (err) {
+              console.error(err);
+              setFeedback(feedbackEl, "Er ging iets mis. Probeer het opnieuw.");
+            } finally {
+              btn.disabled = false;
+              btn.textContent = original;
+            }
+          });
+        };
+
+        document.addEventListener("DOMContentLoaded", init);
+      })();
+    </script>
+  </body>
+</html>
+
+

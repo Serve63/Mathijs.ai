@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mathijs.ai | Personeel dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --accent: #e6c200;
+        --accent-dark: #c9a900;
+        --hero-1: #1a1a2e;
+        --hero-2: #16213e;
+        --hero-3: #0f3460;
+        --bg: #f6f7fb;
+        --card: #ffffff;
+        --fg: #1a1a1f;
+        --muted: rgba(26, 26, 31, 0.6);
+        --border: rgba(0, 0, 0, 0.08);
+        --danger: #dc3545;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(26, 26, 46, 0.95);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .topbar-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        color: #fff;
+      }
+
+      .brand-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        display: inline-flex;
+        align-items: baseline;
+        gap: 2px;
+      }
+
+      .brand-dot {
+        color: var(--accent);
+      }
+
+      .brand-sub {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+        font-weight: 600;
+        font-size: 0.88rem;
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease;
+      }
+
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.26);
+      }
+
+      .btn.primary {
+        background: var(--accent);
+        border-color: rgba(0, 0, 0, 0.08);
+        color: #1a1600;
+      }
+
+      .btn.primary:hover {
+        background: var(--accent-dark);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 28px 20px 60px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 18px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 12px 30px -24px rgba(0, 0, 0, 0.25);
+      }
+
+      .kpi {
+        grid-column: span 4;
+      }
+
+      .kpi-label {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin: 0 0 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+      }
+
+      .kpi-value {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .kpi-foot {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .list {
+        grid-column: span 12;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .list-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .list-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .list-sub {
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .rows {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 10px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .row:last-child {
+        border-bottom: none;
+      }
+
+      .row strong {
+        font-weight: 600;
+      }
+
+      .row small {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .error {
+        margin-top: 16px;
+        color: var(--danger);
+        font-weight: 600;
+      }
+
+      @media (max-width: 960px) {
+        .kpi {
+          grid-column: span 12;
+        }
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-title">MATHIJS<span class="brand-dot">.AI</span></div>
+          <div class="brand-sub">Personeel dashboard</div>
+        </div>
+        <div class="topbar-actions">
+          <a class="btn" href="index.html">Home</a>
+          <button class="btn primary" id="staff-logout-btn" type="button">Uitloggen</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="grid">
+        <section class="card kpi">
+          <p class="kpi-label">Totaal klanten</p>
+          <p class="kpi-value" id="kpi-total">—</p>
+          <div class="kpi-foot">Totaal aantal profielen</div>
+        </section>
+
+        <section class="card kpi">
+          <p class="kpi-label">Nieuwe klanten (maand)</p>
+          <p class="kpi-value" id="kpi-month">—</p>
+          <div class="kpi-foot">Sinds start van deze maand</div>
+        </section>
+
+        <section class="card kpi">
+          <p class="kpi-label">Nieuwe klanten (30 dagen)</p>
+          <p class="kpi-value" id="kpi-30d">—</p>
+          <div class="kpi-foot">Laatste 30 dagen</div>
+        </section>
+
+        <section class="card list">
+          <div class="list-head">
+            <h2 class="list-title">Recente klanten</h2>
+            <div class="list-sub" id="last-updated">—</div>
+          </div>
+          <div class="rows" id="recent-rows"></div>
+        </section>
+
+        <div class="error" id="staff-error" style="display:none;"></div>
+      </div>
+    </main>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+      (() => {
+        const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
+
+        const STAFF_EMAIL_ALLOWLIST = [
+          // Zelfde allowlist als in staff-login.html (optioneel)
+          // "staff@mathijs.ai",
+        ];
+
+        const isStaffEmail = (email) => {
+          const e = (email || "").toLowerCase().trim();
+          if (!e) return false;
+          if (STAFF_EMAIL_ALLOWLIST.includes(e)) return true;
+          return e.endsWith("@mathijs.ai");
+        };
+
+        const fmtDate = (iso) => {
+          try {
+            return new Date(iso).toLocaleString("nl-NL", { year: "numeric", month: "short", day: "2-digit" });
+          } catch {
+            return iso || "";
+          }
+        };
+
+        const setText = (id, v) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = v;
+        };
+
+        const showError = (msg) => {
+          const el = document.getElementById("staff-error");
+          if (!el) return;
+          el.style.display = "block";
+          el.textContent = msg;
+        };
+
+        const startOfMonthISO = () => {
+          const d = new Date();
+          const s = new Date(d.getFullYear(), d.getMonth(), 1);
+          return s.toISOString();
+        };
+
+        const daysAgoISO = (days) => {
+          const d = new Date();
+          d.setDate(d.getDate() - days);
+          return d.toISOString();
+        };
+
+        const init = async () => {
+          if (!window.supabase?.createClient) return;
+          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+          // Auth gate
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError) {
+            showError("Kan sessie niet ophalen.");
+            return;
+          }
+          const session = sessionData?.session;
+          const email = session?.user?.email;
+          if (!session || !isStaffEmail(email)) {
+            window.location.href = "staff-login.html";
+            return;
+          }
+
+          // Logout
+          const logoutBtn = document.getElementById("staff-logout-btn");
+          logoutBtn?.addEventListener("click", async () => {
+            await supabase.auth.signOut();
+            window.location.href = "index.html";
+          });
+
+          // KPIs (profiles table as "customers")
+          const monthISO = startOfMonthISO();
+          const d30ISO = daysAgoISO(30);
+
+          try {
+            const { count: totalCount, error: totalErr } = await supabase
+              .from("profiles")
+              .select("id", { count: "exact", head: true });
+            if (totalErr) throw totalErr;
+            setText("kpi-total", String(totalCount ?? 0));
+
+            const { count: monthCount, error: monthErr } = await supabase
+              .from("profiles")
+              .select("id", { count: "exact", head: true })
+              .gte("created_at", monthISO);
+            if (monthErr) throw monthErr;
+            setText("kpi-month", String(monthCount ?? 0));
+
+            const { count: d30Count, error: d30Err } = await supabase
+              .from("profiles")
+              .select("id", { count: "exact", head: true })
+              .gte("created_at", d30ISO);
+            if (d30Err) throw d30Err;
+            setText("kpi-30d", String(d30Count ?? 0));
+
+            const { data: recent, error: recentErr } = await supabase
+              .from("profiles")
+              .select("email, created_at")
+              .order("created_at", { ascending: false })
+              .limit(10);
+            if (recentErr) throw recentErr;
+
+            const rowsEl = document.getElementById("recent-rows");
+            if (rowsEl) {
+              rowsEl.innerHTML = "";
+              (recent || []).forEach((r) => {
+                const row = document.createElement("div");
+                row.className = "row";
+                row.innerHTML = `<div><strong>${r.email || "(geen email)"}</strong></div><div><small>${fmtDate(
+                  r.created_at
+                )}</small></div>`;
+                rowsEl.appendChild(row);
+              });
+              if (!recent?.length) {
+                const row = document.createElement("div");
+                row.className = "row";
+                row.innerHTML = `<div><strong>Geen data</strong></div><div><small>—</small></div>`;
+                rowsEl.appendChild(row);
+              }
+            }
+
+            setText("last-updated", `Laatst bijgewerkt: ${fmtDate(new Date().toISOString())}`);
+          } catch (err) {
+            console.error(err);
+            showError(
+              "Dashboard data kon niet worden geladen. Check of de Supabase tabel `profiles` bestaat en `created_at` bevat."
+            );
+          }
+        };
+
+        document.addEventListener("DOMContentLoaded", init);
+      })();
+    </script>
+  </body>
+</html>
+
+
