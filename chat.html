@@ -1261,7 +1261,7 @@
         display: flex;
         flex-direction: column;
         gap: 14px;
-        align-items: center;
+        align-items: stretch;
         background: var(--chat-panel);
         width: 100%;
         box-sizing: border-box;
@@ -1317,15 +1317,24 @@
         align-items: flex-start;
         background: transparent;
         padding: 0 0 0 0;
-        margin: 0 auto 12px 0;
-        align-self: flex-start;
+        margin: 0 auto 12px auto;
+        align-self: center;
       }
 
       .message.user {
-        align-self: flex-end;
         justify-content: flex-end;
-        margin-left: auto;
-        margin-right: 0;
+        align-self: center;
+      }
+
+      /* Assistant/system messages: align left within the same centered column */
+      .message.system {
+        justify-content: flex-start;
+        align-self: center;
+      }
+
+      /* Give assistant text a comfortable left edge (not hugging the sidebar) */
+      .message.system .bubble {
+        max-width: 640px;
       }
 
       .chat-log .bubble {
