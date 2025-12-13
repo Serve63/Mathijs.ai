@@ -1048,6 +1048,204 @@
             window.location.href = "index.html";
           });
 
+          // === Customer Modal Management (moet buiten try-catch) ===
+          let allCustomers = [];
+          let selectedCustomer = null;
+
+          const modal = document.getElementById("customer-modal");
+          const modalClose = document.getElementById("modal-close");
+          const customerListView = document.getElementById("customer-list-view");
+          const customerDetailView = document.getElementById("customer-detail-view");
+          const customerListEl = document.getElementById("customer-list");
+          const customerSearch = document.getElementById("customer-search");
+          const detailBack = document.getElementById("detail-back");
+
+          const openModal = () => {
+            if (modal) {
+              modal.classList.add("active");
+              document.body.style.overflow = "hidden";
+            }
+          };
+
+          const closeModal = () => {
+            if (modal) {
+              modal.classList.remove("active");
+              document.body.style.overflow = "";
+              showCustomerList();
+            }
+          };
+
+          const showCustomerList = () => {
+            if (customerListView) customerListView.style.display = "block";
+            if (customerDetailView) customerDetailView.classList.remove("active");
+            const titleEl = document.getElementById("modal-title");
+            if (titleEl) titleEl.textContent = `Alle klanten (${allCustomers.length})`;
+          };
+
+          const showCustomerDetail = (customer) => {
+            selectedCustomer = customer;
+            if (customerListView) customerListView.style.display = "none";
+            if (customerDetailView) customerDetailView.classList.add("active");
+            const titleEl = document.getElementById("modal-title");
+            if (titleEl) titleEl.textContent = "Klantdetails";
+
+            document.getElementById("detail-email").textContent = customer.email || "(geen email)";
+            document.getElementById("detail-id").textContent = `Klantnummer: ${customer.id?.substring(0, 8) || "—"}`;
+            
+            const isCancelled = !!customer.cancelled_at;
+            const statusEl = document.getElementById("detail-status");
+            if (statusEl) {
+              statusEl.textContent = isCancelled ? "Opgezegd" : "Actief";
+              statusEl.className = `customer-badge ${isCancelled ? "cancelled" : "active"}`;
+            }
+
+            const createdDate = customer.created_at ? new Date(customer.created_at) : new Date();
+            const now = new Date();
+            const monthsDiff = Math.max(1, Math.floor((now - createdDate) / (1000 * 60 * 60 * 24 * 30)));
+            const freeMonths = customer.free_months || 0;
+            const paidMonths = Math.max(0, monthsDiff - freeMonths);
+            const totalPaid = paidMonths * 20;
+
+            setText("detail-member-since", fmtDate(customer.created_at));
+            setText("detail-months", String(monthsDiff));
+            setText("detail-paid", `€${totalPaid.toLocaleString("nl-NL")}`);
+            setText("detail-free", String(freeMonths));
+
+            const freeFb = document.getElementById("free-feedback");
+            if (freeFb) { freeFb.className = "action-feedback"; freeFb.textContent = ""; }
+            const dangerFb = document.getElementById("danger-feedback");
+            if (dangerFb) { dangerFb.className = "action-feedback"; dangerFb.textContent = ""; }
+          };
+
+          const renderCustomerList = (customers) => {
+            if (!customerListEl) return;
+            customerListEl.innerHTML = "";
+            if (!customers.length) {
+              customerListEl.innerHTML = '<div class="empty-rows">Geen klanten gevonden.</div>';
+              return;
+            }
+            customers.forEach((c) => {
+              const row = document.createElement("div");
+              row.className = "customer-row";
+              const isCancelled = !!c.cancelled_at;
+              row.innerHTML = `
+                <div class="customer-email">${c.email || "(geen email)"}</div>
+                <div class="customer-date">${fmtDate(c.created_at)}</div>
+                <span class="customer-badge ${isCancelled ? "cancelled" : "active"}">${isCancelled ? "Opgezegd" : "Actief"}</span>
+              `;
+              row.addEventListener("click", () => showCustomerDetail(c));
+              customerListEl.appendChild(row);
+            });
+          };
+
+          const loadAllCustomers = async () => {
+            try {
+              const { data, error } = await supabase
+                .from("profiles")
+                .select("id, email, created_at, cancelled_at, free_months, plan")
+                .order("created_at", { ascending: false });
+              if (error) throw error;
+              allCustomers = data || [];
+              renderCustomerList(allCustomers);
+            } catch (e) {
+              console.error(e);
+              if (customerListEl) customerListEl.innerHTML = '<div class="empty-rows">Kon klanten niet laden.</div>';
+            }
+          };
+
+          // Modal Event Listeners
+          document.getElementById("kpi-total-card")?.addEventListener("click", async () => {
+            openModal();
+            await loadAllCustomers();
+          });
+
+          modalClose?.addEventListener("click", closeModal);
+          modal?.addEventListener("click", (e) => {
+            if (e.target === modal) closeModal();
+          });
+
+          detailBack?.addEventListener("click", showCustomerList);
+
+          customerSearch?.addEventListener("input", (e) => {
+            const q = e.target.value.toLowerCase().trim();
+            const filtered = allCustomers.filter((c) =>
+              (c.email || "").toLowerCase().includes(q)
+            );
+            renderCustomerList(filtered);
+          });
+
+          // Add Free Period
+          document.getElementById("add-free-btn")?.addEventListener("click", async () => {
+            if (!selectedCustomer) return;
+            const amount = parseInt(document.getElementById("free-amount").value) || 1;
+            const unit = document.getElementById("free-unit").value;
+            const months = unit === "year" ? amount * 12 : amount;
+            const currentFree = selectedCustomer.free_months || 0;
+            const newFree = currentFree + months;
+
+            try {
+              const { error } = await supabase
+                .from("profiles")
+                .update({ free_months: newFree })
+                .eq("id", selectedCustomer.id);
+              if (error) throw error;
+
+              selectedCustomer.free_months = newFree;
+              setText("detail-free", String(newFree));
+              const fb = document.getElementById("free-feedback");
+              if (fb) { fb.className = "action-feedback success"; fb.textContent = `✓ ${months} gratis maand(en) toegevoegd!`; }
+            } catch (e) {
+              const fb = document.getElementById("free-feedback");
+              if (fb) { fb.className = "action-feedback error"; fb.textContent = "Fout bij toevoegen: " + (e.message || "onbekend"); }
+            }
+          });
+
+          // Cancel Subscription
+          document.getElementById("cancel-sub-btn")?.addEventListener("click", async () => {
+            if (!selectedCustomer) return;
+            if (!confirm("Weet je zeker dat je dit abonnement wilt opzeggen?")) return;
+
+            try {
+              const { error } = await supabase
+                .from("profiles")
+                .update({ cancelled_at: new Date().toISOString() })
+                .eq("id", selectedCustomer.id);
+              if (error) throw error;
+
+              selectedCustomer.cancelled_at = new Date().toISOString();
+              const statusEl = document.getElementById("detail-status");
+              if (statusEl) { statusEl.textContent = "Opgezegd"; statusEl.className = "customer-badge cancelled"; }
+              const fb = document.getElementById("danger-feedback");
+              if (fb) { fb.className = "action-feedback success"; fb.textContent = "✓ Abonnement is opgezegd."; }
+            } catch (e) {
+              const fb = document.getElementById("danger-feedback");
+              if (fb) { fb.className = "action-feedback error"; fb.textContent = "Fout bij opzeggen: " + (e.message || "onbekend"); }
+            }
+          });
+
+          // Delete Customer
+          document.getElementById("delete-customer-btn")?.addEventListener("click", async () => {
+            if (!selectedCustomer) return;
+            if (!confirm("WAARSCHUWING: Dit verwijdert de klant permanent. Doorgaan?")) return;
+            if (!confirm("Ben je ECHT zeker? Dit kan niet ongedaan worden gemaakt!")) return;
+
+            try {
+              const { error } = await supabase
+                .from("profiles")
+                .delete()
+                .eq("id", selectedCustomer.id);
+              if (error) throw error;
+
+              allCustomers = allCustomers.filter((c) => c.id !== selectedCustomer.id);
+              showCustomerList();
+              renderCustomerList(allCustomers);
+              setText("kpi-total", String(allCustomers.length));
+            } catch (e) {
+              const fb = document.getElementById("danger-feedback");
+              if (fb) { fb.className = "action-feedback error"; fb.textContent = "Fout bij verwijderen: " + (e.message || "onbekend"); }
+            }
+          });
+
           // KPIs (profiles table as "customers")
           const monthISO = startOfMonthISO();
           const d30ISO = daysAgoISO(30);
@@ -1122,204 +1320,6 @@
             }
 
             setText("last-updated", `Laatst bijgewerkt: ${fmtDate(new Date().toISOString())}`);
-
-            // === Customer Modal Management ===
-            let allCustomers = [];
-            let selectedCustomer = null;
-
-            const modal = document.getElementById("customer-modal");
-            const modalClose = document.getElementById("modal-close");
-            const customerListView = document.getElementById("customer-list-view");
-            const customerDetailView = document.getElementById("customer-detail-view");
-            const customerListEl = document.getElementById("customer-list");
-            const customerSearch = document.getElementById("customer-search");
-            const detailBack = document.getElementById("detail-back");
-
-            const openModal = () => {
-              modal.classList.add("active");
-              document.body.style.overflow = "hidden";
-            };
-
-            const closeModal = () => {
-              modal.classList.remove("active");
-              document.body.style.overflow = "";
-              showCustomerList();
-            };
-
-            const showCustomerList = () => {
-              customerListView.style.display = "block";
-              customerDetailView.classList.remove("active");
-              document.getElementById("modal-title").textContent = `Alle klanten (${allCustomers.length})`;
-            };
-
-            const showCustomerDetail = (customer) => {
-              selectedCustomer = customer;
-              customerListView.style.display = "none";
-              customerDetailView.classList.add("active");
-              document.getElementById("modal-title").textContent = "Klantdetails";
-
-              // Populate detail fields
-              document.getElementById("detail-email").textContent = customer.email || "(geen email)";
-              document.getElementById("detail-id").textContent = `Klantnummer: ${customer.id?.substring(0, 8) || "—"}`;
-              
-              const isCancelled = !!customer.cancelled_at;
-              const statusEl = document.getElementById("detail-status");
-              statusEl.textContent = isCancelled ? "Opgezegd" : "Actief";
-              statusEl.className = `customer-badge ${isCancelled ? "cancelled" : "active"}`;
-
-              // Calculate membership stats
-              const createdDate = customer.created_at ? new Date(customer.created_at) : new Date();
-              const now = new Date();
-              const monthsDiff = Math.max(1, Math.floor((now - createdDate) / (1000 * 60 * 60 * 24 * 30)));
-              const freeMonths = customer.free_months || 0;
-              const paidMonths = Math.max(0, monthsDiff - freeMonths);
-              const totalPaid = paidMonths * 20;
-
-              document.getElementById("detail-member-since").textContent = fmtDate(customer.created_at);
-              document.getElementById("detail-months").textContent = monthsDiff;
-              document.getElementById("detail-paid").textContent = `€${totalPaid.toLocaleString("nl-NL")}`;
-              document.getElementById("detail-free").textContent = freeMonths;
-
-              // Clear feedbacks
-              document.getElementById("free-feedback").className = "action-feedback";
-              document.getElementById("free-feedback").textContent = "";
-              document.getElementById("danger-feedback").className = "action-feedback";
-              document.getElementById("danger-feedback").textContent = "";
-            };
-
-            const renderCustomerList = (customers) => {
-              customerListEl.innerHTML = "";
-              if (!customers.length) {
-                customerListEl.innerHTML = '<div class="empty-rows">Geen klanten gevonden.</div>';
-                return;
-              }
-              customers.forEach((c) => {
-                const row = document.createElement("div");
-                row.className = "customer-row";
-                const isCancelled = !!c.cancelled_at;
-                row.innerHTML = `
-                  <div class="customer-email">${c.email || "(geen email)"}</div>
-                  <div class="customer-date">${fmtDate(c.created_at)}</div>
-                  <span class="customer-badge ${isCancelled ? "cancelled" : "active"}">${isCancelled ? "Opgezegd" : "Actief"}</span>
-                `;
-                row.addEventListener("click", () => showCustomerDetail(c));
-                customerListEl.appendChild(row);
-              });
-            };
-
-            const loadAllCustomers = async () => {
-              try {
-                const { data, error } = await supabase
-                  .from("profiles")
-                  .select("id, email, created_at, cancelled_at, free_months, plan")
-                  .order("created_at", { ascending: false });
-                if (error) throw error;
-                allCustomers = data || [];
-                renderCustomerList(allCustomers);
-              } catch (e) {
-                console.error(e);
-                customerListEl.innerHTML = '<div class="empty-rows">Kon klanten niet laden.</div>';
-              }
-            };
-
-            // Event Listeners
-            document.getElementById("kpi-total-card")?.addEventListener("click", async () => {
-              openModal();
-              await loadAllCustomers();
-            });
-
-            modalClose?.addEventListener("click", closeModal);
-            modal?.addEventListener("click", (e) => {
-              if (e.target === modal) closeModal();
-            });
-
-            detailBack?.addEventListener("click", showCustomerList);
-
-            customerSearch?.addEventListener("input", (e) => {
-              const q = e.target.value.toLowerCase().trim();
-              const filtered = allCustomers.filter((c) =>
-                (c.email || "").toLowerCase().includes(q)
-              );
-              renderCustomerList(filtered);
-            });
-
-            // Add Free Period
-            document.getElementById("add-free-btn")?.addEventListener("click", async () => {
-              if (!selectedCustomer) return;
-              const amount = parseInt(document.getElementById("free-amount").value) || 1;
-              const unit = document.getElementById("free-unit").value;
-              const months = unit === "year" ? amount * 12 : amount;
-              const currentFree = selectedCustomer.free_months || 0;
-              const newFree = currentFree + months;
-
-              try {
-                const { error } = await supabase
-                  .from("profiles")
-                  .update({ free_months: newFree })
-                  .eq("id", selectedCustomer.id);
-                if (error) throw error;
-
-                selectedCustomer.free_months = newFree;
-                document.getElementById("detail-free").textContent = newFree;
-                const fb = document.getElementById("free-feedback");
-                fb.className = "action-feedback success";
-                fb.textContent = `✓ ${months} gratis maand(en) toegevoegd!`;
-              } catch (e) {
-                const fb = document.getElementById("free-feedback");
-                fb.className = "action-feedback error";
-                fb.textContent = "Fout bij toevoegen: " + (e.message || "onbekend");
-              }
-            });
-
-            // Cancel Subscription
-            document.getElementById("cancel-sub-btn")?.addEventListener("click", async () => {
-              if (!selectedCustomer) return;
-              if (!confirm("Weet je zeker dat je dit abonnement wilt opzeggen?")) return;
-
-              try {
-                const { error } = await supabase
-                  .from("profiles")
-                  .update({ cancelled_at: new Date().toISOString() })
-                  .eq("id", selectedCustomer.id);
-                if (error) throw error;
-
-                selectedCustomer.cancelled_at = new Date().toISOString();
-                const statusEl = document.getElementById("detail-status");
-                statusEl.textContent = "Opgezegd";
-                statusEl.className = "customer-badge cancelled";
-                const fb = document.getElementById("danger-feedback");
-                fb.className = "action-feedback success";
-                fb.textContent = "✓ Abonnement is opgezegd.";
-              } catch (e) {
-                const fb = document.getElementById("danger-feedback");
-                fb.className = "action-feedback error";
-                fb.textContent = "Fout bij opzeggen: " + (e.message || "onbekend");
-              }
-            });
-
-            // Delete Customer
-            document.getElementById("delete-customer-btn")?.addEventListener("click", async () => {
-              if (!selectedCustomer) return;
-              if (!confirm("WAARSCHUWING: Dit verwijdert de klant permanent. Doorgaan?")) return;
-              if (!confirm("Ben je ECHT zeker? Dit kan niet ongedaan worden gemaakt!")) return;
-
-              try {
-                const { error } = await supabase
-                  .from("profiles")
-                  .delete()
-                  .eq("id", selectedCustomer.id);
-                if (error) throw error;
-
-                allCustomers = allCustomers.filter((c) => c.id !== selectedCustomer.id);
-                showCustomerList();
-                renderCustomerList(allCustomers);
-                setText("kpi-total", String(allCustomers.length));
-              } catch (e) {
-                const fb = document.getElementById("danger-feedback");
-                fb.className = "action-feedback error";
-                fb.textContent = "Fout bij verwijderen: " + (e.message || "onbekend");
-              }
-            });
 
           } catch (err) {
             console.error(err);
