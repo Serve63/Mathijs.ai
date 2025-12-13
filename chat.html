@@ -28,6 +28,8 @@
           sans-serif;
         display: flex;
         min-height: 100vh;
+        height: 100vh;
+        overflow: hidden;
       }
 
       .chat-layout {
@@ -35,6 +37,7 @@
         grid-template-columns: 280px minmax(0, 1fr);
         width: 100%;
         height: 100vh;
+        overflow: hidden;
       }
 
       .sidebar {
@@ -1418,6 +1421,9 @@
         border: none;
         box-shadow: none;
         border-top: none;
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
       }
 
       .chat-input {
