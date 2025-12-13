@@ -169,8 +169,17 @@
 
       .grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(6, 1fr);
         gap: 24px;
+      }
+
+      .kpi {
+        grid-column: span 2;
+      }
+
+      .kpi:nth-child(4),
+      .kpi:nth-child(5) {
+        grid-column: span 3;
       }
 
       .card {
@@ -247,8 +256,24 @@
         color: var(--muted);
       }
 
+      .kpi-danger::before {
+        background: radial-gradient(circle, rgba(255, 107, 107, 0.12) 0%, transparent 70%);
+      }
+
+      .kpi-icon-danger {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+      }
+
+      .kpi-success::before {
+        background: radial-gradient(circle, rgba(0, 184, 148, 0.12) 0%, transparent 70%);
+      }
+
+      .kpi-icon-success {
+        background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+      }
+
       .list {
-        grid-column: span 3;
+        grid-column: span 6;
         padding: 0;
         overflow: hidden;
         margin-top: 16px;
@@ -334,7 +359,7 @@
       }
 
       .error {
-        grid-column: span 3;
+        grid-column: span 6;
         margin-top: 16px;
         padding: 20px 24px;
         background: rgba(255, 107, 107, 0.1);
@@ -347,6 +372,11 @@
       @media (max-width: 960px) {
         .grid {
           grid-template-columns: 1fr;
+        }
+        .kpi,
+        .kpi:nth-child(4),
+        .kpi:nth-child(5) {
+          grid-column: span 1;
         }
         .list {
           grid-column: span 1;
@@ -422,6 +452,32 @@
           <p class="kpi-label">Laatste 30 dagen</p>
           <p class="kpi-value" id="kpi-30d">—</p>
           <div class="kpi-foot">Groei afgelopen maand</div>
+        </section>
+
+        <section class="card kpi kpi-danger">
+          <div class="kpi-icon kpi-icon-danger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <line x1="18" y1="8" x2="23" y2="13"/>
+              <line x1="23" y1="8" x2="18" y2="13"/>
+            </svg>
+          </div>
+          <p class="kpi-label">Opgezegd deze maand</p>
+          <p class="kpi-value" id="kpi-cancelled">—</p>
+          <div class="kpi-foot">Abonnementen gestopt</div>
+        </section>
+
+        <section class="card kpi kpi-success">
+          <div class="kpi-icon kpi-icon-success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <p class="kpi-label">Inkomsten deze maand</p>
+          <p class="kpi-value" id="kpi-revenue">—</p>
+          <div class="kpi-foot">Abonnement = €20/maand</div>
         </section>
 
         <section class="card list">
@@ -543,6 +599,27 @@
               .gte("created_at", d30ISO);
             if (d30Err) throw d30Err;
             setText("kpi-30d", String(d30Count ?? 0));
+
+            // Opgezegd deze maand (cancelled_at veld)
+            let cancelledCount = 0;
+            try {
+              const { count: cancelled, error: cancelErr } = await supabase
+                .from("profiles")
+                .select("id", { count: "exact", head: true })
+                .gte("cancelled_at", monthISO);
+              if (!cancelErr) {
+                cancelledCount = cancelled ?? 0;
+              }
+            } catch (e) {
+              // cancelled_at veld bestaat mogelijk niet
+            }
+            setText("kpi-cancelled", String(cancelledCount));
+
+            // Inkomsten deze maand: actieve klanten * €20
+            // Actief = totaal - opgezegd (of gewoon totaal als geen cancelled data)
+            const activeCount = (totalCount ?? 0) - cancelledCount;
+            const revenue = activeCount * 20;
+            setText("kpi-revenue", `€${revenue.toLocaleString("nl-NL")}`);
 
             const { data: recent, error: recentErr } = await supabase
               .from("profiles")
