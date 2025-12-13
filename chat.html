@@ -930,13 +930,17 @@
       }
       
       .chat-model-selector {
-        padding: 12px 0 0 40px;
+        padding: 0 0 0 40px;
         margin: 0;
         width: 100%;
         flex-shrink: 0;
         background: var(--chat-panel);
         border: none;
         box-shadow: none;
+      }
+      
+      .chat-model-selector > *:first-child {
+        margin-top: 12px;
       }
 
       .status-info {
@@ -1734,7 +1738,11 @@
         }
 
         .chat-model-selector {
-          padding: 32px 0 0 20px;
+          padding: 0 0 0 20px;
+        }
+        
+        .chat-model-selector > *:first-child {
+          margin-top: 32px;
         }
 
         .chat-footer {
