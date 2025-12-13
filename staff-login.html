@@ -310,6 +310,23 @@
                 return;
               }
 
+              // Ensure profile exists (so staff can also appear as customer)
+              try {
+                const token = data?.session?.access_token;
+                if (token) {
+                  await fetch("/api/staff/customers", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ action: "ensure_profile", id: data.user.id, email: userEmail }),
+                  });
+                }
+              } catch (e) {
+                // ignore
+              }
+
               setFeedback(feedbackEl, "Inloggen gelukt. Doorsturen...", "success");
               window.location.href = "staff-dashboard.html";
             } catch (err) {

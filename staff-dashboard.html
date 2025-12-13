@@ -1140,12 +1140,18 @@
 
           const loadAllCustomers = async () => {
             try {
-              const { data, error } = await supabase
-                .from("profiles")
-                .select("id, email, created_at, cancelled_at, free_months, plan")
-                .order("created_at", { ascending: false });
-              if (error) throw error;
-              allCustomers = data || [];
+              const { data: sessionData3 } = await supabase.auth.getSession();
+              const accessToken = sessionData3?.session?.access_token;
+              if (!accessToken) throw new Error("Geen access token");
+
+              const resp = await fetch("/api/staff/customers", {
+                method: "GET",
+                headers: { Authorization: `Bearer ${accessToken}` },
+              });
+              const payload = await resp.json();
+              if (!resp.ok) throw new Error(payload?.error || "API error");
+
+              allCustomers = payload.customers || [];
               renderCustomerList(allCustomers);
             } catch (e) {
               console.error(e);
@@ -1180,18 +1186,25 @@
             const amount = parseInt(document.getElementById("free-amount").value) || 1;
             const unit = document.getElementById("free-unit").value;
             const months = unit === "year" ? amount * 12 : amount;
-            const currentFree = selectedCustomer.free_months || 0;
-            const newFree = currentFree + months;
 
             try {
-              const { error } = await supabase
-                .from("profiles")
-                .update({ free_months: newFree })
-                .eq("id", selectedCustomer.id);
-              if (error) throw error;
+              const { data: sessionData3 } = await supabase.auth.getSession();
+              const accessToken = sessionData3?.session?.access_token;
+              if (!accessToken) throw new Error("Geen access token");
 
-              selectedCustomer.free_months = newFree;
-              setText("detail-free", String(newFree));
+              const resp = await fetch("/api/staff/customers", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ action: "grant_free_months", id: selectedCustomer.id, months }),
+              });
+              const payload = await resp.json();
+              if (!resp.ok) throw new Error(payload?.error || "API error");
+
+              selectedCustomer.free_months = payload.free_months ?? (selectedCustomer.free_months || 0) + months;
+              setText("detail-free", String(selectedCustomer.free_months));
               const fb = document.getElementById("free-feedback");
               if (fb) { fb.className = "action-feedback success"; fb.textContent = `✓ ${months} gratis maand(en) toegevoegd!`; }
             } catch (e) {
@@ -1206,13 +1219,22 @@
             if (!confirm("Weet je zeker dat je dit abonnement wilt opzeggen?")) return;
 
             try {
-              const { error } = await supabase
-                .from("profiles")
-                .update({ cancelled_at: new Date().toISOString() })
-                .eq("id", selectedCustomer.id);
-              if (error) throw error;
+              const { data: sessionData3 } = await supabase.auth.getSession();
+              const accessToken = sessionData3?.session?.access_token;
+              if (!accessToken) throw new Error("Geen access token");
 
-              selectedCustomer.cancelled_at = new Date().toISOString();
+              const resp = await fetch("/api/staff/customers", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ action: "cancel_subscription", id: selectedCustomer.id }),
+              });
+              const payload = await resp.json();
+              if (!resp.ok) throw new Error(payload?.error || "API error");
+
+              selectedCustomer.cancelled_at = payload.cancelled_at || new Date().toISOString();
               const statusEl = document.getElementById("detail-status");
               if (statusEl) { statusEl.textContent = "Opgezegd"; statusEl.className = "customer-badge cancelled"; }
               const fb = document.getElementById("danger-feedback");
@@ -1230,11 +1252,20 @@
             if (!confirm("Ben je ECHT zeker? Dit kan niet ongedaan worden gemaakt!")) return;
 
             try {
-              const { error } = await supabase
-                .from("profiles")
-                .delete()
-                .eq("id", selectedCustomer.id);
-              if (error) throw error;
+              const { data: sessionData3 } = await supabase.auth.getSession();
+              const accessToken = sessionData3?.session?.access_token;
+              if (!accessToken) throw new Error("Geen access token");
+
+              const resp = await fetch("/api/staff/customers", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ action: "delete_customer", id: selectedCustomer.id }),
+              });
+              const payload = await resp.json();
+              if (!resp.ok) throw new Error(payload?.error || "API error");
 
               allCustomers = allCustomers.filter((c) => c.id !== selectedCustomer.id);
               showCustomerList();
@@ -1251,59 +1282,45 @@
           const d30ISO = daysAgoISO(30);
 
           try {
-            const { count: totalCount, error: totalErr } = await supabase
-              .from("profiles")
-              .select("id", { count: "exact", head: true });
-            if (totalErr) throw totalErr;
-            setText("kpi-total", String(totalCount ?? 0));
+            // Load customers via server-side API (bypasses RLS)
+            const { data: sessionData2 } = await supabase.auth.getSession();
+            const accessToken = sessionData2?.session?.access_token;
+            if (!accessToken) throw new Error("Geen access token");
 
-            const { count: monthCount, error: monthErr } = await supabase
-              .from("profiles")
-              .select("id", { count: "exact", head: true })
-              .gte("created_at", monthISO);
-            if (monthErr) throw monthErr;
-            setText("kpi-month", String(monthCount ?? 0));
+            const resp = await fetch("/api/staff/customers", {
+              method: "GET",
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            const payload = await resp.json();
+            if (!resp.ok) throw new Error(payload?.error || "API error");
 
-            const { count: d30Count, error: d30Err } = await supabase
-              .from("profiles")
-              .select("id", { count: "exact", head: true })
-              .gte("created_at", d30ISO);
-            if (d30Err) throw d30Err;
-            setText("kpi-30d", String(d30Count ?? 0));
+            allCustomers = payload.customers || [];
 
-            // Opgezegd deze maand (cancelled_at veld)
-            let cancelledCount = 0;
-            try {
-              const { count: cancelled, error: cancelErr } = await supabase
-                .from("profiles")
-                .select("id", { count: "exact", head: true })
-                .gte("cancelled_at", monthISO);
-              if (!cancelErr) {
-                cancelledCount = cancelled ?? 0;
-              }
-            } catch (e) {
-              // cancelled_at veld bestaat mogelijk niet
-            }
+            // KPIs based on customers array
+            const totalCount = allCustomers.length;
+            setText("kpi-total", String(totalCount));
+
+            const monthStart = new Date(monthISO);
+            const d30Start = new Date(d30ISO);
+            const monthCount = allCustomers.filter((c) => c.created_at && new Date(c.created_at) >= monthStart).length;
+            const d30Count = allCustomers.filter((c) => c.created_at && new Date(c.created_at) >= d30Start).length;
+            setText("kpi-month", String(monthCount));
+            setText("kpi-30d", String(d30Count));
+
+            const cancelledCount = allCustomers.filter((c) => c.cancelled_at && new Date(c.cancelled_at) >= monthStart).length;
             setText("kpi-cancelled", String(cancelledCount));
 
-            // Inkomsten deze maand: actieve klanten * €20
-            // Actief = totaal - opgezegd (of gewoon totaal als geen cancelled data)
-            const activeCount = (totalCount ?? 0) - cancelledCount;
+            const activeCount = allCustomers.filter((c) => !c.cancelled_at).length;
             const revenue = activeCount * 20;
             setText("kpi-revenue", `€${revenue.toLocaleString("nl-NL")}`);
 
-            const { data: recent, error: recentErr } = await supabase
-              .from("profiles")
-              .select("email, created_at")
-              .order("created_at", { ascending: false })
-              .limit(10);
-            if (recentErr) throw recentErr;
-
+            // Recent rows (top 10)
+            const recent = allCustomers.slice(0, 10);
             const rowsEl = document.getElementById("recent-rows");
             if (rowsEl) {
               rowsEl.innerHTML = "";
-              if (recent?.length) {
-                (recent || []).forEach((r) => {
+              if (recent.length) {
+                recent.forEach((r) => {
                   const row = document.createElement("div");
                   row.className = "row";
                   row.innerHTML = `<div class="row-email">${r.email || "(geen email)"}</div><div class="row-date">${fmtDate(
@@ -1324,7 +1341,7 @@
           } catch (err) {
             console.error(err);
             showError(
-              "Dashboard data kon niet worden geladen. Check of de Supabase tabel `profiles` bestaat en `created_at` bevat."
+              "Dashboard data kon niet worden geladen. Waarschijnlijk ontbreekt de Vercel env `SUPABASE_SERVICE_ROLE_KEY` of is de Supabase tabel `profiles`/RLS niet goed ingesteld."
             );
           }
         };
