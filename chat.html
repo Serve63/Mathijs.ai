@@ -883,46 +883,37 @@
         z-index: 1;
         border-left: none;
       }
-      
-      .chat-header__topbar {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 10px;
-      }
 
-      .header-logout-btn {
+      .sidebar-logout-btn {
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 12px;
+        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+        font-weight: 700;
+        font-size: 0.88rem;
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        padding: 8px 14px;
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        border-radius: 10px;
-        color: #fff;
-        font-size: 0.85rem;
-        font-weight: 600;
+        gap: 10px;
         cursor: pointer;
-        transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-        white-space: nowrap;
+        transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
       }
-      
-      .header-logout-btn:hover {
-        background: rgba(255, 255, 255, 0.25);
-        border-color: rgba(255, 255, 255, 0.35);
+
+      .sidebar-logout-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.24);
         transform: translateY(-1px);
       }
-      
-      .header-logout-btn:active {
-        transform: translateY(0);
-      }
-      
-      .header-logout-btn:disabled {
+
+      .sidebar-logout-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
         transform: none;
+      }
+
+      /* Mobile-only logout (sidebar is hidden on small screens) */
+      .header-logout-btn {
+        display: none;
       }
 
       .chat-header h1 {
@@ -1757,14 +1748,20 @@
         .chat-header {
           padding: 20px 24px;
         }
-        
-        .chat-header__topbar {
-          margin-bottom: 12px;
-        }
 
         .header-logout-btn {
+          display: inline-flex;
+          position: absolute;
+          top: 14px;
+          left: 16px;
           padding: 6px 12px;
+          background: rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          border-radius: 10px;
+          color: #fff;
           font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
         }
 
         .profile-modal__dialog {
@@ -1819,6 +1816,9 @@
     <div class="chat-layout">
       <aside class="sidebar">
         <div class="sidebar-top" style="padding-top: 80px;">
+          <button class="sidebar-logout-btn" id="sidebar-logout-btn" type="button" aria-label="Uitloggen">
+            Uitloggen
+          </button>
           <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
             <span>+</span>Nieuw gesprek
           </button>
@@ -1944,15 +1944,13 @@
       </div>
       <main class="chat-main">
         <header class="chat-header">
-          <div class="chat-header__topbar">
-            <button class="header-logout-btn" id="header-logout-btn" type="button" aria-label="Uitloggen">Uitloggen</button>
-            <a href="course.html" class="header-course-btn">Bekijk Cursus</a>
-          </div>
           <div class="status">
             <div class="status-info">
               <h2>De Complete AI-Leeromgeving</h2>
               <p>Test en vergelijk AI-modellen zonder keuzestress en ontdek welke het beste past bij jouw business en workflow.</p>
             </div>
+            <button class="header-logout-btn" id="header-logout-btn" type="button" aria-label="Uitloggen">Uitloggen</button>
+            <a href="course.html" class="header-course-btn">Bekijk Cursus</a>
           </div>
         </header>
         <div class="chat-content-wrapper">
@@ -3385,29 +3383,40 @@
       };
       
       const initLogoutButton = () => {
-        const logoutBtn = document.getElementById("header-logout-btn");
-        if (!logoutBtn || !supabaseClient) return;
-        
-        logoutBtn.addEventListener("click", async () => {
-          logoutBtn.disabled = true;
-          logoutBtn.textContent = "Bezig met uitloggen...";
+        if (!supabaseClient) return;
+
+        const buttons = [
+          document.getElementById("sidebar-logout-btn"),
+          document.getElementById("header-logout-btn"),
+        ].filter(Boolean);
+
+        if (!buttons.length) return;
+
+        const handleLogout = async (btn) => {
+          btn.disabled = true;
+          const originalText = btn.textContent;
+          btn.textContent = "Bezig met uitloggen...";
           
           try {
             const { error } = await supabaseClient.auth.signOut();
             if (error) {
               console.error("Uitloggen mislukt", error);
               alert("Uitloggen mislukt: " + (error.message || "Onbekende fout"));
-              logoutBtn.disabled = false;
-              logoutBtn.textContent = "Uitloggen";
+              btn.disabled = false;
+              btn.textContent = originalText || "Uitloggen";
               return;
             }
             window.location.href = "login.html";
           } catch (err) {
             console.error("Onverwachte fout tijdens uitloggen", err);
             alert("Er ging iets mis bij het uitloggen. Probeer het opnieuw.");
-            logoutBtn.disabled = false;
-            logoutBtn.textContent = "Uitloggen";
+            btn.disabled = false;
+            btn.textContent = originalText || "Uitloggen";
           }
+        };
+
+        buttons.forEach((btn) => {
+          btn.addEventListener("click", () => handleLogout(btn));
         });
       };
 
