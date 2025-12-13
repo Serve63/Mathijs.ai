@@ -372,21 +372,55 @@
         border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
 
-      .trustpilot-widget-inner {
+      .trustpilot-link {
         display: flex;
         flex-direction: column;
+        gap: 8px;
+        text-decoration: none;
+        transition: opacity 0.2s ease;
+      }
+
+      .trustpilot-link:hover {
+        opacity: 0.9;
+      }
+
+      .trustpilot-score {
+        display: flex;
+        align-items: center;
         gap: 12px;
       }
 
-      .trustpilot-label {
-        font-size: 0.85rem;
-        color: rgba(255, 255, 255, 0.6);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+      .trustpilot-rating {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #fff;
       }
 
-      #trustpilot-widget-container {
-        min-height: 60px;
+      .trustpilot-stars {
+        display: flex;
+        gap: 4px;
+      }
+
+      .trustpilot-stars svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .trustpilot-info {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+      }
+
+      .trustpilot-reviews {
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .trustpilot-logo {
+        color: #00b67a;
+        font-weight: 600;
       }
 
       /* Trust Bar */
@@ -868,12 +902,22 @@
               </div>
             </div>
             <div class="trustpilot-widget">
-              <div class="trustpilot-widget-inner">
-                <div class="trustpilot-widget-header">
-                  <span class="trustpilot-label">Beoordeeld op</span>
+              <a href="https://nl.trustpilot.com/review/mathijs.ai" target="_blank" rel="noopener" class="trustpilot-link">
+                <div class="trustpilot-score">
+                  <span class="trustpilot-rating">4.8</span>
+                  <div class="trustpilot-stars">
+                    <svg viewBox="0 0 24 24" fill="#00b67a"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg viewBox="0 0 24 24" fill="#00b67a"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg viewBox="0 0 24 24" fill="#00b67a"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg viewBox="0 0 24 24" fill="#00b67a"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg viewBox="0 0 24 24" fill="#00b67a"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  </div>
                 </div>
-                <div id="trustpilot-widget-container"></div>
-              </div>
+                <div class="trustpilot-info">
+                  <span class="trustpilot-reviews">128 reviews op</span>
+                  <span class="trustpilot-logo">★ Trustpilot</span>
+                </div>
+              </a>
             </div>
           </div>
         </div>
@@ -1028,19 +1072,5 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <!-- Trustpilot Widget -->
-    <script type="text/javascript" src="https://widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js" async></script>
-    <script>
-      (function() {
-        var tp = window.Trustpilot || [];
-        tp.push(['loadTrustBoxFromElement', 'trustpilot-widget-container', {
-          locale: 'nl-NL',
-          theme: 'dark',
-          styleHeight: '60px',
-          styleWidth: '100%',
-          templateId: '54ad5defc6454f065c28d8e5'
-        }]);
-      })();
-    </script>
   </body>
 </html>
