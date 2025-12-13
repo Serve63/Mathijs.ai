@@ -951,27 +951,13 @@
       }
       
       .chat-content-wrapper::-webkit-scrollbar {
-        width: 8px;
-      }
-      
-      .chat-content-wrapper::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.05);
-        border-radius: 4px;
-      }
-      
-      .chat-content-wrapper::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 4px;
-      }
-      
-      .chat-content-wrapper::-webkit-scrollbar-thumb:hover {
-        background: rgba(0, 0, 0, 0.5);
+        width: 0;
+        display: none;
       }
       
       /* Firefox scrollbar */
       .chat-content-wrapper {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(0, 0, 0, 0.3) rgba(0, 0, 0, 0.05);
+        scrollbar-width: none;
       }
       
       .chat-model-selector {
