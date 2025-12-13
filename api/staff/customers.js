@@ -56,21 +56,19 @@ async function getUserFromAccessToken(accessToken) {
   return await resp.json();
 }
 
-async function supabaseRest(path, { method = "GET", accessKey, body } = {}) {
-  const headers = {
-    apikey: accessKey,
-    Authorization: `Bearer ${accessKey}`,
-    "Content-Type": "application/json",
-    Prefer: "return=representation",
-  };
-  const resp = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {}) {
+  const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/${path}`, {
     method,
-    headers,
+    headers: {
+      apikey: accessKey,
+      Authorization: `Bearer ${accessKey}`,
+      "Content-Type": "application/json",
+    },
     body: body ? JSON.stringify(body) : undefined,
   });
   const text = await resp.text();
   if (!resp.ok) {
-    throw new Error(`rest_failed:${resp.status}:${text}`);
+    throw new Error(`auth_admin_failed:${resp.status}:${text}`);
   }
   if (!text) return null;
   try {
@@ -78,6 +76,18 @@ async function supabaseRest(path, { method = "GET", accessKey, body } = {}) {
   } catch {
     return text;
   }
+}
+
+function normalizeCustomerFromUser(u) {
+  const meta = u?.user_metadata || {};
+  return {
+    id: u?.id,
+    email: u?.email,
+    created_at: u?.created_at,
+    cancelled_at: meta.cancelled_at || null,
+    free_months: Number(meta.free_months || 0),
+    plan: meta.plan || "free",
+  };
 }
 
 module.exports = async (req, res) => {
@@ -98,12 +108,24 @@ module.exports = async (req, res) => {
     if (!isStaffEmail(user?.email)) return json(res, 403, { error: "Forbidden (not staff)" });
 
     if (req.method === "GET") {
-      // Return all customers (profiles)
-      const rows = await supabaseRest(
-        "profiles?select=id,email,created_at,cancelled_at,free_months,plan&order=created_at.desc",
-        { method: "GET", accessKey: serviceRoleKey }
-      );
-      return json(res, 200, { customers: rows || [] });
+      // Return all customers from Supabase Auth users (no DB table needed)
+      // Note: Supabase admin list is paginated. We pull first 1000 for now.
+      const out = [];
+      let page = 1;
+      const perPage = 200;
+      while (page <= 5) {
+        const resp = await supabaseAuthAdmin(`users?page=${page}&per_page=${perPage}`, {
+          method: "GET",
+          accessKey: serviceRoleKey,
+        });
+        const users = resp?.users || [];
+        users.forEach((u) => out.push(normalizeCustomerFromUser(u)));
+        if (users.length < perPage) break;
+        page += 1;
+      }
+      // newest first
+      out.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+      return json(res, 200, { customers: out });
     }
 
     if (req.method === "POST") {
@@ -114,14 +136,8 @@ module.exports = async (req, res) => {
         const id = body?.id;
         const email = body?.email;
         if (!id || !email) return json(res, 400, { error: "Missing id/email" });
-
-        // Upsert minimal row
-        const rows = await supabaseRest("profiles", {
-          method: "POST",
-          accessKey: serviceRoleKey,
-          body: [{ id, email, plan: "free", updated_at: new Date().toISOString() }],
-        });
-        return json(res, 200, { ok: true, profile: rows?.[0] || null });
+        // No-op for Auth-based customers (user already exists if they can login)
+        return json(res, 200, { ok: true });
       }
 
       const id = body?.id;
@@ -131,33 +147,38 @@ module.exports = async (req, res) => {
         const months = Number(body?.months || 0);
         if (!Number.isFinite(months) || months <= 0) return json(res, 400, { error: "Invalid months" });
 
-        // Read current free_months
-        const existing = await supabaseRest(`profiles?select=free_months&id=eq.${encodeURIComponent(id)}`, {
+        // Read user to get current metadata
+        const u = await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
           method: "GET",
           accessKey: serviceRoleKey,
         });
-        const current = Number(existing?.[0]?.free_months || 0);
+        const current = Number(u?.user?.user_metadata?.free_months || 0);
         const next = current + months;
 
-        const updated = await supabaseRest(`profiles?id=eq.${encodeURIComponent(id)}`, {
-          method: "PATCH",
+        await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
+          method: "PUT",
           accessKey: serviceRoleKey,
-          body: { free_months: next, updated_at: new Date().toISOString() },
+          body: { user_metadata: { ...(u?.user?.user_metadata || {}), free_months: next } },
         });
-        return json(res, 200, { ok: true, free_months: updated?.[0]?.free_months ?? next });
+        return json(res, 200, { ok: true, free_months: next });
       }
 
       if (action === "cancel_subscription") {
-        const updated = await supabaseRest(`profiles?id=eq.${encodeURIComponent(id)}`, {
-          method: "PATCH",
+        const nowIso = new Date().toISOString();
+        const u = await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
+          method: "GET",
           accessKey: serviceRoleKey,
-          body: { cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() },
         });
-        return json(res, 200, { ok: true, cancelled_at: updated?.[0]?.cancelled_at || null });
+        await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
+          method: "PUT",
+          accessKey: serviceRoleKey,
+          body: { user_metadata: { ...(u?.user?.user_metadata || {}), cancelled_at: nowIso } },
+        });
+        return json(res, 200, { ok: true, cancelled_at: nowIso });
       }
 
       if (action === "delete_customer") {
-        await supabaseRest(`profiles?id=eq.${encodeURIComponent(id)}`, {
+        await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
           method: "DELETE",
           accessKey: serviceRoleKey,
         });
