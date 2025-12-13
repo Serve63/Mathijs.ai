@@ -3393,31 +3393,10 @@
 
         if (!buttons.length) return;
 
-        const handleLogout = async (btn) => {
-          btn.disabled = true;
-          const originalText = btn.textContent;
-          btn.textContent = "Bezig met uitloggen...";
-          
-          try {
-            const { error } = await supabaseClient.auth.signOut();
-            if (error) {
-              console.error("Uitloggen mislukt", error);
-              alert("Uitloggen mislukt: " + (error.message || "Onbekende fout"));
-              btn.disabled = false;
-              btn.textContent = originalText || "Uitloggen";
-              return;
-            }
-            window.location.href = "login.html";
-          } catch (err) {
-            console.error("Onverwachte fout tijdens uitloggen", err);
-            alert("Er ging iets mis bij het uitloggen. Probeer het opnieuw.");
-            btn.disabled = false;
-            btn.textContent = originalText || "Uitloggen";
-          }
-        };
-
         buttons.forEach((btn) => {
-          btn.addEventListener("click", () => handleLogout(btn));
+          btn.addEventListener("click", () => {
+            window.location.href = "index.html";
+          });
         });
       };
 
