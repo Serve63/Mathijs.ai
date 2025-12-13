@@ -75,7 +75,7 @@
           return;
         }
         setFeedback(feedbackEl, "Inloggen gelukt, je wordt doorgestuurd...", "success");
-        window.location.href = "dashboard.html?next=chat";
+        window.location.href = "chat.html";
       } catch (err) {
         console.error("Onverwachte fout tijdens login", err);
         setFeedback(feedbackEl, "Er ging iets mis, probeer het opnieuw.");
@@ -170,7 +170,7 @@
 
         setFeedback(feedbackEl, "Account aangemaakt! Je wordt doorgestuurd...", "success");
         signupForm.reset();
-        window.location.href = "dashboard.html?next=chat";
+        window.location.href = "chat.html";
       } catch (err) {
         console.error("Onverwachte fout tijdens signup", err);
         setFeedback(feedbackEl, "Er ging iets mis, probeer het opnieuw.");
