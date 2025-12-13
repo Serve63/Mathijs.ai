@@ -884,20 +884,29 @@
         border-left: none;
       }
       
+      .chat-header__topbar {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 10px;
+      }
+
       .header-logout-btn {
-        position: absolute;
-        top: 18px;
-        left: 18px;
-        padding: 8px 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 14px;
         background: rgba(255, 255, 255, 0.15);
         border: 1px solid rgba(255, 255, 255, 0.25);
-        border-radius: 8px;
+        border-radius: 10px;
         color: #fff;
         font-size: 0.85rem;
         font-weight: 600;
         cursor: pointer;
         transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-        z-index: 10;
+        white-space: nowrap;
       }
       
       .header-logout-btn:hover {
@@ -1749,9 +1758,11 @@
           padding: 20px 24px;
         }
         
+        .chat-header__topbar {
+          margin-bottom: 12px;
+        }
+
         .header-logout-btn {
-          top: 14px;
-          left: 14px;
           padding: 6px 12px;
           font-size: 0.8rem;
         }
@@ -1933,13 +1944,15 @@
       </div>
       <main class="chat-main">
         <header class="chat-header">
-          <button class="header-logout-btn" id="header-logout-btn" type="button" aria-label="Uitloggen">Uitloggen</button>
+          <div class="chat-header__topbar">
+            <button class="header-logout-btn" id="header-logout-btn" type="button" aria-label="Uitloggen">Uitloggen</button>
+            <a href="course.html" class="header-course-btn">Bekijk Cursus</a>
+          </div>
           <div class="status">
             <div class="status-info">
               <h2>De Complete AI-Leeromgeving</h2>
               <p>Test en vergelijk AI-modellen zonder keuzestress en ontdek welke het beste past bij jouw business en workflow.</p>
             </div>
-            <a href="course.html" class="header-course-btn">Bekijk Cursus</a>
           </div>
         </header>
         <div class="chat-content-wrapper">
