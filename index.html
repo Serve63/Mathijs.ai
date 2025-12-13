@@ -844,6 +844,14 @@
                 </div>
               </div>
             </div>
+            <div class="trustpilot-widget">
+              <div class="trustpilot-widget-inner">
+                <div class="trustpilot-widget-header">
+                  <span class="trustpilot-label">Beoordeeld op</span>
+                </div>
+                <div id="trustpilot-widget-container"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -997,5 +1005,19 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- Trustpilot Widget -->
+    <script type="text/javascript" src="https://widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js" async></script>
+    <script>
+      (function() {
+        var tp = window.Trustpilot || [];
+        tp.push(['loadTrustBoxFromElement', 'trustpilot-widget-container', {
+          locale: 'nl-NL',
+          theme: 'dark',
+          styleHeight: '60px',
+          styleWidth: '100%',
+          templateId: '54ad5defc6454f065c28d8e5'
+        }]);
+      })();
+    </script>
   </body>
 </html>
