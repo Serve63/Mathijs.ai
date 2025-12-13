@@ -1012,6 +1012,31 @@
           el.textContent = msg;
         };
 
+        const fetchStaffCustomers = async (supabase) => {
+          const { data: s } = await supabase.auth.getSession();
+          const accessToken = s?.session?.access_token;
+          if (!accessToken) throw new Error("Geen access token (log opnieuw in).");
+
+          const resp = await fetch("/api/staff/customers", {
+            method: "GET",
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+
+          let payload = null;
+          try {
+            payload = await resp.json();
+          } catch {
+            // ignore
+          }
+
+          if (!resp.ok) {
+            const msg = payload?.error || resp.statusText || "API error";
+            throw new Error(`API ${resp.status}: ${msg}`);
+          }
+
+          return payload?.customers || [];
+        };
+
         const startOfMonthISO = () => {
           const d = new Date();
           const s = new Date(d.getFullYear(), d.getMonth(), 1);
@@ -1140,22 +1165,15 @@
 
           const loadAllCustomers = async () => {
             try {
-              const { data: sessionData3 } = await supabase.auth.getSession();
-              const accessToken = sessionData3?.session?.access_token;
-              if (!accessToken) throw new Error("Geen access token");
-
-              const resp = await fetch("/api/staff/customers", {
-                method: "GET",
-                headers: { Authorization: `Bearer ${accessToken}` },
-              });
-              const payload = await resp.json();
-              if (!resp.ok) throw new Error(payload?.error || "API error");
-
-              allCustomers = payload.customers || [];
+              allCustomers = await fetchStaffCustomers(supabase);
               renderCustomerList(allCustomers);
             } catch (e) {
               console.error(e);
-              if (customerListEl) customerListEl.innerHTML = '<div class="empty-rows">Kon klanten niet laden.</div>';
+              if (customerListEl) {
+                customerListEl.innerHTML = `<div class="empty-rows">Kon klanten niet laden.<br /><small style="color: rgba(255,255,255,0.6);">${String(
+                  e?.message || e
+                )}</small></div>`;
+              }
             }
           };
 
@@ -1283,18 +1301,7 @@
 
           try {
             // Load customers via server-side API (bypasses RLS)
-            const { data: sessionData2 } = await supabase.auth.getSession();
-            const accessToken = sessionData2?.session?.access_token;
-            if (!accessToken) throw new Error("Geen access token");
-
-            const resp = await fetch("/api/staff/customers", {
-              method: "GET",
-              headers: { Authorization: `Bearer ${accessToken}` },
-            });
-            const payload = await resp.json();
-            if (!resp.ok) throw new Error(payload?.error || "API error");
-
-            allCustomers = payload.customers || [];
+            allCustomers = await fetchStaffCustomers(supabase);
 
             // KPIs based on customers array
             const totalCount = allCustomers.length;
@@ -1341,7 +1348,7 @@
           } catch (err) {
             console.error(err);
             showError(
-              "Dashboard data kon niet worden geladen. Waarschijnlijk ontbreekt de Vercel env `SUPABASE_SERVICE_ROLE_KEY` of is de Supabase tabel `profiles`/RLS niet goed ingesteld."
+              `Dashboard data kon niet worden geladen. ${String(err?.message || err)}`
             );
           }
         };
