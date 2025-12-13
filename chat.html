@@ -885,16 +885,20 @@
       }
 
       .sidebar-logout-btn {
+        position: absolute;
+        top: 16px;
+        left: 20px;
         border: 1px solid rgba(255, 255, 255, 0.18);
-        border-radius: 12px;
-        padding: 10px 14px;
+        border-radius: 8px;
+        padding: 8px 14px;
         background: rgba(255, 255, 255, 0.08);
         color: rgba(255, 255, 255, 0.92);
-        font-weight: 700;
-        font-size: 0.88rem;
+        font-weight: 600;
+        font-size: 0.82rem;
         display: inline-flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
+        z-index: 10;
         cursor: pointer;
         transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
       }
@@ -1815,10 +1819,10 @@
   <body>
     <div class="chat-layout">
       <aside class="sidebar">
+        <button class="sidebar-logout-btn" id="sidebar-logout-btn" type="button" aria-label="Uitloggen">
+          Uitloggen
+        </button>
         <div class="sidebar-top" style="padding-top: 80px;">
-          <button class="sidebar-logout-btn" id="sidebar-logout-btn" type="button" aria-label="Uitloggen">
-            Uitloggen
-          </button>
           <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
             <span>+</span>Nieuw gesprek
           </button>
