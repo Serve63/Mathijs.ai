@@ -883,6 +883,38 @@
         z-index: 1;
         border-left: none;
       }
+      
+      .header-logout-btn {
+        position: absolute;
+        top: 20px;
+        left: 40px;
+        padding: 8px 16px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        z-index: 10;
+      }
+      
+      .header-logout-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.35);
+        transform: translateY(-1px);
+      }
+      
+      .header-logout-btn:active {
+        transform: translateY(0);
+      }
+      
+      .header-logout-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
 
       .chat-header h1 {
         margin: 0;
@@ -1716,6 +1748,13 @@
         .chat-header {
           padding: 20px 24px;
         }
+        
+        .header-logout-btn {
+          top: 16px;
+          left: 24px;
+          padding: 6px 12px;
+          font-size: 0.8rem;
+        }
 
         .profile-modal__dialog {
           width: 100%;
@@ -1894,6 +1933,7 @@
       </div>
       <main class="chat-main">
         <header class="chat-header">
+          <button class="header-logout-btn" id="header-logout-btn" type="button" aria-label="Uitloggen">Uitloggen</button>
           <div class="status">
             <div class="status-info">
               <h2>De Complete AI-Leeromgeving</h2>
@@ -3327,7 +3367,35 @@
         titleOverrides = loadTitleOverrides(currentUser.id);
         updateProfileSidebar(currentUser);
         initProfileEnhancements();
+        initLogoutButton();
         return currentUser;
+      };
+      
+      const initLogoutButton = () => {
+        const logoutBtn = document.getElementById("header-logout-btn");
+        if (!logoutBtn || !supabaseClient) return;
+        
+        logoutBtn.addEventListener("click", async () => {
+          logoutBtn.disabled = true;
+          logoutBtn.textContent = "Bezig met uitloggen...";
+          
+          try {
+            const { error } = await supabaseClient.auth.signOut();
+            if (error) {
+              console.error("Uitloggen mislukt", error);
+              alert("Uitloggen mislukt: " + (error.message || "Onbekende fout"));
+              logoutBtn.disabled = false;
+              logoutBtn.textContent = "Uitloggen";
+              return;
+            }
+            window.location.href = "login.html";
+          } catch (err) {
+            console.error("Onverwachte fout tijdens uitloggen", err);
+            alert("Er ging iets mis bij het uitloggen. Probeer het opnieuw.");
+            logoutBtn.disabled = false;
+            logoutBtn.textContent = "Uitloggen";
+          }
+        });
       };
 
 
