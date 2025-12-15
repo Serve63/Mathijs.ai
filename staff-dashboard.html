@@ -70,43 +70,10 @@
       .topbar-inner {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 18px 24px;
+        padding: 14px 16px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-      }
-
-      .brand {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        color: #fff;
-      }
-
-      .brand-title {
-        font-family: "Space Grotesk", sans-serif;
-        font-weight: 700;
-        font-size: 1.2rem;
-        letter-spacing: 0.06em;
-        display: inline-flex;
-        align-items: baseline;
-        gap: 2px;
-      }
-
-      .brand-dot {
-        color: var(--accent);
-      }
-
-      .brand-sub {
-        font-size: 0.85rem;
-        color: rgba(255, 255, 255, 0.5);
-      }
-
-      .topbar-actions {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+        justify-content: flex-start;
       }
 
       .btn {
@@ -774,14 +741,7 @@
   <body>
     <header class="topbar">
       <div class="topbar-inner">
-        <div class="brand">
-          <div class="brand-title">MATHIJS<span class="brand-dot">.AI</span></div>
-          <div class="brand-sub">Personeel dashboard</div>
-        </div>
-        <div class="topbar-actions">
-          <a class="btn" href="index.html">Home</a>
-          <button class="btn primary" id="staff-logout-btn" type="button">Uitloggen</button>
-        </div>
+        <button class="btn primary" id="staff-logout-btn" type="button">Uitloggen</button>
       </div>
     </header>
 
