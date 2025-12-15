@@ -92,7 +92,7 @@
 
       .layout-toggle {
         position: absolute;
-        top: 12px;
+        top: 16px;
         left: 16px;
         z-index: 5;
         border: 1px solid rgba(26, 26, 46, 0.12);
@@ -1016,6 +1016,7 @@
         background: var(--chat-panel);
         width: 100%;
         box-sizing: border-box;
+        position: relative;
       }
       
       .chat-content-wrapper::-webkit-scrollbar {
@@ -2081,10 +2082,6 @@
         </div>
       </div>
       <main class="chat-main">
-        <button class="layout-toggle" id="layout-toggle" type="button">
-          <div class="layout-toggle__icon" aria-hidden="true"></div>
-          <span>Vergroot chat</span>
-        </button>
         <header class="chat-header">
           <div class="status">
             <div class="status-info">
@@ -2096,6 +2093,10 @@
           </div>
         </header>
         <div class="chat-content-wrapper">
+          <button class="layout-toggle" id="layout-toggle" type="button">
+            <div class="layout-toggle__icon" aria-hidden="true"></div>
+            <span>Vergroot chat</span>
+          </button>
         <div class="chat-model-selector">
               <div class="model-selects">
                 <div class="model-select" data-category="chat" data-label="Model">
