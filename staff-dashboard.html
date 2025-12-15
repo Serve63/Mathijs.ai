@@ -782,8 +782,8 @@
               <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
           </div>
-          <p class="kpi-label">All time klanten</p>
-          <p class="kpi-value" id="kpi-total">—</p>
+          <p class="kpi-label">Actieve klanten</p>
+          <p class="kpi-value" id="kpi-active">—</p>
           <div class="kpi-foot">Klik om alle klanten te bekijken →</div>
         </section>
 
@@ -889,18 +889,6 @@
           <p class="kpi-label">Opgezegd deze maand</p>
           <p class="kpi-value" id="kpi-cancelled-month">—</p>
           <div class="kpi-foot">Vanaf 1e</div>
-        </section>
-
-        <section class="card kpi">
-          <div class="kpi-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-            </svg>
-          </div>
-          <p class="kpi-label">Actieve klanten</p>
-          <p class="kpi-value" id="kpi-active">—</p>
-          <div class="kpi-foot">Met actief abonnement</div>
         </section>
 
         <section class="card kpi">
@@ -1469,9 +1457,6 @@
             allCustomers = await fetchStaffCustomers(supabase);
 
             // KPIs based on customers array
-            const totalCount = allCustomers.length; // all time klanten
-            setText("kpi-total", String(totalCount));
-
             const monthStart = new Date(monthISO);
             const now = new Date();
             const activeCustomers = allCustomers.filter((c) => !c.cancelled_at);
