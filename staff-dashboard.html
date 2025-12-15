@@ -896,44 +896,6 @@
           <div class="kpi-foot">Vanaf 1e</div>
         </section>
 
-        <section class="card kpi">
-          <div class="kpi-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
-          </div>
-          <p class="kpi-label">Nieuwe klanten vandaag</p>
-          <p class="kpi-value" id="kpi-new-today">—</p>
-          <div class="kpi-foot">Sinds 00:00</div>
-        </section>
-
-        <section class="card kpi">
-          <div class="kpi-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 3v18h18"/>
-              <path d="M7 12l3-3 4 4 6-6"/>
-            </svg>
-          </div>
-          <p class="kpi-label">Nieuwe klanten deze week</p>
-          <p class="kpi-value" id="kpi-new-week">—</p>
-          <div class="kpi-foot">Vanaf maandag</div>
-        </section>
-
-        <section class="card kpi">
-          <div class="kpi-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 7H3"/>
-              <path d="M21 17H3"/>
-              <path d="M7 7v10"/>
-              <path d="M17 7v10"/>
-            </svg>
-          </div>
-          <p class="kpi-label">Nieuwe klanten dit kwartaal</p>
-          <p class="kpi-value" id="kpi-new-quarter">—</p>
-          <div class="kpi-foot">Q1–Q4</div>
-        </section>
-
         <section class="card list">
           <div class="list-head">
             <h2 class="list-title">
@@ -1477,45 +1439,20 @@
             setText("kpi-cancelled-month", String(cancelledMonth));
 
             // New customers periods
-            const startOfDay = new Date(now);
-            startOfDay.setHours(0, 0, 0, 0);
-
-            const startOfWeek = new Date(startOfDay);
-            const day = startOfWeek.getDay(); // 0 = Sun, 1 = Mon...
-            const diffToMonday = (day + 6) % 7; // Mon => 0, Tue => 1, Sun => 6
-            startOfWeek.setDate(startOfWeek.getDate() - diffToMonday);
-
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
-            const startOfQuarter = new Date(now.getFullYear(), quarterStartMonth, 1);
             const startOfYear = new Date(now.getFullYear(), 0, 1);
 
             const createdAt = (c) => (c.created_at ? new Date(c.created_at) : null);
-            const newToday = allCustomers.filter((c) => {
-              const d = createdAt(c);
-              return d && d >= startOfDay;
-            }).length;
-            const newWeek = allCustomers.filter((c) => {
-              const d = createdAt(c);
-              return d && d >= startOfWeek;
-            }).length;
             const newMonth = allCustomers.filter((c) => {
               const d = createdAt(c);
               return d && d >= startOfMonth;
-            }).length;
-            const newQuarter = allCustomers.filter((c) => {
-              const d = createdAt(c);
-              return d && d >= startOfQuarter;
             }).length;
             const newYear = allCustomers.filter((c) => {
               const d = createdAt(c);
               return d && d >= startOfYear;
             }).length;
 
-            setText("kpi-new-today", String(newToday));
-            setText("kpi-new-week", String(newWeek));
             setText("kpi-new-month", String(newMonth));
-            setText("kpi-new-quarter", String(newQuarter));
             setText("kpi-new-year", String(newYear));
 
             // Revenue assumptions:
