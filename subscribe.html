@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mathijs.ai | Abonneren</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --accent: #e6c200;
+        --accent-dark: #c9a900;
+        --hero-1: #1a1a2e;
+        --hero-2: #16213e;
+        --hero-3: #0f3460;
+        --fg: #1a1a1f;
+        --fg-muted: #6b6b76;
+        --border: rgba(0, 0, 0, 0.08);
+        --error: #dc3545;
+        --success: #28a745;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 50%, var(--hero-3) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 80% 50% at 20% 30%, rgba(230, 194, 0, 0.1) 0%, transparent 50%),
+          radial-gradient(ellipse 60% 40% at 85% 70%, rgba(230, 194, 0, 0.08) 0%, transparent 50%);
+        pointer-events: none;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 520px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 24px;
+        padding: 42px 40px;
+        box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.4);
+      }
+
+      .headline {
+        text-align: center;
+        margin-bottom: 26px;
+      }
+
+      .eyebrow {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--accent);
+        margin: 0 0 10px;
+      }
+
+      .headline h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 10px;
+        color: var(--fg);
+      }
+
+      .subtitle {
+        font-size: 0.95rem;
+        color: var(--fg-muted);
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--fg);
+      }
+
+      input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: var(--fg);
+        background: #fafafa;
+        transition: all 0.2s ease;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: var(--accent);
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(230, 194, 0, 0.15);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        background: var(--accent);
+        color: #1a1600;
+      }
+
+      .btn:hover {
+        background: var(--accent-dark);
+        transform: translateY(-2px);
+      }
+
+      .btn:active { transform: translateY(0); }
+      .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+      .feedback {
+        min-height: 20px;
+        font-size: 0.85rem;
+        text-align: center;
+        margin: 14px 0 0;
+      }
+
+      .feedback.error { color: var(--error); }
+      .feedback.success { color: var(--success); }
+
+      .back-link {
+        position: absolute;
+        top: -48px;
+        left: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .back-link:hover { color: #fff; }
+      .back-link svg { width: 18px; height: 18px; }
+
+      @media (max-width: 480px) {
+        body { padding: 60px 16px 40px; }
+        .card { padding: 36px 24px; }
+        .headline h1 { font-size: 1.3rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a href="chat.html" class="back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Terug
+      </a>
+      <div class="card">
+        <div class="headline">
+          <p class="eyebrow">Abonnement</p>
+          <h1>Activeer je account</h1>
+          <p class="subtitle">Vul je contactgegevens in en rond daarna je betaling af om te abonneren.</p>
+        </div>
+
+        <form id="subscribe-form" novalidate>
+          <div class="group">
+            <label for="full-name">Naam</label>
+            <input id="full-name" name="full_name" type="text" placeholder="Voornaam Achternaam" autocomplete="name" required />
+          </div>
+          <div class="group">
+            <label for="company">Bedrijfsnaam</label>
+            <input id="company" name="company" type="text" placeholder="Bedrijf BV" autocomplete="organization" />
+          </div>
+          <div class="group">
+            <label for="phone">Telefoon (optioneel)</label>
+            <input id="phone" name="phone" type="tel" placeholder="+31 6 12345678" autocomplete="tel" />
+          </div>
+
+          <button type="submit" class="btn" id="subscribe-submit">Ga naar betaling</button>
+        </form>
+        <p class="feedback" id="subscribe-feedback" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script defer>
+      (() => {
+        const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
+
+        const feedback = (msg, type = "error") => {
+          const el = document.querySelector("#subscribe-feedback");
+          if (!el) return;
+          el.textContent = msg || "";
+          el.classList.remove("error", "success");
+          if (msg) el.classList.add(type);
+        };
+
+        const setLoading = (btn, loading) => {
+          if (!btn) return;
+          if (loading) {
+            btn.dataset.originalLabel = btn.textContent;
+            btn.textContent = "Doorsturen naar betaling...";
+            btn.disabled = true;
+          } else {
+            btn.textContent = btn.dataset.originalLabel || btn.textContent;
+            btn.disabled = false;
+          }
+        };
+
+        document.addEventListener("DOMContentLoaded", async () => {
+          if (!window.supabase?.createClient) return;
+          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+          const { data } = await supabase.auth.getSession();
+          const accessToken = data?.session?.access_token;
+          if (!accessToken) {
+            window.location.href = "login.html";
+            return;
+          }
+
+          const cancelled = new URLSearchParams(window.location.search).get("cancelled");
+          if (cancelled) {
+            feedback("Betaling geannuleerd. Probeer het opnieuw als je wilt abonneren.");
+          }
+
+          const form = document.querySelector("#subscribe-form");
+          const submitBtn = document.querySelector("#subscribe-submit");
+          form?.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            feedback("");
+
+            const fullName = document.querySelector("#full-name")?.value?.trim();
+            if (!fullName) {
+              feedback("Vul je naam in.");
+              return;
+            }
+            const company = document.querySelector("#company")?.value?.trim() || "";
+            const phone = document.querySelector("#phone")?.value?.trim() || "";
+
+            setLoading(submitBtn, true);
+            try {
+              const resp = await fetch("/api/billing/create-checkout-session", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ full_name: fullName, company, phone }),
+              });
+              const payload = await resp.json().catch(() => ({}));
+              if (!resp.ok || !payload?.url) {
+                throw new Error(payload?.error || "Checkout kon niet worden gestart.");
+              }
+              window.location.href = payload.url;
+            } catch (err) {
+              feedback(err?.message || "Er ging iets mis, probeer het opnieuw.");
+              setLoading(submitBtn, false);
+            }
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
+

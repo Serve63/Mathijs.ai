@@ -170,7 +170,7 @@
 
         setFeedback(feedbackEl, "Account aangemaakt! Je wordt doorgestuurd...", "success");
         signupForm.reset();
-        window.location.href = "chat.html";
+        window.location.href = "subscribe.html";
       } catch (err) {
         console.error("Onverwachte fout tijdens signup", err);
         setFeedback(feedbackEl, "Er ging iets mis, probeer het opnieuw.");
