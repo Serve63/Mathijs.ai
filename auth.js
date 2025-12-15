@@ -134,25 +134,15 @@
 
       toggleButtonLoading(submitButton, true, "Account aanmaken...");
       try {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              username: email,
-            },
-          },
+        // Create user server-side as confirmed, so signup doesn't depend on email delivery.
+        const adminSignupResp = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
         });
-
-        if (error) {
-          console.error("Registratie mislukt", error);
-          setFeedback(feedbackEl, error.message || "Registratie mislukt, probeer het opnieuw.");
-          return;
-        }
-
-        const userId = data?.user?.id;
-        if (userId) {
-          await upsertProfile(userId, email);
+        const adminSignupPayload = await adminSignupResp.json().catch(() => ({}));
+        if (!adminSignupResp.ok) {
+          throw new Error(adminSignupPayload?.error || "Registratie mislukt, probeer het opnieuw.");
         }
 
         // Direct inloggen zodat de gebruiker meteen kan starten.
@@ -161,11 +151,17 @@
           console.error("Auto-login na signup mislukt", loginError);
           setFeedback(
             feedbackEl,
-            "Account aangemaakt. Check je mail voor bevestiging en log daarna in.",
+            "Account aangemaakt, maar inloggen lukt nu niet. Probeer opnieuw via de login pagina.",
             "success"
           );
           signupForm.reset();
           return;
+        }
+
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData?.user?.id;
+        if (userId) {
+          await upsertProfile(userId, email);
         }
 
         setFeedback(feedbackEl, "Account aangemaakt! Je wordt doorgestuurd...", "success");
