@@ -46,7 +46,7 @@
         border-right: none;
         display: flex;
         flex-direction: column;
-        padding: 56px 20px 20px 20px;
+        padding: 100px 20px 20px 20px;
         gap: 20px;
         position: relative;
         z-index: 2;
@@ -71,41 +71,9 @@
       .sidebar-top {
         display: flex;
         flex-direction: column;
-        gap: 18px;
+        gap: 24px;
         flex: 1;
         overflow: hidden;
-        padding-top: 64px;
-      }
-
-      .sidebar-mascot {
-        width: min(230px, 100%);
-        margin: 0 auto -64px;
-        display: flex;
-        justify-content: center;
-        pointer-events: none;
-        position: relative;
-      }
-
-      .sidebar-mascot img {
-        width: 100%;
-        height: auto;
-        display: block;
-        transform: translateY(44px) rotate(-1.5deg);
-        transform-origin: 50% 100%;
-      }
-
-      .sidebar-mascot .mascot-base {
-        filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.35));
-      }
-
-      .sidebar-mascot .mascot-arms {
-        position: absolute;
-        top: 0;
-        left: 0;
-        z-index: 3;
-        width: 100%;
-        height: 100%;
-        clip-path: inset(78% 0 0 0);
       }
 
       .sidebar-bottom {
@@ -141,8 +109,6 @@
         cursor: pointer;
         transition: background 0.2s ease, transform 0.2s ease;
         box-shadow: 0 8px 24px -8px rgba(230, 194, 0, 0.4);
-        position: relative;
-        z-index: 1;
       }
 
       .new-chat:hover {
@@ -920,9 +886,9 @@
 
       .sidebar-logout-btn {
         position: absolute;
-        top: 14px;
+        top: 50px;
         left: 50%;
-        transform: translateX(-50%);
+        transform: translateX(-60%);
         border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: 8px;
         padding: 8px 14px;
@@ -992,7 +958,7 @@
       .chat-content-wrapper {
         scrollbar-width: none;
       }
-      
+
       .chat-model-selector {
         padding: 0 0 0 72px;
         margin: 0;
@@ -1759,7 +1725,7 @@
         .chat-content-wrapper {
           padding-right: 0;
         }
-        
+
         .chat-log {
           padding: 0 24px 0 24px;
         }
@@ -1836,11 +1802,6 @@
           margin-top: 56px;
         }
 
-        .sidebar-mascot {
-          width: min(210px, 100%);
-          margin: 0 auto -64px;
-        }
-
         .chat-footer {
           padding: 14px 20px 14px;
         }
@@ -1858,17 +1819,7 @@
         <button class="sidebar-logout-btn" id="sidebar-logout-btn" type="button" aria-label="Uitloggen">
           Uitloggen
         </button>
-        <div class="sidebar-top">
-          <div class="sidebar-mascot" aria-hidden="true">
-            <img
-              class="mascot-base"
-              src="assets/mathijs-lean.png"
-              alt=""
-              loading="eager"
-              onerror="this.onerror=null;this.src='assets/mathijs-avatar.png';this.style.borderRadius='50%';"
-            />
-            <img class="mascot-arms" src="assets/mathijs-lean.png" alt="" loading="eager" />
-          </div>
+        <div class="sidebar-top" style="padding-top: 120px;">
           <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
             <span>+</span>Nieuw gesprek
           </button>
@@ -2004,55 +1955,55 @@
           </div>
         </header>
         <div class="chat-content-wrapper">
-          <div class="chat-model-selector">
-                <div class="model-selects">
-                  <div class="model-select" data-category="chat" data-label="Model">
-                    <button
-                      type="button"
-                      class="model-select__activator"
-                      aria-pressed="true"
-                      aria-label="Activeer model"
-                    ></button>
-                    <span class="model-select__label">Model</span>
-                    <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-                  <span class="selected-label">ChatGPT 5.1 (Instant)</span>
-                      <svg viewBox="0 0 24 24">
-                        <path d="M6 9l6 6 6-6" />
-                      </svg>
-                    </button>
-                    <div class="model-dropdown" role="listbox" aria-label="Kies een model">
-                  <div class="model-option has-sub" data-model="ChatGPT 5.1" role="option" aria-selected="false">
-                        ChatGPT 5.1
-                        <div class="model-option-sub">
-                          <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Instant)">Instant</button>
-                          <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Thinking)">Thinking</button>
-                      </div>
+        <div class="chat-model-selector">
+              <div class="model-selects">
+                <div class="model-select" data-category="chat" data-label="Model">
+                  <button
+                    type="button"
+                    class="model-select__activator"
+                    aria-pressed="true"
+                    aria-label="Activeer model"
+                  ></button>
+                  <span class="model-select__label">Model</span>
+                  <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
+                <span class="selected-label">ChatGPT 5.1 (Instant)</span>
+                    <svg viewBox="0 0 24 24">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                  <div class="model-dropdown" role="listbox" aria-label="Kies een model">
+                <div class="model-option has-sub" data-model="ChatGPT 5.1" role="option" aria-selected="false">
+                      ChatGPT 5.1
+                      <div class="model-option-sub">
+                        <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Instant)">Instant</button>
+                        <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Thinking)">Thinking</button>
                     </div>
-                  <div class="model-option has-sub" data-model="Gemini 3" role="option" aria-selected="false">
-                    Gemini 3
-                    <div class="model-option-sub">
-                      <button type="button" class="model-suboption" data-model="Gemini 3 (Snel)">Snel</button>
-                      <button type="button" class="model-suboption" data-model="Gemini 3 (Nadenken)">Nadenken</button>
                   </div>
-                  </div>
-                  <div class="model-option has-sub" data-model="DeepSeek V2" role="option" aria-selected="false">
-                    DeepSeek V2
-                    <div class="model-option-sub">
-                      <button type="button" class="model-suboption" data-model="DeepSeek V2 (Snel)">Snel</button>
-                      <button type="button" class="model-suboption" data-model="DeepSeek V2 (Diepdenken)">Diepdenken</button>
+                <div class="model-option has-sub" data-model="Gemini 3" role="option" aria-selected="false">
+                  Gemini 3
+                  <div class="model-option-sub">
+                    <button type="button" class="model-suboption" data-model="Gemini 3 (Snel)">Snel</button>
+                    <button type="button" class="model-suboption" data-model="Gemini 3 (Nadenken)">Nadenken</button>
                 </div>
-              </div>
-                  <div class="model-option has-sub" data-model="Grok" role="option" aria-selected="false">
-                    Grok
-                    <div class="model-option-sub">
-                      <button type="button" class="model-suboption" data-model="Grok (Expert)">Expert</button>
-                      <button type="button" class="model-suboption" data-model="Grok (Snel)">Snel</button>
-            </div>
-                  </div>
                 </div>
+                <div class="model-option has-sub" data-model="DeepSeek V2" role="option" aria-selected="false">
+                  DeepSeek V2
+                  <div class="model-option-sub">
+                    <button type="button" class="model-suboption" data-model="DeepSeek V2 (Snel)">Snel</button>
+                    <button type="button" class="model-suboption" data-model="DeepSeek V2 (Diepdenken)">Diepdenken</button>
               </div>
             </div>
-          <section class="chat-log"></section>
+                <div class="model-option has-sub" data-model="Grok" role="option" aria-selected="false">
+                  Grok
+                  <div class="model-option-sub">
+                    <button type="button" class="model-suboption" data-model="Grok (Expert)">Expert</button>
+                    <button type="button" class="model-suboption" data-model="Grok (Snel)">Snel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <section class="chat-log"></section>
         </div>
         <footer class="chat-footer">
           <div class="chat-input">
@@ -3707,3 +3658,6 @@
     </script>
   </body>
 </html>
+
+
+
