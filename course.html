@@ -269,6 +269,89 @@
         transform: translateY(0);
       }
 
+      /* Lesson video modal */
+      .lesson-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(10, 10, 20, 0.65);
+        backdrop-filter: blur(10px);
+      }
+
+      .lesson-modal__panel {
+        width: min(980px, 100%);
+        background: linear-gradient(145deg, #141a33 0%, #0f152c 100%);
+        border: 1px solid rgba(230, 194, 0, 0.22);
+        border-radius: 18px;
+        box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.65);
+        overflow: hidden;
+      }
+
+      .lesson-modal__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .lesson-modal__title {
+        margin: 0;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #fff;
+        line-height: 1.25;
+      }
+
+      .lesson-modal__close {
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.85);
+        border-radius: 12px;
+        padding: 10px 12px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+      }
+
+      .lesson-modal__close:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(230, 194, 0, 0.35);
+        transform: translateY(-1px);
+      }
+
+      .lesson-modal__body {
+        padding: 16px 18px 18px;
+      }
+
+      .lesson-video {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #000;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+
+      .lesson-modal__hint {
+        margin: 12px 0 0;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .lesson-modal__hint strong {
+        color: rgba(230, 194, 0, 0.95);
+        font-weight: 600;
+      }
+
       .lesson-tile {
         background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
         border: 1px solid rgba(230, 194, 0, 0.15);
@@ -748,6 +831,20 @@
       </div>
     </main>
     <footer>© Mathijs.ai 2024 · Mathijs.ai Academy</footer>
+    <div class="lesson-modal is-hidden" id="lesson-modal" role="dialog" aria-modal="true" aria-label="Les video">
+      <div class="lesson-modal__panel" role="document">
+        <div class="lesson-modal__head">
+          <h3 class="lesson-modal__title" id="lesson-modal-title">Les</h3>
+          <button class="lesson-modal__close" id="lesson-modal-close" type="button" aria-label="Sluiten">Sluiten</button>
+        </div>
+        <div class="lesson-modal__body">
+          <video class="lesson-video" id="lesson-video" controls playsinline preload="metadata"></video>
+          <p class="lesson-modal__hint">
+            Tip: later kunnen we per les een eigen video-URL koppelen.
+          </p>
+        </div>
+      </div>
+    </div>
     <script>
       (function initLessonLoadMore() {
         const grid = document.getElementById("lesson-grid");
@@ -773,6 +870,57 @@
 
         // start state
         applyVisibility();
+      })();
+
+      (function initLessonVideoModal() {
+        const DEFAULT_VIDEO_SRC = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+        const grid = document.getElementById("lesson-grid");
+        const modal = document.getElementById("lesson-modal");
+        const titleEl = document.getElementById("lesson-modal-title");
+        const video = document.getElementById("lesson-video");
+        const closeBtn = document.getElementById("lesson-modal-close");
+
+        if (!grid || !modal || !titleEl || !video || !closeBtn) return;
+
+        const open = (title, src) => {
+          titleEl.textContent = title || "Les";
+          // Set src on open to avoid downloading the file upfront.
+          video.src = src || DEFAULT_VIDEO_SRC;
+          modal.classList.remove("is-hidden");
+          document.body.style.overflow = "hidden";
+          // Autoplay is often blocked; we keep it user-controlled.
+        };
+
+        const close = () => {
+          modal.classList.add("is-hidden");
+          document.body.style.overflow = "";
+          try {
+            video.pause();
+          } catch (_) {}
+          video.removeAttribute("src");
+          video.load();
+        };
+
+        grid.addEventListener("click", (e) => {
+          const tile = e.target.closest(".lesson-tile");
+          if (!tile) return;
+          const title = tile.querySelector(".lesson-title")?.textContent?.trim() || "Les";
+          const src = tile.getAttribute("data-video-src") || DEFAULT_VIDEO_SRC;
+          open(title, src);
+        });
+
+        closeBtn.addEventListener("click", close);
+
+        modal.addEventListener("click", (e) => {
+          // click on backdrop closes
+          if (e.target === modal) close();
+        });
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && !modal.classList.contains("is-hidden")) {
+            close();
+          }
+        });
       })();
     </script>
   </body>
