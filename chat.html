@@ -71,14 +71,14 @@
       .sidebar-top {
         display: flex;
         flex-direction: column;
-        gap: 24px;
+        gap: 18px;
         flex: 1;
         overflow: hidden;
       }
 
       .sidebar-mascot {
-        width: min(240px, 100%);
-        margin: 6px auto -14px;
+        width: min(230px, 100%);
+        margin: 0 auto -64px;
         display: flex;
         justify-content: center;
         pointer-events: none;
@@ -89,7 +89,8 @@
         width: 100%;
         height: auto;
         display: block;
-        transform: rotate(-1.5deg);
+        transform: translateY(18px) rotate(-1.5deg);
+        transform-origin: 50% 100%;
       }
 
       .sidebar-bottom {
@@ -125,6 +126,8 @@
         cursor: pointer;
         transition: background 0.2s ease, transform 0.2s ease;
         box-shadow: 0 8px 24px -8px rgba(230, 194, 0, 0.4);
+        position: relative;
+        z-index: 2;
       }
 
       .new-chat:hover {
@@ -1819,8 +1822,8 @@
         }
 
         .sidebar-mascot {
-          width: 180px;
-          margin: 6px auto -10px;
+          width: min(210px, 100%);
+          margin: 0 auto -64px;
         }
 
         .chat-footer {
@@ -3687,4 +3690,3 @@
     </script>
   </body>
 </html>
-
