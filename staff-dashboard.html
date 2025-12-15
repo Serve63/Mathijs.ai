@@ -813,16 +813,68 @@
           <div class="kpi-foot">Vanaf 1e</div>
         </section>
 
-        <section class="card kpi">
-          <div class="kpi-icon">
+        <section class="card kpi kpi-success">
+          <div class="kpi-icon kpi-icon-success">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
             </svg>
           </div>
-          <p class="kpi-label">Actieve klanten</p>
-          <p class="kpi-value" id="kpi-active">—</p>
-          <div class="kpi-foot">Met actief abonnement</div>
+          <p class="kpi-label">Inkomsten all time (netto)</p>
+          <p class="kpi-value" id="kpi-revenue-all-net">—</p>
+          <div class="kpi-foot">Netto (btw eraf)</div>
+        </section>
+
+        <section class="card kpi kpi-success">
+          <div class="kpi-icon kpi-icon-success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18"/>
+              <path d="M7 14l4-4 4 2 5-7"/>
+            </svg>
+          </div>
+          <p class="kpi-label">Inkomsten dit jaar (netto)</p>
+          <p class="kpi-value" id="kpi-revenue-year-net">—</p>
+          <div class="kpi-foot">Netto (btw eraf)</div>
+        </section>
+
+        <section class="card kpi kpi-success">
+          <div class="kpi-icon kpi-icon-success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <p class="kpi-label">Inkomsten deze maand (netto)</p>
+          <p class="kpi-value" id="kpi-revenue-month-net">—</p>
+          <div class="kpi-foot">Betalende leden × €20</div>
+        </section>
+
+        <section class="card kpi kpi-danger">
+          <div class="kpi-icon kpi-icon-danger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <line x1="18" y1="8" x2="23" y2="13"/>
+              <line x1="23" y1="8" x2="18" y2="13"/>
+            </svg>
+          </div>
+          <p class="kpi-label">Opgezegd all time</p>
+          <p class="kpi-value" id="kpi-cancelled-all">—</p>
+          <div class="kpi-foot">Totaal opgezegd</div>
+        </section>
+
+        <section class="card kpi kpi-danger">
+          <div class="kpi-icon kpi-icon-danger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <line x1="18" y1="8" x2="23" y2="13"/>
+              <line x1="23" y1="8" x2="18" y2="13"/>
+            </svg>
+          </div>
+          <p class="kpi-label">Opgezegd dit jaar</p>
+          <p class="kpi-value" id="kpi-cancelled-year">—</p>
+          <div class="kpi-foot">Vanaf 1 jan</div>
         </section>
 
         <section class="card kpi kpi-danger">
@@ -835,32 +887,20 @@
             </svg>
           </div>
           <p class="kpi-label">Opgezegd deze maand</p>
-          <p class="kpi-value" id="kpi-cancelled">—</p>
-          <div class="kpi-foot">Abonnementen gestopt</div>
+          <p class="kpi-value" id="kpi-cancelled-month">—</p>
+          <div class="kpi-foot">Vanaf 1e</div>
         </section>
 
-        <section class="card kpi kpi-success">
-          <div class="kpi-icon kpi-icon-success">
+        <section class="card kpi">
+          <div class="kpi-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 3v18h18"/>
-              <path d="M7 14l4-4 4 2 5-7"/>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
             </svg>
           </div>
-          <p class="kpi-label">Inkomsten dit jaar</p>
-          <p class="kpi-value" id="kpi-revenue-year">—</p>
-          <div class="kpi-foot">YTD (geschat)</div>
-        </section>
-
-        <section class="card kpi kpi-success">
-          <div class="kpi-icon kpi-icon-success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
-          </div>
-          <p class="kpi-label">Inkomsten all time</p>
-          <p class="kpi-value" id="kpi-revenue-all">—</p>
-          <div class="kpi-foot">Totaal (geschat)</div>
+          <p class="kpi-label">Actieve klanten</p>
+          <p class="kpi-value" id="kpi-active">—</p>
+          <div class="kpi-foot">Met actief abonnement</div>
         </section>
 
         <section class="card kpi">
@@ -1438,8 +1478,12 @@
             const activeCount = activeCustomers.length;
             setText("kpi-active", String(activeCount));
 
-            const cancelledCount = allCustomers.filter((c) => c.cancelled_at && new Date(c.cancelled_at) >= monthStart).length;
-            setText("kpi-cancelled", String(cancelledCount));
+            const cancelledAll = allCustomers.filter((c) => !!c.cancelled_at).length;
+            const cancelledYear = allCustomers.filter((c) => c.cancelled_at && new Date(c.cancelled_at) >= startOfYear).length;
+            const cancelledMonth = allCustomers.filter((c) => c.cancelled_at && new Date(c.cancelled_at) >= monthStart).length;
+            setText("kpi-cancelled-all", String(cancelledAll));
+            setText("kpi-cancelled-year", String(cancelledYear));
+            setText("kpi-cancelled-month", String(cancelledMonth));
 
             // New customers periods
             const startOfDay = new Date(now);
@@ -1488,15 +1532,16 @@
             // - "this month" revenue = active customers * 20 (MRR)
             // - "year" and "all time" = estimated from account age (created_at -> cancelled_at/now), minus free_months
             const PRICE = 20;
+            const VAT_RATE = 0.21; // NL standaard btw (pas aan indien nodig)
+            const toNet = (gross) => gross / (1 + VAT_RATE);
             const paidActiveCount = activeCustomers.filter((c) => !c.lifetime_free).length;
-            const revenueThisMonth = paidActiveCount * PRICE;
-            setText("kpi-revenue", money(revenueThisMonth));
+            const revenueThisMonthGross = paidActiveCount * PRICE;
 
             const yearStart = new Date(now.getFullYear(), 0, 1).toISOString();
             const nowIso = now.toISOString();
 
-            let revenueYear = 0;
-            let revenueAll = 0;
+            let revenueYearGross = 0;
+            let revenueAllGross = 0;
             allCustomers.forEach((c) => {
               if (c.lifetime_free) return;
               const start = c.created_at || nowIso;
@@ -1505,16 +1550,17 @@
 
               const totalMonths = Math.max(0, monthsBetweenApprox(start, end));
               const paidMonthsAll = Math.max(0, totalMonths - freeMonths);
-              revenueAll += paidMonthsAll * PRICE;
+              revenueAllGross += paidMonthsAll * PRICE;
 
               const yMonths = overlapMonthsApprox(start, end, yearStart, nowIso);
               // Only apply free months to year if the account started this year (simple/expected behaviour)
               const freeInYear = new Date(start) >= new Date(yearStart) ? Math.min(freeMonths, yMonths) : 0;
               const paidMonthsYear = Math.max(0, yMonths - freeInYear);
-              revenueYear += paidMonthsYear * PRICE;
+              revenueYearGross += paidMonthsYear * PRICE;
             });
-            setText("kpi-revenue-year", money(revenueYear));
-            setText("kpi-revenue-all", money(revenueAll));
+            setText("kpi-revenue-month-net", money(toNet(revenueThisMonthGross)));
+            setText("kpi-revenue-year-net", money(toNet(revenueYearGross)));
+            setText("kpi-revenue-all-net", money(toNet(revenueAllGross)));
 
             // Recent rows (top 10)
             const recent = allCustomers.slice(0, 10);
