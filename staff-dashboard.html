@@ -559,6 +559,14 @@
         margin: 0 0 4px;
       }
 
+      .detail-stat-value.danger {
+        color: var(--danger);
+      }
+
+      .detail-stat-value.success {
+        color: var(--success);
+      }
+
       .detail-stat-label {
         font-size: 0.8rem;
         color: var(--muted);
@@ -599,6 +607,33 @@
         display: flex;
         gap: 12px;
         flex-wrap: wrap;
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--card-border);
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      .toggle input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
       }
 
       .free-period-form input {
@@ -890,6 +925,23 @@
               <div class="action-section">
                 <h3>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3 3-7z"/>
+                  </svg>
+                  Lifetime gratis
+                </h3>
+                <div class="toggle-row">
+                  <label class="toggle">
+                    <input type="checkbox" id="lifetime-toggle" />
+                    Lifetime gratis (altijd €0)
+                  </label>
+                  <button class="btn-action success" id="save-lifetime-btn" type="button">Opslaan</button>
+                </div>
+                <div class="action-feedback" id="lifetime-feedback"></div>
+              </div>
+
+              <div class="action-section">
+                <h3>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/>
                     <path d="M12 15l9-9"/>
                     <path d="M16 3h5v5"/>
@@ -1098,7 +1150,8 @@
             const isCancelled = !!customer.cancelled_at;
             const statusEl = document.getElementById("detail-status");
             if (statusEl) {
-              statusEl.textContent = isCancelled ? "Opgezegd" : "Actief";
+              const lf = !!customer.lifetime_free;
+              statusEl.textContent = isCancelled ? "Opgezegd" : lf ? "Lifetime gratis" : "Actief";
               statusEl.className = `customer-badge ${isCancelled ? "cancelled" : "active"}`;
             }
 
@@ -1106,18 +1159,23 @@
               const endDate = customer.cancelled_at ? new Date(customer.cancelled_at) : new Date();
               const monthsDiff = Math.max(0, monthsBetweenApprox(createdDate.toISOString(), endDate.toISOString())) || 1;
             const freeMonths = customer.free_months || 0;
-            const paidMonths = Math.max(0, monthsDiff - freeMonths);
+            const paidMonths = customer.lifetime_free ? 0 : Math.max(0, monthsDiff - freeMonths);
             const totalPaid = paidMonths * 20;
 
             setText("detail-member-since", fmtDate(customer.created_at));
             setText("detail-months", String(monthsDiff));
             setText("detail-paid", `€${totalPaid.toLocaleString("nl-NL")}`);
-            setText("detail-free", String(freeMonths));
+            setText("detail-free", customer.lifetime_free ? "∞" : String(freeMonths));
+
+            const lfToggle = document.getElementById("lifetime-toggle");
+            if (lfToggle) lfToggle.checked = !!customer.lifetime_free;
 
             const freeFb = document.getElementById("free-feedback");
             if (freeFb) { freeFb.className = "action-feedback"; freeFb.textContent = ""; }
             const dangerFb = document.getElementById("danger-feedback");
             if (dangerFb) { dangerFb.className = "action-feedback"; dangerFb.textContent = ""; }
+            const lfFb = document.getElementById("lifetime-feedback");
+            if (lfFb) { lfFb.className = "action-feedback"; lfFb.textContent = ""; }
           };
 
           const renderCustomerList = (customers) => {
@@ -1273,6 +1331,43 @@
             }
           });
 
+          // Save lifetime free
+          document.getElementById("save-lifetime-btn")?.addEventListener("click", async () => {
+            if (!selectedCustomer) return;
+            const enabled = !!document.getElementById("lifetime-toggle")?.checked;
+            try {
+              const { data: s } = await supabase.auth.getSession();
+              const accessToken = s?.session?.access_token;
+              if (!accessToken) throw new Error("Geen access token");
+
+              const resp = await fetch("/api/staff/customers", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ action: "set_lifetime_free", id: selectedCustomer.id, enabled }),
+              });
+              const payload = await resp.json();
+              if (!resp.ok) throw new Error(payload?.error || "API error");
+
+              selectedCustomer.lifetime_free = payload.lifetime_free;
+              const fb = document.getElementById("lifetime-feedback");
+              if (fb) {
+                fb.className = "action-feedback success";
+                fb.textContent = "✓ Opgeslagen.";
+              }
+              // refresh detail view numbers
+              showCustomerDetail(selectedCustomer);
+            } catch (e) {
+              const fb = document.getElementById("lifetime-feedback");
+              if (fb) {
+                fb.className = "action-feedback error";
+                fb.textContent = "Fout bij opslaan: " + (e.message || "onbekend");
+              }
+            }
+          });
+
           // KPIs (profiles table as "customers")
           const monthISO = startOfMonthISO();
           const d30ISO = daysAgoISO(30);
@@ -1299,7 +1394,8 @@
             // - "this month" revenue = active customers * 20 (MRR)
             // - "year" and "all time" = estimated from account age (created_at -> cancelled_at/now), minus free_months
             const PRICE = 20;
-            const revenueThisMonth = activeCount * PRICE;
+            const paidActiveCount = activeCustomers.filter((c) => !c.lifetime_free).length;
+            const revenueThisMonth = paidActiveCount * PRICE;
             setText("kpi-revenue", money(revenueThisMonth));
 
             const yearStart = new Date(now.getFullYear(), 0, 1).toISOString();
@@ -1308,6 +1404,7 @@
             let revenueYear = 0;
             let revenueAll = 0;
             allCustomers.forEach((c) => {
+              if (c.lifetime_free) return;
               const start = c.created_at || nowIso;
               const end = c.cancelled_at || nowIso;
               const freeMonths = Number(c.free_months || 0);

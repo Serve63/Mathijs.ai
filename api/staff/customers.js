@@ -86,6 +86,7 @@ function normalizeCustomerFromUser(u) {
     created_at: u?.created_at,
     cancelled_at: meta.cancelled_at || null,
     free_months: Number(meta.free_months || 0),
+    lifetime_free: Boolean(meta.lifetime_free) || meta.plan === "lifetime",
     plan: meta.plan || "free",
   };
 }
@@ -175,6 +176,20 @@ module.exports = async (req, res) => {
           body: { user_metadata: { ...(u?.user?.user_metadata || {}), cancelled_at: nowIso } },
         });
         return json(res, 200, { ok: true, cancelled_at: nowIso });
+      }
+
+      if (action === "set_lifetime_free") {
+        const enabled = Boolean(body?.enabled);
+        const u = await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
+          method: "GET",
+          accessKey: serviceRoleKey,
+        });
+        await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
+          method: "PUT",
+          accessKey: serviceRoleKey,
+          body: { user_metadata: { ...(u?.user?.user_metadata || {}), lifetime_free: enabled } },
+        });
+        return json(res, 200, { ok: true, lifetime_free: enabled });
       }
 
       if (action === "delete_customer") {
