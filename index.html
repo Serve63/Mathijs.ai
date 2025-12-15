@@ -50,16 +50,36 @@
 
       /* Header */
       .site-header {
-        position: absolute;
+        position: sticky;
         top: 0;
         left: 0;
         right: 0;
         z-index: 100;
         padding: 20px 40px;
-        background: rgba(26, 26, 46, 0.95);
+        background: linear-gradient(180deg, rgba(10, 12, 28, 0.98) 0%, rgba(20, 26, 48, 0.92) 100%);
         backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      }
+
+      .site-header::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(230, 194, 0, 0.45) 25%,
+          rgba(230, 194, 0, 0.65) 50%,
+          rgba(230, 194, 0, 0.45) 75%,
+          transparent 100%
+        );
+        opacity: 0.7;
+        pointer-events: none;
       }
 
       .header-inner {
@@ -150,7 +170,7 @@
         background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 50%, var(--hero-3) 100%);
         position: relative;
         overflow: visible;
-        padding: 140px 40px 120px;
+        padding: 96px 40px 120px;
         min-height: auto;
         display: flex;
         align-items: center;
@@ -833,7 +853,7 @@
         }
 
         .hero {
-          padding: 120px 20px 60px;
+          padding: 72px 20px 60px;
         }
 
         .section {
