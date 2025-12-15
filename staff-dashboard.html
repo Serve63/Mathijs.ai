@@ -136,17 +136,8 @@
 
       .grid {
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 24px;
-      }
-
-      .kpi {
-        grid-column: span 2;
-      }
-
-      .kpi:nth-child(4),
-      .kpi:nth-child(5) {
-        grid-column: span 3;
       }
 
       .card {
@@ -240,7 +231,7 @@
       }
 
       .list {
-        grid-column: span 6;
+        grid-column: span 3;
         padding: 0;
         overflow: hidden;
         margin-top: 16px;
@@ -326,7 +317,7 @@
       }
 
       .error {
-        grid-column: span 6;
+        grid-column: span 3;
         margin-top: 16px;
         padding: 20px 24px;
         background: rgba(255, 107, 107, 0.1);
@@ -718,11 +709,6 @@
         .grid {
           grid-template-columns: 1fr;
         }
-        .kpi,
-        .kpi:nth-child(4),
-        .kpi:nth-child(5) {
-          grid-column: span 1;
-        }
         .list {
           grid-column: span 1;
         }
@@ -761,7 +747,7 @@
               <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
           </div>
-          <p class="kpi-label">Totaal klanten</p>
+          <p class="kpi-label">All time klanten</p>
           <p class="kpi-value" id="kpi-total">—</p>
           <div class="kpi-foot">Klik om alle klanten te bekijken →</div>
         </section>
@@ -769,27 +755,13 @@
         <section class="card kpi">
           <div class="kpi-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
             </svg>
           </div>
-          <p class="kpi-label">Deze maand</p>
-          <p class="kpi-value" id="kpi-month">—</p>
-          <div class="kpi-foot">Nieuwe aanmeldingen deze maand</div>
-        </section>
-
-        <section class="card kpi">
-          <div class="kpi-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-              <polyline points="17 6 23 6 23 12"/>
-            </svg>
-          </div>
-          <p class="kpi-label">Laatste 30 dagen</p>
-          <p class="kpi-value" id="kpi-30d">—</p>
-          <div class="kpi-foot">Groei afgelopen maand</div>
+          <p class="kpi-label">Actieve klanten</p>
+          <p class="kpi-value" id="kpi-active">—</p>
+          <div class="kpi-foot">Met actief abonnement</div>
         </section>
 
         <section class="card kpi kpi-danger">
@@ -816,6 +788,30 @@
           <p class="kpi-label">Inkomsten deze maand</p>
           <p class="kpi-value" id="kpi-revenue">—</p>
           <div class="kpi-foot">Abonnement = €20/maand</div>
+        </section>
+
+        <section class="card kpi kpi-success">
+          <div class="kpi-icon kpi-icon-success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18"/>
+              <path d="M7 14l4-4 4 2 5-7"/>
+            </svg>
+          </div>
+          <p class="kpi-label">Inkomsten dit jaar</p>
+          <p class="kpi-value" id="kpi-revenue-year">—</p>
+          <div class="kpi-foot">YTD (geschat)</div>
+        </section>
+
+        <section class="card kpi kpi-success">
+          <div class="kpi-icon kpi-icon-success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+          </div>
+          <p class="kpi-label">Inkomsten all time</p>
+          <p class="kpi-value" id="kpi-revenue-all">—</p>
+          <div class="kpi-foot">Totaal (geschat)</div>
         </section>
 
         <section class="card list">
@@ -960,6 +956,28 @@
           }
         };
 
+        const money = (n) => `€${Number(n || 0).toLocaleString("nl-NL")}`;
+
+        const monthsBetweenApprox = (startIso, endIso) => {
+          try {
+            const start = new Date(startIso);
+            const end = new Date(endIso);
+            const ms = Math.max(0, end - start);
+            const days = ms / (1000 * 60 * 60 * 24);
+            const months = Math.ceil(days / 30);
+            return Math.max(0, months);
+          } catch {
+            return 0;
+          }
+        };
+
+        const overlapMonthsApprox = (aStart, aEnd, bStart, bEnd) => {
+          const start = new Date(Math.max(new Date(aStart).getTime(), new Date(bStart).getTime()));
+          const end = new Date(Math.min(new Date(aEnd).getTime(), new Date(bEnd).getTime()));
+          if (end <= start) return 0;
+          return monthsBetweenApprox(start.toISOString(), end.toISOString());
+        };
+
         const setText = (id, v) => {
           const el = document.getElementById(id);
           if (el) el.textContent = v;
@@ -1084,9 +1102,9 @@
               statusEl.className = `customer-badge ${isCancelled ? "cancelled" : "active"}`;
             }
 
-            const createdDate = customer.created_at ? new Date(customer.created_at) : new Date();
-            const now = new Date();
-            const monthsDiff = Math.max(1, Math.floor((now - createdDate) / (1000 * 60 * 60 * 24 * 30)));
+              const createdDate = customer.created_at ? new Date(customer.created_at) : new Date();
+              const endDate = customer.cancelled_at ? new Date(customer.cancelled_at) : new Date();
+              const monthsDiff = Math.max(0, monthsBetweenApprox(createdDate.toISOString(), endDate.toISOString())) || 1;
             const freeMonths = customer.free_months || 0;
             const paidMonths = Math.max(0, monthsDiff - freeMonths);
             const totalPaid = paidMonths * 20;
@@ -1264,22 +1282,48 @@
             allCustomers = await fetchStaffCustomers(supabase);
 
             // KPIs based on customers array
-            const totalCount = allCustomers.length;
+            const totalCount = allCustomers.length; // all time klanten
             setText("kpi-total", String(totalCount));
 
             const monthStart = new Date(monthISO);
-            const d30Start = new Date(d30ISO);
-            const monthCount = allCustomers.filter((c) => c.created_at && new Date(c.created_at) >= monthStart).length;
-            const d30Count = allCustomers.filter((c) => c.created_at && new Date(c.created_at) >= d30Start).length;
-            setText("kpi-month", String(monthCount));
-            setText("kpi-30d", String(d30Count));
+            const now = new Date();
+            const activeCustomers = allCustomers.filter((c) => !c.cancelled_at);
+            const activeCount = activeCustomers.length;
+            setText("kpi-active", String(activeCount));
 
             const cancelledCount = allCustomers.filter((c) => c.cancelled_at && new Date(c.cancelled_at) >= monthStart).length;
             setText("kpi-cancelled", String(cancelledCount));
 
-            const activeCount = allCustomers.filter((c) => !c.cancelled_at).length;
-            const revenue = activeCount * 20;
-            setText("kpi-revenue", `€${revenue.toLocaleString("nl-NL")}`);
+            // Revenue assumptions:
+            // - subscription = €20 per month
+            // - "this month" revenue = active customers * 20 (MRR)
+            // - "year" and "all time" = estimated from account age (created_at -> cancelled_at/now), minus free_months
+            const PRICE = 20;
+            const revenueThisMonth = activeCount * PRICE;
+            setText("kpi-revenue", money(revenueThisMonth));
+
+            const yearStart = new Date(now.getFullYear(), 0, 1).toISOString();
+            const nowIso = now.toISOString();
+
+            let revenueYear = 0;
+            let revenueAll = 0;
+            allCustomers.forEach((c) => {
+              const start = c.created_at || nowIso;
+              const end = c.cancelled_at || nowIso;
+              const freeMonths = Number(c.free_months || 0);
+
+              const totalMonths = Math.max(0, monthsBetweenApprox(start, end));
+              const paidMonthsAll = Math.max(0, totalMonths - freeMonths);
+              revenueAll += paidMonthsAll * PRICE;
+
+              const yMonths = overlapMonthsApprox(start, end, yearStart, nowIso);
+              // Only apply free months to year if the account started this year (simple/expected behaviour)
+              const freeInYear = new Date(start) >= new Date(yearStart) ? Math.min(freeMonths, yMonths) : 0;
+              const paidMonthsYear = Math.max(0, yMonths - freeInYear);
+              revenueYear += paidMonthsYear * PRICE;
+            });
+            setText("kpi-revenue-year", money(revenueYear));
+            setText("kpi-revenue-all", money(revenueAll));
 
             // Recent rows (top 10)
             const recent = allCustomers.slice(0, 10);
