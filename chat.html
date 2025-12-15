@@ -1047,8 +1047,10 @@
 
       .model-select.is-active .model-select__trigger {
         border-color: var(--chat-accent);
-        box-shadow: 0 8px 24px -12px rgba(230, 194, 0, 0.5);
-        background: rgba(230, 194, 0, 0.2);
+        box-shadow: 
+          0 6px 20px -8px rgba(230, 194, 0, 0.4),
+          0 0 0 1px rgba(230, 194, 0, 0.15) inset;
+        background: linear-gradient(135deg, rgba(230, 194, 0, 0.12) 0%, rgba(230, 194, 0, 0.08) 100%);
       }
 
       .model-select.is-active .model-select__label {
@@ -1109,36 +1111,72 @@
       }
 
       .model-select__trigger {
-        padding: 6px 12px;
-        border-radius: 999px;
-        background: #fff;
+        padding: 10px 20px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #fff 0%, #fafafa 100%);
         color: #1a1a1f;
-        font-size: 0.75rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        border: 1px solid var(--chat-border);
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: none;
+        border: 1.5px solid rgba(230, 194, 0, 0.25);
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 10px;
         white-space: nowrap;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 
+          0 2px 8px -4px rgba(0, 0, 0, 0.1),
+          0 0 0 1px rgba(230, 194, 0, 0.05) inset;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .model-select__trigger::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(230, 194, 0, 0.08), transparent);
+        transition: left 0.5s ease;
       }
 
       .model-select__trigger:hover {
-        background: #f5f5f5;
-        border-color: rgba(0, 0, 0, 0.15);
+        background: linear-gradient(135deg, #fff 0%, #f8f8f8 100%);
+        border-color: rgba(230, 194, 0, 0.4);
+        box-shadow: 
+          0 4px 16px -6px rgba(230, 194, 0, 0.3),
+          0 0 0 1px rgba(230, 194, 0, 0.1) inset;
+        transform: translateY(-1px);
+      }
+
+      .model-select__trigger:hover::before {
+        left: 100%;
       }
 
       .model-select__trigger .selected-label {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
         white-space: nowrap;
+        font-weight: 600;
+        letter-spacing: -0.01em;
       }
 
       .model-select__trigger svg {
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
         fill: currentColor;
+        opacity: 0.6;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      .model-select__trigger:hover svg {
+        opacity: 1;
+        transform: translateY(1px);
       }
 
       .model-dropdown {
