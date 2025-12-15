@@ -76,23 +76,23 @@
         overflow: hidden;
       }
 
-      .sidebar-mascot {
-        width: min(230px, 100%);
-        margin: 0 auto -120px;
-        display: flex;
-        justify-content: center;
-        pointer-events: none;
-        filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.35));
+      .new-chat-wrap {
         position: relative;
-        z-index: 3;
       }
 
-      .sidebar-mascot img {
-        width: 100%;
-        height: auto;
-        display: block;
-        transform: translateY(74px) rotate(-1.5deg);
+      .new-chat-wrap::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% - 18px);
+        width: clamp(180px, 90%, 240px);
+        aspect-ratio: 1 / 1;
+        background: url("assets/mathijs-lean.png") center / contain no-repeat;
+        transform: translateX(-50%) rotate(-1.5deg);
         transform-origin: 50% 100%;
+        filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.35));
+        pointer-events: none;
+        z-index: 2;
       }
 
       .sidebar-bottom {
@@ -129,7 +129,7 @@
         transition: background 0.2s ease, transform 0.2s ease;
         box-shadow: 0 8px 24px -8px rgba(230, 194, 0, 0.4);
         position: relative;
-        z-index: 2;
+        z-index: 1;
       }
 
       .new-chat:hover {
@@ -1823,9 +1823,9 @@
           margin-top: 56px;
         }
 
-        .sidebar-mascot {
-          width: min(210px, 100%);
-          margin: 0 auto -120px;
+        .new-chat-wrap::before {
+          width: clamp(170px, 80%, 220px);
+          bottom: calc(100% - 14px);
         }
 
         .chat-footer {
@@ -1846,17 +1846,11 @@
           Uitloggen
         </button>
         <div class="sidebar-top" style="padding-top: 170px;">
-          <div class="sidebar-mascot" aria-hidden="true">
-            <img
-              src="assets/mathijs-lean.png"
-              alt=""
-              loading="eager"
-              onerror="this.onerror=null;this.src='assets/mathijs-avatar.png';this.style.borderRadius='50%';"
-            />
+          <div class="new-chat-wrap">
+            <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
+              <span>+</span>Nieuw gesprek
+            </button>
           </div>
-          <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
-            <span>+</span>Nieuw gesprek
-          </button>
           <h2>sessies</h2>
           <p class="session-empty" id="session-empty">Nog geen gesprekken. Start je eerste chat.</p>
           <div class="session-list" id="session-list"></div>
