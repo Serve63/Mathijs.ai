@@ -142,7 +142,8 @@
         });
         const adminSignupPayload = await adminSignupResp.json().catch(() => ({}));
         if (!adminSignupResp.ok) {
-          throw new Error(adminSignupPayload?.error || "Registratie mislukt, probeer het opnieuw.");
+          const msg = adminSignupPayload?.error || `Registratie mislukt (${adminSignupResp.status}).`;
+          throw new Error(msg);
         }
 
         // Direct inloggen zodat de gebruiker meteen kan starten.
@@ -169,7 +170,7 @@
         window.location.href = "subscribe.html";
       } catch (err) {
         console.error("Onverwachte fout tijdens signup", err);
-        setFeedback(feedbackEl, "Er ging iets mis, probeer het opnieuw.");
+        setFeedback(feedbackEl, err?.message || "Er ging iets mis, probeer het opnieuw.");
       } finally {
         toggleButtonLoading(submitButton, false);
       }
