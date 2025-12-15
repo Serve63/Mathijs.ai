@@ -784,7 +784,12 @@
           </div>
           <p class="kpi-label">Actieve klanten</p>
           <p class="kpi-value" id="kpi-active">—</p>
-          <div class="kpi-foot">Klik om alle klanten te bekijken →</div>
+          <div class="kpi-foot">
+            Klik om alle klanten te bekijken →
+            <div style="margin-top: 8px; color: rgba(255, 255, 255, 0.55); font-size: 0.82rem;">
+              All time klanten: <span id="kpi-alltime-customers">—</span>
+            </div>
+          </div>
         </section>
 
         <section class="card kpi">
@@ -1459,6 +1464,7 @@
             // KPIs based on customers array
             const monthStart = new Date(monthISO);
             const now = new Date();
+            setText("kpi-alltime-customers", String(allCustomers.length));
             const activeCustomers = allCustomers.filter((c) => !c.cancelled_at);
             const activeCount = activeCustomers.length;
             setText("kpi-active", String(activeCount));
