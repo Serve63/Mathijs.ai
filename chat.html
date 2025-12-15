@@ -1030,17 +1030,21 @@
       }
 
       .chat-model-selector {
-        padding: 0 0 0 72px;
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        z-index: 5;
+        padding: 0;
         margin: 0;
-        width: 100%;
+        width: auto;
         flex-shrink: 0;
-        background: var(--chat-panel);
+        background: transparent;
         border: none;
         box-shadow: none;
       }
       
       .chat-model-selector > *:first-child {
-        margin-top: 40px;
+        margin-top: 0;
       }
 
       .status-info {
@@ -1394,7 +1398,7 @@
 
       .chat-log {
         flex: 1;
-        padding: 0 24px 0 24px;
+        padding: 60px 24px 0 24px;
         min-height: 0;
         display: flex;
         flex-direction: column;
@@ -1865,7 +1869,7 @@
         }
 
         .chat-log {
-          padding: 0 24px 0 24px;
+          padding: 60px 24px 0 24px;
         }
         
         .chat-log > .message:first-child {
@@ -1933,11 +1937,12 @@
         }
 
         .chat-model-selector {
-          padding: 0 0 0 20px;
+          top: 12px;
+          left: 12px;
         }
         
         .chat-model-selector > *:first-child {
-          margin-top: 56px;
+          margin-top: 0;
         }
 
         .chat-footer {
