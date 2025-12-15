@@ -80,40 +80,6 @@
         box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.4);
       }
 
-      .auth-brand {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 16px;
-        margin-bottom: 32px;
-      }
-
-      .auth-avatar {
-        width: 72px;
-        height: 72px;
-        border-radius: 50%;
-        border: 3px solid var(--accent);
-        box-shadow: 0 8px 24px -8px rgba(230, 194, 0, 0.4);
-      }
-
-      .auth-brand-text {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 1.1rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        display: flex;
-        align-items: center;
-        gap: 2px;
-      }
-
-      .auth-brand-word {
-        color: var(--fg);
-      }
-
-      .auth-brand-dot {
-        color: var(--accent);
-      }
-
       .auth-headline {
         text-align: center;
         margin-bottom: 32px;
@@ -301,24 +267,17 @@
         Terug naar home
       </a>
       <div class="auth-card">
-        <div class="auth-brand" aria-label="Mathijs dot AI">
-          <img class="auth-avatar" src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" />
-          <div class="auth-brand-text">
-            <span class="auth-brand-word">MATHIJS</span>
-            <span class="auth-brand-dot">.AI</span>
-          </div>
-        </div>
         <div class="auth-headline">
           <p class="auth-eyebrow">Aan de slag</p>
           <h1>Maak een account aan</h1>
           <p class="auth-subtitle">
             Vul je gegevens in om een account te registreren. Je ontvangt een bevestiging per e-mail.
           </p>
-      </div>
+        </div>
         <form id="signup-form" class="auth-form" novalidate>
           <div class="form-group">
             <label for="signup-email">E-mailadres</label>
-          <input id="signup-email" name="email" type="email" placeholder="naam@bedrijf.com" required />
+            <input id="signup-email" name="email" type="email" placeholder="naam@bedrijf.com" required />
           </div>
 
           <div class="form-group">
@@ -328,22 +287,22 @@
 
           <div class="form-group">
             <label for="signup-confirm">Herhaal wachtwoord</label>
-          <input
-            id="signup-confirm"
-            name="confirm-password"
-            type="password"
+            <input
+              id="signup-confirm"
+              name="confirm-password"
+              type="password"
               placeholder="••••••••"
-            required
-            minlength="6"
-          />
+              required
+              minlength="6"
+            />
           </div>
 
           <button type="submit" id="signup-submit" class="btn primary">Account aanmaken</button>
-      </form>
-      <p class="form-feedback" id="signup-feedback" aria-live="polite"></p>
+        </form>
+        <p class="form-feedback" id="signup-feedback" aria-live="polite"></p>
         <div class="auth-meta">
-        <span>Heb je al toegang?</span>
-        <a href="login.html">Log in</a>
+          <span>Heb je al toegang?</span>
+          <a href="login.html">Log in</a>
         </div>
       </div>
     </div>
