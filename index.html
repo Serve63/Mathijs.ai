@@ -156,6 +156,7 @@
         align-items: center;
       }
 
+      /* Divider Styles - Each unique */
       .section-divider {
         position: absolute;
         left: 0;
@@ -164,32 +165,32 @@
         overflow: hidden;
         line-height: 0;
         z-index: 10;
-      }
-
-      .section-divider.bottom {
         bottom: 0;
         transform: translateY(1px);
-      }
-
-      .section-divider.top {
-        top: 0;
-        transform: translateY(-1px) rotate(180deg);
       }
 
       .section-divider svg {
         position: relative;
         display: block;
         width: 100%;
-        height: 80px;
       }
 
-      .section-divider .fill-light {
-        fill: #fafafa;
-      }
+      .fill-light { fill: #fafafa; }
+      .fill-dark { fill: var(--hero-1); }
 
-      .section-divider .fill-dark {
-        fill: var(--hero-1);
-      }
+      /* Divider 1: Layered waves with depth */
+      .divider-waves svg { height: 120px; }
+      .divider-waves .wave-back { opacity: 0.3; }
+      .divider-waves .wave-mid { opacity: 0.6; }
+
+      /* Divider 2: Diagonal slash */
+      .divider-diagonal svg { height: 100px; }
+
+      /* Divider 3: Organic blob */
+      .divider-blob svg { height: 140px; }
+
+      /* Divider 4: Geometric angular */
+      .divider-angular svg { height: 80px; }
 
       .hero::before {
         content: '';
@@ -965,10 +966,12 @@
             </div>
           </div>
         </div>
-        <!-- Curve divider hero → features -->
-        <div class="section-divider bottom">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" preserveAspectRatio="none">
-            <path class="fill-light" d="M0,0 C480,100 960,100 1440,0 L1440,100 L0,100 Z"></path>
+        <!-- Divider 1: Layered waves with depth -->
+        <div class="section-divider divider-waves">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" preserveAspectRatio="none">
+            <path class="fill-light wave-back" d="M0,60 C200,120 400,0 600,60 C800,120 1000,0 1200,60 C1300,90 1380,75 1440,60 L1440,120 L0,120 Z"></path>
+            <path class="fill-light wave-mid" d="M0,80 C240,120 480,40 720,80 C960,120 1200,40 1440,80 L1440,120 L0,120 Z"></path>
+            <path class="fill-light" d="M0,100 C360,120 720,80 1080,100 C1260,110 1380,95 1440,100 L1440,120 L0,120 Z"></path>
           </svg>
         </div>
       </section>
@@ -1016,10 +1019,10 @@
             </article>
           </div>
         </div>
-        <!-- Curve divider features → how -->
-        <div class="section-divider bottom">
+        <!-- Divider 2: Diagonal slash -->
+        <div class="section-divider divider-diagonal">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" preserveAspectRatio="none">
-            <path class="fill-dark" d="M0,0 C480,100 960,100 1440,0 L1440,100 L0,100 Z"></path>
+            <path class="fill-dark" d="M0,100 L0,40 Q360,80 720,20 Q1080,-40 1440,30 L1440,100 Z"></path>
           </svg>
         </div>
       </section>
@@ -1051,10 +1054,10 @@
             </div>
           </div>
         </div>
-        <!-- Curve divider how → reviews -->
-        <div class="section-divider bottom">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" preserveAspectRatio="none">
-            <path class="fill-light" d="M0,0 C480,100 960,100 1440,0 L1440,100 L0,100 Z"></path>
+        <!-- Divider 3: Organic asymmetric blob -->
+        <div class="section-divider divider-blob">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 140" preserveAspectRatio="none">
+            <path class="fill-light" d="M0,140 L0,60 C120,100 240,20 420,40 C600,60 700,120 900,80 C1100,40 1200,100 1320,60 C1380,40 1420,70 1440,50 L1440,140 Z"></path>
           </svg>
         </div>
       </section>
@@ -1107,10 +1110,10 @@
             </article>
           </div>
         </div>
-        <!-- Curve divider reviews → cta -->
-        <div class="section-divider bottom">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" preserveAspectRatio="none">
-            <path class="fill-dark" d="M0,0 C480,100 960,100 1440,0 L1440,100 L0,100 Z"></path>
+        <!-- Divider 4: Geometric angular -->
+        <div class="section-divider divider-angular">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 80" preserveAspectRatio="none">
+            <path class="fill-dark" d="M0,80 L0,50 L400,20 L800,60 L1200,10 L1440,40 L1440,80 Z"></path>
           </svg>
         </div>
       </section>
