@@ -1046,11 +1046,9 @@
       }
 
       .model-select.is-active .model-select__trigger {
-        border-color: var(--chat-accent);
-        box-shadow: 
-          0 6px 20px -8px rgba(230, 194, 0, 0.4),
-          0 0 0 1px rgba(230, 194, 0, 0.15) inset;
-        background: linear-gradient(135deg, rgba(230, 194, 0, 0.12) 0%, rgba(230, 194, 0, 0.08) 100%);
+        border-color: #1d4ed8;
+        background: #fff4cc;
+        box-shadow: 0 12px 32px -14px rgba(37, 99, 235, 0.6);
       }
 
       .model-select.is-active .model-select__label {
@@ -1111,50 +1109,29 @@
       }
 
       .model-select__trigger {
-        padding: 10px 20px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #fff 0%, #fafafa 100%);
-        color: #1a1a1f;
-        font-size: 0.8rem;
-        font-weight: 600;
-        letter-spacing: 0.02em;
+        padding: 10px 22px;
+        border-radius: 16px;
+        background: #fff9e6;
+        color: #111827;
+        font-size: 0.9rem;
+        font-weight: 650;
+        letter-spacing: -0.01em;
         text-transform: none;
-        border: 1.5px solid rgba(230, 194, 0, 0.25);
+        border: 2px solid #2563eb;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         gap: 10px;
         white-space: nowrap;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 
-          0 2px 8px -4px rgba(0, 0, 0, 0.1),
-          0 0 0 1px rgba(230, 194, 0, 0.05) inset;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .model-select__trigger::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(230, 194, 0, 0.08), transparent);
-        transition: left 0.5s ease;
+        transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        box-shadow: 0 8px 24px -10px rgba(37, 99, 235, 0.35);
       }
 
       .model-select__trigger:hover {
-        background: linear-gradient(135deg, #fff 0%, #f8f8f8 100%);
-        border-color: rgba(230, 194, 0, 0.4);
-        box-shadow: 
-          0 4px 16px -6px rgba(230, 194, 0, 0.3),
-          0 0 0 1px rgba(230, 194, 0, 0.1) inset;
+        background: #fff4cc;
+        border-color: #1d4ed8;
+        box-shadow: 0 10px 28px -12px rgba(37, 99, 235, 0.5);
         transform: translateY(-1px);
-      }
-
-      .model-select__trigger:hover::before {
-        left: 100%;
       }
 
       .model-select__trigger .selected-label {
