@@ -206,7 +206,7 @@
       .fill-dark { fill: var(--hero-1); }
 
       /* Type 1: Gentle arc */
-      .divider-arc svg { height: 80px; }
+      .divider-arc svg { height: 110px; }
 
       /* Type 2: Subtle slant */
       .divider-slant svg { height: 50px; }
@@ -240,6 +240,23 @@
         background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         pointer-events: none;
         opacity: 0.5;
+      }
+
+      .hero-transition {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 160px;
+        background: linear-gradient(
+          180deg,
+          rgba(250, 250, 250, 0) 0%,
+          rgba(250, 250, 250, 0.55) 45%,
+          rgba(250, 250, 250, 0.85) 70%,
+          #fafafa 100%
+        );
+        pointer-events: none;
+        z-index: 0;
       }
 
       .hero-inner {
@@ -991,10 +1008,12 @@
             </div>
           </div>
         </div>
+        <div class="hero-transition" aria-hidden="true"></div>
         <!-- Divider: Gentle arc -->
         <div class="section-divider divider-arc">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 80" preserveAspectRatio="none">
-            <path class="fill-light" d="M0,80 C480,0 960,0 1440,80 L1440,80 L0,80 Z"></path>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" preserveAspectRatio="none">
+            <path fill="#fafafa" opacity="0.55" d="M0,120 C240,35 520,10 760,48 C980,82 1190,72 1440,28 L1440,120 L0,120 Z"></path>
+            <path class="fill-light" d="M0,120 C320,20 640,92 960,48 C1180,18 1320,22 1440,34 L1440,120 L0,120 Z"></path>
           </svg>
         </div>
       </section>
