@@ -1013,8 +1013,6 @@
         min-height: 0;
         display: flex;
         flex-direction: column;
-        /* Center main content column (chat log matches input/footer) */
-        align-items: center;
         background: var(--chat-panel);
         width: 100%;
         box-sizing: border-box;
@@ -1035,7 +1033,7 @@
         position: absolute;
         top: 16px;
         left: 16px;
-        z-index: 1000;
+        z-index: 5;
         padding: 0;
         margin: 0;
         width: auto;
@@ -1283,7 +1281,7 @@
         display: none;
         flex-direction: column;
         overflow: visible;
-        z-index: 2000;
+        z-index: 20;
         padding: 6px;
         box-sizing: border-box;
       }
@@ -1415,34 +1413,21 @@
       }
 
 
-      .chat-log-container {
-        flex: 1;
-        width: min(880px, 100%);
-        margin: 0 auto;
-        padding: 60px 24px 0 24px;
-        min-height: 0;
-        box-sizing: border-box;
-        background: var(--chat-panel);
-        position: relative;
-        left: auto;
-        transform: none;
-        z-index: 0;
-      }
-
       .chat-log {
-        width: 100%;
+        flex: 1;
+        padding: 60px 80px 0 80px;
         min-height: 0;
         display: flex;
         flex-direction: column;
         gap: 14px;
-        /* Center messages inside the fixed-width container */
+        /* Keep a centered chat column like the input field */
         align-items: center;
-        background: transparent;
+        background: var(--chat-panel);
+        width: 100%;
         box-sizing: border-box;
         border: none;
         box-shadow: none;
         margin: 0;
-        padding: 0;
       }
       
       .chat-log > .message:first-child {
@@ -1493,8 +1478,7 @@
         background: transparent;
         padding: 0 0 0 0;
         margin: 0 0 12px 0;
-        /* Don't stretch across the whole log; keep a centered column */
-        align-self: center;
+        align-self: stretch;
       }
 
       .message.user {
@@ -1904,7 +1888,7 @@
           padding-right: 0;
         }
 
-        .chat-log-container {
+        .chat-log {
           padding: 60px 20px 0 20px;
         }
         
@@ -2186,9 +2170,7 @@
             </div>
           </div>
         </div>
-        <div class="chat-log-container">
-          <section class="chat-log"></section>
-        </div>
+        <section class="chat-log"></section>
         </div>
         <footer class="chat-footer">
           <div class="chat-input">
