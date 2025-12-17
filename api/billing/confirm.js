@@ -94,8 +94,8 @@ module.exports = async (req, res) => {
     }
 
     const nowIso = new Date().toISOString();
-    const nextMeta = {
-      ...(user?.user_metadata || {}),
+    const nextAppMeta = {
+      ...(user?.app_metadata || {}),
       plan: "standard",
       cancelled_at: null,
       stripe_customer_id: session?.customer || null,
@@ -106,7 +106,7 @@ module.exports = async (req, res) => {
     await supabaseAuthAdmin(`users/${encodeURIComponent(userId)}`, {
       method: "PUT",
       accessKey: serviceRoleKey,
-      body: { user_metadata: nextMeta },
+      body: { app_metadata: nextAppMeta },
     });
 
     return json(res, 200, { ok: true, status: subStatus, plan: "standard" });

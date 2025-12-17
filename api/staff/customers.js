@@ -7,35 +7,10 @@
 
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, readJson } = require("../_lib/security");
 const { SUPABASE_URL, getUserFromAccessToken } = require("../_lib/supabase");
+const { isStaffUser } = require("../_lib/staff");
 
 const STAFF_WINDOW_MS = 60_000;
 const STAFF_LIMIT = 120;
-
-const DEFAULT_STAFF_EMAIL_ALLOWLIST = ["servec321@gmail.com"];
-
-function parseAllowlistEnv(value) {
-  return String(value || "")
-    .split(",")
-    .map((v) => v.trim().toLowerCase())
-    .filter(Boolean);
-}
-
-const STAFF_EMAIL_ALLOWLIST = new Set([
-  ...DEFAULT_STAFF_EMAIL_ALLOWLIST.map((v) => v.toLowerCase()),
-  ...parseAllowlistEnv(process.env.STAFF_EMAIL_ALLOWLIST),
-]);
-
-const STAFF_USER_ID_ALLOWLIST = new Set(parseAllowlistEnv(process.env.STAFF_USER_ID_ALLOWLIST));
-
-function isStaffUser(user) {
-  const email = (user?.email || "").toLowerCase().trim();
-  if (email && STAFF_EMAIL_ALLOWLIST.has(email)) return true;
-
-  const id = String(user?.id || "").trim();
-  if (id && STAFF_USER_ID_ALLOWLIST.has(id)) return true;
-
-  return false;
-}
 
 async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {}) {
   const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/${path}`, {
@@ -60,15 +35,15 @@ async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {})
 }
 
 function normalizeCustomerFromUser(u) {
-  const meta = u?.user_metadata || {};
+  const appMeta = u?.app_metadata || {};
   return {
     id: u?.id,
     email: u?.email,
     created_at: u?.created_at,
-    cancelled_at: meta.cancelled_at || null,
-    free_months: Number(meta.free_months || 0),
-    lifetime_free: Boolean(meta.lifetime_free) || meta.plan === "lifetime",
-    plan: meta.plan || "free",
+    cancelled_at: appMeta.cancelled_at || null,
+    free_months: Number(appMeta.free_months || 0),
+    lifetime_free: Boolean(appMeta.lifetime_free) || appMeta.plan === "lifetime",
+    plan: appMeta.plan || "free",
   };
 }
 
@@ -122,14 +97,6 @@ module.exports = async (req, res) => {
       const body = await readJson(req);
       const action = body?.action;
 
-      if (action === "ensure_profile") {
-        const id = body?.id;
-        const email = body?.email;
-        if (!id || !email) return json(res, 400, { error: "Missing id/email" });
-        // No-op for Auth-based customers (user already exists if they can login)
-        return json(res, 200, { ok: true });
-      }
-
       const id = body?.id;
       if (!id) return json(res, 400, { error: "Missing id" });
 
@@ -142,13 +109,13 @@ module.exports = async (req, res) => {
           method: "GET",
           accessKey: serviceRoleKey,
         });
-        const current = Number(u?.user?.user_metadata?.free_months || 0);
+        const current = Number(u?.user?.app_metadata?.free_months || 0);
         const next = current + months;
 
         await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
           method: "PUT",
           accessKey: serviceRoleKey,
-          body: { user_metadata: { ...(u?.user?.user_metadata || {}), free_months: next } },
+          body: { app_metadata: { ...(u?.user?.app_metadata || {}), free_months: next } },
         });
         return json(res, 200, { ok: true, free_months: next });
       }
@@ -162,7 +129,7 @@ module.exports = async (req, res) => {
         await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
           method: "PUT",
           accessKey: serviceRoleKey,
-          body: { user_metadata: { ...(u?.user?.user_metadata || {}), cancelled_at: nowIso } },
+          body: { app_metadata: { ...(u?.user?.app_metadata || {}), cancelled_at: nowIso } },
         });
         return json(res, 200, { ok: true, cancelled_at: nowIso });
       }
@@ -176,7 +143,7 @@ module.exports = async (req, res) => {
         await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
           method: "PUT",
           accessKey: serviceRoleKey,
-          body: { user_metadata: { ...(u?.user?.user_metadata || {}), lifetime_free: enabled } },
+          body: { app_metadata: { ...(u?.user?.app_metadata || {}), lifetime_free: enabled } },
         });
         return json(res, 200, { ok: true, lifetime_free: enabled });
       }

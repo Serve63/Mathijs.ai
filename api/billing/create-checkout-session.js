@@ -14,9 +14,26 @@ const CHECKOUT_WINDOW_MS = 60_000;
 const CHECKOUT_LIMIT = 10;
 
 function getBaseUrl(req) {
-  const proto = req.headers["x-forwarded-proto"] || "https";
-  const host = req.headers["x-forwarded-host"] || req.headers.host;
-  return `${proto}://${host}`;
+  const configured = process.env.APP_BASE_URL;
+  if (configured) {
+    const trimmed = String(configured).trim().replace(/\/+$/, "");
+    if (!/^https:\/\//i.test(trimmed)) {
+      throw new Error("invalid_APP_BASE_URL");
+    }
+    return trimmed;
+  }
+
+  // Vercel provides this in prod; prefer it over request headers to avoid host-header injection.
+  const vercelUrl = process.env.VERCEL_URL;
+  if (vercelUrl) {
+    return `https://${String(vercelUrl).trim().replace(/\/+$/, "")}`;
+  }
+
+  const host = String(req.headers["x-forwarded-host"] || req.headers.host || "").split(",")[0].trim();
+  if (!host) {
+    throw new Error("missing_host");
+  }
+  return `https://${host}`;
 }
 
 async function stripeRequest(path, secretKey, params) {

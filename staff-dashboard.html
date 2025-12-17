@@ -1028,28 +1028,16 @@
       </div>
     </div>
 
-    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+	    <script defer src="assets/vendor/supabase.min.js"></script>
     <script>
       (() => {
         const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
 
-        const STAFF_EMAIL_ALLOWLIST = [
-          // Zelfde allowlist als in staff-login.html (optioneel)
-          // "staff@mathijs.ai",
-          "servec321@gmail.com",
-        ];
-
-	        const isStaffEmail = (email) => {
-	          const e = (email || "").toLowerCase().trim();
-	          if (!e) return false;
-	          return STAFF_EMAIL_ALLOWLIST.includes(e);
-	        };
-
-        const fmtDate = (iso) => {
-          try {
-            return new Date(iso).toLocaleString("nl-NL", { year: "numeric", month: "short", day: "2-digit" });
-          } catch {
+	        const fmtDate = (iso) => {
+	          try {
+	            return new Date(iso).toLocaleString("nl-NL", { year: "numeric", month: "short", day: "2-digit" });
+	          } catch {
             return iso || "";
           }
         };
@@ -1127,7 +1115,9 @@
 
         const init = async () => {
           if (!window.supabase?.createClient) return;
-          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+	          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+	            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+	          });
 
           // Auth gate
           const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -1135,12 +1125,27 @@
             showError("Kan sessie niet ophalen.");
             return;
           }
-          const session = sessionData?.session;
-          const email = session?.user?.email;
-          if (!session || !isStaffEmail(email)) {
-            window.location.href = "staff-login.html";
-            return;
-          }
+	          const session = sessionData?.session;
+	          const token = session?.access_token;
+	          if (!session || !token) {
+	            window.location.href = "staff-login.html";
+	            return;
+	          }
+
+	          const verifyResp = await fetch("/api/staff/me", {
+	            method: "GET",
+	            headers: { Authorization: `Bearer ${token}` },
+	          });
+	          const verifyPayload = await verifyResp.json().catch(() => ({}));
+	          if (!verifyResp.ok || !verifyPayload?.staff) {
+	            try {
+	              await supabase.auth.signOut();
+	            } catch {
+	              // ignore
+	            }
+	            window.location.href = "staff-login.html";
+	            return;
+	          }
 
           // Logout
           const logoutBtn = document.getElementById("staff-logout-btn");

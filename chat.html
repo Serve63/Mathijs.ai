@@ -2099,10 +2099,10 @@
               <input type="email" id="edit-email-input" class="edit-credentials-modal__input" placeholder="naam@voorbeeld.nl" />
               
               <label for="edit-password-input" class="edit-credentials-modal__label">Nieuw wachtwoord (laat leeg om niet te wijzigen)</label>
-              <input type="password" id="edit-password-input" class="edit-credentials-modal__input" placeholder="Minimaal 6 tekens" minlength="6" />
+	              <input type="password" id="edit-password-input" class="edit-credentials-modal__input" placeholder="Minimaal 10 tekens" minlength="10" />
               
               <label for="edit-password-confirm-input" class="edit-credentials-modal__label">Bevestig wachtwoord</label>
-              <input type="password" id="edit-password-confirm-input" class="edit-credentials-modal__input" placeholder="Herhaal wachtwoord" minlength="6" />
+	              <input type="password" id="edit-password-confirm-input" class="edit-credentials-modal__input" placeholder="Herhaal wachtwoord" minlength="10" />
               
               <div class="edit-credentials-modal__actions">
                 <button type="button" class="edit-credentials-modal__cancel">Annuleren</button>
@@ -2247,7 +2247,7 @@
         </footer>
       </main>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="assets/vendor/supabase.min.js"></script>
     <script src="auth.js"></script>
     <script>
 	      const modelSelects = Array.from(document.querySelectorAll(".model-select"));
@@ -2776,11 +2776,11 @@
 
           // Validate password if provided
           if (newPassword) {
-            if (newPassword.length < 6) {
-              alert("Wachtwoord moet minimaal 6 tekens lang zijn.");
-              if (editPasswordInput) editPasswordInput.focus();
-              return;
-            }
+	            if (newPassword.length < 10) {
+	              alert("Wachtwoord moet minimaal 10 tekens lang zijn.");
+	              if (editPasswordInput) editPasswordInput.focus();
+	              return;
+	            }
             if (newPassword !== confirmPassword) {
               alert("Wachtwoorden komen niet overeen.");
               if (editPasswordConfirmInput) editPasswordConfirmInput.focus();

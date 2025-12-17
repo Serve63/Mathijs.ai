@@ -244,28 +244,16 @@
       </div>
     </div>
 
-    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+	    <script defer src="assets/vendor/supabase.min.js"></script>
     <script>
       (() => {
         const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
 
-	        const STAFF_EMAIL_ALLOWLIST = [
-	          // Voeg hier staff emails toe (exacte matches)
-	          // "staff@mathijs.ai",
-	          "servec321@gmail.com",
-	        ];
-
-	        const isStaffEmail = (email) => {
-	          const e = (email || "").toLowerCase().trim();
-	          if (!e) return false;
-	          return STAFF_EMAIL_ALLOWLIST.includes(e);
-	        };
-
-        const setFeedback = (el, msg = "", type = "error") => {
-          if (!el) return;
-          el.textContent = msg;
-          el.classList.remove("error", "success");
+	        const setFeedback = (el, msg = "", type = "error") => {
+	          if (!el) return;
+	          el.textContent = msg;
+	          el.classList.remove("error", "success");
           if (msg) el.classList.add(type);
         };
 
@@ -277,7 +265,9 @@
           const btn = document.getElementById("staff-login-btn");
 
           if (!form || !window.supabase?.createClient) return;
-          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+	          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+	            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+	          });
 
           form.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -294,40 +284,34 @@
             const original = btn.textContent;
             btn.textContent = "Bezig met inloggen...";
 
-            try {
-              const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-              if (error) {
-                setFeedback(feedbackEl, error.message || "Inloggen mislukt.");
-                return;
-              }
+	            try {
+	              const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+	              if (error) {
+	                setFeedback(feedbackEl, error.message || "Inloggen mislukt.");
+	                return;
+	              }
 
-              const userEmail = data?.user?.email || email;
-              if (!isStaffEmail(userEmail)) {
-                await supabase.auth.signOut();
-                setFeedback(feedbackEl, "Geen toegang: alleen personeel.", "error");
-                return;
-              }
+	              const token = data?.session?.access_token;
+	              if (!token) {
+	                await supabase.auth.signOut();
+	                setFeedback(feedbackEl, "Inloggen gelukt, maar je sessie ontbreekt. Probeer opnieuw.", "error");
+	                return;
+	              }
 
-              // Ensure profile exists (so staff can also appear as customer)
-              try {
-                const token = data?.session?.access_token;
-                if (token) {
-                  await fetch("/api/staff/customers", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({ action: "ensure_profile", id: data.user.id, email: userEmail }),
-                  });
-                }
-              } catch (e) {
-                // ignore
-              }
+	              const verifyResp = await fetch("/api/staff/me", {
+	                method: "GET",
+	                headers: { Authorization: `Bearer ${token}` },
+	              });
+	              const verifyPayload = await verifyResp.json().catch(() => ({}));
+	              if (!verifyResp.ok || !verifyPayload?.staff) {
+	                await supabase.auth.signOut();
+	                setFeedback(feedbackEl, "Geen toegang: alleen personeel.", "error");
+	                return;
+	              }
 
-              setFeedback(feedbackEl, "Inloggen gelukt. Doorsturen...", "success");
-              window.location.href = "staff-dashboard.html";
-            } catch (err) {
+	              setFeedback(feedbackEl, "Inloggen gelukt. Doorsturen...", "success");
+	              window.location.href = "staff-dashboard.html";
+	            } catch (err) {
               console.error(err);
               setFeedback(feedbackEl, "Er ging iets mis. Probeer het opnieuw.");
             } finally {
@@ -342,4 +326,3 @@
     </script>
   </body>
 </html>
-

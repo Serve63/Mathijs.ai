@@ -2,18 +2,20 @@
   const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
 
-  const initializeClient = () => {
-    if (window.mathijsSupabase) {
-      return window.mathijsSupabase;
-    }
+	  const initializeClient = () => {
+	    if (window.mathijsSupabase) {
+	      return window.mathijsSupabase;
+	    }
     if (!window.supabase || !window.supabase.createClient) {
       console.error("Supabase library is niet geladen.");
       return null;
     }
-    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    window.mathijsSupabase = client;
-    return client;
-  };
+	    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+	      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+	    });
+	    window.mathijsSupabase = client;
+	    return client;
+	  };
 
   const supabase = initializeClient();
 

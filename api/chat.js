@@ -277,8 +277,10 @@ module.exports = async function handler(req, res) {
     const user = await getUserFromAccessToken(token);
     if (!user?.id) return json(res, 401, { error: "Unauthorized" });
 
-    const userPlan = String(user?.user_metadata?.plan || "free").toLowerCase();
-    const limit = userPlan === "standard" ? CHAT_LIMIT_PAID : CHAT_LIMIT_FREE;
+    const appMeta = user?.app_metadata || {};
+    const userPlan = String(appMeta?.plan || "free").toLowerCase();
+    const isPaid = userPlan === "standard" || userPlan === "lifetime" || appMeta?.lifetime_free === true;
+    const limit = isPaid ? CHAT_LIMIT_PAID : CHAT_LIMIT_FREE;
 
     const userLimit = rateLimit({ key: `chat:user:${user.id}`, limit, windowMs: CHAT_WINDOW_MS });
     if (!userLimit.ok) {

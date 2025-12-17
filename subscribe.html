@@ -230,7 +230,7 @@
       </div>
     </div>
 
-    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script defer src="assets/vendor/supabase.min.js"></script>
     <script defer>
       (() => {
         const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
@@ -258,7 +258,9 @@
 
         document.addEventListener("DOMContentLoaded", async () => {
           if (!window.supabase?.createClient) return;
-          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+	          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+	            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+	          });
 
           const { data } = await supabase.auth.getSession();
           const accessToken = data?.session?.access_token;
@@ -311,4 +313,3 @@
     </script>
   </body>
 </html>
-
