@@ -1035,7 +1035,7 @@
         position: absolute;
         top: 16px;
         left: 16px;
-        z-index: 5;
+        z-index: 1000;
         padding: 0;
         margin: 0;
         width: auto;
@@ -1283,7 +1283,7 @@
         display: none;
         flex-direction: column;
         overflow: visible;
-        z-index: 20;
+        z-index: 2000;
         padding: 6px;
         box-sizing: border-box;
       }
@@ -1418,15 +1418,15 @@
       .chat-log-container {
         flex: 1;
         width: min(880px, 100%);
-        margin: 0;
+        margin: 0 auto;
         padding: 60px 24px 0 24px;
         min-height: 0;
         box-sizing: border-box;
         background: var(--chat-panel);
-        /* Bulletproof centering inside flex/scroll containers */
         position: relative;
-        left: 50%;
-        transform: translateX(-50%);
+        left: auto;
+        transform: none;
+        z-index: 0;
       }
 
       .chat-log {
