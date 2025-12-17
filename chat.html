@@ -2127,61 +2127,62 @@
             <a href="course.html" class="header-course-btn">Bekijk Cursus</a>
           </div>
         </header>
-        <div class="chat-content-wrapper">
-          <button class="layout-toggle" id="layout-toggle" type="button">
-            <div class="layout-toggle__icon" aria-hidden="true"></div>
-            <span>Vergroot chat</span>
-          </button>
-        <div class="chat-model-selector">
-              <div class="model-selects">
-                <div class="model-select" data-category="chat" data-label="Model">
-                  <button
-                    type="button"
-                    class="model-select__activator"
-                    aria-pressed="true"
-                    aria-label="Activeer model"
-                  ></button>
-                  <span class="model-select__label">Model</span>
-                  <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-                <span class="selected-label">ChatGPT 5.1 (Instant)</span>
-                    <svg viewBox="0 0 24 24">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </button>
-                  <div class="model-dropdown" role="listbox" aria-label="Kies een model">
-                <div class="model-option has-sub" data-model="ChatGPT 5.1" role="option" aria-selected="false">
-                      <span class="model-option__label">ChatGPT 5.1</span>
-                      <div class="model-option-sub">
-                        <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Instant)">Instant</button>
-                        <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Thinking)">Thinking</button>
-                    </div>
-                  </div>
-                <div class="model-option has-sub" data-model="Gemini 3" role="option" aria-selected="false">
-                  <span class="model-option__label">Gemini 3</span>
-                  <div class="model-option-sub">
-                    <button type="button" class="model-suboption" data-model="Gemini 3 (Snel)">Snel</button>
-                    <button type="button" class="model-suboption" data-model="Gemini 3 (Nadenken)">Nadenken</button>
-                </div>
-                </div>
-                <div class="model-option has-sub" data-model="DeepSeek V2" role="option" aria-selected="false">
-                  <span class="model-option__label">DeepSeek V2</span>
-                  <div class="model-option-sub">
-                    <button type="button" class="model-suboption" data-model="DeepSeek V2 (Snel)">Snel</button>
-                    <button type="button" class="model-suboption" data-model="DeepSeek V2 (Diepdenken)">Diepdenken</button>
-              </div>
-            </div>
-                <div class="model-option has-sub" data-model="Grok" role="option" aria-selected="false">
-                  <span class="model-option__label">Grok</span>
-                  <div class="model-option-sub">
-                    <button type="button" class="model-suboption" data-model="Grok (Expert)">Expert</button>
-                    <button type="button" class="model-suboption" data-model="Grok (Snel)">Snel</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <section class="chat-log"></section>
-        </div>
+	        <div class="chat-content-wrapper">
+	          <button class="layout-toggle" id="layout-toggle" type="button">
+	            <div class="layout-toggle__icon" aria-hidden="true"></div>
+	            <span>Vergroot chat</span>
+	          </button>
+	          <div class="chat-model-selector">
+	            <div class="model-selects">
+	              <div class="model-select" data-category="chat" data-label="Model">
+	                <button
+	                  type="button"
+	                  class="model-select__activator"
+	                  aria-pressed="true"
+	                  aria-label="Activeer model"
+	                ></button>
+	                <span class="model-select__label">Model</span>
+	                <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
+	                  <span class="selected-label">ChatGPT 5.1 (Instant)</span>
+	                  <svg viewBox="0 0 24 24">
+	                    <path d="M6 9l6 6 6-6" />
+	                  </svg>
+	                </button>
+	                <div class="model-dropdown" role="listbox" aria-label="Kies een model">
+	                  <div class="model-option has-sub" data-model="ChatGPT 5.1" role="option" aria-selected="false">
+	                    <span class="model-option__label">ChatGPT 5.1</span>
+	                    <div class="model-option-sub">
+	                      <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Instant)">Instant</button>
+	                      <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Thinking)">Thinking</button>
+	                    </div>
+	                  </div>
+	                  <div class="model-option has-sub" data-model="Gemini 3" role="option" aria-selected="false">
+	                    <span class="model-option__label">Gemini 3</span>
+	                    <div class="model-option-sub">
+	                      <button type="button" class="model-suboption" data-model="Gemini 3 (Snel)">Snel</button>
+	                      <button type="button" class="model-suboption" data-model="Gemini 3 (Nadenken)">Nadenken</button>
+	                    </div>
+	                  </div>
+	                  <div class="model-option has-sub" data-model="DeepSeek V2" role="option" aria-selected="false">
+	                    <span class="model-option__label">DeepSeek V2</span>
+	                    <div class="model-option-sub">
+	                      <button type="button" class="model-suboption" data-model="DeepSeek V2 (Snel)">Snel</button>
+	                      <button type="button" class="model-suboption" data-model="DeepSeek V2 (Diepdenken)">Diepdenken</button>
+	                    </div>
+	                  </div>
+	                  <div class="model-option has-sub" data-model="Grok" role="option" aria-selected="false">
+	                    <span class="model-option__label">Grok</span>
+	                    <div class="model-option-sub">
+	                      <button type="button" class="model-suboption" data-model="Grok (Expert)">Expert</button>
+	                      <button type="button" class="model-suboption" data-model="Grok (Snel)">Snel</button>
+	                    </div>
+	                  </div>
+	                </div>
+	              </div>
+	            </div>
+	          </div>
+	        <section class="chat-log"></section>
+	        </div>
         <footer class="chat-footer">
           <div class="chat-input">
             <div class="chat-input__inner">
