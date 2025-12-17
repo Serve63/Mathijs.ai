@@ -1006,18 +1006,28 @@
         gap: 24px;
       }
 
-      .chat-content-wrapper {
-        flex: 1;
-        overflow-y: auto;
-        overflow-x: hidden;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        background: var(--chat-panel);
-        width: 100%;
-        box-sizing: border-box;
-        position: relative;
-      }
+	      .chat-content-wrapper {
+	        flex: 1;
+	        overflow-y: auto;
+	        overflow-x: hidden;
+	        min-height: 0;
+	        display: flex;
+	        flex-direction: column;
+	        background: var(--chat-panel);
+	        width: 100%;
+	        box-sizing: border-box;
+	        position: relative;
+	      }
+
+	      .chat-log-container {
+	        width: 100%;
+	        max-width: 880px;
+	        margin: 0 auto;
+	        box-sizing: border-box;
+	        flex: 1;
+	        min-height: 0;
+	        display: flex;
+	      }
       
       .chat-content-wrapper::-webkit-scrollbar {
         width: 0;
@@ -1413,22 +1423,21 @@
       }
 
 
-      .chat-log {
-        flex: 1;
-        padding: 60px 80px 0 80px;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        /* Keep a centered chat column like the input field */
-        align-items: center;
-        background: var(--chat-panel);
-        width: 100%;
-        box-sizing: border-box;
-        border: none;
-        box-shadow: none;
-        margin: 0;
-      }
+	      .chat-log {
+	        flex: 1;
+	        padding: 60px 20px 0 20px;
+	        min-height: 0;
+	        display: flex;
+	        flex-direction: column;
+	        gap: 14px;
+	        align-items: stretch;
+	        background: transparent;
+	        width: 100%;
+	        box-sizing: border-box;
+	        border: none;
+	        box-shadow: none;
+	        margin: 0;
+	      }
       
       .chat-log > .message:first-child {
         margin-top: 18px;
@@ -1470,33 +1479,33 @@
         color: rgba(17, 17, 17, 0.6);
       }
 
-      .message {
-        display: flex;
-        width: min(720px, 100%);
-        max-width: none;
-        align-items: flex-start;
-        background: transparent;
-        padding: 0 0 0 0;
-        margin: 0 0 12px 0;
-        align-self: stretch;
-      }
+	      .message {
+	        display: flex;
+	        width: 100%;
+	        max-width: 100%;
+	        align-items: flex-start;
+	        background: transparent;
+	        padding: 0 0 0 0;
+	        margin: 0 0 12px 0;
+	        align-self: stretch;
+	      }
 
-      .message.user {
-        justify-content: flex-end;
-        align-self: center;
-      }
+	      .message.user {
+	        justify-content: flex-end;
+	        align-self: stretch;
+	      }
 
       /* Assistant/system messages: align left within the same centered column */
-      .message.system {
-        justify-content: flex-start;
-        align-self: center;
-      }
+	      .message.system {
+	        justify-content: flex-start;
+	        align-self: stretch;
+	      }
 
       /* Give assistant text a comfortable left edge (not hugging the sidebar) */
-      .message.system .bubble {
-        max-width: 640px;
-        margin-right: auto;
-      }
+	      .message.system .bubble {
+	        max-width: min(680px, 88%);
+	        margin-right: auto;
+	      }
 
       .chat-log .bubble {
         padding: 0;
@@ -3836,6 +3845,5 @@
     </script>
   </body>
 </html>
-
 
 
