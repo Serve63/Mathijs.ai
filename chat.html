@@ -1274,14 +1274,16 @@
           0 0 0 1px rgba(230, 194, 0, 0.1) inset,
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(20px);
-        min-width: 240px;
-        width: max-content;
+        /* Match trigger width (no oversized dropdown) */
+        width: 100%;
+        min-width: 100%;
         max-width: min(380px, calc(100vw - 32px));
         display: none;
         flex-direction: column;
         overflow: visible;
         z-index: 20;
         padding: 8px;
+        box-sizing: border-box;
       }
 
       .model-dropdown.active {
@@ -1310,6 +1312,15 @@
         border-radius: 12px;
         margin-bottom: 4px;
         border: 1px solid transparent;
+        box-sizing: border-box;
+        max-width: 100%;
+      }
+
+      .model-option,
+      .model-option-sub .model-suboption {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .model-option:hover {
