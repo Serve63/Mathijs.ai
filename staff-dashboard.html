@@ -1040,12 +1040,11 @@
           "servec321@gmail.com",
         ];
 
-        const isStaffEmail = (email) => {
-          const e = (email || "").toLowerCase().trim();
-          if (!e) return false;
-          if (STAFF_EMAIL_ALLOWLIST.includes(e)) return true;
-          return e.endsWith("@mathijs.ai");
-        };
+	        const isStaffEmail = (email) => {
+	          const e = (email || "").toLowerCase().trim();
+	          if (!e) return false;
+	          return STAFF_EMAIL_ALLOWLIST.includes(e);
+	        };
 
         const fmtDate = (iso) => {
           try {
@@ -1225,40 +1224,63 @@
             if (lfFb) { lfFb.className = "action-feedback"; lfFb.textContent = ""; }
           };
 
-          const renderCustomerList = (customers) => {
-            if (!customerListEl) return;
-            customerListEl.innerHTML = "";
-            if (!customers.length) {
-              customerListEl.innerHTML = '<div class="empty-rows">Geen klanten gevonden.</div>';
-              return;
-            }
-            customers.forEach((c) => {
-              const row = document.createElement("div");
-              row.className = "customer-row";
-              const isCancelled = !!c.cancelled_at;
-              row.innerHTML = `
-                <div class="customer-email">${c.email || "(geen email)"}</div>
-                <div class="customer-date">${fmtDate(c.created_at)}</div>
-                <span class="customer-badge ${isCancelled ? "cancelled" : "active"}">${isCancelled ? "Opgezegd" : "Actief"}</span>
-              `;
-              row.addEventListener("click", () => showCustomerDetail(c));
-              customerListEl.appendChild(row);
-            });
-          };
+	          const renderCustomerList = (customers) => {
+	            if (!customerListEl) return;
+	            customerListEl.textContent = "";
+	            if (!customers.length) {
+	              const empty = document.createElement("div");
+	              empty.className = "empty-rows";
+	              empty.textContent = "Geen klanten gevonden.";
+	              customerListEl.appendChild(empty);
+	              return;
+	            }
+	            customers.forEach((c) => {
+	              const row = document.createElement("div");
+	              row.className = "customer-row";
+	              const isCancelled = !!c.cancelled_at;
+	              const emailEl = document.createElement("div");
+	              emailEl.className = "customer-email";
+	              emailEl.textContent = c.email || "(geen email)";
 
-          const loadAllCustomers = async () => {
-            try {
-              allCustomers = await fetchStaffCustomers(supabase);
-              renderCustomerList(allCustomers);
-            } catch (e) {
-              console.error(e);
-              if (customerListEl) {
-                customerListEl.innerHTML = `<div class="empty-rows">Kon klanten niet laden.<br /><small style="color: rgba(255,255,255,0.6);">${String(
-                  e?.message || e
-                )}</small></div>`;
-              }
-            }
-          };
+	              const dateEl = document.createElement("div");
+	              dateEl.className = "customer-date";
+	              dateEl.textContent = fmtDate(c.created_at);
+
+	              const badgeEl = document.createElement("span");
+	              badgeEl.className = `customer-badge ${isCancelled ? "cancelled" : "active"}`;
+	              badgeEl.textContent = isCancelled ? "Opgezegd" : "Actief";
+
+	              row.appendChild(emailEl);
+	              row.appendChild(dateEl);
+	              row.appendChild(badgeEl);
+	              row.addEventListener("click", () => showCustomerDetail(c));
+	              customerListEl.appendChild(row);
+	            });
+	          };
+
+	          const loadAllCustomers = async () => {
+	            try {
+	              allCustomers = await fetchStaffCustomers(supabase);
+	              renderCustomerList(allCustomers);
+	            } catch (e) {
+	              console.error(e);
+	              if (customerListEl) {
+	                customerListEl.textContent = "";
+	                const empty = document.createElement("div");
+	                empty.className = "empty-rows";
+	                empty.textContent = "Kon klanten niet laden.";
+
+	                const br = document.createElement("br");
+	                const detail = document.createElement("small");
+	                detail.style.color = "rgba(255,255,255,0.6)";
+	                detail.textContent = String(e?.message || e);
+
+	                empty.appendChild(br);
+	                empty.appendChild(detail);
+	                customerListEl.appendChild(empty);
+	              }
+	            }
+	          };
 
           // Modal Event Listeners
           document.getElementById("kpi-total-card")?.addEventListener("click", async () => {
@@ -1491,22 +1513,29 @@
             setText("kpi-revenue-all-net", money(toNet(revenueAllGross)));
 
             // Recent rows (top 10)
-            const recent = allCustomers.slice(0, 10);
-            const rowsEl = document.getElementById("recent-rows");
-            if (rowsEl) {
-              rowsEl.innerHTML = "";
-              if (recent.length) {
-                recent.forEach((r) => {
-                  const row = document.createElement("div");
-                  row.className = "row";
-                  row.innerHTML = `<div class="row-email">${r.email || "(geen email)"}</div><div class="row-date">${fmtDate(
-                    r.created_at
-                  )}</div>`;
-                  rowsEl.appendChild(row);
-                });
-              } else {
-                const empty = document.createElement("div");
-                empty.className = "empty-rows";
+	            const recent = allCustomers.slice(0, 10);
+	            const rowsEl = document.getElementById("recent-rows");
+	            if (rowsEl) {
+	              rowsEl.textContent = "";
+	              if (recent.length) {
+	                recent.forEach((r) => {
+	                  const row = document.createElement("div");
+	                  row.className = "row";
+	                  const emailEl = document.createElement("div");
+	                  emailEl.className = "row-email";
+	                  emailEl.textContent = r.email || "(geen email)";
+
+	                  const dateEl = document.createElement("div");
+	                  dateEl.className = "row-date";
+	                  dateEl.textContent = fmtDate(r.created_at);
+
+	                  row.appendChild(emailEl);
+	                  row.appendChild(dateEl);
+	                  rowsEl.appendChild(row);
+	                });
+	              } else {
+	                const empty = document.createElement("div");
+	                empty.className = "empty-rows";
                 empty.textContent = "Nog geen klanten gevonden.";
                 rowsEl.appendChild(empty);
               }

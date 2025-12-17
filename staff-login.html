@@ -250,19 +250,17 @@
         const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
 
-        const STAFF_EMAIL_ALLOWLIST = [
-          // Voeg hier staff emails toe (exacte matches)
-          // "staff@mathijs.ai",
-          "servec321@gmail.com",
-        ];
+	        const STAFF_EMAIL_ALLOWLIST = [
+	          // Voeg hier staff emails toe (exacte matches)
+	          // "staff@mathijs.ai",
+	          "servec321@gmail.com",
+	        ];
 
-        const isStaffEmail = (email) => {
-          const e = (email || "").toLowerCase().trim();
-          if (!e) return false;
-          if (STAFF_EMAIL_ALLOWLIST.includes(e)) return true;
-          // alternatief: alle @mathijs.ai emails toestaan
-          return e.endsWith("@mathijs.ai");
-        };
+	        const isStaffEmail = (email) => {
+	          const e = (email || "").toLowerCase().trim();
+	          if (!e) return false;
+	          return STAFF_EMAIL_ALLOWLIST.includes(e);
+	        };
 
         const setFeedback = (el, msg = "", type = "error") => {
           if (!el) return;
@@ -344,5 +342,4 @@
     </script>
   </body>
 </html>
-
 

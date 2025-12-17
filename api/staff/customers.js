@@ -11,16 +11,30 @@ const { SUPABASE_URL, getUserFromAccessToken } = require("../_lib/supabase");
 const STAFF_WINDOW_MS = 60_000;
 const STAFF_LIMIT = 120;
 
-const STAFF_EMAIL_ALLOWLIST = [
-  "servec321@gmail.com",
-  // Add more explicit staff emails here if needed.
-];
+const DEFAULT_STAFF_EMAIL_ALLOWLIST = ["servec321@gmail.com"];
 
-function isStaffEmail(email) {
-  const e = (email || "").toLowerCase().trim();
-  if (!e) return false;
-  if (STAFF_EMAIL_ALLOWLIST.includes(e)) return true;
-  return e.endsWith("@mathijs.ai");
+function parseAllowlistEnv(value) {
+  return String(value || "")
+    .split(",")
+    .map((v) => v.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+const STAFF_EMAIL_ALLOWLIST = new Set([
+  ...DEFAULT_STAFF_EMAIL_ALLOWLIST.map((v) => v.toLowerCase()),
+  ...parseAllowlistEnv(process.env.STAFF_EMAIL_ALLOWLIST),
+]);
+
+const STAFF_USER_ID_ALLOWLIST = new Set(parseAllowlistEnv(process.env.STAFF_USER_ID_ALLOWLIST));
+
+function isStaffUser(user) {
+  const email = (user?.email || "").toLowerCase().trim();
+  if (email && STAFF_EMAIL_ALLOWLIST.has(email)) return true;
+
+  const id = String(user?.id || "").trim();
+  if (id && STAFF_USER_ID_ALLOWLIST.has(id)) return true;
+
+  return false;
 }
 
 async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {}) {
@@ -78,8 +92,10 @@ module.exports = async (req, res) => {
     }
 
     const user = await getUserFromAccessToken(token);
-    if (!user?.email) return json(res, 401, { error: "Unauthorized" });
-    if (!isStaffEmail(user?.email)) return json(res, 403, { error: "Forbidden (not staff)" });
+    if (!user?.id || !user?.email) return json(res, 401, { error: "Unauthorized" });
+    const confirmedAt = user?.email_confirmed_at || user?.confirmed_at;
+    if (!confirmedAt) return json(res, 403, { error: "Forbidden (email not verified)" });
+    if (!isStaffUser(user)) return json(res, 403, { error: "Forbidden (not staff)" });
 
     if (req.method === "GET") {
       // Return all customers from Supabase Auth users (no DB table needed)
@@ -181,4 +197,3 @@ module.exports = async (req, res) => {
     return publicError(res, 500, "Verzoek mislukt. Probeer later opnieuw.", e);
   }
 };
-

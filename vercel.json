@@ -52,12 +52,28 @@
           "value": "public, max-age=0, must-revalidate"
         },
         {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' https://cdn.jsdelivr.net 'sha256-NBY98L+TEivgyiH7LNjw0vKfPNApX5i59cExygQBk7g=' 'sha256-/JvvAoxVzDpzqpxYFrbtIZq7KKmfCqqX5YLsFxg2ci0=' 'sha256-NbrzAoscyIOlQTvz9oL47VP0VZVUC0Z8bZ1TIfP+mbc=' 'sha256-xSpCQNzo6XUfSFHvKbrgVmtls2w0WFe8GPVbLeH9XOM=' 'sha256-s6MkhAop7dmdXeykC0A1bkQrDXgdOG7YTyRujv+gpjE=' 'sha256-aCuAdKgeyDShK6TOx6XRGt85XsarqxT/OUNuxShBi9c='; media-src 'self' https://commondatastorage.googleapis.com; frame-src 'none'; upgrade-insecure-requests"
+        },
+        {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
         },
         {
           "key": "X-Frame-Options",
           "value": "DENY"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "Cross-Origin-Resource-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "X-Permitted-Cross-Domain-Policies",
+          "value": "none"
         },
         {
           "key": "Referrer-Policy",
