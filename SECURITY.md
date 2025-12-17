@@ -13,6 +13,7 @@
 - Signup endpoint heeft **rate limiting** + een eenvoudige **honeypot** tegen bots.
 - Staff endpoints (`/api/staff/*`) vereisen **Supabase access token** + een **server-side allowlist**.
 - Abonnement/rollen staan in Supabase **`app_metadata`** (niet `user_metadata`) zodat gebruikers dit niet zelf kunnen aanpassen.
+- Token-verbruik wordt server-side afgeschreven uit **`app_metadata.tokens`**; bij 0 tokens verschijnt een opwaardeer-flow.
 
 ## Aanbevolen in je platform instellingen
 
@@ -31,6 +32,7 @@
 - Zet alle secrets in **Project Settings → Environment Variables**.
 - Maak secrets **niet** zichtbaar in logs; gebruik generieke errors naar de client.
 - Zet `APP_BASE_URL` zodat Stripe redirects niet afhankelijk zijn van request headers.
+ - Token top-ups: zet `STRIPE_SECRET_KEY` en (optioneel) `TOPUP_MIN_EUR`, `TOPUP_MAX_EUR`, `TOPUP_TOKENS_PER_EUR`.
 
 ### Staff allowlist (Vercel env vars)
 - `STAFF_EMAIL_ALLOWLIST`: comma-separated emails (lower/upper maakt niet uit), bv. `servec321@gmail.com,staff2@...`

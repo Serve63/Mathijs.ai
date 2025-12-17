@@ -10,6 +10,7 @@ try {
 
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, redactSecrets, setCommonApiHeaders } = require("./_lib/security");
 const { getUserFromAccessToken } = require("./_lib/supabase");
+const { SUPABASE_URL } = require("./_lib/supabase");
 
 const GEMINI_MODEL_ID = "gemini-1.5-flash";
 const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
@@ -22,6 +23,29 @@ const MAX_TOTAL_CHARS = 24000;
 const CHAT_WINDOW_MS = 60_000;
 const CHAT_LIMIT_FREE = 20;
 const CHAT_LIMIT_PAID = 60;
+const TOKENS_PER_CHAT = 1;
+
+async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {}) {
+  const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/${path}`, {
+    method,
+    headers: {
+      apikey: accessKey,
+      Authorization: `Bearer ${accessKey}`,
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const text = await resp.text();
+  if (!resp.ok) {
+    throw new Error(`auth_admin_failed:${resp.status}:${text}`);
+  }
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
 
 function parseBody(req) {
   if (!req) return {};
@@ -282,6 +306,17 @@ module.exports = async function handler(req, res) {
     const isPaid = userPlan === "standard" || userPlan === "lifetime" || appMeta?.lifetime_free === true;
     const limit = isPaid ? CHAT_LIMIT_PAID : CHAT_LIMIT_FREE;
 
+    // Token gating + deduct (stored server-side in app_metadata.tokens)
+    const tokenBalance = Number(appMeta?.tokens || 0);
+    if (!Number.isFinite(tokenBalance) || tokenBalance < TOKENS_PER_CHAT) {
+      return json(res, 402, {
+        error: "Je tokens zijn op. Waardeer je account op om door te chatten.",
+        topup_required: true,
+        tokens_required: TOKENS_PER_CHAT,
+        tokens_available: Math.max(0, Number.isFinite(tokenBalance) ? tokenBalance : 0),
+      });
+    }
+
     const userLimit = rateLimit({ key: `chat:user:${user.id}`, limit, windowMs: CHAT_WINDOW_MS });
     if (!userLimit.ok) {
       return json(res, 429, { error: "Te veel chatverzoeken. Probeer zo opnieuw." }, rateLimitHeaders(userLimit, limit));
@@ -292,6 +327,20 @@ module.exports = async function handler(req, res) {
     if (!ipLimit.ok) {
       return json(res, 429, { error: "Te veel verzoeken. Probeer zo opnieuw." }, rateLimitHeaders(ipLimit, limit * 2));
     }
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+      return json(res, 500, { error: "Server misconfiguratie (missing SUPABASE_SERVICE_ROLE_KEY)." });
+    }
+
+    // Deduct tokens upfront to prevent free usage on failed streams.
+    // Note: app_metadata update is not atomic across concurrent requests; rate limiting mitigates abuse.
+    const nextTokens = Math.max(0, Math.floor(tokenBalance - TOKENS_PER_CHAT));
+    await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
+      method: "PUT",
+      accessKey: serviceRoleKey,
+      body: { app_metadata: { ...(appMeta || {}), tokens: nextTokens } },
+    });
 
     const { messages, model } = parseBody(req);
     const normalizedMessages = validateAndNormalizeMessages(messages);

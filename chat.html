@@ -914,6 +914,158 @@
         transform: none;
       }
 
+      .topup-modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10, 12, 18, 0.58);
+        backdrop-filter: blur(8px);
+        z-index: 140;
+        padding: 24px;
+      }
+
+      .topup-modal.is-visible {
+        display: flex;
+      }
+
+      .topup-modal__dialog {
+        width: min(480px, 100%);
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 24px;
+        box-shadow: 0 40px 90px -50px rgba(16, 21, 32, 0.6);
+        border: 1px solid rgba(16, 21, 32, 0.08);
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+      }
+
+      .topup-modal__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 26px 16px;
+        border-bottom: 1px solid rgba(16, 21, 32, 0.06);
+      }
+
+      .topup-modal__title {
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: #1a1a1f;
+      }
+
+      .topup-modal__close {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(26, 26, 31, 0.6);
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .topup-modal__close:hover {
+        background: rgba(16, 21, 32, 0.06);
+        color: #1a1a1f;
+      }
+
+      .topup-modal__body {
+        padding: 22px 26px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .topup-modal__message {
+        font-size: 0.92rem;
+        color: rgba(26, 26, 31, 0.85);
+        line-height: 1.5;
+      }
+
+      .topup-modal__row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .topup-modal__label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #1a1a1f;
+      }
+
+      .topup-modal__input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid rgba(16, 21, 32, 0.12);
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: #1a1a1f;
+        background: #fff;
+      }
+
+      .topup-modal__input:focus {
+        outline: none;
+        border-color: var(--chat-accent);
+        box-shadow: 0 0 0 3px rgba(255, 212, 0, 0.15);
+      }
+
+      .topup-modal__actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 6px;
+      }
+
+      .topup-modal__btn {
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(16, 21, 32, 0.12);
+      }
+
+      .topup-modal__btn.secondary {
+        background: #fff;
+        color: #1a1a1f;
+      }
+
+      .topup-modal__btn.secondary:hover {
+        background: rgba(16, 21, 32, 0.04);
+      }
+
+      .topup-modal__btn.primary {
+        background: var(--chat-accent);
+        color: #1a1600;
+        border-color: var(--chat-accent);
+      }
+
+      .topup-modal__btn.primary:hover {
+        background: #ffe55a;
+        transform: translateY(-1px);
+      }
+
+      .topup-modal__btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .topup-modal__feedback {
+        min-height: 18px;
+        font-size: 0.85rem;
+        color: rgba(180, 26, 26, 0.9);
+      }
+
       .chat-main {
         display: flex;
         flex-direction: column;
@@ -3359,6 +3511,129 @@
 	        return { ok: resp.ok, status: resp.status, payload };
 	      };
 
+	      let topupModalEl = null;
+	      const openTopupModal = ({ message = "", tokensAvailable = null } = {}) => {
+	        if (topupModalEl) {
+	          topupModalEl.classList.add("is-visible");
+	          const msgEl = topupModalEl.querySelector("[data-topup-message]");
+	          if (msgEl) {
+	            const suffix = tokensAvailable !== null ? ` (saldo: ${tokensAvailable})` : "";
+	            msgEl.textContent = `${message || "Je tokens zijn op."}${suffix}`;
+	          }
+	          return;
+	        }
+
+	        const overlay = document.createElement("div");
+	        overlay.className = "topup-modal is-visible";
+	        overlay.setAttribute("role", "dialog");
+	        overlay.setAttribute("aria-modal", "true");
+
+	        const dialog = document.createElement("div");
+	        dialog.className = "topup-modal__dialog";
+	        dialog.addEventListener("click", (e) => e.stopPropagation());
+
+	        const header = document.createElement("div");
+	        header.className = "topup-modal__header";
+	        const title = document.createElement("div");
+	        title.className = "topup-modal__title";
+	        title.textContent = "Tokens opwaarderen";
+	        const closeBtn = document.createElement("button");
+	        closeBtn.type = "button";
+	        closeBtn.className = "topup-modal__close";
+	        closeBtn.setAttribute("aria-label", "Sluiten");
+	        closeBtn.textContent = "✕";
+	        header.appendChild(title);
+	        header.appendChild(closeBtn);
+
+	        const body = document.createElement("div");
+	        body.className = "topup-modal__body";
+
+	        const msg = document.createElement("div");
+	        msg.className = "topup-modal__message";
+	        msg.setAttribute("data-topup-message", "true");
+	        const suffix = tokensAvailable !== null ? ` (saldo: ${tokensAvailable})` : "";
+	        msg.textContent = `${message || "Je tokens zijn op. Waardeer je account op om door te chatten."}${suffix}`;
+
+	        const row = document.createElement("div");
+	        row.className = "topup-modal__row";
+	        const label = document.createElement("label");
+	        label.className = "topup-modal__label";
+	        label.textContent = "Bedrag (€)";
+	        label.setAttribute("for", "topup-amount");
+	        const input = document.createElement("input");
+	        input.id = "topup-amount";
+	        input.type = "number";
+	        input.min = "1";
+	        input.step = "1";
+	        input.value = "10";
+	        input.className = "topup-modal__input";
+	        input.inputMode = "decimal";
+	        row.appendChild(label);
+	        row.appendChild(input);
+
+	        const feedback = document.createElement("div");
+	        feedback.className = "topup-modal__feedback";
+
+	        const actions = document.createElement("div");
+	        actions.className = "topup-modal__actions";
+	        const cancel = document.createElement("button");
+	        cancel.type = "button";
+	        cancel.className = "topup-modal__btn secondary";
+	        cancel.textContent = "Annuleren";
+	        const confirm = document.createElement("button");
+	        confirm.type = "button";
+	        confirm.className = "topup-modal__btn primary";
+	        confirm.textContent = "Opwaarderen";
+	        actions.appendChild(cancel);
+	        actions.appendChild(confirm);
+
+	        body.appendChild(msg);
+	        body.appendChild(row);
+	        body.appendChild(actions);
+	        body.appendChild(feedback);
+
+	        dialog.appendChild(header);
+	        dialog.appendChild(body);
+	        overlay.appendChild(dialog);
+
+	        const close = () => overlay.classList.remove("is-visible");
+	        overlay.addEventListener("click", close);
+	        closeBtn.addEventListener("click", close);
+	        cancel.addEventListener("click", close);
+	        document.addEventListener("keydown", (e) => {
+	          if (e.key === "Escape") close();
+	        });
+
+	        confirm.addEventListener("click", async () => {
+	          feedback.textContent = "";
+	          const amountEur = Number(String(input.value || "").replace(",", "."));
+	          if (!Number.isFinite(amountEur) || amountEur <= 0) {
+	            feedback.textContent = "Vul een geldig bedrag in.";
+	            return;
+	          }
+	          confirm.disabled = true;
+	          confirm.textContent = "Bezig...";
+	          try {
+	            const resp = await apiFetchJson("/api/billing/topup-create-session", {
+	              method: "POST",
+	              body: { amount_eur: amountEur },
+	            });
+	            if (!resp.ok || !resp.payload?.url) {
+	              throw new Error(resp?.payload?.error || "Opwaarderen kon niet worden gestart.");
+	            }
+	            window.location.href = resp.payload.url;
+	          } catch (e) {
+	            feedback.textContent = e?.message || "Opwaarderen mislukt. Probeer later opnieuw.";
+	            confirm.disabled = false;
+	            confirm.textContent = "Opwaarderen";
+	          }
+	        });
+
+	        document.body.appendChild(overlay);
+	        topupModalEl = overlay;
+	        setTimeout(() => input.focus(), 50);
+	      };
+
 	      const saveMessageToApi = async (sessionId, role, content) => {
 	        return await apiFetchJson("/api/messages/add", {
 	          method: "POST",
@@ -3749,14 +4024,23 @@
             }),
           });
 
-	            if (!response.ok || !response.body) {
-	            let errorMessage = "Er ging iets mis bij het ophalen van een antwoord.";
-	            try {
-	              const errorPayload = await response.json();
-	              if (errorPayload && errorPayload.error) {
-	                errorMessage = errorPayload.error;
-	              }
-	            } catch (jsonError) {
+		            if (!response.ok || !response.body) {
+		            let errorMessage = "Er ging iets mis bij het ophalen van een antwoord.";
+		            try {
+		              const errorPayload = await response.json();
+		              if (response.status === 402 && errorPayload?.topup_required) {
+		                hideThinkingIndicator();
+		                openTopupModal({
+		                  message: errorPayload?.error || "Je tokens zijn op.",
+		                  tokensAvailable:
+		                    typeof errorPayload?.tokens_available === "number" ? errorPayload.tokens_available : null,
+		                });
+		                return;
+		              }
+		              if (errorPayload && errorPayload.error) {
+		                errorMessage = errorPayload.error;
+		              }
+		            } catch (jsonError) {
 	              try {
 	                errorMessage = (await response.text()) || errorMessage;
 	              } catch (textError) {
