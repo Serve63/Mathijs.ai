@@ -91,39 +91,37 @@
         padding-top: 24px;
       }
 
-      .layout-toggle {
-        position: absolute;
-        top: 16px;
-        right: 16px;
-        z-index: 5;
-        border: 1px solid rgba(26, 26, 46, 0.12);
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 999px;
-        padding: 6px 14px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        letter-spacing: 0.02em;
-        text-transform: uppercase;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
-        box-shadow: 0 8px 20px -10px rgba(15, 23, 42, 0.4);
-        color: #111827;
-      }
+	      .layout-toggle {
+	        position: absolute;
+	        top: 16px;
+	        right: 16px;
+	        z-index: 5;
+	        border: 1px solid rgba(26, 26, 46, 0.12);
+	        background: rgba(255, 255, 255, 0.9);
+	        border-radius: 999px;
+	        width: 40px;
+	        height: 40px;
+	        padding: 0;
+	        display: inline-flex;
+	        align-items: center;
+	        justify-content: center;
+	        cursor: pointer;
+	        box-shadow: 0 8px 20px -10px rgba(15, 23, 42, 0.4);
+	        color: #111827;
+	      }
 
-      .layout-toggle span {
-        font-size: 0.7rem;
-      }
+	      .layout-toggle:hover {
+	        background: rgba(255, 255, 255, 1);
+	      }
 
-      .layout-toggle__icon {
-        width: 12px;
-        height: 12px;
-        border-radius: 3px;
-        border: 1px solid rgba(17, 24, 39, 0.4);
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
-        position: relative;
-      }
+	      .layout-toggle__icon {
+	        width: 16px;
+	        height: 16px;
+	        border-radius: 3px;
+	        border: 1px solid rgba(17, 24, 39, 0.4);
+	        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+	        position: relative;
+	      }
 
       .layout-toggle__icon::before,
       .layout-toggle__icon::after {
@@ -2125,9 +2123,8 @@
 	          </div>
 	        </header>
 	        <div class="chat-content-wrapper">
-	          <button class="layout-toggle" id="layout-toggle" type="button">
+	          <button class="layout-toggle" id="layout-toggle" type="button" aria-label="Vergroot chat" title="Vergroot chat">
 	            <div class="layout-toggle__icon" aria-hidden="true"></div>
-	            <span>Vergroot chat</span>
 	          </button>
 	          <div class="chat-model-selector">
 	            <div class="model-selects">
@@ -2321,15 +2318,15 @@
       let selectedModelLabel = "ChatGPT 5.1 (Instant)";
       let thinkingIndicator = null;
 
-      // Toggle fullscreen chat (hide header + sidebar)
-      if (layoutToggleBtn) {
-        layoutToggleBtn.addEventListener("click", () => {
-          const isFullscreen = document.body.classList.toggle("chat-fullscreen");
-          const label = isFullscreen ? "Verlaat fullscreen" : "Vergroot chat";
-          const span = layoutToggleBtn.querySelector("span");
-          if (span) span.textContent = label;
-        });
-      }
+	      // Toggle fullscreen chat (hide header + sidebar)
+	      if (layoutToggleBtn) {
+	        layoutToggleBtn.addEventListener("click", () => {
+	          const isFullscreen = document.body.classList.toggle("chat-fullscreen");
+	          const label = isFullscreen ? "Verlaat fullscreen" : "Vergroot chat";
+	          layoutToggleBtn.setAttribute("aria-label", label);
+	          layoutToggleBtn.setAttribute("title", label);
+	        });
+	      }
 
       const updateSelectedModel = (label) => {
         selectedModelLabel = label || "ChatGPT 5.1";
