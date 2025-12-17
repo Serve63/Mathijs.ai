@@ -1420,7 +1420,8 @@
         display: flex;
         flex-direction: column;
         gap: 14px;
-        align-items: stretch;
+        /* Keep a centered chat column like the input field */
+        align-items: center;
         background: var(--chat-panel);
         width: 100%;
         box-sizing: border-box;
@@ -1471,13 +1472,13 @@
 
       .message {
         display: flex;
-        width: 100%;
-        max-width: 760px;
+        width: min(720px, 100%);
+        max-width: none;
         align-items: flex-start;
         background: transparent;
         padding: 0 0 0 0;
-        margin: 0 auto 12px auto;
-        align-self: center;
+        margin: 0 0 12px 0;
+        align-self: stretch;
       }
 
       .message.user {
