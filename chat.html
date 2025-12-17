@@ -1413,22 +1413,30 @@
       }
 
 
-      .chat-log {
+      .chat-log-container {
         flex: 1;
-        /* Match footer/input centering (avoid left-biased column) */
         width: min(880px, 100%);
-        margin-inline: auto;
+        margin: 0 auto;
         padding: 60px 24px 0 24px;
+        min-height: 0;
+        box-sizing: border-box;
+        background: var(--chat-panel);
+      }
+
+      .chat-log {
+        width: 100%;
         min-height: 0;
         display: flex;
         flex-direction: column;
         gap: 14px;
-        /* Keep a centered chat column like the input field */
+        /* Center messages inside the fixed-width container */
         align-items: center;
-        background: var(--chat-panel);
+        background: transparent;
         box-sizing: border-box;
         border: none;
         box-shadow: none;
+        margin: 0;
+        padding: 0;
       }
       
       .chat-log > .message:first-child {
@@ -1889,7 +1897,7 @@
           padding-right: 0;
         }
 
-        .chat-log {
+        .chat-log-container {
           padding: 60px 20px 0 20px;
         }
         
@@ -2171,7 +2179,9 @@
             </div>
           </div>
         </div>
-        <section class="chat-log"></section>
+        <div class="chat-log-container">
+          <section class="chat-log"></section>
+        </div>
         </div>
         <footer class="chat-footer">
           <div class="chat-input">
