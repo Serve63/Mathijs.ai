@@ -120,8 +120,8 @@
         return;
       }
 
-      if (password.length < 6) {
-        setFeedback(feedbackEl, "Wachtwoord moet minimaal 6 tekens zijn.");
+      if (password.length < 10) {
+        setFeedback(feedbackEl, "Wachtwoord moet minimaal 10 tekens zijn.");
         return;
       }
 
@@ -134,11 +134,12 @@
 
       toggleButtonLoading(submitButton, true, "Account aanmaken...");
       try {
+        const honeypot = signupForm.querySelector('input[name="company_website"]')?.value || "";
         // Create user server-side as confirmed, so signup doesn't depend on email delivery.
         const adminSignupResp = await fetch("/api/auth/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ email, password, company_website: honeypot }),
         });
         const adminSignupPayload = await adminSignupResp.json().catch(() => ({}));
         if (!adminSignupResp.ok) {

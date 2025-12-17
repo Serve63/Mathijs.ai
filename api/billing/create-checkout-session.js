@@ -7,44 +7,11 @@
 //
 // Auth: expects `Authorization: Bearer <supabase_access_token>`
 
-const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
+const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, readJson } = require("../_lib/security");
+const { getUserFromAccessToken } = require("../_lib/supabase");
 
-function json(res, status, body) {
-  res.statusCode = status;
-  res.setHeader("Content-Type", "application/json; charset=utf-8");
-  res.end(JSON.stringify(body));
-}
-
-async function readJson(req) {
-  return await new Promise((resolve, reject) => {
-    let data = "";
-    req.on("data", (chunk) => (data += chunk));
-    req.on("end", () => {
-      if (!data) return resolve({});
-      try {
-        resolve(JSON.parse(data));
-      } catch (e) {
-        reject(e);
-      }
-    });
-  });
-}
-
-async function getUserFromAccessToken(accessToken) {
-  const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    method: "GET",
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-  if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error(`auth_user_failed:${resp.status}:${txt}`);
-  }
-  return await resp.json();
-}
+const CHECKOUT_WINDOW_MS = 60_000;
+const CHECKOUT_LIMIT = 10;
 
 function getBaseUrl(req) {
   const proto = req.headers["x-forwarded-proto"] || "https";
@@ -84,9 +51,14 @@ module.exports = async (req, res) => {
     if (!stripeSecretKey) return json(res, 500, { error: "Missing STRIPE_SECRET_KEY" });
     if (!stripePriceId) return json(res, 500, { error: "Missing STRIPE_PRICE_ID" });
 
-    const authHeader = req.headers.authorization || req.headers.Authorization;
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : null;
+    const token = getBearerToken(req);
     if (!token) return json(res, 401, { error: "Missing Authorization Bearer token" });
+
+    const ip = getClientIp(req);
+    const rate = rateLimit({ key: `billing_checkout:ip:${ip}`, limit: CHECKOUT_LIMIT, windowMs: CHECKOUT_WINDOW_MS });
+    if (!rate.ok) {
+      return json(res, 429, { error: "Te veel verzoeken. Probeer later opnieuw." }, rateLimitHeaders(rate, CHECKOUT_LIMIT));
+    }
 
     const user = await getUserFromAccessToken(token);
     const email = (user?.email || "").trim();
@@ -126,6 +98,6 @@ module.exports = async (req, res) => {
     const session = await stripeRequest("checkout/sessions", stripeSecretKey, sessionParams);
     return json(res, 200, { url: session.url });
   } catch (e) {
-    return json(res, 500, { error: String(e?.message || e) });
+    return publicError(res, 500, "Checkout kon niet worden gestart. Probeer later opnieuw.", e);
   }
 };

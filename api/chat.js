@@ -8,9 +8,20 @@ try {
   console.warn("Gemini SDK niet beschikbaar:", error.message);
 }
 
+const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, redactSecrets, setCommonApiHeaders } = require("./_lib/security");
+const { getUserFromAccessToken } = require("./_lib/supabase");
+
 const GEMINI_MODEL_ID = "gemini-1.5-flash";
 const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
 const OPENAI_MODEL_ID = "gpt-4-turbo";
+
+const MAX_MESSAGES = 30;
+const MAX_MESSAGE_CHARS = 8000;
+const MAX_TOTAL_CHARS = 24000;
+
+const CHAT_WINDOW_MS = 60_000;
+const CHAT_LIMIT_FREE = 20;
+const CHAT_LIMIT_PAID = 60;
 
 function parseBody(req) {
   if (!req) return {};
@@ -75,21 +86,64 @@ function splitGeminiHistory(messages = []) {
   return { history, prompt };
 }
 
+function validateAndNormalizeMessages(messages) {
+  if (!Array.isArray(messages)) {
+    const err = new Error("messages_required");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (messages.length > MAX_MESSAGES) {
+    const err = new Error("messages_too_many");
+    err.statusCode = 413;
+    throw err;
+  }
+
+  let totalChars = 0;
+  const normalized = [];
+
+  for (const message of messages) {
+    const role = (message?.role || "user").toLowerCase();
+    const content = normalizeContent(message?.content);
+    if (!content) continue;
+
+    if (content.length > MAX_MESSAGE_CHARS) {
+      const err = new Error("message_too_large");
+      err.statusCode = 413;
+      throw err;
+    }
+
+    totalChars += content.length;
+    if (totalChars > MAX_TOTAL_CHARS) {
+      const err = new Error("messages_too_large");
+      err.statusCode = 413;
+      throw err;
+    }
+
+    normalized.push({ role, content });
+  }
+
+  if (!normalized.length) {
+    const err = new Error("messages_empty");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  return normalized;
+}
+
 async function streamGeminiResponse(res, messages) {
   if (!geminiSdkAvailable || !GoogleGenerativeAI) {
-    res.status(500).json({ error: "Gemini SDK ontbreekt op deze omgeving." });
-    return;
+    return json(res, 500, { error: "AI provider niet beschikbaar. Probeer later opnieuw." });
   }
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({ error: "GEMINI_API_KEY ontbreekt." });
-    return;
+    return json(res, 500, { error: "AI provider is niet geconfigureerd." });
   }
 
   const { history, prompt } = splitGeminiHistory(messages);
   if (!prompt) {
-    res.status(400).json({ error: "Geen gebruikersprompt aangetroffen." });
-    return;
+    return json(res, 400, { error: "Geen gebruikersprompt aangetroffen." });
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
@@ -98,6 +152,7 @@ async function streamGeminiResponse(res, messages) {
   const stream = await chat.sendMessageStream(prompt);
 
   res.statusCode = 200;
+  setCommonApiHeaders(res);
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
   res.setHeader("Transfer-Encoding", "chunked");
   if (typeof res.flushHeaders === "function") res.flushHeaders();
@@ -115,8 +170,7 @@ async function streamGeminiResponse(res, messages) {
 async function streamOpenAIResponse(res, messages) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({ error: "OPENAI_API_KEY ontbreekt." });
-    return;
+    return json(res, 500, { error: "AI provider is niet geconfigureerd." });
   }
 
   const response = await fetch(OPENAI_ENDPOINT, {
@@ -127,30 +181,26 @@ async function streamOpenAIResponse(res, messages) {
     },
     body: JSON.stringify({
       model: OPENAI_MODEL_ID,
-      messages,
+      messages: messages.map((m) => ({ role: m.role, content: m.content })),
       stream: true,
     }),
   });
 
   if (!response.ok || !response.body) {
-    let errorMessage = "OpenAI API request failed.";
+    let details = "";
     try {
-      const payload = await response.json();
-      if (payload?.error?.message) {
-        errorMessage = payload.error.message;
-      }
-    } catch (jsonError) {
-      try {
-        errorMessage = await response.text();
-      } catch (textError) {
-        /* ignore */
-      }
+      details = await response.text();
+    } catch {
+      /* ignore */
     }
-    res.status(response.status || 500).json({ error: errorMessage || "OpenAI API request failed." });
-    return;
+    console.error("OpenAI request failed:", response.status, redactSecrets(details));
+    const status = response.status === 429 ? 429 : 502;
+    const message = response.status === 429 ? "Te veel AI-verzoeken. Probeer zo opnieuw." : "AI-request mislukt. Probeer later opnieuw.";
+    return json(res, status, { error: message });
   }
 
   res.statusCode = 200;
+  setCommonApiHeaders(res);
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
   res.setHeader("Transfer-Encoding", "chunked");
   if (typeof res.flushHeaders === "function") res.flushHeaders();
@@ -218,31 +268,53 @@ module.exports = async function handler(req, res) {
   try {
     if (req.method !== "POST") {
       res.setHeader("Allow", "POST");
-      res.status(405).json({ error: "Method not allowed" });
-      return;
+      return json(res, 405, { error: "Method not allowed" });
+    }
+
+    const token = getBearerToken(req);
+    if (!token) return json(res, 401, { error: "Unauthorized" });
+
+    const user = await getUserFromAccessToken(token);
+    if (!user?.id) return json(res, 401, { error: "Unauthorized" });
+
+    const userPlan = String(user?.user_metadata?.plan || "free").toLowerCase();
+    const limit = userPlan === "standard" ? CHAT_LIMIT_PAID : CHAT_LIMIT_FREE;
+
+    const userLimit = rateLimit({ key: `chat:user:${user.id}`, limit, windowMs: CHAT_WINDOW_MS });
+    if (!userLimit.ok) {
+      return json(res, 429, { error: "Te veel chatverzoeken. Probeer zo opnieuw." }, rateLimitHeaders(userLimit, limit));
+    }
+
+    const ip = getClientIp(req);
+    const ipLimit = rateLimit({ key: `chat:ip:${ip}`, limit: limit * 2, windowMs: CHAT_WINDOW_MS });
+    if (!ipLimit.ok) {
+      return json(res, 429, { error: "Te veel verzoeken. Probeer zo opnieuw." }, rateLimitHeaders(ipLimit, limit * 2));
     }
 
     const { messages, model } = parseBody(req);
-    if (!Array.isArray(messages)) {
-      res.status(400).json({ error: "Messages array is required." });
-      return;
-    }
+    const normalizedMessages = validateAndNormalizeMessages(messages);
 
     const requestedModel = typeof model === "string" ? model : "";
     const wantsGemini = requestedModel.toLowerCase().includes("gemini");
 
     if (wantsGemini) {
-      await streamGeminiResponse(res, messages);
+      await streamGeminiResponse(res, normalizedMessages);
       return;
     }
 
-    await streamOpenAIResponse(res, messages);
+    await streamOpenAIResponse(res, normalizedMessages);
   } catch (error) {
-    console.error("Chat handler error:", error);
-    if (res.headersSent) {
-      res.end();
-      return;
-    }
-    res.status(500).json({ error: error.message || "Unexpected server error." });
+    const status = Number(error?.statusCode) || (error?.code === "payload_too_large" ? 413 : 500);
+    if (res.headersSent) return;
+
+    const map = {
+      messages_required: "Berichten ontbreken.",
+      messages_empty: "Berichten ontbreken.",
+      messages_too_many: "Te veel context meegestuurd. Start een nieuw gesprek.",
+      message_too_large: "Bericht is te lang.",
+      messages_too_large: "Te veel tekst/context meegestuurd.",
+    };
+    const publicMsg = map[error?.message] || "Er ging iets mis. Probeer opnieuw.";
+    publicError(res, status, publicMsg, error);
   }
 };

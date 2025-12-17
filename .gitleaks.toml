@@ -1,0 +1,12 @@
+title = "Mathijs.ai gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow known public keys (publishable) and URLs"
+regexes = [
+  '''sb_publishable_[A-Za-z0-9_-]+''',
+  '''https://mengrlsqgshxqcxhirjn\\.supabase\\.co''',
+]
+

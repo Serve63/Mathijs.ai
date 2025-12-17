@@ -1,2 +1,8 @@
 .env.local.txt
+.env
+.env.*
+!.env.example
+.vercel
+*.log
+.DS_Store
 node_modules/

@@ -5,55 +5,22 @@
 //
 // Auth: expects `Authorization: Bearer <supabase_access_token>`
 
-const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
+const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, readJson } = require("../_lib/security");
+const { SUPABASE_URL, getUserFromAccessToken } = require("../_lib/supabase");
+
+const STAFF_WINDOW_MS = 60_000;
+const STAFF_LIMIT = 120;
 
 const STAFF_EMAIL_ALLOWLIST = [
   "servec321@gmail.com",
   // Add more explicit staff emails here if needed.
 ];
 
-function json(res, status, body) {
-  res.statusCode = status;
-  res.setHeader("Content-Type", "application/json; charset=utf-8");
-  res.end(JSON.stringify(body));
-}
-
-async function readJson(req) {
-  return await new Promise((resolve, reject) => {
-    let data = "";
-    req.on("data", (chunk) => (data += chunk));
-    req.on("end", () => {
-      if (!data) return resolve({});
-      try {
-        resolve(JSON.parse(data));
-      } catch (e) {
-        reject(e);
-      }
-    });
-  });
-}
-
 function isStaffEmail(email) {
   const e = (email || "").toLowerCase().trim();
   if (!e) return false;
   if (STAFF_EMAIL_ALLOWLIST.includes(e)) return true;
   return e.endsWith("@mathijs.ai");
-}
-
-async function getUserFromAccessToken(accessToken) {
-  const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    method: "GET",
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-  if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error(`auth_user_failed:${resp.status}:${txt}`);
-  }
-  return await resp.json();
 }
 
 async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {}) {
@@ -101,11 +68,17 @@ module.exports = async (req, res) => {
       });
     }
 
-    const authHeader = req.headers.authorization || req.headers.Authorization;
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : null;
+    const token = getBearerToken(req);
     if (!token) return json(res, 401, { error: "Missing Authorization Bearer token" });
 
+    const ip = getClientIp(req);
+    const rate = rateLimit({ key: `staff:ip:${ip}`, limit: STAFF_LIMIT, windowMs: STAFF_WINDOW_MS });
+    if (!rate.ok) {
+      return json(res, 429, { error: "Te veel verzoeken. Probeer later opnieuw." }, rateLimitHeaders(rate, STAFF_LIMIT));
+    }
+
     const user = await getUserFromAccessToken(token);
+    if (!user?.email) return json(res, 401, { error: "Unauthorized" });
     if (!isStaffEmail(user?.email)) return json(res, 403, { error: "Forbidden (not staff)" });
 
     if (req.method === "GET") {
@@ -205,8 +178,7 @@ module.exports = async (req, res) => {
 
     return json(res, 405, { error: "Method not allowed" });
   } catch (e) {
-    return json(res, 500, { error: String(e?.message || e) });
+    return publicError(res, 500, "Verzoek mislukt. Probeer later opnieuw.", e);
   }
 };
-
 

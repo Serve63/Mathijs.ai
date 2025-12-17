@@ -3709,11 +3709,11 @@
         return user;
       })();
 
-      const sendMessage = async () => {
-        await workspaceReady;
-        if (!chatInput) return;
-        const value = chatInput.value.trim();
-        if (!value) return;
+	      const sendMessage = async () => {
+	        await workspaceReady;
+	        if (!chatInput) return;
+	        const value = chatInput.value.trim();
+	        if (!value) return;
 
         if (selectedModel === "grok4") {
           alert("Grok 4 is nog niet gekoppeld. Kies GPT-5 om verder te chatten.");
@@ -3751,39 +3751,52 @@
 
         showThinkingIndicator();
 
-        let assistantStreamMessage = null;
-        let assistantResponseBuffer = "";
+	        let assistantStreamMessage = null;
+	        let assistantResponseBuffer = "";
 
-        try {
-          const engine = modelEngineMap[selectedModel] || "gpt-4o";
-          const response = await fetch("/api/chat", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              messages,
-              webSearch: webSearchEnabled,
-              model: engine,
+	        try {
+	          const engine = modelEngineMap[selectedModel] || "gpt-4o";
+	          const { data: sessionData } = await supabaseClient.auth.getSession();
+	          const accessToken = sessionData?.session?.access_token;
+	          if (!accessToken) {
+	            throw new Error("Je sessie is verlopen. Log opnieuw in.");
+	          }
+	          const response = await fetch("/api/chat", {
+	            method: "POST",
+	            headers: {
+	              "Content-Type": "application/json",
+	              Authorization: `Bearer ${accessToken}`,
+	            },
+	            body: JSON.stringify({
+	              messages,
+	              webSearch: webSearchEnabled,
+	              model: engine,
             }),
           });
 
-          if (!response.ok || !response.body) {
-            let errorMessage = "Er ging iets mis bij het ophalen van een antwoord.";
-            try {
-              const errorPayload = await response.json();
-              if (errorPayload && errorPayload.error) {
-                errorMessage = errorPayload.error;
-              }
-            } catch (jsonError) {
-              try {
-                errorMessage = (await response.text()) || errorMessage;
-              } catch (textError) {
-                /* ignore */
-              }
-            }
-            throw new Error(errorMessage);
-          }
+	            if (!response.ok || !response.body) {
+	            let errorMessage = "Er ging iets mis bij het ophalen van een antwoord.";
+	            try {
+	              const errorPayload = await response.json();
+	              if (errorPayload && errorPayload.error) {
+	                errorMessage = errorPayload.error;
+	              }
+	            } catch (jsonError) {
+	              try {
+	                errorMessage = (await response.text()) || errorMessage;
+	              } catch (textError) {
+	                /* ignore */
+	              }
+	            }
+	            errorMessage = String(errorMessage)
+	              .replace(/\bsk-[A-Za-z0-9_-]{10,}\b/g, "***REDACTED***")
+	              .replace(/\b(?:sk_live|rk_live|whsec)_[A-Za-z0-9]{10,}\b/g, "***REDACTED***")
+	              .replace(/\bAIza[0-9A-Za-z_-]{20,}\b/g, "***REDACTED***");
+	            if (response.status === 401) {
+	              window.location.href = "login.html";
+	            }
+	            throw new Error(errorMessage);
+	          }
 
           hideThinkingIndicator();
           assistantStreamMessage = createAssistantStreamMessage();
