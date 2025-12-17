@@ -1013,6 +1013,8 @@
         min-height: 0;
         display: flex;
         flex-direction: column;
+        /* Center main content column (chat log matches input/footer) */
+        align-items: center;
         background: var(--chat-panel);
         width: 100%;
         box-sizing: border-box;
@@ -1421,6 +1423,7 @@
         min-height: 0;
         box-sizing: border-box;
         background: var(--chat-panel);
+        align-self: center;
       }
 
       .chat-log {
@@ -1487,7 +1490,8 @@
         background: transparent;
         padding: 0 0 0 0;
         margin: 0 0 12px 0;
-        align-self: stretch;
+        /* Don't stretch across the whole log; keep a centered column */
+        align-self: center;
       }
 
       .message.user {
