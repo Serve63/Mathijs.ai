@@ -3334,32 +3334,53 @@
         return session.id;
       };
 
-      const saveMessageToSupabase = async (userId, sessionId, role, content) => {
-        const payloadSessionId = sessionId === LEGACY_SESSION_ID ? null : sessionId;
-        return supabaseClient.from("messages").insert([
-          {
-            user_id: userId,
-            session_id: payloadSessionId,
-            role,
-            message_text: content,
-          },
-        ]);
-      };
+	      const requireAccessToken = async () => {
+	        const { data: sessionData } = await supabaseClient.auth.getSession();
+	        const accessToken = sessionData?.session?.access_token;
+	        if (!accessToken) {
+	          window.location.href = "login.html";
+	          return null;
+	        }
+	        return accessToken;
+	      };
 
-      const deleteSession = async (sessionId, isLegacy) => {
-        const user = await requireAuthenticatedUser();
-        if (!user) return;
-        try {
-          let query = supabaseClient.from("messages").delete().eq("user_id", user.id);
-          query = isLegacy ? query.is("session_id", null) : query.eq("session_id", sessionId);
-          const { error } = await query;
-          if (error) {
-            throw error;
-          }
-        } catch (err) {
-          console.error("Verwijderen van sessie mislukt", err);
-          alert("Kon het gesprek niet verwijderen. Probeer later opnieuw.");
-          return;
+	      const apiFetchJson = async (url, { method = "GET", body } = {}) => {
+	        const accessToken = await requireAccessToken();
+	        if (!accessToken) return { ok: false, status: 401, payload: { error: "Unauthorized" } };
+	        const resp = await fetch(url, {
+	          method,
+	          headers: {
+	            "Content-Type": "application/json",
+	            Authorization: `Bearer ${accessToken}`,
+	          },
+	          body: body ? JSON.stringify(body) : undefined,
+	        });
+	        const payload = await resp.json().catch(() => ({}));
+	        return { ok: resp.ok, status: resp.status, payload };
+	      };
+
+	      const saveMessageToApi = async (sessionId, role, content) => {
+	        return await apiFetchJson("/api/messages/add", {
+	          method: "POST",
+	          body: { session_id: sessionId, role, message_text: content },
+	        });
+	      };
+
+	      const deleteSession = async (sessionId, isLegacy) => {
+	        const user = await requireAuthenticatedUser();
+	        if (!user) return;
+	        try {
+	          const resp = await apiFetchJson("/api/messages/delete-session", {
+	            method: "POST",
+	            body: { session_id: isLegacy ? LEGACY_SESSION_ID : sessionId },
+	          });
+	          if (!resp.ok) {
+	            throw new Error(resp?.payload?.error || "Kon sessie niet verwijderen");
+	          }
+	        } catch (err) {
+	          console.error("Verwijderen van sessie mislukt", err);
+	          alert("Kon het gesprek niet verwijderen. Probeer later opnieuw.");
+	          return;
         }
         deleteTitleOverride(user.id, sessionId);
         titleOverrides = loadTitleOverrides(user.id);
@@ -3367,62 +3388,31 @@
         renderEmptyState();
       };
 
-      const refreshSessionsFromSupabase = async (options = {}) => {
-        const { goToLatest = false } = options;
-        const user = await requireAuthenticatedUser();
-        if (!user) return;
-        try {
-          const { data, error } = await supabaseClient
-            .from("messages")
-            .select("session_id, role, message_text, created_at")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false });
+	      const refreshSessionsFromSupabase = async (options = {}) => {
+	        const { goToLatest = false } = options;
+	        try {
+	          const { ok, payload } = await apiFetchJson("/api/messages/sessions");
+	          if (!ok) {
+	            throw new Error(payload?.error || "Kon sessies niet laden");
+	          }
 
-          if (error) {
-            throw error;
-          }
-
-          if (!data || !data.length) {
-            sessionState.list = [];
-            sessionState.activeId = null;
-            sessionState.untitledCount = 0;
-            renderSessionList();
+	          const data = payload?.sessions || [];
+	          if (!Array.isArray(data) || !data.length) {
+	            sessionState.list = [];
+	            sessionState.activeId = null;
+	            sessionState.untitledCount = 0;
+	            renderSessionList();
             renderEmptySessionMessage();
             return;
           }
 
-          const sessionMap = new Map();
-          data.forEach((entry) => {
-            const sessionId = entry.session_id || LEGACY_SESSION_ID;
-            const createdAt = entry.created_at;
-            const existing = sessionMap.get(sessionId);
-            if (!existing) {
-              sessionMap.set(sessionId, {
-                id: sessionId,
-                createdAt,
-                updatedAt: createdAt,
-                firstUserMessage: entry.role === "user" ? entry.message_text : "",
-                isLegacy: !entry.session_id,
-              });
-            } else {
-              // Data is sorted newest->oldest; preserve earliest createdAt and latest updatedAt
-              existing.updatedAt = existing.updatedAt || createdAt;
-              if (!existing.createdAt || new Date(createdAt) < new Date(existing.createdAt)) {
-                existing.createdAt = createdAt;
-              }
-              if (!existing.firstUserMessage && entry.role === "user") {
-                existing.firstUserMessage = entry.message_text;
-              }
-            }
-          });
-
-          const derivedSessions = Array.from(sessionMap.values()).map((session, index) => ({
-            ...session,
-            title:
-              titleOverrides[session.id] ||
-              generateSessionTitleFromPrompt(session.firstUserMessage) ||
-              `Gesprek ${index + 1}`,
-          }));
+	          const derivedSessions = data.map((session, index) => ({
+	            ...session,
+	            title:
+	              titleOverrides[session.id] ||
+	              generateSessionTitleFromPrompt(session.firstUserMessage) ||
+	              `Gesprek ${index + 1}`,
+	          }));
 
           derivedSessions.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
           sessionState.list = derivedSessions;
@@ -3438,47 +3428,35 @@
         }
       };
 
-      const loadMessagesForSession = async (sessionId) => {
-        const user = await requireAuthenticatedUser();
-        const activeSession = sessionState.list.find((session) => session.id === sessionId);
-        if (!user || !sessionId || !chatLog || !activeSession) {
+	      const loadMessagesForSession = async (sessionId) => {
+	        const user = await requireAuthenticatedUser();
+	        const activeSession = sessionState.list.find((session) => session.id === sessionId);
+	        if (!user || !sessionId || !chatLog || !activeSession) {
           renderEmptyState();
           return;
         }
-        chatLog.innerHTML = "";
-        messages = [createSystemMessage()];
-        try {
-          let query = supabaseClient
-            .from("messages")
-            .select("role, message_text, created_at")
-            .eq("user_id", user.id);
+	        chatLog.innerHTML = "";
+	        messages = [createSystemMessage()];
+	        try {
+	          const qs = new URLSearchParams({ session_id: sessionId });
+	          const { ok, payload } = await apiFetchJson(`/api/messages/session?${qs.toString()}`);
+	          if (!ok) throw new Error(payload?.error || "Kon berichten niet laden");
+	          const data = payload?.messages || [];
 
-          if (activeSession.isLegacy) {
-            query = query.is("session_id", null);
-          } else {
-            query = query.eq("session_id", sessionId);
-          }
+	          if (!Array.isArray(data) || !data.length) {
+	            renderEmptyState();
+	            return;
+	          }
 
-          const { data, error } = await query.order("created_at", { ascending: true });
-
-          if (error) {
-            throw error;
-          }
-
-          if (!data || !data.length) {
-            renderEmptyState();
-            return;
-          }
-
-          const history = [];
-          data.forEach((entry) => {
-            const normalizedRole = entry.role === "user" ? "user" : "assistant";
-            appendMessage(entry.message_text, normalizedRole, { persist: false });
-            history.push({ role: normalizedRole, content: entry.message_text });
-          });
-          messages = [createSystemMessage(), ...history];
-        } catch (error) {
-          console.error("Berichten ophalen mislukt", error);
+	          const history = [];
+	          data.forEach((entry) => {
+	            const normalizedRole = entry.role === "user" ? "user" : "assistant";
+	            appendMessage(entry.message_text, normalizedRole, { persist: false });
+	            history.push({ role: normalizedRole, content: entry.message_text });
+	          });
+	          messages = [createSystemMessage(), ...history];
+	        } catch (error) {
+	          console.error("Berichten ophalen mislukt", error);
           appendMessage(
             "Berichten konden niet geladen worden. Controleer je verbinding en probeer het opnieuw.",
             "assistant",
@@ -3736,14 +3714,12 @@
         chatInput.value = "";
         chatInput.focus();
 
-        try {
-          const { error: userInsertError } = await saveMessageToSupabase(user.id, sessionId, "user", value);
-          if (userInsertError) {
-            throw userInsertError;
-          }
-        } catch (error) {
-          console.error("Gebruikersbericht opslaan mislukt", error);
-          appendMessage("Je bericht kon niet opgeslagen worden. Probeer het opnieuw.", "assistant");
+	        try {
+	          const save = await saveMessageToApi(sessionId, "user", value);
+	          if (!save.ok) throw new Error(save?.payload?.error || "Opslaan mislukt");
+	        } catch (error) {
+	          console.error("Gebruikersbericht opslaan mislukt", error);
+	          appendMessage("Je bericht kon niet opgeslagen worden. Probeer het opnieuw.", "assistant");
           await refreshSessionsFromSupabase();
           await loadMessagesForSession(sessionId);
           return;
@@ -3754,14 +3730,13 @@
 	        let assistantStreamMessage = null;
 	        let assistantResponseBuffer = "";
 
-	        try {
-	          const engine = modelEngineMap[selectedModel] || "gpt-4o";
-	          const { data: sessionData } = await supabaseClient.auth.getSession();
-	          const accessToken = sessionData?.session?.access_token;
-	          if (!accessToken) {
-	            throw new Error("Je sessie is verlopen. Log opnieuw in.");
-	          }
-	          const response = await fetch("/api/chat", {
+		        try {
+		          const engine = modelEngineMap[selectedModel] || "gpt-4o";
+		          const accessToken = await requireAccessToken();
+		          if (!accessToken) {
+		            throw new Error("Je sessie is verlopen. Log opnieuw in.");
+		          }
+		          const response = await fetch("/api/chat", {
 	            method: "POST",
 	            headers: {
 	              "Content-Type": "application/json",
@@ -3825,21 +3800,16 @@
             appendMessage(finalContent, "assistant");
           }
 
-          messages.push({ role: "assistant", content: finalContent });
-          updateSessionMetaAfterMessage("assistant", finalContent);
+	          messages.push({ role: "assistant", content: finalContent });
+	          updateSessionMetaAfterMessage("assistant", finalContent);
 
-          const { error: assistantInsertError } = await saveMessageToSupabase(
-            user.id,
-            sessionId,
-            "assistant",
-            finalContent,
-          );
-          if (assistantInsertError) {
-            console.error("AI-antwoord opslaan mislukt", assistantInsertError);
-          }
-          await refreshSessionsFromSupabase();
-        } catch (error) {
-          console.error("Chat request failed", error);
+	          const assistantSave = await saveMessageToApi(sessionId, "assistant", finalContent);
+	          if (!assistantSave.ok) {
+	            console.error("AI-antwoord opslaan mislukt", assistantSave?.payload?.error || assistantSave);
+	          }
+	          await refreshSessionsFromSupabase();
+	        } catch (error) {
+	          console.error("Chat request failed", error);
           console.error("Selected model:", selectedModel);
           console.error("Engine:", modelEngineMap[selectedModel] || "gpt-4o");
           console.error("Error details:", error.message, error.stack);
