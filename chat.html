@@ -1416,8 +1416,8 @@
       .chat-log {
         flex: 1;
         /* Match footer/input centering (avoid left-biased column) */
-        max-width: 880px;
-        margin: 0 auto;
+        width: min(880px, 100%);
+        margin-inline: auto;
         padding: 60px 24px 0 24px;
         min-height: 0;
         display: flex;
@@ -1426,7 +1426,6 @@
         /* Keep a centered chat column like the input field */
         align-items: center;
         background: var(--chat-panel);
-        width: 100%;
         box-sizing: border-box;
         border: none;
         box-shadow: none;
