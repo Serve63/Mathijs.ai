@@ -1415,7 +1415,10 @@
 
       .chat-log {
         flex: 1;
-        padding: 60px 80px 0 80px;
+        /* Match footer/input centering (avoid left-biased column) */
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 60px 24px 0 24px;
         min-height: 0;
         display: flex;
         flex-direction: column;
@@ -1427,7 +1430,6 @@
         box-sizing: border-box;
         border: none;
         box-shadow: none;
-        margin: 0;
       }
       
       .chat-log > .message:first-child {
