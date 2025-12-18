@@ -3264,10 +3264,10 @@
         return sessionState.list.find((session) => session.id === sessionState.activeId) || null;
       };
 
-      const generateDefaultSessionTitle = () => {
-        sessionState.untitledCount += 1;
-        return `Nieuw gesprek ${sessionState.untitledCount}`;
-      };
+	      const generateDefaultSessionTitle = () => {
+	        sessionState.untitledCount += 1;
+	        return "chat";
+	      };
 
       const generateSessionTitleFromPrompt = (text) => {
         if (!text) return "";
@@ -3485,11 +3485,11 @@
 	          : "Start nieuw gesprek";
 	      }
 
-	      const getDisplayTitle = (session) => {
-	        if (!session) return "";
-	        if (titleOverrides[session.id]) return titleOverrides[session.id];
-	        return session.title || "Gesprek";
-	      };
+		      const getDisplayTitle = (session) => {
+		        if (!session) return "";
+		        if (titleOverrides[session.id]) return titleOverrides[session.id];
+		        return session.title || "chat";
+		      };
 
       const createLocalSession = () => {
         const session = {
@@ -3794,13 +3794,13 @@
             return;
           }
 
-	          const derivedSessions = data.map((session, index) => ({
-	            ...session,
-	            title:
-	              titleOverrides[session.id] ||
-	              generateSessionTitleFromPrompt(session.firstUserMessage) ||
-	              `Gesprek ${index + 1}`,
-	          }));
+		          const derivedSessions = data.map((session, index) => ({
+		            ...session,
+		            title:
+		              titleOverrides[session.id] ||
+		              generateSessionTitleFromPrompt(session.firstUserMessage) ||
+		              "chat",
+		          }));
 
           derivedSessions.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
           sessionState.list = derivedSessions;
