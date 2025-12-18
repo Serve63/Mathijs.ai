@@ -3418,13 +3418,14 @@
         renderSessionList();
       };
 
-      const renderEmptySessionMessage = () => {
-        if (!sessionEmptyEl) return;
-        sessionEmptyEl.style.removeProperty("display");
-        if (sessionListEl) {
-          sessionListEl.innerHTML = "";
-        }
-      };
+	      const renderEmptySessionMessage = (message = "Nog geen gesprekken. Start je eerste chat.") => {
+	        if (!sessionEmptyEl) return;
+	        sessionEmptyEl.textContent = message;
+	        sessionEmptyEl.style.removeProperty("display");
+	        if (sessionListEl) {
+	          sessionListEl.innerHTML = "";
+	        }
+	      };
 
       const SESSION_TITLE_KEY = "mathijs_session_titles_v1";
       const loadTitleOverrides = (userId) => {
@@ -3580,10 +3581,10 @@
 	        }
 	      };
 
-	      const tryImportLegacySessions = async (userId) => {
+	      const tryImportLegacySessions = async (userId, { force = false } = {}) => {
 	        if (!userId) return false;
 	        if (legacyImportInFlight) return false;
-	        if (hasMigratedLegacy(userId)) return false;
+	        if (!force && hasMigratedLegacy(userId)) return false;
 	        const legacy = loadLegacyLocalSessions(userId);
 	        const legacyList = Array.isArray(legacy?.list) ? legacy.list : [];
 	        if (!legacyList.length) return false;
@@ -3616,6 +3617,62 @@
 	        } finally {
 	          legacyImportInFlight = false;
 	        }
+	      };
+
+	      const ensureSessionEmptyActions = () => {
+	        if (!sessionEmptyEl) return;
+	        if (document.getElementById("session-empty-actions")) return;
+
+	        const wrap = document.createElement("div");
+	        wrap.id = "session-empty-actions";
+	        wrap.style.display = "flex";
+	        wrap.style.flexWrap = "wrap";
+	        wrap.style.gap = "10px";
+	        wrap.style.marginTop = "12px";
+
+	        const reloadBtn = document.createElement("button");
+	        reloadBtn.type = "button";
+	        reloadBtn.textContent = "Opnieuw laden";
+	        reloadBtn.style.padding = "10px 12px";
+	        reloadBtn.style.borderRadius = "12px";
+	        reloadBtn.style.border = "1px solid #dedede";
+	        reloadBtn.style.background = "#fff";
+	        reloadBtn.style.cursor = "pointer";
+
+	        const restoreBtn = document.createElement("button");
+	        restoreBtn.type = "button";
+	        restoreBtn.textContent = "Herstel geschiedenis";
+	        restoreBtn.style.padding = "10px 12px";
+	        restoreBtn.style.borderRadius = "12px";
+	        restoreBtn.style.border = "1px solid #dedede";
+	        restoreBtn.style.background = "#fff";
+	        restoreBtn.style.cursor = "pointer";
+
+	        reloadBtn.addEventListener("click", async () => {
+	          await refreshSessionsFromSupabase({ goToLatest: true });
+	          if (sessionState.activeId) {
+	            await loadMessagesForSession(sessionState.activeId);
+	          }
+	        });
+
+	        restoreBtn.addEventListener("click", async () => {
+	          const user = await requireAuthenticatedUser();
+	          if (!user?.id) return;
+	          const imported = await tryImportLegacySessions(user.id, { force: true });
+	          if (!imported) {
+	            renderEmptySessionMessage("Geen lokale geschiedenis gevonden om te herstellen.");
+	            ensureSessionEmptyActions();
+	            return;
+	          }
+	          await refreshSessionsFromSupabase({ goToLatest: true });
+	          if (sessionState.activeId) {
+	            await loadMessagesForSession(sessionState.activeId);
+	          }
+	        });
+
+	        wrap.appendChild(reloadBtn);
+	        wrap.appendChild(restoreBtn);
+	        sessionEmptyEl.insertAdjacentElement("afterend", wrap);
 	      };
 
 	      let topupModalEl = null;
@@ -3791,9 +3848,10 @@
 	            sessionState.activeId = null;
 	            sessionState.untitledCount = 0;
 	            renderSessionList();
-	            renderEmptySessionMessage();
-            return;
-          }
+	            renderEmptySessionMessage("Geen gesprekken gevonden. Probeer opnieuw laden of herstel je geschiedenis.");
+	            ensureSessionEmptyActions();
+	            return;
+	          }
 
 		          const derivedSessions = data.map((session, index) => ({
 		            ...session,
@@ -3810,12 +3868,14 @@
           if (goToLatest || !sessionState.activeId || !hasActiveSession) {
             sessionState.activeId = derivedSessions[0] ? derivedSessions[0].id : null;
           }
-          renderSessionList();
-        } catch (error) {
-          console.error("Sessies ophalen mislukt", error);
-          renderSessionList();
-        }
-      };
+	          renderSessionList();
+	        } catch (error) {
+	          console.error("Sessies ophalen mislukt", error);
+	          renderSessionList();
+	          renderEmptySessionMessage("Kon gesprekken niet laden. Probeer opnieuw laden.");
+	          ensureSessionEmptyActions();
+	        }
+	      };
 
 	      const loadMessagesForSession = async (sessionId) => {
 	        const user = await requireAuthenticatedUser();
