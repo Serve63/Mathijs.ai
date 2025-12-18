@@ -3464,13 +3464,32 @@
         }
       };
 
-      let titleOverrides = {};
+	      let titleOverrides = {};
 
-      const getDisplayTitle = (session) => {
-        if (!session) return "";
-        if (titleOverrides[session.id]) return titleOverrides[session.id];
-        return session.title || "Gesprek";
-      };
+	      function countConversationMessages() {
+	        if (!Array.isArray(messages)) return 0;
+	        return messages.filter((m) => m && (m.role === "user" || m.role === "assistant") && String(m.content || "").trim()).length;
+	      }
+
+	      function isActiveSessionEmpty() {
+	        return countConversationMessages() === 0;
+	      }
+
+	      function updateNewChatButtonState() {
+	        if (!newChatButton) return;
+	        const disabled = isActiveSessionEmpty();
+	        newChatButton.disabled = disabled;
+	        newChatButton.setAttribute("aria-disabled", disabled ? "true" : "false");
+	        newChatButton.title = disabled
+	          ? "Je zit al in een leeg gesprek. Stuur eerst een bericht of kies een bestaande chat."
+	          : "Start nieuw gesprek";
+	      }
+
+	      const getDisplayTitle = (session) => {
+	        if (!session) return "";
+	        if (titleOverrides[session.id]) return titleOverrides[session.id];
+	        return session.title || "Gesprek";
+	      };
 
       const createLocalSession = () => {
         const session = {
@@ -3484,13 +3503,14 @@
         upsertSessionEntry(session);
         sessionState.activeId = session.id;
         renderSessionList();
-        if (chatInput) {
-          chatInput.value = "";
-        }
-        renderEmptyState();
-        messages = [createSystemMessage()];
-        return session;
-      };
+	        if (chatInput) {
+	          chatInput.value = "";
+	        }
+	        renderEmptyState();
+	        messages = [createSystemMessage()];
+	        updateNewChatButtonState();
+	        return session;
+	      };
 
       const ensureActiveSessionId = () => {
         if (sessionState.activeId) {
@@ -3800,9 +3820,10 @@
 	        const user = await requireAuthenticatedUser();
 	        const activeSession = sessionState.list.find((session) => session.id === sessionId);
 	        if (!user || !sessionId || !chatLog || !activeSession) {
-          renderEmptyState();
-          return;
-        }
+	          renderEmptyState();
+	          updateNewChatButtonState();
+	          return;
+	        }
 	        chatLog.innerHTML = "";
 	        messages = [createSystemMessage()];
 	        try {
@@ -3822,27 +3843,30 @@
 	            appendMessage(entry.message_text, normalizedRole, { persist: false });
 	            history.push({ role: normalizedRole, content: entry.message_text });
 	          });
-	          messages = [createSystemMessage(), ...history];
-	        } catch (error) {
-	          console.error("Berichten ophalen mislukt", error);
-          appendMessage(
-            "Berichten konden niet geladen worden. Controleer je verbinding en probeer het opnieuw.",
-            "assistant",
-            { persist: false }
-          );
-        }
-      };
+		          messages = [createSystemMessage(), ...history];
+		          updateNewChatButtonState();
+		        } catch (error) {
+		          console.error("Berichten ophalen mislukt", error);
+	          appendMessage(
+	            "Berichten konden niet geladen worden. Controleer je verbinding en probeer het opnieuw.",
+	            "assistant",
+	            { persist: false }
+	          );
+	          updateNewChatButtonState();
+	        }
+	      };
 
-      const setActiveSession = async (sessionId) => {
-        if (!sessionId) {
-          return;
-        }
-        if (sessionId !== sessionState.activeId) {
-          sessionState.activeId = sessionId;
-        }
-        renderSessionList();
-        await loadMessagesForSession(sessionId);
-      };
+	      const setActiveSession = async (sessionId) => {
+	        if (!sessionId) {
+	          return;
+	        }
+	        if (sessionId !== sessionState.activeId) {
+	          sessionState.activeId = sessionId;
+	        }
+	        renderSessionList();
+	        await loadMessagesForSession(sessionId);
+	        updateNewChatButtonState();
+	      };
 
       const updateProfileSidebar = (user) => {
         if (!user) return;
@@ -4006,11 +4030,11 @@
         return withBold.replace(/\n/g, "<br>");
       };
 
-      const appendMessage = (content, role = "assistant", options = {}) => {
-        if (!chatLog || !content) return;
-        clearEmptyState();
-        const article = document.createElement("article");
-        article.className = "message " + (role === "user" ? "user" : "system");
+	      const appendMessage = (content, role = "assistant", options = {}) => {
+	        if (!chatLog || !content) return;
+	        clearEmptyState();
+	        const article = document.createElement("article");
+	        article.className = "message " + (role === "user" ? "user" : "system");
 
         const bubble = document.createElement("div");
         bubble.className = "bubble";
@@ -4023,9 +4047,10 @@
         if (options.persist === false) {
           return;
         }
-        messages.push({ role, content });
-        updateSessionMetaAfterMessage(role, content);
-      };
+	        messages.push({ role, content });
+	        updateSessionMetaAfterMessage(role, content);
+	        updateNewChatButtonState();
+	      };
 
       const createAssistantStreamMessage = () => {
         if (!chatLog) return null;
@@ -4041,19 +4066,20 @@
         return { article, bubble };
       };
 
-      const workspaceReady = (async () => {
-        const user = await requireAuthenticatedUser();
-        if (!user) {
-          return null;
-        }
-        await refreshSessionsFromSupabase({ goToLatest: true });
-        if (sessionState.activeId) {
-          await loadMessagesForSession(sessionState.activeId);
-        } else {
-          createLocalSession();
-        }
-        return user;
-      })();
+	      const workspaceReady = (async () => {
+	        const user = await requireAuthenticatedUser();
+	        if (!user) {
+	          return null;
+	        }
+	        await refreshSessionsFromSupabase({ goToLatest: true });
+	        if (sessionState.activeId) {
+	          await loadMessagesForSession(sessionState.activeId);
+	        } else {
+	          createLocalSession();
+	        }
+	        updateNewChatButtonState();
+	        return user;
+	      })();
 
 	      const sendMessage = async () => {
 	        await workspaceReady;
@@ -4211,15 +4237,19 @@
         });
       }
 
-      if (newChatButton) {
-        newChatButton.addEventListener("click", async () => {
-          await workspaceReady;
-          createLocalSession();
-          if (chatInput) {
-            chatInput.focus();
-          }
-        });
-      }
+	      if (newChatButton) {
+	        newChatButton.addEventListener("click", async () => {
+	          await workspaceReady;
+	          if (isActiveSessionEmpty()) {
+	            if (chatInput) chatInput.focus();
+	            return;
+	          }
+	          createLocalSession();
+	          if (chatInput) {
+	            chatInput.focus();
+	          }
+	        });
+	      }
     </script>
   </body>
 </html>
