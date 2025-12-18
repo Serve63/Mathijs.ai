@@ -2319,23 +2319,35 @@
 		                    <path d="M6 9l6 6 6-6" />
 		                  </svg>
 		                </button>
-		                <div class="model-dropdown" role="listbox" aria-label="Kies een model">
+			                <div class="model-dropdown" role="listbox" aria-label="Kies een model">
 			                  <div class="model-option" data-model="ChatGPT 5.2" role="option" aria-selected="true">
 			                    <span class="model-option__label">ChatGPT 5.2</span>
 			                  </div>
-		                  <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">
-		                    <span class="model-option__label">Gemini 3</span>
-		                  </div>
-		                  <div class="model-option" data-model="DeepSeek V2" role="option" aria-selected="false">
-		                    <span class="model-option__label">DeepSeek V2</span>
-		                  </div>
-		                  <div class="model-option" data-model="Grok" role="option" aria-selected="false">
-		                    <span class="model-option__label">Grok</span>
-		                  </div>
-		                </div>
-		              </div>
-		            </div>
-		          </div>
+			                  <div class="model-option" data-model="Claude Opus 4.5" role="option" aria-selected="false">
+			                    <span class="model-option__label">Claude Opus 4.5</span>
+			                  </div>
+			                  <div class="model-option" data-model="Claude Sonnet 4" role="option" aria-selected="false">
+			                    <span class="model-option__label">Claude Sonnet 4</span>
+			                  </div>
+			                  <div class="model-option" data-model="Claude Haiku 4.5" role="option" aria-selected="false">
+			                    <span class="model-option__label">Claude Haiku 4.5</span>
+			                  </div>
+			                  <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">
+			                    <span class="model-option__label">Gemini 3</span>
+			                  </div>
+			                  <div class="model-option" data-model="QWEN" role="option" aria-selected="false">
+			                    <span class="model-option__label">QWEN</span>
+			                  </div>
+			                  <div class="model-option" data-model="DeepSeek V2" role="option" aria-selected="false">
+			                    <span class="model-option__label">DeepSeek V2</span>
+			                  </div>
+			                  <div class="model-option" data-model="Grok 4" role="option" aria-selected="false">
+			                    <span class="model-option__label">Grok 4</span>
+			                  </div>
+			                </div>
+			              </div>
+			            </div>
+			          </div>
 	        <section class="chat-log"></section>
 	        </div>
         <footer class="chat-footer">
@@ -2470,12 +2482,16 @@
       let webSearchEnabled = false;
 
 		      const modelEngineMap = {
-		        chatgpt51: "gpt-4o",
+		        chatgpt52: "gpt-4o",
+		        claudeopus45: "gpt-4o",
+		        claudesonnet4: "gpt-4o",
+		        claudehaiku45: "gpt-4o",
 		        gemini3: "gemini-3",
+		        qwen: "gpt-4o",
 		        deepseekv2: "gpt-4o", // Fallback to OpenAI until DeepSeek API is implemented
-		        grok: "gpt-4o", // Fallback to OpenAI until Grok API is implemented
+		        grok4: "gpt-4o", // Fallback to OpenAI until Grok API is implemented
 		      };
-		      let selectedModel = "chatgpt51";
+		      let selectedModel = "chatgpt52";
 		      let selectedModelLabel = "ChatGPT 5.2";
 		      let thinkingIndicator = null;
 
@@ -2491,20 +2507,36 @@
 
 	      const updateSelectedModel = (label) => {
 	        selectedModelLabel = label || "ChatGPT 5.2";
+	        if (label && label.startsWith("Claude Opus 4.5")) {
+	          selectedModel = "claudeopus45";
+	          return;
+	        }
+	        if (label && label.startsWith("Claude Sonnet 4")) {
+	          selectedModel = "claudesonnet4";
+	          return;
+	        }
+	        if (label && label.startsWith("Claude Haiku 4.5")) {
+	          selectedModel = "claudehaiku45";
+	          return;
+	        }
 	        if (label && label.startsWith("Gemini 3")) {
 	          selectedModel = "gemini3";
 	          return;
 	        }
-        if (label && label.startsWith("DeepSeek V2")) {
-          selectedModel = "deepseekv2";
-          return;
-        }
-        if (label && label.startsWith("Grok")) {
-          selectedModel = "grok";
-          return;
-        }
-        selectedModel = "chatgpt51";
-      };
+	        if (label && label.startsWith("QWEN")) {
+	          selectedModel = "qwen";
+	          return;
+	        }
+	        if (label && label.startsWith("DeepSeek V2")) {
+	          selectedModel = "deepseekv2";
+	          return;
+	        }
+	        if (label && label.startsWith("Grok 4")) {
+	          selectedModel = "grok4";
+	          return;
+	        }
+	        selectedModel = "chatgpt52";
+	      };
 
       let activeCategory = "chat";
 
@@ -4049,8 +4081,28 @@
 	        if (!value) return;
 
         if (selectedModel === "grok4") {
-          alert("Grok 4 is nog niet gekoppeld. Kies GPT-5 om verder te chatten.");
+          alert("Grok 4 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
           console.log("Grok 4 chat is nog niet geïmplementeerd.");
+          return;
+        }
+        if (selectedModel === "claudeopus45") {
+          alert("Claude Opus 4.5 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
+          console.log("Claude Opus 4.5 chat is nog niet geïmplementeerd.");
+          return;
+        }
+        if (selectedModel === "claudesonnet4") {
+          alert("Claude Sonnet 4 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
+          console.log("Claude Sonnet 4 chat is nog niet geïmplementeerd.");
+          return;
+        }
+        if (selectedModel === "claudehaiku45") {
+          alert("Claude Haiku 4.5 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
+          console.log("Claude Haiku 4.5 chat is nog niet geïmplementeerd.");
+          return;
+        }
+        if (selectedModel === "qwen") {
+          alert("QWEN is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
+          console.log("QWEN chat is nog niet geïmplementeerd.");
           return;
         }
         if (selectedModel === "gemini25pro") {
