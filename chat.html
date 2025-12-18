@@ -3266,7 +3266,7 @@
 
 	      const generateDefaultSessionTitle = () => {
 	        sessionState.untitledCount += 1;
-	        return "chat";
+	        return "Chat";
 	      };
 
       const generateSessionTitleFromPrompt = (text) => {
@@ -3488,7 +3488,7 @@
 		      const getDisplayTitle = (session) => {
 		        if (!session) return "";
 		        if (titleOverrides[session.id]) return titleOverrides[session.id];
-		        return session.title || "chat";
+		        return session.title || "Chat";
 		      };
 
       const createLocalSession = () => {
@@ -3799,7 +3799,7 @@
 		            title:
 		              titleOverrides[session.id] ||
 		              generateSessionTitleFromPrompt(session.firstUserMessage) ||
-		              "chat",
+		              "Chat",
 		          }));
 
           derivedSessions.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
