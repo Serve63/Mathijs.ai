@@ -2323,14 +2323,14 @@
 			                  <div class="model-option" data-model="ChatGPT 5.2" role="option" aria-selected="true">
 			                    <span class="model-option__label">ChatGPT 5.2</span>
 			                  </div>
-			                  <div class="model-option" data-model="Claude Opus 4.5" role="option" aria-selected="false">
-			                    <span class="model-option__label">Claude Opus 4.5</span>
+			                  <div class="model-option" data-model="Opus 4.5" role="option" aria-selected="false">
+			                    <span class="model-option__label">Opus 4.5</span>
 			                  </div>
-			                  <div class="model-option" data-model="Claude Sonnet 4" role="option" aria-selected="false">
-			                    <span class="model-option__label">Claude Sonnet 4</span>
+			                  <div class="model-option" data-model="Sonnet 4" role="option" aria-selected="false">
+			                    <span class="model-option__label">Sonnet 4</span>
 			                  </div>
-			                  <div class="model-option" data-model="Claude Haiku 4.5" role="option" aria-selected="false">
-			                    <span class="model-option__label">Claude Haiku 4.5</span>
+			                  <div class="model-option" data-model="Haiku 4.5" role="option" aria-selected="false">
+			                    <span class="model-option__label">Haiku 4.5</span>
 			                  </div>
 			                  <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">
 			                    <span class="model-option__label">Gemini 3</span>
@@ -2486,9 +2486,9 @@
 
 		      const modelEngineMap = {
 		        chatgpt52: "gpt-4o",
-		        claudeopus45: "gpt-4o",
-		        claudesonnet4: "gpt-4o",
-		        claudehaiku45: "gpt-4o",
+		        opus45: "gpt-4o",
+		        sonnet4: "gpt-4o",
+		        haiku45: "gpt-4o",
 		        gemini3: "gemini-3",
 		        llama4: "gpt-4o",
 		        qwen: "gpt-4o",
@@ -2511,16 +2511,16 @@
 
 	      const updateSelectedModel = (label) => {
 	        selectedModelLabel = label || "ChatGPT 5.2";
-	        if (label && label.startsWith("Claude Opus 4.5")) {
-	          selectedModel = "claudeopus45";
+	        if (label && label.startsWith("Opus 4.5")) {
+	          selectedModel = "opus45";
 	          return;
 	        }
-	        if (label && label.startsWith("Claude Sonnet 4")) {
-	          selectedModel = "claudesonnet4";
+	        if (label && label.startsWith("Sonnet 4")) {
+	          selectedModel = "sonnet4";
 	          return;
 	        }
-	        if (label && label.startsWith("Claude Haiku 4.5")) {
-	          selectedModel = "claudehaiku45";
+	        if (label && label.startsWith("Haiku 4.5")) {
+	          selectedModel = "haiku45";
 	          return;
 	        }
 	        if (label && label.startsWith("Gemini 3")) {
@@ -4248,19 +4248,19 @@
           console.log("Grok 4 chat is nog niet geïmplementeerd.");
           return;
         }
-        if (selectedModel === "claudeopus45") {
-          alert("Claude Opus 4.5 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
-          console.log("Claude Opus 4.5 chat is nog niet geïmplementeerd.");
+        if (selectedModel === "opus45") {
+          alert("Opus 4.5 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
+          console.log("Opus 4.5 chat is nog niet geïmplementeerd.");
           return;
         }
-        if (selectedModel === "claudesonnet4") {
-          alert("Claude Sonnet 4 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
-          console.log("Claude Sonnet 4 chat is nog niet geïmplementeerd.");
+        if (selectedModel === "sonnet4") {
+          alert("Sonnet 4 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
+          console.log("Sonnet 4 chat is nog niet geïmplementeerd.");
           return;
         }
-        if (selectedModel === "claudehaiku45") {
-          alert("Claude Haiku 4.5 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
-          console.log("Claude Haiku 4.5 chat is nog niet geïmplementeerd.");
+        if (selectedModel === "haiku45") {
+          alert("Haiku 4.5 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
+          console.log("Haiku 4.5 chat is nog niet geïmplementeerd.");
           return;
         }
         if (selectedModel === "llama4") {
