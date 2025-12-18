@@ -3511,6 +3511,78 @@
 	        return { ok: resp.ok, status: resp.status, payload };
 	      };
 
+	      const LEGACY_SESSIONS_KEY_PREFIX = "mathijs_sessions_";
+	      const LEGACY_MIGRATION_KEY = "mathijs_sessions_migrated_v1";
+	      let legacyImportInFlight = false;
+
+	      const loadLegacyLocalSessions = (userId) => {
+	        if (!userId) return null;
+	        const key = `${LEGACY_SESSIONS_KEY_PREFIX}${userId}`;
+	        try {
+	          const raw = localStorage.getItem(key);
+	          if (!raw) return null;
+	          const parsed = JSON.parse(raw);
+	          if (!parsed || !Array.isArray(parsed.list)) return null;
+	          return parsed;
+	        } catch {
+	          return null;
+	        }
+	      };
+
+	      const hasMigratedLegacy = (userId) => {
+	        try {
+	          return localStorage.getItem(`${LEGACY_MIGRATION_KEY}:${userId}`) === "1";
+	        } catch {
+	          return false;
+	        }
+	      };
+
+	      const markMigratedLegacy = (userId) => {
+	        try {
+	          localStorage.setItem(`${LEGACY_MIGRATION_KEY}:${userId}`, "1");
+	        } catch {
+	          // ignore
+	        }
+	      };
+
+	      const tryImportLegacySessions = async (userId) => {
+	        if (!userId) return false;
+	        if (legacyImportInFlight) return false;
+	        if (hasMigratedLegacy(userId)) return false;
+	        const legacy = loadLegacyLocalSessions(userId);
+	        const legacyList = Array.isArray(legacy?.list) ? legacy.list : [];
+	        if (!legacyList.length) return false;
+
+	        legacyImportInFlight = true;
+	        try {
+	          const sessions = legacyList
+	            .filter((s) => s && s.id && Array.isArray(s.messages) && s.messages.length)
+	            .map((s) => ({
+	              id: String(s.id),
+	              messages: s.messages.map((m) => ({
+	                role: m?.role,
+	                content: m?.content || m?.message_text || "",
+	                created_at: m?.created_at || m?.createdAt || null,
+	              })),
+	            }));
+
+	          if (!sessions.length) return false;
+
+	          const resp = await apiFetchJson("/api/messages/import-legacy", {
+	            method: "POST",
+	            body: { sessions },
+	          });
+	          if (!resp.ok) {
+	            console.error("Legacy import failed", resp);
+	            return false;
+	          }
+	          markMigratedLegacy(userId);
+	          return true;
+	        } finally {
+	          legacyImportInFlight = false;
+	        }
+	      };
+
 	      let topupModalEl = null;
 	      const openTopupModal = ({ message = "", tokensAvailable = null } = {}) => {
 	        if (topupModalEl) {
@@ -3665,6 +3737,8 @@
 
 	      const refreshSessionsFromSupabase = async (options = {}) => {
 	        const { goToLatest = false } = options;
+	        const user = await requireAuthenticatedUser();
+	        if (!user?.id) return;
 	        try {
 	          const { ok, payload } = await apiFetchJson("/api/messages/sessions");
 	          if (!ok) {
@@ -3673,11 +3747,16 @@
 
 	          const data = payload?.sessions || [];
 	          if (!Array.isArray(data) || !data.length) {
+	            const imported = await tryImportLegacySessions(user.id);
+	            if (imported) {
+	              // Try again after import.
+	              return await refreshSessionsFromSupabase(options);
+	            }
 	            sessionState.list = [];
 	            sessionState.activeId = null;
 	            sessionState.untitledCount = 0;
 	            renderSessionList();
-            renderEmptySessionMessage();
+	            renderEmptySessionMessage();
             return;
           }
 
