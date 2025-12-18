@@ -11,6 +11,13 @@ const { SUPABASE_URL } = require("../_lib/supabase");
 
 const SIGNUP_WINDOW_MS = 15 * 60_000;
 const SIGNUP_LIMIT = 5;
+const STARTER_CREDITS_EUR = 10;
+
+function getTokensPerEur() {
+  const tokensPerEur = Number(process.env.TOPUP_TOKENS_PER_EUR || 100);
+  if (!Number.isFinite(tokensPerEur) || tokensPerEur <= 0) return 100;
+  return Math.floor(tokensPerEur);
+}
 
 function isValidEmail(email) {
   const e = (email || "").trim();
@@ -73,6 +80,9 @@ module.exports = async (req, res) => {
     if (!isValidEmail(email)) return json(res, 400, { error: "Invalid email" });
     if (password.length < 10) return json(res, 400, { error: "Password must be at least 10 characters" });
 
+    const tokensPerEur = getTokensPerEur();
+    const starterTokens = Math.max(0, Math.round(STARTER_CREDITS_EUR * tokensPerEur));
+
     await supabaseAuthAdmin("users", {
       accessKey: serviceRoleKey,
       body: {
@@ -80,6 +90,7 @@ module.exports = async (req, res) => {
         password,
         email_confirm: true,
         user_metadata: { username: email },
+        app_metadata: { plan: "free", tokens: starterTokens, credits_initialized: true, starter_credits_eur: STARTER_CREDITS_EUR },
       },
     });
 

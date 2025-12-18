@@ -210,10 +210,29 @@
         -ms-overflow-style: none;
       }
 
-      .session-list::-webkit-scrollbar {
-        width: 0;
-        height: 0;
-      }
+	      .session-list::-webkit-scrollbar {
+	        width: 0;
+	        height: 0;
+	      }
+
+	      .credits-balance {
+	        color: rgba(255, 255, 255, 0.92);
+	        font-weight: 600;
+	        font-size: 0.9rem;
+	        padding: 10px 12px;
+	        border-radius: 12px;
+	        background: rgba(255, 255, 255, 0.08);
+	        border: 1px solid rgba(255, 255, 255, 0.14);
+	        width: fit-content;
+	      }
+
+	      .credits-balance__sub {
+	        display: block;
+	        margin-top: 2px;
+	        font-weight: 500;
+	        font-size: 0.78rem;
+	        color: rgba(255, 255, 255, 0.68);
+	      }
 
       .session-row {
         padding: 8px 10px;
@@ -2164,15 +2183,19 @@
   </head>
   <body>
 	    <div class="chat-layout">
-	      <aside class="sidebar">
-	        <div class="sidebar-top">
-	          <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
-	            <span>+</span>Nieuw gesprek
-	          </button>
-          <h2>sessies</h2>
-          <p class="session-empty" id="session-empty">Nog geen gesprekken. Start je eerste chat.</p>
-          <div class="session-list" id="session-list"></div>
-        </div>
+		      <aside class="sidebar">
+		        <div class="sidebar-top">
+		          <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
+		            <span>+</span>Nieuw gesprek
+		          </button>
+		          <div class="credits-balance" id="credits-balance" title="Je tegoed in euro's (op basis van tokens).">
+		            <span id="credits-balance-value">Credits: €--</span>
+		            <span class="credits-balance__sub" id="credits-balance-sub">Laden...</span>
+		          </div>
+	          <h2>sessies</h2>
+	          <p class="session-empty" id="session-empty">Nog geen gesprekken. Start je eerste chat.</p>
+	          <div class="session-list" id="session-list"></div>
+	        </div>
         <div class="sidebar-bottom">
           <div class="profile">
             <div class="profile-avatar" aria-label="Upload profielfoto" title="Upload profielfoto">
@@ -3551,10 +3574,10 @@
 	        return accessToken;
 	      };
 
-	      const apiFetchJson = async (url, { method = "GET", body } = {}) => {
-	        const accessToken = await requireAccessToken();
-	        if (!accessToken) return { ok: false, status: 401, payload: { error: "Unauthorized" } };
-	        const resp = await fetch(url, {
+		      const apiFetchJson = async (url, { method = "GET", body } = {}) => {
+		        const accessToken = await requireAccessToken();
+		        if (!accessToken) return { ok: false, status: 401, payload: { error: "Unauthorized" } };
+		        const resp = await fetch(url, {
 	          method,
 	          headers: {
 	            "Content-Type": "application/json",
@@ -3562,9 +3585,35 @@
 	          },
 	          body: body ? JSON.stringify(body) : undefined,
 	        });
-	        const payload = await resp.json().catch(() => ({}));
-	        return { ok: resp.ok, status: resp.status, payload };
-	      };
+		        const payload = await resp.json().catch(() => ({}));
+		        return { ok: resp.ok, status: resp.status, payload };
+		      };
+
+		      const creditsBalanceEl = document.getElementById("credits-balance");
+		      const creditsBalanceValueEl = document.getElementById("credits-balance-value");
+		      const creditsBalanceSubEl = document.getElementById("credits-balance-sub");
+
+		      const refreshCreditsBalance = async () => {
+		        if (!creditsBalanceEl || !creditsBalanceValueEl) return;
+		        try {
+		          const { ok, payload } = await apiFetchJson("/api/billing/balance");
+		          if (!ok) {
+		            creditsBalanceValueEl.textContent = "Credits: €--";
+		            if (creditsBalanceSubEl) creditsBalanceSubEl.textContent = "Kan saldo niet laden";
+		            return;
+		          }
+		          const eur = typeof payload?.credits_eur === "number" ? payload.credits_eur : null;
+		          const tokens = typeof payload?.tokens_available === "number" ? payload.tokens_available : null;
+		          const eurText = eur !== null ? eur.toFixed(2) : "--";
+		          creditsBalanceValueEl.textContent = `Credits: €${eurText}`;
+		          if (creditsBalanceSubEl) {
+		            creditsBalanceSubEl.textContent = tokens !== null ? `${tokens} tokens beschikbaar` : "";
+		          }
+		        } catch (e) {
+		          creditsBalanceValueEl.textContent = "Credits: €--";
+		          if (creditsBalanceSubEl) creditsBalanceSubEl.textContent = "Kan saldo niet laden";
+		        }
+		      };
 
 		      const LEGACY_SESSIONS_KEY_PREFIX = "mathijs_sessions_";
 		      const LEGACY_MIGRATION_KEY = "mathijs_sessions_migrated_v1";
@@ -4220,6 +4269,7 @@
 		          if (!user) {
 		            return null;
 		          }
+		          await refreshCreditsBalance();
 		          await refreshSessionsFromSupabase({ goToLatest: true });
 		          if (sessionState.activeId) {
 		            await loadMessagesForSession(sessionState.activeId);
@@ -4302,10 +4352,10 @@
 
         showThinkingIndicator();
 
-	        let assistantStreamMessage = null;
-	        let assistantResponseBuffer = "";
+		        let assistantStreamMessage = null;
+		        let assistantResponseBuffer = "";
 
-		        try {
+			        try {
 		          const engine = modelEngineMap[selectedModel] || "gpt-4o";
 		          const accessToken = await requireAccessToken();
 		          if (!accessToken) {
@@ -4392,21 +4442,22 @@
 	            console.error("AI-antwoord opslaan mislukt", assistantSave?.payload?.error || assistantSave);
 	          }
 	          await refreshSessionsFromSupabase();
-	        } catch (error) {
+			        } catch (error) {
 	          console.error("Chat request failed", error);
           console.error("Selected model:", selectedModel);
           console.error("Engine:", modelEngineMap[selectedModel] || "gpt-4o");
           console.error("Error details:", error.message, error.stack);
           const fallbackMessage = `De AI-request mislukte: ${error.message || "Onbekende fout"}. Controleer je verbinding en probeer opnieuw.`;
-          if (assistantStreamMessage?.bubble) {
-            assistantStreamMessage.bubble.innerHTML = formatMessageContent(fallbackMessage);
-          } else {
-            appendMessage(fallbackMessage, "assistant");
-          }
-        } finally {
-          hideThinkingIndicator();
-        }
-      };
+	          if (assistantStreamMessage?.bubble) {
+	            assistantStreamMessage.bubble.innerHTML = formatMessageContent(fallbackMessage);
+	          } else {
+	            appendMessage(fallbackMessage, "assistant");
+	          }
+	        } finally {
+	          hideThinkingIndicator();
+	          await refreshCreditsBalance();
+	        }
+	      };
 
       if (sendButton && chatInput) {
         sendButton.addEventListener("click", sendMessage);

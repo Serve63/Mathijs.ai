@@ -24,6 +24,13 @@ const CHAT_WINDOW_MS = 60_000;
 const CHAT_LIMIT_FREE = 20;
 const CHAT_LIMIT_PAID = 60;
 const TOKENS_PER_CHAT = 1;
+const STARTER_CREDITS_EUR = 10;
+
+function getTokensPerEur() {
+  const tokensPerEur = Number(process.env.TOPUP_TOKENS_PER_EUR || 100);
+  if (!Number.isFinite(tokensPerEur) || tokensPerEur <= 0) return 100;
+  return Math.floor(tokensPerEur);
+}
 
 async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {}) {
   const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/${path}`, {
@@ -301,7 +308,26 @@ module.exports = async function handler(req, res) {
     const user = await getUserFromAccessToken(token);
     if (!user?.id) return json(res, 401, { error: "Unauthorized" });
 
-    const appMeta = user?.app_metadata || {};
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+      return json(res, 500, { error: "Server misconfiguratie (missing SUPABASE_SERVICE_ROLE_KEY)." });
+    }
+
+    let appMeta = user?.app_metadata || {};
+    const tokensPerEur = getTokensPerEur();
+    const starterTokens = Math.max(0, Math.round(STARTER_CREDITS_EUR * tokensPerEur));
+    const tokenMetaValue = Number(appMeta?.tokens);
+
+    // Initialize starter credits once for users missing a token balance.
+    if (!Number.isFinite(tokenMetaValue)) {
+      appMeta = { ...(appMeta || {}), tokens: starterTokens, credits_initialized: true, starter_credits_eur: STARTER_CREDITS_EUR };
+      await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
+        method: "PUT",
+        accessKey: serviceRoleKey,
+        body: { app_metadata: appMeta },
+      });
+    }
+
     const userPlan = String(appMeta?.plan || "free").toLowerCase();
     const isPaid = userPlan === "standard" || userPlan === "lifetime" || appMeta?.lifetime_free === true;
     const limit = isPaid ? CHAT_LIMIT_PAID : CHAT_LIMIT_FREE;
@@ -326,11 +352,6 @@ module.exports = async function handler(req, res) {
     const ipLimit = rateLimit({ key: `chat:ip:${ip}`, limit: limit * 2, windowMs: CHAT_WINDOW_MS });
     if (!ipLimit.ok) {
       return json(res, 429, { error: "Te veel verzoeken. Probeer zo opnieuw." }, rateLimitHeaders(ipLimit, limit * 2));
-    }
-
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceRoleKey) {
-      return json(res, 500, { error: "Server misconfiguratie (missing SUPABASE_SERVICE_ROLE_KEY)." });
     }
 
     // Deduct tokens upfront to prevent free usage on failed streams.
