@@ -74,7 +74,6 @@
         display: flex;
         align-items: center;
         justify-content: flex-start;
-        gap: 12px;
       }
 
       .btn {
@@ -413,128 +412,6 @@
         padding: 24px 28px;
       }
 
-      /* Marketing */
-      .marketing-shell {
-        display: grid;
-        grid-template-columns: 220px 1fr;
-        gap: 18px;
-      }
-
-      .marketing-tabs {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .marketing-tab {
-        width: 100%;
-        text-align: left;
-        padding: 12px 14px;
-        border-radius: 14px;
-        border: 1px solid var(--card-border);
-        background: rgba(255, 255, 255, 0.04);
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s ease;
-      }
-
-      .marketing-tab:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(230, 194, 0, 0.35);
-      }
-
-      .marketing-tab.active {
-        background: rgba(230, 194, 0, 0.16);
-        border-color: rgba(230, 194, 0, 0.6);
-        color: #fff;
-      }
-
-      .marketing-panel {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--card-border);
-        border-radius: 18px;
-        padding: 18px;
-      }
-
-      .marketing-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 14px;
-      }
-
-      .marketing-field {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .marketing-field label {
-        font-size: 0.78rem;
-        color: var(--muted);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        font-weight: 700;
-      }
-
-      .marketing-field input,
-      .marketing-field textarea,
-      .marketing-field select {
-        width: 100%;
-        padding: 12px 14px;
-        border-radius: 12px;
-        border: 1px solid var(--card-border);
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
-        font-size: 0.95rem;
-        font-family: inherit;
-      }
-
-      .marketing-field textarea {
-        min-height: 92px;
-        resize: vertical;
-      }
-
-      .marketing-actions {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-top: 14px;
-        flex-wrap: wrap;
-      }
-
-      .marketing-actions .hint {
-        color: var(--muted);
-        font-size: 0.9rem;
-      }
-
-      .marketing-output {
-        margin-top: 14px;
-      }
-
-      .marketing-output textarea {
-        min-height: 200px;
-      }
-
-      .marketing-output-tools {
-        display: flex;
-        gap: 10px;
-        margin-top: 10px;
-        flex-wrap: wrap;
-      }
-
-      .btn.secondary {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.15);
-        color: rgba(255, 255, 255, 0.92);
-      }
-
-      .btn.secondary:hover {
-        background: rgba(255, 255, 255, 0.14);
-        border-color: rgba(255, 255, 255, 0.25);
-      }
-
       .modal-search {
         margin-bottom: 20px;
       }
@@ -861,14 +738,6 @@
         .free-period-form {
           flex-direction: column;
         }
-
-        .marketing-shell {
-          grid-template-columns: 1fr;
-        }
-
-        .marketing-grid {
-          grid-template-columns: 1fr;
-        }
       }
 
       @media (max-width: 960px) {
@@ -893,7 +762,6 @@
   <body>
     <header class="topbar">
       <div class="topbar-inner">
-        <button class="btn secondary" id="marketing-btn" type="button">Marketing</button>
         <button class="btn primary" id="staff-logout-btn" type="button">Uitloggen</button>
       </div>
     </header>
@@ -1160,90 +1028,6 @@
       </div>
     </div>
 
-    <!-- Marketing Modal -->
-    <div class="modal-overlay" id="marketing-modal">
-      <div class="modal">
-        <div class="modal-header">
-          <h2 class="modal-title">Marketing</h2>
-          <button class="modal-close" id="marketing-modal-close" type="button">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="marketing-shell">
-            <div class="marketing-tabs" role="tablist" aria-label="Marketing kanaal">
-              <button class="marketing-tab active" type="button" data-channel="instagram" role="tab" aria-selected="true">
-                Instagram post
-              </button>
-              <button class="marketing-tab" type="button" data-channel="facebook" role="tab" aria-selected="false">
-                Facebook ad
-              </button>
-              <button class="marketing-tab" type="button" data-channel="google" role="tab" aria-selected="false">
-                Google ads
-              </button>
-              <button class="marketing-tab" type="button" data-channel="linkedin" role="tab" aria-selected="false">
-                LinkedIn ad
-              </button>
-            </div>
-
-            <div class="marketing-panel">
-              <div class="marketing-grid">
-                <div class="marketing-field">
-                  <label for="m-objective">Doel</label>
-                  <select id="m-objective">
-                    <option value="awareness">Awareness</option>
-                    <option value="leads">Leads</option>
-                    <option value="sales">Sales</option>
-                    <option value="retention">Retentie</option>
-                  </select>
-                </div>
-
-                <div class="marketing-field">
-                  <label for="m-tone">Tone of voice</label>
-                  <input id="m-tone" type="text" placeholder="Bijv. direct, premium, nuchter, speels" />
-                </div>
-
-                <div class="marketing-field" style="grid-column: 1 / -1;">
-                  <label for="m-product">Product / dienst</label>
-                  <textarea id="m-product" placeholder="Wat verkoop je precies? (benefits, prijs, USP’s)"></textarea>
-                </div>
-
-                <div class="marketing-field">
-                  <label for="m-audience">Doelgroep</label>
-                  <input id="m-audience" type="text" placeholder="Bijv. MKB ondernemers, HR managers, coaches..." />
-                </div>
-
-                <div class="marketing-field">
-                  <label for="m-offer">Aanbod / CTA</label>
-                  <input id="m-offer" type="text" placeholder="Bijv. Plan een call, vraag demo, 20% korting..." />
-                </div>
-
-                <div class="marketing-field" style="grid-column: 1 / -1;">
-                  <label for="m-notes">Extra context</label>
-                  <textarea id="m-notes" placeholder="Link, landingspagina, bezwaren, stijlregels, verboden woorden..."></textarea>
-                </div>
-              </div>
-
-              <div class="marketing-actions">
-                <div class="hint" id="m-channel-hint">Output: caption + hooks + hashtags.</div>
-                <button class="btn primary" id="m-generate" type="button">Genereer</button>
-              </div>
-
-              <div class="marketing-output">
-                <div class="marketing-field">
-                  <label for="m-output">Resultaat</label>
-                  <textarea id="m-output" readonly placeholder="Hier komt je output..."></textarea>
-                </div>
-                <div class="marketing-output-tools">
-                  <button class="btn" id="m-copy" type="button">Kopieer</button>
-                  <button class="btn" id="m-clear" type="button">Leegmaken</button>
-                </div>
-                <div class="action-feedback" id="m-feedback"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
 	    <script defer src="assets/vendor/supabase.min.js"></script>
     <script>
       (() => {
@@ -1368,140 +1152,6 @@
           logoutBtn?.addEventListener("click", async () => {
             await supabase.auth.signOut();
             window.location.href = "index.html";
-          });
-
-          // Marketing modal
-          const marketingBtn = document.getElementById("marketing-btn");
-          const marketingModal = document.getElementById("marketing-modal");
-          const marketingClose = document.getElementById("marketing-modal-close");
-          const marketingTabs = Array.from(document.querySelectorAll(".marketing-tab"));
-          const marketingHint = document.getElementById("m-channel-hint");
-          const marketingGenerate = document.getElementById("m-generate");
-          const marketingOutput = document.getElementById("m-output");
-          const marketingCopy = document.getElementById("m-copy");
-          const marketingClear = document.getElementById("m-clear");
-          const marketingFeedback = document.getElementById("m-feedback");
-
-          const setMarketingFeedback = (message = "", type = "success") => {
-            if (!marketingFeedback) return;
-            if (!message) {
-              marketingFeedback.className = "action-feedback";
-              marketingFeedback.textContent = "";
-              return;
-            }
-            marketingFeedback.className = `action-feedback ${type === "error" ? "error" : "success"}`;
-            marketingFeedback.textContent = message;
-          };
-
-          const openMarketing = () => {
-            if (!marketingModal) return;
-            marketingModal.classList.add("active");
-            document.body.style.overflow = "hidden";
-          };
-
-          const closeMarketing = () => {
-            if (!marketingModal) return;
-            marketingModal.classList.remove("active");
-            document.body.style.overflow = "";
-          };
-
-          const channelHints = {
-            instagram: "Output: caption + hooks + hashtags.",
-            facebook: "Output: primary text + headline + description + 3 varianten.",
-            google: "Output: 15 headlines + 4 descriptions (max. 30/90 tekens).",
-            linkedin: "Output: 2–3 varianten + headline + CTA.",
-          };
-
-          let activeMarketingChannel = "instagram";
-
-          const setActiveMarketingChannel = (channel) => {
-            activeMarketingChannel = channel || "instagram";
-            marketingTabs.forEach((btn) => {
-              const isActive = btn.getAttribute("data-channel") === activeMarketingChannel;
-              btn.classList.toggle("active", isActive);
-              btn.setAttribute("aria-selected", isActive ? "true" : "false");
-            });
-            if (marketingHint) {
-              marketingHint.textContent = channelHints[activeMarketingChannel] || "";
-            }
-          };
-
-          marketingBtn?.addEventListener("click", () => {
-            setMarketingFeedback("");
-            openMarketing();
-          });
-          marketingClose?.addEventListener("click", closeMarketing);
-          marketingModal?.addEventListener("click", (e) => {
-            if (e.target === marketingModal) closeMarketing();
-          });
-
-          marketingTabs.forEach((btn) => {
-            btn.addEventListener("click", () => {
-              setActiveMarketingChannel(btn.getAttribute("data-channel") || "instagram");
-            });
-          });
-          setActiveMarketingChannel(activeMarketingChannel);
-
-          marketingCopy?.addEventListener("click", async () => {
-            try {
-              const value = marketingOutput?.value || "";
-              if (!value.trim()) return;
-              await navigator.clipboard.writeText(value);
-              setMarketingFeedback("✓ Gekopieerd naar klembord.", "success");
-            } catch (e) {
-              setMarketingFeedback("Kopiëren mislukt.", "error");
-            }
-          });
-
-          marketingClear?.addEventListener("click", () => {
-            if (marketingOutput) marketingOutput.value = "";
-            setMarketingFeedback("");
-          });
-
-          const getMarketingPayload = () => ({
-            channel: activeMarketingChannel,
-            objective: document.getElementById("m-objective")?.value || "awareness",
-            tone: document.getElementById("m-tone")?.value || "",
-            product: document.getElementById("m-product")?.value || "",
-            audience: document.getElementById("m-audience")?.value || "",
-            offer: document.getElementById("m-offer")?.value || "",
-            notes: document.getElementById("m-notes")?.value || "",
-          });
-
-          marketingGenerate?.addEventListener("click", async () => {
-            if (!marketingGenerate) return;
-            setMarketingFeedback("");
-            const payload = getMarketingPayload();
-            if (!payload.product.trim()) {
-              setMarketingFeedback("Vul eerst je product/dienst in.", "error");
-              return;
-            }
-
-            const prevText = marketingGenerate.textContent;
-            marketingGenerate.disabled = true;
-            marketingGenerate.textContent = "Bezig...";
-
-            try {
-              const resp = await fetch("/api/staff/marketing-generate", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(payload),
-              });
-              const out = await resp.json().catch(() => ({}));
-              if (!resp.ok) {
-                throw new Error(out?.error || `API ${resp.status}`);
-              }
-              if (marketingOutput) marketingOutput.value = out?.result || "";
-              setMarketingFeedback("✓ Klaar.", "success");
-            } catch (e) {
-              setMarketingFeedback(`Fout: ${String(e?.message || e)}`, "error");
-            } finally {
-              marketingGenerate.disabled = false;
-              marketingGenerate.textContent = prevText || "Genereer";
-            }
           });
 
           // === Customer Modal Management (moet buiten try-catch) ===
