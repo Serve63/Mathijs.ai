@@ -216,22 +216,32 @@
 	      }
 
 	      .credits-balance {
+	        display: flex;
+	        align-items: center;
+	        justify-content: space-between;
+	        gap: 12px;
+	        width: 100%;
+	        max-width: 100%;
 	        color: rgba(255, 255, 255, 0.92);
-	        font-weight: 600;
-	        font-size: 0.9rem;
-	        padding: 10px 12px;
-	        border-radius: 12px;
-	        background: rgba(255, 255, 255, 0.08);
-	        border: 1px solid rgba(255, 255, 255, 0.14);
-	        width: fit-content;
+	        padding: 10px 14px;
+	        border-radius: 14px;
+	        background: rgba(255, 255, 255, 0.06);
+	        border: 1px solid rgba(255, 255, 255, 0.12);
+	        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 	      }
 
-	      .credits-balance__sub {
-	        display: block;
-	        margin-top: 2px;
-	        font-weight: 500;
-	        font-size: 0.78rem;
-	        color: rgba(255, 255, 255, 0.68);
+	      .credits-balance__value {
+	        font-weight: 700;
+	        font-size: 0.92rem;
+	        letter-spacing: 0.01em;
+	        white-space: nowrap;
+	      }
+
+	      .credits-balance__status {
+	        font-weight: 600;
+	        font-size: 0.82rem;
+	        color: rgba(255, 255, 255, 0.64);
+	        white-space: nowrap;
 	      }
 
       .session-row {
@@ -2189,8 +2199,8 @@
 		            <span>+</span>Nieuw gesprek
 		          </button>
 			          <div class="credits-balance" id="credits-balance" title="Je tokensaldo.">
-			            <span id="credits-balance-value">Tokens: --</span>
-			            <span class="credits-balance__sub" id="credits-balance-sub">Laden...</span>
+			            <span class="credits-balance__value" id="credits-balance-value">Tokens: --</span>
+			            <span class="credits-balance__status" id="credits-balance-sub">Laden...</span>
 			          </div>
 	          <h2>sessies</h2>
 	          <p class="session-empty" id="session-empty">Nog geen gesprekken. Start je eerste chat.</p>
