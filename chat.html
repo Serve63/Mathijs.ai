@@ -2292,55 +2292,39 @@
 	          <button class="layout-toggle" id="layout-toggle" type="button" aria-label="Vergroot chat" title="Vergroot chat">
 	            <div class="layout-toggle__icon" aria-hidden="true"></div>
 	          </button>
-	          <div class="chat-model-selector">
-	            <div class="model-selects">
-	              <div class="model-select" data-category="chat" data-label="Model">
+		          <div class="chat-model-selector">
+		            <div class="model-selects">
+		              <div class="model-select" data-category="chat" data-label="Model">
 	                <button
 	                  type="button"
 	                  class="model-select__activator"
 	                  aria-pressed="true"
 	                  aria-label="Activeer model"
 	                ></button>
-	                <span class="model-select__label">Model</span>
-	                <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-	                  <span class="selected-label">ChatGPT 5.1 (Instant)</span>
-	                  <svg viewBox="0 0 24 24">
-	                    <path d="M6 9l6 6 6-6" />
-	                  </svg>
-	                </button>
-	                <div class="model-dropdown" role="listbox" aria-label="Kies een model">
-	                  <div class="model-option has-sub" data-model="ChatGPT 5.1" role="option" aria-selected="false">
-	                    <span class="model-option__label">ChatGPT 5.1</span>
-	                    <div class="model-option-sub">
-	                      <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Instant)">Instant</button>
-	                      <button type="button" class="model-suboption" data-model="ChatGPT 5.1 (Thinking)">Thinking</button>
-	                    </div>
-	                  </div>
-	                  <div class="model-option has-sub" data-model="Gemini 3" role="option" aria-selected="false">
-	                    <span class="model-option__label">Gemini 3</span>
-	                    <div class="model-option-sub">
-	                      <button type="button" class="model-suboption" data-model="Gemini 3 (Snel)">Snel</button>
-	                      <button type="button" class="model-suboption" data-model="Gemini 3 (Nadenken)">Nadenken</button>
-	                    </div>
-	                  </div>
-	                  <div class="model-option has-sub" data-model="DeepSeek V2" role="option" aria-selected="false">
-	                    <span class="model-option__label">DeepSeek V2</span>
-	                    <div class="model-option-sub">
-	                      <button type="button" class="model-suboption" data-model="DeepSeek V2 (Snel)">Snel</button>
-	                      <button type="button" class="model-suboption" data-model="DeepSeek V2 (Diepdenken)">Diepdenken</button>
-	                    </div>
-	                  </div>
-	                  <div class="model-option has-sub" data-model="Grok" role="option" aria-selected="false">
-	                    <span class="model-option__label">Grok</span>
-	                    <div class="model-option-sub">
-	                      <button type="button" class="model-suboption" data-model="Grok (Expert)">Expert</button>
-	                      <button type="button" class="model-suboption" data-model="Grok (Snel)">Snel</button>
-	                    </div>
-	                  </div>
-	                </div>
-	              </div>
-	            </div>
-	          </div>
+		                <span class="model-select__label">Model</span>
+		                <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
+		                  <span class="selected-label">ChatGPT 5.1</span>
+		                  <svg viewBox="0 0 24 24">
+		                    <path d="M6 9l6 6 6-6" />
+		                  </svg>
+		                </button>
+		                <div class="model-dropdown" role="listbox" aria-label="Kies een model">
+		                  <div class="model-option" data-model="ChatGPT 5.1" role="option" aria-selected="true">
+		                    <span class="model-option__label">ChatGPT 5.1</span>
+		                  </div>
+		                  <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">
+		                    <span class="model-option__label">Gemini 3</span>
+		                  </div>
+		                  <div class="model-option" data-model="DeepSeek V2" role="option" aria-selected="false">
+		                    <span class="model-option__label">DeepSeek V2</span>
+		                  </div>
+		                  <div class="model-option" data-model="Grok" role="option" aria-selected="false">
+		                    <span class="model-option__label">Grok</span>
+		                  </div>
+		                </div>
+		              </div>
+		            </div>
+		          </div>
 	        <section class="chat-log"></section>
 	        </div>
         <footer class="chat-footer">
@@ -2474,15 +2458,15 @@
       let messages = [createSystemMessage()];
       let webSearchEnabled = false;
 
-      const modelEngineMap = {
-        chatgpt51: "gpt-4o",
-        gemini3: "gemini-3",
-        deepseekv2: "gpt-4o", // Fallback to OpenAI until DeepSeek API is implemented
-        grok: "gpt-4o", // Fallback to OpenAI until Grok API is implemented
-      };
-      let selectedModel = "chatgpt51";
-      let selectedModelLabel = "ChatGPT 5.1 (Instant)";
-      let thinkingIndicator = null;
+	      const modelEngineMap = {
+	        chatgpt51: "gpt-4o",
+	        gemini3: "gemini-3",
+	        deepseekv2: "gpt-4o", // Fallback to OpenAI until DeepSeek API is implemented
+	        grok: "gpt-4o", // Fallback to OpenAI until Grok API is implemented
+	      };
+	      let selectedModel = "chatgpt51";
+	      let selectedModelLabel = "ChatGPT 5.1";
+	      let thinkingIndicator = null;
 
 	      // Toggle fullscreen chat (hide header + sidebar)
 	      if (layoutToggleBtn) {
@@ -2581,15 +2565,14 @@
         }, 900);
       };
 
-      modelSelects.forEach((select) => {
-        const trigger = select.querySelector(".model-select__trigger");
-        const activator = select.querySelector(".model-select__activator");
-        const dropdown = select.querySelector(".model-dropdown");
-        const options = dropdown ? Array.from(dropdown.querySelectorAll(".model-option")) : [];
-        const subOptions = dropdown ? Array.from(dropdown.querySelectorAll(".model-suboption")) : [];
-        const selectedLabel = trigger ? trigger.querySelector(".selected-label") : null;
-        const categoryKey = select.getAttribute("data-category") || "model";
-        const categoryLabel = select.getAttribute("data-label") || categoryKey;
+	      modelSelects.forEach((select) => {
+	        const trigger = select.querySelector(".model-select__trigger");
+	        const activator = select.querySelector(".model-select__activator");
+	        const dropdown = select.querySelector(".model-dropdown");
+	        const options = dropdown ? Array.from(dropdown.querySelectorAll(".model-option")) : [];
+	        const selectedLabel = trigger ? trigger.querySelector(".selected-label") : null;
+	        const categoryKey = select.getAttribute("data-category") || "model";
+	        const categoryLabel = select.getAttribute("data-label") || categoryKey;
 
         if (!trigger || !dropdown || options.length === 0 || !selectedLabel) {
           return;
@@ -2607,68 +2590,35 @@
           if (categoryKey === "chat") {
             updateSelectedModel(value);
           }
-        };
+	        };
 
-        // Find first non-has-sub option, or first suboption if all have submenus
-        let activeOption = dropdown.querySelector(".model-option[aria-selected='true']:not(.has-sub)");
-        if (!activeOption) {
-          activeOption = options.find(opt => !opt.classList.contains("has-sub"));
-        }
-        // If all options have submenus, select the first suboption
-        if (!activeOption && subOptions.length > 0) {
-          const firstSubOption = subOptions[0];
-          const value = firstSubOption.getAttribute("data-model") || "";
-          selectionState[categoryKey] = value;
-          syncButtonLabel(value);
-          if (categoryKey === "chat") {
-            updateSelectedModel(value);
-          }
-        } else if (activeOption) {
-          setActiveOption(activeOption);
-        }
+	        let activeOption = dropdown.querySelector(".model-option[aria-selected='true']");
+	        if (!activeOption) activeOption = options[0] || null;
+	        if (activeOption) setActiveOption(activeOption);
 
-        trigger.addEventListener("click", () => {
-          const willOpen = !dropdown.classList.contains("active");
-          closeAllDropdowns(willOpen ? dropdown : null);
-          dropdown.classList.toggle("active");
-          trigger.setAttribute("aria-expanded", dropdown.classList.contains("active") ? "true" : "false");
-        });
+	        trigger.addEventListener("click", () => {
+	          const willOpen = !dropdown.classList.contains("active");
+	          closeAllDropdowns(willOpen ? dropdown : null);
+	          dropdown.classList.toggle("active");
+	          trigger.setAttribute("aria-expanded", dropdown.classList.contains("active") ? "true" : "false");
+	        });
 
-        options.forEach((option) => {
-          option.addEventListener("click", (event) => {
-            // Prevent selection of items with submenu - users must select a suboption
-            if (option.classList.contains("has-sub")) {
-              event.stopPropagation();
-              return;
-            }
-            const value = option.getAttribute("data-model");
-            if (selectionState[categoryKey] === value) {
-              closeAllDropdowns();
-              return;
+	        options.forEach((option) => {
+	          option.addEventListener("click", (event) => {
+	            const value = option.getAttribute("data-model");
+	            if (selectionState[categoryKey] === value) {
+	              closeAllDropdowns();
+	              return;
             }
             setActiveOption(option);
             setActiveCategory(categoryKey);
             closeAllDropdowns();
-            handleModelChange(categoryLabel, value);
-          });
-        });
+	            handleModelChange(categoryLabel, value);
+	          });
+	        });
 
-        subOptions.forEach((btn) => {
-          btn.addEventListener("click", (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            const value = btn.getAttribute("data-model") || "";
-            selectionState[categoryKey] = value;
-            if (selectedLabel) selectedLabel.textContent = value;
-            updateSelectedModel(value);
-            setActiveCategory(categoryKey);
-            closeAllDropdowns();
-            handleModelChange(categoryLabel, value);
-          });
-        });
-
-        if (activator) {
-          activator.addEventListener("click", (event) => {
+	        if (activator) {
+	          activator.addEventListener("click", (event) => {
             event.preventDefault();
             event.stopPropagation();
             console.log("Activator clicked:", categoryKey);
