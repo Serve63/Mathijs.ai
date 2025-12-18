@@ -51,6 +51,8 @@
         gap: 20px;
         position: relative;
         z-index: 2;
+        height: 100vh;
+        overflow: hidden;
       }
 
       .sidebar::before {
@@ -142,6 +144,7 @@
         gap: 24px;
         flex: 1;
         overflow: hidden;
+        min-height: 0;
       }
 
       .sidebar-bottom {
@@ -199,6 +202,10 @@
         overflow-y: auto;
         padding-right: 4px;
         flex: 1;
+        min-height: 0;
+        padding-bottom: 12px;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
       }
 
       .session-row {
