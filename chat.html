@@ -3043,7 +3043,22 @@
       const profileInitialsEl = document.querySelector(".profile-avatar__initials");
       const profileNameEditBtn = document.querySelector(".profile-name-edit");
 
-      const supabaseClient = window.mathijsSupabase;
+	      const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
+	      const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
+
+	      const getSupabaseClient = () => {
+	        if (window.mathijsSupabase) return window.mathijsSupabase;
+	        if (!window.supabase || typeof window.supabase.createClient !== "function") {
+	          return null;
+	        }
+	        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+	          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+	        });
+	        window.mathijsSupabase = client;
+	        return client;
+	      };
+
+	      const supabaseClient = getSupabaseClient();
       let currentUser = null;
       let profileEnhancementsInitialized = false;
 
@@ -3522,12 +3537,16 @@
         return session.id;
       };
 
-	      const requireAccessToken = async () => {
-	        const { data: sessionData } = await supabaseClient.auth.getSession();
-	        const accessToken = sessionData?.session?.access_token;
-	        if (!accessToken) {
-	          window.location.href = "login.html";
-	          return null;
+		      const requireAccessToken = async () => {
+		        if (!supabaseClient) {
+		          window.location.href = "login.html";
+		          return null;
+		        }
+		        const { data: sessionData } = await supabaseClient.auth.getSession();
+		        const accessToken = sessionData?.session?.access_token;
+		        if (!accessToken) {
+		          window.location.href = "login.html";
+		          return null;
 	        }
 	        return accessToken;
 	      };
@@ -3547,15 +3566,35 @@
 	        return { ok: resp.ok, status: resp.status, payload };
 	      };
 
-	      const LEGACY_SESSIONS_KEY_PREFIX = "mathijs_sessions_";
-	      const LEGACY_MIGRATION_KEY = "mathijs_sessions_migrated_v1";
-	      let legacyImportInFlight = false;
+		      const LEGACY_SESSIONS_KEY_PREFIX = "mathijs_sessions_";
+		      const LEGACY_MIGRATION_KEY = "mathijs_sessions_migrated_v1";
+		      let legacyImportInFlight = false;
 
-	      const loadLegacyLocalSessions = (userId) => {
-	        if (!userId) return null;
-	        const key = `${LEGACY_SESSIONS_KEY_PREFIX}${userId}`;
-	        try {
-	          const raw = localStorage.getItem(key);
+		      const findLegacyLocalSessionCandidates = () => {
+		        try {
+		          const candidates = [];
+		          for (let i = 0; i < localStorage.length; i += 1) {
+		            const key = localStorage.key(i);
+		            if (!key || !key.startsWith(LEGACY_SESSIONS_KEY_PREFIX)) continue;
+		            const raw = localStorage.getItem(key);
+		            if (!raw) continue;
+		            const parsed = JSON.parse(raw);
+		            const list = Array.isArray(parsed?.list) ? parsed.list : [];
+		            if (!list.length) continue;
+		            candidates.push({ key, parsed, count: list.length });
+		          }
+		          candidates.sort((a, b) => (b.count || 0) - (a.count || 0));
+		          return candidates;
+		        } catch {
+		          return [];
+		        }
+		      };
+
+		      const loadLegacyLocalSessions = (userId) => {
+		        if (!userId) return null;
+		        const key = `${LEGACY_SESSIONS_KEY_PREFIX}${userId}`;
+		        try {
+		          const raw = localStorage.getItem(key);
 	          if (!raw) return null;
 	          const parsed = JSON.parse(raw);
 	          if (!parsed || !Array.isArray(parsed.list)) return null;
@@ -3581,13 +3620,20 @@
 	        }
 	      };
 
-	      const tryImportLegacySessions = async (userId, { force = false } = {}) => {
-	        if (!userId) return false;
-	        if (legacyImportInFlight) return false;
-	        if (!force && hasMigratedLegacy(userId)) return false;
-	        const legacy = loadLegacyLocalSessions(userId);
-	        const legacyList = Array.isArray(legacy?.list) ? legacy.list : [];
-	        if (!legacyList.length) return false;
+		      const tryImportLegacySessions = async (userId, { force = false } = {}) => {
+		        if (!userId) return false;
+		        if (legacyImportInFlight) return false;
+		        if (!force && hasMigratedLegacy(userId)) return false;
+		        let legacy = loadLegacyLocalSessions(userId);
+		        let legacyList = Array.isArray(legacy?.list) ? legacy.list : [];
+		        if (!legacyList.length) {
+		          const candidates = findLegacyLocalSessionCandidates();
+		          if (candidates.length) {
+		            legacy = candidates[0].parsed;
+		            legacyList = Array.isArray(legacy?.list) ? legacy.list : [];
+		          }
+		        }
+		        if (!legacyList.length) return false;
 
 	        legacyImportInFlight = true;
 	        try {
@@ -3619,9 +3665,9 @@
 	        }
 	      };
 
-	      const ensureSessionEmptyActions = () => {
-	        if (!sessionEmptyEl) return;
-	        if (document.getElementById("session-empty-actions")) return;
+		      const ensureSessionEmptyActions = () => {
+		        if (!sessionEmptyEl) return;
+		        if (document.getElementById("session-empty-actions")) return;
 
 	        const wrap = document.createElement("div");
 	        wrap.id = "session-empty-actions";
@@ -3639,41 +3685,60 @@
 	        reloadBtn.style.background = "#fff";
 	        reloadBtn.style.cursor = "pointer";
 
-	        const restoreBtn = document.createElement("button");
-	        restoreBtn.type = "button";
-	        restoreBtn.textContent = "Herstel geschiedenis";
-	        restoreBtn.style.padding = "10px 12px";
-	        restoreBtn.style.borderRadius = "12px";
-	        restoreBtn.style.border = "1px solid #dedede";
-	        restoreBtn.style.background = "#fff";
-	        restoreBtn.style.cursor = "pointer";
+		        const restoreBtn = document.createElement("button");
+		        restoreBtn.type = "button";
+		        restoreBtn.textContent = "Herstel geschiedenis";
+		        restoreBtn.style.padding = "10px 12px";
+		        restoreBtn.style.borderRadius = "12px";
+		        restoreBtn.style.border = "1px solid #dedede";
+		        restoreBtn.style.background = "#fff";
+		        restoreBtn.style.cursor = "pointer";
 
-	        reloadBtn.addEventListener("click", async () => {
-	          await refreshSessionsFromSupabase({ goToLatest: true });
-	          if (sessionState.activeId) {
-	            await loadMessagesForSession(sessionState.activeId);
+		        const reloginBtn = document.createElement("button");
+		        reloginBtn.type = "button";
+		        reloginBtn.textContent = "Opnieuw inloggen";
+		        reloginBtn.style.padding = "10px 12px";
+		        reloginBtn.style.borderRadius = "12px";
+		        reloginBtn.style.border = "1px solid #dedede";
+		        reloginBtn.style.background = "#fff";
+		        reloginBtn.style.cursor = "pointer";
+
+		        reloadBtn.addEventListener("click", async () => {
+		          await refreshSessionsFromSupabase({ goToLatest: true });
+		          if (sessionState.activeId) {
+		            await loadMessagesForSession(sessionState.activeId);
 	          }
 	        });
 
-	        restoreBtn.addEventListener("click", async () => {
-	          const user = await requireAuthenticatedUser();
-	          if (!user?.id) return;
-	          const imported = await tryImportLegacySessions(user.id, { force: true });
+		        restoreBtn.addEventListener("click", async () => {
+		          const user = await requireAuthenticatedUser();
+		          if (!user?.id) return;
+		          const imported = await tryImportLegacySessions(user.id, { force: true });
 	          if (!imported) {
 	            renderEmptySessionMessage("Geen lokale geschiedenis gevonden om te herstellen.");
 	            ensureSessionEmptyActions();
 	            return;
 	          }
 	          await refreshSessionsFromSupabase({ goToLatest: true });
-	          if (sessionState.activeId) {
-	            await loadMessagesForSession(sessionState.activeId);
-	          }
-	        });
+		          if (sessionState.activeId) {
+		            await loadMessagesForSession(sessionState.activeId);
+		          }
+		        });
 
-	        wrap.appendChild(reloadBtn);
-	        wrap.appendChild(restoreBtn);
-	        sessionEmptyEl.insertAdjacentElement("afterend", wrap);
-	      };
+		        wrap.appendChild(reloadBtn);
+		        wrap.appendChild(restoreBtn);
+		        wrap.appendChild(reloginBtn);
+		        sessionEmptyEl.insertAdjacentElement("afterend", wrap);
+
+		        reloginBtn.addEventListener("click", async () => {
+		          try {
+		            await supabaseClient?.auth?.signOut();
+		          } catch {
+		            // ignore
+		          }
+		          window.location.href = "login.html";
+		        });
+		      };
 
 	      let topupModalEl = null;
 	      const openTopupModal = ({ message = "", tokensAvailable = null } = {}) => {
@@ -3996,28 +4061,50 @@
         }
       };
 
-      const requireAuthenticatedUser = async () => {
-        if (!supabaseClient) {
-          alert("Supabase is niet beschikbaar. Log opnieuw in.");
-          return null;
-        }
-        if (currentUser) {
-          return currentUser;
-        }
-        const { data, error } = await supabaseClient.auth.getUser();
-        if (error || !data || !data.user) {
-          console.error("Geen actieve gebruiker gevonden", error);
-          alert("Je bent niet ingelogd. Log opnieuw in om je chat te bekijken.");
-          window.location.href = "login.html";
-          return null;
-        }
-        currentUser = data.user;
-        titleOverrides = loadTitleOverrides(currentUser.id);
-        updateProfileSidebar(currentUser);
-        initProfileEnhancements();
-        initLogoutButton();
-        return currentUser;
-      };
+	      const requireAuthenticatedUser = async () => {
+	        if (!supabaseClient) {
+	          console.error("Supabase client ontbreekt.");
+	          renderEmptyState();
+	          renderEmptySessionMessage("Inloggen is nodig om je chats te laden.");
+	          ensureSessionEmptyActions();
+	          window.location.href = "login.html";
+	          return null;
+	        }
+	        if (currentUser) {
+	          return currentUser;
+	        }
+	        try {
+	          const { data, error } = await supabaseClient.auth.getUser();
+	          if (error || !data?.user) {
+	            console.error("Geen actieve gebruiker gevonden", error);
+	            try {
+	              await supabaseClient.auth.signOut();
+	            } catch {
+	              // ignore
+	            }
+	            window.location.href = "login.html";
+	            return null;
+	          }
+	          currentUser = data.user;
+	        } catch (error) {
+	          console.error("Kon gebruiker niet ophalen", error);
+	          try {
+	            await supabaseClient.auth.signOut();
+	          } catch {
+	            // ignore
+	          }
+	          renderEmptyState();
+	          renderEmptySessionMessage("Kon je login niet controleren. Probeer opnieuw in te loggen.");
+	          ensureSessionEmptyActions();
+	          window.location.href = "login.html";
+	          return null;
+	        }
+	        titleOverrides = loadTitleOverrides(currentUser.id);
+	        updateProfileSidebar(currentUser);
+	        initProfileEnhancements();
+	        initLogoutButton();
+	        return currentUser;
+	      };
       
       const initLogoutButton = () => {
         if (!supabaseClient) return;
@@ -4127,20 +4214,28 @@
         return { article, bubble };
       };
 
-	      const workspaceReady = (async () => {
-	        const user = await requireAuthenticatedUser();
-	        if (!user) {
-	          return null;
-	        }
-	        await refreshSessionsFromSupabase({ goToLatest: true });
-	        if (sessionState.activeId) {
-	          await loadMessagesForSession(sessionState.activeId);
-	        } else {
-	          createLocalSession();
-	        }
-	        updateNewChatButtonState();
-	        return user;
-	      })();
+		      const workspaceReady = (async () => {
+		        try {
+		          const user = await requireAuthenticatedUser();
+		          if (!user) {
+		            return null;
+		          }
+		          await refreshSessionsFromSupabase({ goToLatest: true });
+		          if (sessionState.activeId) {
+		            await loadMessagesForSession(sessionState.activeId);
+		          } else {
+		            createLocalSession();
+		          }
+		          updateNewChatButtonState();
+		          return user;
+		        } catch (error) {
+		          console.error("Workspace init failed", error);
+		          renderEmptyState();
+		          renderEmptySessionMessage("Kon gesprekken niet laden. Probeer opnieuw laden of log opnieuw in.");
+		          ensureSessionEmptyActions();
+		          return null;
+		        }
+		      })();
 
 	      const sendMessage = async () => {
 	        await workspaceReady;
