@@ -2314,15 +2314,15 @@
 	                ></button>
 		                <span class="model-select__label">Model</span>
 		                <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-		                  <span class="selected-label">ChatGPT 5.1</span>
+			                  <span class="selected-label">ChatGPT 5.2</span>
 		                  <svg viewBox="0 0 24 24">
 		                    <path d="M6 9l6 6 6-6" />
 		                  </svg>
 		                </button>
 		                <div class="model-dropdown" role="listbox" aria-label="Kies een model">
-		                  <div class="model-option" data-model="ChatGPT 5.1" role="option" aria-selected="true">
-		                    <span class="model-option__label">ChatGPT 5.1</span>
-		                  </div>
+			                  <div class="model-option" data-model="ChatGPT 5.2" role="option" aria-selected="true">
+			                    <span class="model-option__label">ChatGPT 5.2</span>
+			                  </div>
 		                  <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">
 		                    <span class="model-option__label">Gemini 3</span>
 		                  </div>
@@ -2469,15 +2469,15 @@
       let messages = [createSystemMessage()];
       let webSearchEnabled = false;
 
-	      const modelEngineMap = {
-	        chatgpt51: "gpt-4o",
-	        gemini3: "gemini-3",
-	        deepseekv2: "gpt-4o", // Fallback to OpenAI until DeepSeek API is implemented
-	        grok: "gpt-4o", // Fallback to OpenAI until Grok API is implemented
-	      };
-	      let selectedModel = "chatgpt51";
-	      let selectedModelLabel = "ChatGPT 5.1";
-	      let thinkingIndicator = null;
+		      const modelEngineMap = {
+		        chatgpt51: "gpt-4o",
+		        gemini3: "gemini-3",
+		        deepseekv2: "gpt-4o", // Fallback to OpenAI until DeepSeek API is implemented
+		        grok: "gpt-4o", // Fallback to OpenAI until Grok API is implemented
+		      };
+		      let selectedModel = "chatgpt51";
+		      let selectedModelLabel = "ChatGPT 5.2";
+		      let thinkingIndicator = null;
 
 	      // Toggle fullscreen chat (hide header + sidebar)
 	      if (layoutToggleBtn) {
@@ -2489,12 +2489,12 @@
 	        });
 	      }
 
-      const updateSelectedModel = (label) => {
-        selectedModelLabel = label || "ChatGPT 5.1";
-        if (label && label.startsWith("Gemini 3")) {
-          selectedModel = "gemini3";
-          return;
-        }
+	      const updateSelectedModel = (label) => {
+	        selectedModelLabel = label || "ChatGPT 5.2";
+	        if (label && label.startsWith("Gemini 3")) {
+	          selectedModel = "gemini3";
+	          return;
+	        }
         if (label && label.startsWith("DeepSeek V2")) {
           selectedModel = "deepseekv2";
           return;
