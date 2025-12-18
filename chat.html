@@ -2188,10 +2188,10 @@
 		          <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
 		            <span>+</span>Nieuw gesprek
 		          </button>
-		          <div class="credits-balance" id="credits-balance" title="Je tegoed in euro's (op basis van tokens).">
-		            <span id="credits-balance-value">Credits: €--</span>
-		            <span class="credits-balance__sub" id="credits-balance-sub">Laden...</span>
-		          </div>
+			          <div class="credits-balance" id="credits-balance" title="Je tokensaldo.">
+			            <span id="credits-balance-value">Tokens: --</span>
+			            <span class="credits-balance__sub" id="credits-balance-sub">Laden...</span>
+			          </div>
 	          <h2>sessies</h2>
 	          <p class="session-empty" id="session-empty">Nog geen gesprekken. Start je eerste chat.</p>
 	          <div class="session-list" id="session-list"></div>
@@ -3598,19 +3598,17 @@
 		        try {
 		          const { ok, payload } = await apiFetchJson("/api/billing/balance");
 		          if (!ok) {
-		            creditsBalanceValueEl.textContent = "Credits: €--";
+		            creditsBalanceValueEl.textContent = "Tokens: --";
 		            if (creditsBalanceSubEl) creditsBalanceSubEl.textContent = "Kan saldo niet laden";
 		            return;
 		          }
-		          const eur = typeof payload?.credits_eur === "number" ? payload.credits_eur : null;
 		          const tokens = typeof payload?.tokens_available === "number" ? payload.tokens_available : null;
-		          const eurText = eur !== null ? eur.toFixed(2) : "--";
-		          creditsBalanceValueEl.textContent = `Credits: €${eurText}`;
+		          creditsBalanceValueEl.textContent = `Tokens: ${tokens !== null ? tokens : "--"}`;
 		          if (creditsBalanceSubEl) {
-		            creditsBalanceSubEl.textContent = tokens !== null ? `${tokens} tokens beschikbaar` : "";
+		            creditsBalanceSubEl.textContent = tokens !== null ? "Beschikbaar" : "";
 		          }
 		        } catch (e) {
-		          creditsBalanceValueEl.textContent = "Credits: €--";
+		          creditsBalanceValueEl.textContent = "Tokens: --";
 		          if (creditsBalanceSubEl) creditsBalanceSubEl.textContent = "Kan saldo niet laden";
 		        }
 		      };
