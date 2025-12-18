@@ -2335,6 +2335,9 @@
 			                  <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">
 			                    <span class="model-option__label">Gemini 3</span>
 			                  </div>
+			                  <div class="model-option" data-model="Llama 4" role="option" aria-selected="false">
+			                    <span class="model-option__label">Llama 4</span>
+			                  </div>
 			                  <div class="model-option" data-model="QWEN" role="option" aria-selected="false">
 			                    <span class="model-option__label">QWEN</span>
 			                  </div>
@@ -2487,6 +2490,7 @@
 		        claudesonnet4: "gpt-4o",
 		        claudehaiku45: "gpt-4o",
 		        gemini3: "gemini-3",
+		        llama4: "gpt-4o",
 		        qwen: "gpt-4o",
 		        deepseekv2: "gpt-4o", // Fallback to OpenAI until DeepSeek API is implemented
 		        grok4: "gpt-4o", // Fallback to OpenAI until Grok API is implemented
@@ -2521,6 +2525,10 @@
 	        }
 	        if (label && label.startsWith("Gemini 3")) {
 	          selectedModel = "gemini3";
+	          return;
+	        }
+	        if (label && label.startsWith("Llama 4")) {
+	          selectedModel = "llama4";
 	          return;
 	        }
 	        if (label && label.startsWith("QWEN")) {
@@ -4098,6 +4106,11 @@
         if (selectedModel === "claudehaiku45") {
           alert("Claude Haiku 4.5 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
           console.log("Claude Haiku 4.5 chat is nog niet geïmplementeerd.");
+          return;
+        }
+        if (selectedModel === "llama4") {
+          alert("Llama 4 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
+          console.log("Llama 4 chat is nog niet geïmplementeerd.");
           return;
         }
         if (selectedModel === "qwen") {
