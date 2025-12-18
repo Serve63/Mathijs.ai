@@ -206,6 +206,13 @@
         padding-bottom: 12px;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .session-list::-webkit-scrollbar {
+        width: 0;
+        height: 0;
       }
 
       .session-row {
