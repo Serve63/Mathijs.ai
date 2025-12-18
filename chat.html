@@ -215,26 +215,31 @@
 	        height: 0;
 	      }
 
-	      .credits-balance {
-	        display: inline-flex;
-	        align-items: center;
-	        gap: 6px;
-	        width: auto;
-	        max-width: 100%;
-	        padding: 0;
-	        margin: 2px 0 0;
-	        border: 0;
-	        border-radius: 0;
-	        background: transparent;
-	        box-shadow: none;
-	        color: rgba(255, 255, 255, 0.78);
+	      .sessions-heading {
+	        display: flex;
+	        align-items: baseline;
+	        gap: 10px;
 	      }
 
-	      .credits-balance__value {
+	      .sessions-heading h2 {
+	        margin: 0;
+	      }
+
+	      .tokens-inline {
+	        display: inline-flex;
+	        align-items: baseline;
+	        gap: 6px;
+	        color: rgba(255, 255, 255, 0.68);
 	        font-weight: 600;
 	        font-size: 0.78rem;
 	        letter-spacing: 0.02em;
 	        white-space: nowrap;
+	      }
+
+	      .tokens-inline__value {
+	        color: rgba(255, 255, 255, 0.86);
+	        font-weight: 700;
+	        font-variant-numeric: tabular-nums;
 	      }
 
       .session-row {
@@ -2191,10 +2196,12 @@
 		          <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
 		            <span>+</span>Nieuw gesprek
 		          </button>
-			          <div class="credits-balance" id="credits-balance" title="Je tokensaldo.">
-			            <span class="credits-balance__value" id="credits-balance-value">Tokens: --</span>
-			          </div>
-	          <h2>sessies</h2>
+		          <div class="sessions-heading">
+		            <h2>sessies</h2>
+		            <span class="tokens-inline" id="credits-balance" title="Je tokensaldo.">| Tokens:
+		              <span class="tokens-inline__value" id="credits-balance-value">--</span>
+		            </span>
+		          </div>
 	          <p class="session-empty" id="session-empty">Nog geen gesprekken. Start je eerste chat.</p>
 	          <div class="session-list" id="session-list"></div>
 	        </div>
@@ -3599,15 +3606,15 @@
 		        try {
 		          const { ok, payload } = await apiFetchJson("/api/billing/balance");
 		          if (!ok) {
-		            creditsBalanceValueEl.textContent = "Tokens: --";
+		            creditsBalanceValueEl.textContent = "--";
 		            creditsBalanceEl.title = "Kan tokensaldo niet laden";
 		            return;
 		          }
 		          const tokens = typeof payload?.tokens_available === "number" ? payload.tokens_available : null;
-		          creditsBalanceValueEl.textContent = `Tokens: ${tokens !== null ? tokens : "--"}`;
+		          creditsBalanceValueEl.textContent = tokens !== null ? String(tokens) : "--";
 		          creditsBalanceEl.title = "Je tokensaldo.";
 		        } catch (e) {
-		          creditsBalanceValueEl.textContent = "Tokens: --";
+		          creditsBalanceValueEl.textContent = "--";
 		          creditsBalanceEl.title = "Kan tokensaldo niet laden";
 		        }
 		      };
