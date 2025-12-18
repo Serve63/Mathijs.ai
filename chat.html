@@ -1435,31 +1435,30 @@
         transform: translateY(2px) rotate(180deg);
       }
 
-      .model-dropdown {
-        position: absolute;
-        top: calc(100% + 12px);
-        left: auto;
-        right: 0;
-        transform: none;
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border-radius: 16px;
-        border: 2px solid rgba(230, 194, 0, 0.25);
-        box-shadow: 
-          0 20px 60px -20px rgba(0, 0, 0, 0.6),
-          0 0 0 1px rgba(230, 194, 0, 0.1) inset,
-          inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(20px);
-        /* Match trigger width (no oversized dropdown) */
-        width: 100%;
-        min-width: 100%;
-        max-width: min(380px, calc(100vw - 32px));
-        display: none;
-        flex-direction: column;
-        overflow: visible;
-        z-index: 20;
-        padding: 6px;
-        box-sizing: border-box;
-      }
+	      .model-dropdown {
+	        position: absolute;
+	        top: calc(100% + 12px);
+	        left: auto;
+	        right: 0;
+	        transform: none;
+	        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+	        border-radius: 16px;
+	        border: 2px solid rgba(230, 194, 0, 0.25);
+	        box-shadow: 
+	          0 20px 60px -20px rgba(0, 0, 0, 0.6),
+	          0 0 0 1px rgba(230, 194, 0, 0.1) inset,
+	          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	        backdrop-filter: blur(20px);
+	        width: max-content;
+	        min-width: 100%;
+	        max-width: min(460px, calc(100vw - 32px));
+	        display: none;
+	        flex-direction: column;
+	        overflow: visible;
+	        z-index: 20;
+	        padding: 6px;
+	        box-sizing: border-box;
+	      }
 
       .model-dropdown.active {
         display: flex;
@@ -1494,14 +1493,22 @@
         overflow: visible;
       }
 
-      .model-option__label,
-      .model-option-sub .model-suboption {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        max-width: 100%;
-        display: block;
-      }
+	      .model-option__label {
+	        white-space: normal;
+	        overflow: visible;
+	        text-overflow: clip;
+	        max-width: 100%;
+	        display: block;
+	        word-break: break-word;
+	      }
+
+	      .model-option-sub .model-suboption {
+	        overflow: hidden;
+	        text-overflow: ellipsis;
+	        white-space: nowrap;
+	        max-width: 100%;
+	        display: block;
+	      }
 
       .model-option:hover {
         background: rgba(230, 194, 0, 0.15);
