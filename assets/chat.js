@@ -649,7 +649,6 @@
       const chatLog = document.querySelector(".chat-log");
       const chatInput = document.querySelector(".chat-input textarea");
       const sendButton = document.querySelector(".chat-input button");
-      const newChatButton = document.querySelector(".new-chat");
       const profileNameEl = document.getElementById("profile-name");
       const profileEmailEl = document.getElementById("profile-email");
       const profileInitialsEl = document.querySelector(".profile-avatar__initials");
