@@ -5,22 +5,19 @@
 	        console.warn("[chat] Inline scripts detected in chat.html. Keep scripts in assets/chat.js to avoid CSP issues.");
 	      }
 
-	      const modelSelects = Array.from(document.querySelectorAll(".model-select"));
-	      const statusIndicator = null;
-	      const sidebar = document.querySelector(".sidebar");
-	      const chatHeader = document.querySelector(".chat-header");
-	      const chatModelSelector = document.querySelector(".chat-model-selector");
+      const modelSelects = Array.from(document.querySelectorAll(".model-select"));
+      const statusIndicator = null;
+      const sidebarTop = document.querySelector(".sidebar-top");
+      const modelTrigger = document.querySelector(".model-select__trigger");
+      const newChatButton = document.querySelector(".new-chat");
 
-	      const syncSidebarTopOffset = () => {
-	        if (!sidebar || !chatHeader) return;
-	        const headerHeight = chatHeader.getBoundingClientRect().height || 0;
-	        const selectorTop = chatModelSelector ? parseFloat(getComputedStyle(chatModelSelector).top) || 0 : 0;
-        const extraOffset = -152;
-	        document.documentElement.style.setProperty(
-	          "--sidebar-top-offset",
-	          `${Math.round(headerHeight + selectorTop + extraOffset)}px`
-	        );
-	      };
+      const syncSidebarTopOffset = () => {
+        if (!sidebarTop || !modelTrigger || !newChatButton) return;
+        const targetTop = modelTrigger.getBoundingClientRect().top;
+        const buttonTop = newChatButton.getBoundingClientRect().top;
+        const delta = Math.round(targetTop - buttonTop);
+        document.documentElement.style.setProperty("--sidebar-top-offset", `${delta}px`);
+      };
 
 	      const scheduleSidebarTopOffsetSync = () => {
 	        requestAnimationFrame(syncSidebarTopOffset);
