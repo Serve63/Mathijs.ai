@@ -1938,27 +1938,34 @@
       .chat-mode-select select {
         appearance: none;
         -webkit-appearance: none;
-        border: 1px solid rgba(16, 21, 32, 0.12);
-        background: #fff;
-        color: #1a1a1f;
+        border: 1px solid rgba(16, 21, 32, 0.08);
+        background: #f6f6f7;
+        color: #202128;
         font-weight: 600;
-        font-size: 0.78rem;
-        padding: 8px 28px 8px 12px;
-        border-radius: 12px;
-        height: 38px;
-        min-width: 120px;
+        font-size: 0.74rem;
+        padding: 6px 26px 6px 12px;
+        border-radius: 999px;
+        height: 34px;
+        min-width: 116px;
         cursor: pointer;
         outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      }
+
+      .chat-mode-select select:focus-visible {
+        border-color: rgba(230, 194, 0, 0.6);
+        box-shadow: 0 0 0 2px rgba(230, 194, 0, 0.2);
+        background: #fffbe6;
       }
 
       .chat-mode-select::after {
         content: "";
         position: absolute;
         right: 12px;
-        width: 8px;
-        height: 8px;
-        border-right: 2px solid rgba(26, 26, 31, 0.6);
-        border-bottom: 2px solid rgba(26, 26, 31, 0.6);
+        width: 7px;
+        height: 7px;
+        border-right: 2px solid rgba(26, 26, 31, 0.55);
+        border-bottom: 2px solid rgba(26, 26, 31, 0.55);
         transform: rotate(45deg);
         pointer-events: none;
       }
