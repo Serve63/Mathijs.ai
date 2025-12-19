@@ -145,7 +145,6 @@
         flex: 1;
         overflow: visible;
         min-height: 0;
-        position: relative;
       }
 
       .sidebar-bottom {
@@ -182,13 +181,9 @@
         cursor: pointer;
         transition: background 0.2s ease, transform 0.2s ease;
         box-shadow: 0 8px 24px -8px rgba(230, 194, 0, 0.4);
-        position: absolute;
-        top: 16px;
-        left: 20px;
-        right: 20px;
-        width: calc(100% - 40px);
+        position: relative;
         overflow: visible;
-        z-index: 3;
+        z-index: 1;
       }
 
       .sidebar-mascot {
@@ -197,7 +192,6 @@
         height: auto;
         display: block;
         margin: 0 auto -64px;
-        margin-top: calc(16px + 56px);
         filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.35));
         user-select: none;
         pointer-events: none;
