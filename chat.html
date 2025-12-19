@@ -4252,24 +4252,36 @@
 	          return currentUser;
 	        }
 	        try {
+	          const { data: sessionData } = await supabaseClient.auth.getSession();
+	          const sessionUser = sessionData?.session?.user || null;
+	          if (sessionUser) {
+	            currentUser = sessionUser;
+	            titleOverrides = loadTitleOverrides(currentUser.id);
+	            updateProfileSidebar(currentUser);
+	            initProfileEnhancements();
+	            initLogoutButton();
+	          }
+	        } catch (error) {
+	          console.warn("Kon sessie niet ophalen", error);
+	        }
+	        try {
 	          const { data, error } = await supabaseClient.auth.getUser();
 	          if (error || !data?.user) {
 	            console.error("Geen actieve gebruiker gevonden", error);
-	            try {
-	              await supabaseClient.auth.signOut();
-	            } catch {
-	              // ignore
+	            if (currentUser) {
+	              return currentUser;
 	            }
+	            renderEmptyState();
+	            renderEmptySessionMessage("Inloggen is nodig om je chats te laden.");
+	            ensureSessionEmptyActions();
 	            window.location.href = "login.html";
 	            return null;
 	          }
 	          currentUser = data.user;
 	        } catch (error) {
 	          console.error("Kon gebruiker niet ophalen", error);
-	          try {
-	            await supabaseClient.auth.signOut();
-	          } catch {
-	            // ignore
+	          if (currentUser) {
+	            return currentUser;
 	          }
 	          renderEmptyState();
 	          renderEmptySessionMessage("Kon je login niet controleren. Probeer opnieuw in te loggen.");
