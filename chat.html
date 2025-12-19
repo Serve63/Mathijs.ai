@@ -3215,9 +3215,24 @@
 	        return client;
 	      };
 
-	      const supabaseClient = getSupabaseClient();
+      const supabaseClient = getSupabaseClient();
       let currentUser = null;
       let profileEnhancementsInitialized = false;
+
+      const ensureSupabaseSession = async () => {
+        if (!supabaseClient) return null;
+        try {
+          const { data } = await supabaseClient.auth.getSession();
+          if (data?.session) {
+            return data.session;
+          }
+          const { data: refreshed } = await supabaseClient.auth.refreshSession();
+          return refreshed?.session || null;
+        } catch (error) {
+          console.warn("Sessierefresh mislukt", error);
+          return null;
+        }
+      };
 
       const safeUpsertProfile = async (fields = {}) => {
         if (!supabaseClient || !currentUser?.id) return;
@@ -4252,8 +4267,8 @@
 	          return currentUser;
 	        }
 	        try {
-	          const { data: sessionData } = await supabaseClient.auth.getSession();
-	          const sessionUser = sessionData?.session?.user || null;
+	          const session = await ensureSupabaseSession();
+	          const sessionUser = session?.user || null;
 	          if (sessionUser) {
 	            currentUser = sessionUser;
 	            titleOverrides = loadTitleOverrides(currentUser.id);
