@@ -7,19 +7,18 @@
 
       const modelSelects = Array.from(document.querySelectorAll(".model-select"));
       const statusIndicator = null;
-      const sidebar = document.querySelector(".sidebar");
-      const chatHeader = document.querySelector(".chat-header");
+      const sidebarTop = document.querySelector(".sidebar-top");
       const chatModelSelector = document.querySelector(".chat-model-selector");
       const newChatButton = document.querySelector(".new-chat");
 
       const syncSidebarTopOffset = () => {
-        if (!sidebar || !chatHeader || !chatModelSelector || !newChatButton) return;
-        const sidebarPadding = parseFloat(getComputedStyle(sidebar).paddingTop) || 0;
+        if (!sidebarTop || !chatModelSelector || !newChatButton) return;
+        const currentShift = parseFloat(getComputedStyle(sidebarTop).marginTop) || 0;
         const targetTop = chatModelSelector.getBoundingClientRect().top;
         const buttonTop = newChatButton.getBoundingClientRect().top;
         const delta = targetTop - buttonTop;
-        const nextPadding = Math.max(0, Math.round(sidebarPadding + delta));
-        document.documentElement.style.setProperty("--sidebar-top-offset", `${nextPadding}px`);
+        const nextShift = Math.round(currentShift + delta);
+        document.documentElement.style.setProperty("--sidebar-top-offset", `${nextShift}px`);
       };
 
 	      const scheduleSidebarTopOffsetSync = () => {
