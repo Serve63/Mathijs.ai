@@ -224,7 +224,7 @@
 
         connectTimeout = setTimeout(() => {
           setStatus("Verbonden", "idle");
-          appendMessage(`${categoryLabel} ${value} is verbonden en klaar voor prompts.`, "system");
+          appendMessage(`${categoryLabel} ${value} is verbonden.`, "system");
         }, 900);
       };
 
