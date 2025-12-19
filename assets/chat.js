@@ -7,25 +7,8 @@
 
       const modelSelects = Array.from(document.querySelectorAll(".model-select"));
       const statusIndicator = null;
-      const sidebarTop = document.querySelector(".sidebar-top");
-      const modelTrigger = document.querySelector(".model-select__trigger");
       const newChatButton = document.querySelector(".new-chat");
 
-      const syncSidebarTopOffset = () => {
-        if (!sidebarTop || !modelTrigger || !newChatButton) return;
-        const targetTop = modelTrigger.getBoundingClientRect().top;
-        const buttonTop = newChatButton.getBoundingClientRect().top;
-        const delta = Math.round(targetTop - buttonTop);
-        document.documentElement.style.setProperty("--sidebar-top-offset", `${delta}px`);
-      };
-
-	      const scheduleSidebarTopOffsetSync = () => {
-	        requestAnimationFrame(syncSidebarTopOffset);
-	      };
-
-	      scheduleSidebarTopOffsetSync();
-	      window.addEventListener("resize", scheduleSidebarTopOffsetSync, { passive: true });
-	      window.addEventListener("load", scheduleSidebarTopOffsetSync, { passive: true });
       const profileAvatar = document.querySelector(".profile-avatar");
       const profileAvatarImage = profileAvatar ? profileAvatar.querySelector(".profile-avatar__image") : null;
       const profileAvatarInput = document.getElementById("profile-avatar-input");
