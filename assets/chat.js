@@ -12,14 +12,11 @@
       const newChatButton = document.querySelector(".new-chat");
 
       const syncSidebarTopOffset = () => {
-        if (!modelTrigger || !newChatButton) return;
-        // Position the new-chat button at the same vertical level as the model selector
+        if (!sidebarTop || !modelTrigger || !newChatButton) return;
         const targetTop = modelTrigger.getBoundingClientRect().top;
-        const sidebarRect = newChatButton.parentElement ? newChatButton.parentElement.getBoundingClientRect() : null;
-        if (sidebarRect) {
-          const newTop = Math.max(16, Math.round(targetTop - sidebarRect.top));
-          newChatButton.style.top = `${newTop}px`;
-        }
+        const buttonTop = newChatButton.getBoundingClientRect().top;
+        const delta = Math.round(targetTop - buttonTop);
+        document.documentElement.style.setProperty("--sidebar-top-offset", `${delta}px`);
       };
 
 	      const scheduleSidebarTopOffsetSync = () => {
