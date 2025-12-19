@@ -5,22 +5,22 @@
 	        console.warn("[chat] Inline scripts detected in chat.html. Keep scripts in assets/chat.js to avoid CSP issues.");
 	      }
 
-      const modelSelects = Array.from(document.querySelectorAll(".model-select"));
-      const statusIndicator = null;
-      const sidebar = document.querySelector(".sidebar");
-      const chatHeader = document.querySelector(".chat-header");
-      const chatModelSelector = document.querySelector(".chat-model-selector");
-      const newChatButton = document.querySelector(".new-chat");
+	      const modelSelects = Array.from(document.querySelectorAll(".model-select"));
+	      const statusIndicator = null;
+	      const sidebar = document.querySelector(".sidebar");
+	      const chatHeader = document.querySelector(".chat-header");
+	      const chatModelSelector = document.querySelector(".chat-model-selector");
 
-      const syncSidebarTopOffset = () => {
-        if (!sidebar || !chatHeader || !chatModelSelector || !newChatButton) return;
-        const sidebarPadding = parseFloat(getComputedStyle(sidebar).paddingTop) || 0;
-        const targetTop = chatModelSelector.getBoundingClientRect().top;
-        const buttonTop = newChatButton.getBoundingClientRect().top;
-        const delta = targetTop - buttonTop;
-        const nextPadding = Math.max(0, Math.round(sidebarPadding + delta));
-        document.documentElement.style.setProperty("--sidebar-top-offset", `${nextPadding}px`);
-      };
+	      const syncSidebarTopOffset = () => {
+	        if (!sidebar || !chatHeader) return;
+	        const headerHeight = chatHeader.getBoundingClientRect().height || 0;
+	        const selectorTop = chatModelSelector ? parseFloat(getComputedStyle(chatModelSelector).top) || 0 : 0;
+        const extraOffset = -190;
+	        document.documentElement.style.setProperty(
+	          "--sidebar-top-offset",
+	          `${Math.round(headerHeight + selectorTop + extraOffset)}px`
+	        );
+	      };
 
 	      const scheduleSidebarTopOffsetSync = () => {
 	        requestAnimationFrame(syncSidebarTopOffset);
