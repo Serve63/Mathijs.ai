@@ -1929,6 +1929,40 @@
         background: #ffe55a;
       }
 
+      .chat-mode-select {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .chat-mode-select select {
+        appearance: none;
+        -webkit-appearance: none;
+        border: 1px solid rgba(16, 21, 32, 0.12);
+        background: #fff;
+        color: #1a1a1f;
+        font-weight: 600;
+        font-size: 0.78rem;
+        padding: 8px 28px 8px 12px;
+        border-radius: 12px;
+        height: 38px;
+        min-width: 120px;
+        cursor: pointer;
+        outline: none;
+      }
+
+      .chat-mode-select::after {
+        content: "";
+        position: absolute;
+        right: 12px;
+        width: 8px;
+        height: 8px;
+        border-right: 2px solid rgba(26, 26, 31, 0.6);
+        border-bottom: 2px solid rgba(26, 26, 31, 0.6);
+        transform: rotate(45deg);
+        pointer-events: none;
+      }
+
       .chat-plus {
         position: relative;
         border: 1px solid rgba(16, 21, 32, 0.12);
@@ -2472,6 +2506,12 @@
                 <span class="close-icon" id="chat-search-close" aria-label="Web zoeken uit">✕</span>
               </span>
               <textarea placeholder="Stuur een bericht" rows="1"></textarea>
+              <div class="chat-mode-select">
+                <select id="thinking-mode-select" aria-label="Denkmodus">
+                  <option value="snel">Snel</option>
+                  <option value="nadenken">Nadenken</option>
+                </select>
+              </div>
               <button type="button" aria-label="Stuur bericht">
                 <svg viewBox="0 0 16 16" aria-hidden="true">
                   <line x1="8" y1="12.5" x2="8" y2="3.5" />
@@ -2520,6 +2560,7 @@
       const profileModalDialog = profileModal ? profileModal.querySelector(".profile-modal__dialog") : null;
       const chatPlus = document.getElementById("chat-plus");
       const chatPlusMenu = document.getElementById("chat-plus-menu");
+      const thinkingModeSelect = document.getElementById("thinking-mode-select");
       const toggleWebSearch = document.getElementById("toggle-web-search");
       const webSearchState = document.getElementById("web-search-state");
       const chatSearchIndicator = document.getElementById("chat-search-indicator");
@@ -2544,6 +2585,7 @@
       });
       let messages = [createSystemMessage()];
       let webSearchEnabled = false;
+      let selectedThinkingMode = "snel";
 
 		      const modelEngineMap = {
 		        chatgpt52: "gpt-4o",
@@ -2639,6 +2681,13 @@
           if (chatPlus) chatPlus.setAttribute("aria-expanded", "false");
         }
       };
+
+      if (thinkingModeSelect) {
+        thinkingModeSelect.value = selectedThinkingMode;
+        thinkingModeSelect.addEventListener("change", (event) => {
+          selectedThinkingMode = event.target.value;
+        });
+      }
 
       const setStatus = (label, state = "idle") => {
         if (!statusIndicator) return;
@@ -4400,10 +4449,11 @@
 	              "Content-Type": "application/json",
 	              Authorization: `Bearer ${accessToken}`,
 	            },
-	            body: JSON.stringify({
-	              messages,
-	              webSearch: webSearchEnabled,
-	              model: engine,
+            body: JSON.stringify({
+              messages,
+              webSearch: webSearchEnabled,
+              model: engine,
+              thinkingMode: selectedThinkingMode,
             }),
           });
 
