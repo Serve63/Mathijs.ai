@@ -60,8 +60,9 @@ module.exports = async (req, res) => {
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeSecretKey) return json(res, 500, { error: "Missing STRIPE_SECRET_KEY" });
 
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceRoleKey) return json(res, 500, { error: "Missing SUPABASE_SERVICE_ROLE_KEY" });
+    const { getSupabaseServiceRoleKey } = require("../_lib/env");
+    const serviceRoleKey = getSupabaseServiceRoleKey();
+    if (!serviceRoleKey) return json(res, 500, { error: "Missing SUPABASE_SERVICE_ROLE_KEY or supabase_service_role_key" });
 
     const token = getBearerToken(req);
     if (!token) return json(res, 401, { error: "Unauthorized" });

@@ -1,10 +1,12 @@
 const { SUPABASE_URL } = require("./supabase");
+const { getSupabaseServiceRoleKey } = require("./env");
 
 function getServiceRoleKey() {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const key = getSupabaseServiceRoleKey();
   if (!key) {
     const err = new Error("missing_service_role_key");
     err.statusCode = 500;
+    err.publicMessage = "Supabase service role key missing (set SUPABASE_SERVICE_ROLE_KEY or supabase_service_role_key).";
     throw err;
   }
   return key;

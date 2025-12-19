@@ -11,10 +11,12 @@ try {
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, redactSecrets, setCommonApiHeaders } = require("./_lib/security");
 const { getUserFromAccessToken } = require("./_lib/supabase");
 const { SUPABASE_URL } = require("./_lib/supabase");
+const { getOpenAIApiKey, getSupabaseServiceRoleKey } = require("./_lib/env");
 
 const GEMINI_MODEL_ID = "gemini-1.5-flash";
 const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
-const OPENAI_MODEL_ID = "gpt-4-turbo";
+const OPENAI_DEFAULT_MODEL = "gpt-4o";
+const OPENAI_ALLOWED_MODELS = ["gpt-4o", "gpt-4o-mini"];
 
 const MAX_MESSAGES = 30;
 const MAX_MESSAGE_CHARS = 8000;
@@ -30,6 +32,18 @@ function getTokensPerEur() {
   const tokensPerEur = Number(process.env.TOPUP_TOKENS_PER_EUR || 100);
   if (!Number.isFinite(tokensPerEur) || tokensPerEur <= 0) return 100;
   return Math.floor(tokensPerEur);
+}
+
+function resolveOpenAIModel(requested) {
+  if (typeof requested !== "string" || !requested.trim()) {
+    return OPENAI_DEFAULT_MODEL;
+  }
+  const normalized = requested.trim();
+  if (!OPENAI_ALLOWED_MODELS.includes(normalized)) {
+    console.warn(`Niet toegestane OpenAI model requested: ${normalized}. Valt terug op ${OPENAI_DEFAULT_MODEL}`);
+    return OPENAI_DEFAULT_MODEL;
+  }
+  return normalized;
 }
 
 async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {}) {
@@ -198,10 +212,11 @@ async function streamGeminiResponse(res, messages) {
   res.end();
 }
 
-async function streamOpenAIResponse(res, messages) {
-  const apiKey = process.env.OPENAI_API_KEY;
+async function streamOpenAIResponse(res, messages, { model = OPENAI_DEFAULT_MODEL, requestId = "" } = {}) {
+  const apiKey = getOpenAIApiKey();
   if (!apiKey) {
-    return json(res, 500, { error: "AI provider is niet geconfigureerd." });
+    console.warn("OpenAI key missing (expected: OPENAI_API_KEY or open_ai_key)");
+    return json(res, 500, { error: "OpenAI key missing (set OPENAI_API_KEY or open_ai_key)." });
   }
 
   const response = await fetch(OPENAI_ENDPOINT, {
@@ -211,7 +226,7 @@ async function streamOpenAIResponse(res, messages) {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: OPENAI_MODEL_ID,
+      model,
       messages: messages.map((m) => ({ role: m.role, content: m.content })),
       stream: true,
     }),
@@ -224,10 +239,10 @@ async function streamOpenAIResponse(res, messages) {
     } catch {
       /* ignore */
     }
-    console.error("OpenAI request failed:", response.status, redactSecrets(details));
+    console.error(`OpenAI request failed (${requestId})`, response.status, redactSecrets(details));
     const status = response.status === 429 ? 429 : 502;
     const message = response.status === 429 ? "Te veel AI-verzoeken. Probeer zo opnieuw." : "AI-request mislukt. Probeer later opnieuw.";
-    return json(res, status, { error: message });
+    return json(res, status, { error: `${message} [${requestId || "no-request-id"}]` });
   }
 
   res.statusCode = 200;
@@ -297,6 +312,7 @@ async function streamOpenAIResponse(res, messages) {
 
 module.exports = async function handler(req, res) {
   try {
+    const requestId = `chat-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     if (req.method !== "POST") {
       res.setHeader("Allow", "POST");
       return json(res, 405, { error: "Method not allowed" });
@@ -308,9 +324,10 @@ module.exports = async function handler(req, res) {
     const user = await getUserFromAccessToken(token);
     if (!user?.id) return json(res, 401, { error: "Unauthorized" });
 
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const serviceRoleKey = getSupabaseServiceRoleKey();
     if (!serviceRoleKey) {
-      return json(res, 500, { error: "Server misconfiguratie (missing SUPABASE_SERVICE_ROLE_KEY)." });
+      console.error("Supabase service role key missing (expected SUPABASE_SERVICE_ROLE_KEY or supabase_service_role_key)");
+      return json(res, 500, { error: "Supabase service role key missing; tokens cannot be initialized." });
     }
 
     let appMeta = user?.app_metadata || {};
@@ -374,7 +391,8 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    await streamOpenAIResponse(res, normalizedMessages);
+    const openaiModel = resolveOpenAIModel(requestedModel);
+    await streamOpenAIResponse(res, normalizedMessages, { model: openaiModel, requestId });
   } catch (error) {
     const status = Number(error?.statusCode) || (error?.code === "payload_too_large" ? 413 : 500);
     if (res.headersSent) return;

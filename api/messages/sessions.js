@@ -73,7 +73,9 @@ module.exports = async (req, res) => {
 
     return json(res, 200, { sessions });
   } catch (e) {
-    return publicError(res, 500, "Kon sessies niet laden.", e);
+    const status = e?.statusCode || 500;
+    const msg = e?.publicMessage || "Kon sessies niet laden.";
+    return publicError(res, status, msg, e);
   }
 };
 

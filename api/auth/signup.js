@@ -59,8 +59,9 @@ module.exports = async (req, res) => {
     if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
     if (!checkSameOrigin(req)) return json(res, 403, { error: "Forbidden" });
 
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceRoleKey) return json(res, 500, { error: "Missing SUPABASE_SERVICE_ROLE_KEY" });
+    const { getSupabaseServiceRoleKey } = require("../_lib/env");
+    const serviceRoleKey = getSupabaseServiceRoleKey();
+    if (!serviceRoleKey) return json(res, 500, { error: "Missing SUPABASE_SERVICE_ROLE_KEY or supabase_service_role_key" });
 
     const ip = getClientIp(req);
     const limitResult = rateLimit({ key: `signup:ip:${ip}`, limit: SIGNUP_LIMIT, windowMs: SIGNUP_WINDOW_MS });

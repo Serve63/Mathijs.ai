@@ -1,4 +1,11 @@
-﻿# Mathijs.ai
+# Mathijs.ai
+
+## Config quick notes
+- OpenAI key: `OPENAI_API_KEY` of `open_ai_key` (beide toegestaan).
+- Supabase service role: `SUPABASE_SERVICE_ROLE_KEY` (init tokens vereist).
+- Supabase URL/anon: `SUPABASE_URL`/`SUPABASE_ANON_KEY` of `NEXT_PUBLIC_...` fallbacks.
+- Default chat model: `gpt-4o`; allowed list: `gpt-4o`, `gpt-4o-mini`.
+- Bij ontbrekende keys loggen we alleen present/missing, nooit secrets.
 
 ## Supabase-auth flow
 

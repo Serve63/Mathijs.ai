@@ -53,7 +53,9 @@ module.exports = async (req, res) => {
 
     return json(res, 200, { messages });
   } catch (e) {
-    return publicError(res, 500, "Kon berichten niet laden.", e);
+    const status = e?.statusCode || 500;
+    const msg = e?.publicMessage || "Kon berichten niet laden.";
+    return publicError(res, status, msg, e);
   }
 };
 

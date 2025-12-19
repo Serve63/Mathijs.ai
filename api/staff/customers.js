@@ -49,11 +49,12 @@ function normalizeCustomerFromUser(u) {
 
 module.exports = async (req, res) => {
   try {
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const { getSupabaseServiceRoleKey } = require("../_lib/env");
+    const serviceRoleKey = getSupabaseServiceRoleKey();
     if (!serviceRoleKey) {
       return json(res, 500, {
         error:
-          "Missing SUPABASE_SERVICE_ROLE_KEY. Add it in Vercel project settings (Environment Variables) and redeploy.",
+          "Missing SUPABASE_SERVICE_ROLE_KEY or supabase_service_role_key. Add it in Vercel project settings (Environment Variables) and redeploy.",
       });
     }
 

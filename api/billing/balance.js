@@ -11,6 +11,7 @@
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders } = require("../_lib/security");
 const { getUserFromAccessToken } = require("../_lib/supabase");
 const { SUPABASE_URL } = require("../_lib/supabase");
+const { getSupabaseServiceRoleKey } = require("../_lib/env");
 
 const WINDOW_MS = 60_000;
 const LIMIT = 120;
@@ -75,21 +76,24 @@ module.exports = async (req, res) => {
 
     const appMeta = user?.app_metadata || {};
     let tokenBalance = Number(appMeta?.tokens);
+    const serviceRoleKey = getSupabaseServiceRoleKey();
 
     // Initialize once for existing users that don't have a balance yet.
     if (!Number.isFinite(tokenBalance)) {
-      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
       if (!serviceRoleKey) {
-        // Can't init without service role, but we can still return 0.
-        tokenBalance = 0;
-      } else {
-        const nextMeta = { ...(appMeta || {}), tokens: starterTokens, credits_initialized: true, starter_credits_eur: STARTER_CREDITS_EUR };
+        return json(res, 503, { error: "Supabase service role key missing; tokens cannot be initialized." });
+      }
+      const nextMeta = { ...(appMeta || {}), tokens: starterTokens, credits_initialized: true, starter_credits_eur: STARTER_CREDITS_EUR };
+      try {
         await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
           method: "PUT",
           accessKey: serviceRoleKey,
           body: { app_metadata: nextMeta },
         });
         tokenBalance = starterTokens;
+      } catch (e) {
+        console.error("Token initialization failed:", e?.message || e);
+        return json(res, 503, { error: "Tokens konden niet worden geïnitialiseerd. Probeer later opnieuw." });
       }
     }
 
