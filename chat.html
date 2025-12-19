@@ -46,7 +46,8 @@
         border-right: none;
         display: flex;
         flex-direction: column;
-        padding: 100px 20px 20px 20px;
+        padding: 20px;
+        padding-top: 16px;
         gap: 20px;
         position: relative;
         z-index: 2;
@@ -144,7 +145,9 @@
         flex: 1;
         overflow: visible;
         min-height: 0;
-        margin-top: var(--sidebar-top-offset, 0px);
+        margin-top: var(--sidebar-top-offset, 100px);
+        padding-top: 70px;
+        position: relative;
       }
 
       .sidebar-bottom {
@@ -181,7 +184,10 @@
         cursor: pointer;
         transition: background 0.2s ease, transform 0.2s ease;
         box-shadow: 0 8px 24px -8px rgba(230, 194, 0, 0.4);
-        position: relative;
+        position: absolute;
+        top: 16px;
+        left: 0;
+        right: 0;
         overflow: visible;
         z-index: 1;
       }
@@ -191,11 +197,13 @@
         max-width: 100%;
         height: auto;
         display: block;
-        margin: 0 auto -64px;
+        position: absolute;
+        top: -130px;
+        left: 50%;
+        transform: translateX(-50%);
         filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.35));
         user-select: none;
         pointer-events: none;
-        position: relative;
         z-index: 2;
       }
 
