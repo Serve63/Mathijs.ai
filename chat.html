@@ -2508,8 +2508,8 @@
               <textarea placeholder="Stuur een bericht" rows="1"></textarea>
               <div class="chat-mode-select">
                 <select id="thinking-mode-select" aria-label="Denkmodus">
-                  <option value="snel">Snel</option>
-                  <option value="nadenken">Nadenken</option>
+                  <option value="instantly">Instantly</option>
+                  <option value="thinking">Thinking</option>
                 </select>
               </div>
               <button type="button" aria-label="Stuur bericht">
@@ -2585,7 +2585,47 @@
       });
       let messages = [createSystemMessage()];
       let webSearchEnabled = false;
-      let selectedThinkingMode = "snel";
+      let selectedThinkingMode = "instantly";
+
+      const defaultThinkingOptions = [
+        { value: "snel", label: "Snel" },
+        { value: "denken", label: "Denken" },
+      ];
+      const thinkingModeOptions = {
+        chatgpt52: [
+          { value: "instantly", label: "Instantly" },
+          { value: "thinking", label: "Thinking" },
+        ],
+        gemini3: [
+          { value: "snel", label: "Snel" },
+          { value: "denken", label: "Denken" },
+        ],
+        deepseekv2: [
+          { value: "snel", label: "Snel" },
+          { value: "diepdenken", label: "Diepdenken" },
+        ],
+        grok4: [
+          { value: "snel", label: "Snel" },
+          { value: "expert", label: "Expert" },
+        ],
+      };
+
+      const syncThinkingModeOptions = () => {
+        if (!thinkingModeSelect) return;
+        const options = thinkingModeOptions[selectedModel] || defaultThinkingOptions;
+        const nextMode = options.some((option) => option.value === selectedThinkingMode)
+          ? selectedThinkingMode
+          : options[0].value;
+        selectedThinkingMode = nextMode;
+        thinkingModeSelect.innerHTML = "";
+        options.forEach((option) => {
+          const opt = document.createElement("option");
+          opt.value = option.value;
+          opt.textContent = option.label;
+          thinkingModeSelect.appendChild(opt);
+        });
+        thinkingModeSelect.value = nextMode;
+      };
 
 		      const modelEngineMap = {
 		        chatgpt52: "gpt-4o",
@@ -2612,42 +2652,29 @@
 	        });
 	      }
 
-	      const updateSelectedModel = (label) => {
-	        selectedModelLabel = label || "ChatGPT 5.2";
-	        if (label && label.startsWith("Opus 4.5")) {
-	          selectedModel = "opus45";
-	          return;
-	        }
-	        if (label && label.startsWith("Sonnet 4")) {
-	          selectedModel = "sonnet4";
-	          return;
-	        }
-	        if (label && label.startsWith("Haiku 4.5")) {
-	          selectedModel = "haiku45";
-	          return;
-	        }
-	        if (label && label.startsWith("Gemini 3")) {
-	          selectedModel = "gemini3";
-	          return;
-	        }
-	        if (label && label.startsWith("Llama 4")) {
-	          selectedModel = "llama4";
-	          return;
-	        }
-	        if (label && label.startsWith("QWEN")) {
-	          selectedModel = "qwen";
-	          return;
-	        }
-	        if (label && label.startsWith("DeepSeek V2")) {
-	          selectedModel = "deepseekv2";
-	          return;
-	        }
-	        if (label && label.startsWith("Grok 4")) {
-	          selectedModel = "grok4";
-	          return;
-	        }
-	        selectedModel = "chatgpt52";
-	      };
+      const updateSelectedModel = (label) => {
+        selectedModelLabel = label || "ChatGPT 5.2";
+        if (label && label.startsWith("Opus 4.5")) {
+          selectedModel = "opus45";
+        } else if (label && label.startsWith("Sonnet 4")) {
+          selectedModel = "sonnet4";
+        } else if (label && label.startsWith("Haiku 4.5")) {
+          selectedModel = "haiku45";
+        } else if (label && label.startsWith("Gemini 3")) {
+          selectedModel = "gemini3";
+        } else if (label && label.startsWith("Llama 4")) {
+          selectedModel = "llama4";
+        } else if (label && label.startsWith("QWEN")) {
+          selectedModel = "qwen";
+        } else if (label && label.startsWith("DeepSeek V2")) {
+          selectedModel = "deepseekv2";
+        } else if (label && label.startsWith("Grok 4")) {
+          selectedModel = "grok4";
+        } else {
+          selectedModel = "chatgpt52";
+        }
+        syncThinkingModeOptions();
+      };
 
       let activeCategory = "chat";
 
@@ -2683,7 +2710,7 @@
       };
 
       if (thinkingModeSelect) {
-        thinkingModeSelect.value = selectedThinkingMode;
+        syncThinkingModeOptions();
         thinkingModeSelect.addEventListener("change", (event) => {
           selectedThinkingMode = event.target.value;
         });
