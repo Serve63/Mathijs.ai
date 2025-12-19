@@ -176,6 +176,7 @@
         font-size: 0.9rem;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
         cursor: pointer;
         transition: background 0.2s ease, transform 0.2s ease;
@@ -201,6 +202,9 @@
       .new-chat__label {
         position: relative;
         z-index: 2;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
       }
 
       .new-chat:hover {
@@ -2216,7 +2220,10 @@
 		        <div class="sidebar-top">
 		          <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
 		            <img class="new-chat__mascot" src="assets/mathijs-lean.png" alt="" aria-hidden="true" />
-		            <span class="new-chat__label"><span>+</span>Nieuw gesprek</span>
+		            <span class="new-chat__label">
+		              <span class="new-chat__plus">+</span>
+		              <span class="new-chat__text">Nieuw gesprek</span>
+		            </span>
 		          </button>
 		          <div class="sessions-heading">
 		            <h2>sessies</h2>
