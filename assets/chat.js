@@ -36,6 +36,9 @@
       const chatPlus = document.getElementById("chat-plus");
       const chatPlusMenu = document.getElementById("chat-plus-menu");
       const thinkingModeSelect = document.getElementById("thinking-mode-select");
+      const thinkingModeTrigger = document.getElementById("thinking-mode-trigger");
+      const thinkingModeMenu = document.getElementById("thinking-mode-menu");
+      const thinkingModeValue = document.getElementById("thinking-mode-value");
       const toggleWebSearch = document.getElementById("toggle-web-search");
       const webSearchState = document.getElementById("web-search-state");
       const chatSearchIndicator = document.getElementById("chat-search-indicator");
@@ -85,6 +88,44 @@
         ],
       };
 
+      let currentThinkingOptions = defaultThinkingOptions;
+
+      const updateThinkingModeLabel = (options, value) => {
+        if (!thinkingModeValue) return;
+        const match = options.find((option) => option.value === value);
+        thinkingModeValue.textContent = match ? match.label : value;
+      };
+
+      const renderThinkingModeMenu = (options, activeValue) => {
+        if (!thinkingModeMenu) return;
+        thinkingModeMenu.innerHTML = "";
+        options.forEach((option) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "chat-mode-option";
+          btn.setAttribute("role", "option");
+          btn.setAttribute("data-value", option.value);
+          btn.textContent = option.label;
+          if (option.value === activeValue) {
+            btn.classList.add("is-active");
+            btn.setAttribute("aria-selected", "true");
+          } else {
+            btn.setAttribute("aria-selected", "false");
+          }
+          btn.addEventListener("click", () => {
+            selectedThinkingMode = option.value;
+            if (thinkingModeSelect) {
+              thinkingModeSelect.value = option.value;
+              thinkingModeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+            updateThinkingModeLabel(options, option.value);
+            renderThinkingModeMenu(options, option.value);
+            closeThinkingMenu();
+          });
+          thinkingModeMenu.appendChild(btn);
+        });
+      };
+
       const syncThinkingModeOptions = () => {
         if (!thinkingModeSelect) return;
         const options = thinkingModeOptions[selectedModel] || defaultThinkingOptions;
@@ -92,6 +133,7 @@
           ? selectedThinkingMode
           : options[0].value;
         selectedThinkingMode = nextMode;
+        currentThinkingOptions = options;
         thinkingModeSelect.innerHTML = "";
         options.forEach((option) => {
           const opt = document.createElement("option");
@@ -100,6 +142,8 @@
           thinkingModeSelect.appendChild(opt);
         });
         thinkingModeSelect.value = nextMode;
+        updateThinkingModeLabel(options, nextMode);
+        renderThinkingModeMenu(options, nextMode);
       };
 
 		      const modelEngineMap = {
@@ -170,6 +214,12 @@
         });
       };
 
+      function closeThinkingMenu() {
+        if (!thinkingModeMenu || !thinkingModeTrigger) return;
+        thinkingModeMenu.classList.remove("is-open");
+        thinkingModeTrigger.setAttribute("aria-expanded", "false");
+      }
+
       const closeAllDropdowns = (exception = null) => {
         modelSelects.forEach((select) => {
           const dropdown = select.querySelector(".model-dropdown");
@@ -182,12 +232,32 @@
           chatPlusMenu.style.display = "none";
           if (chatPlus) chatPlus.setAttribute("aria-expanded", "false");
         }
+        if (thinkingModeMenu && exception !== thinkingModeMenu) {
+          closeThinkingMenu();
+        }
       };
 
       if (thinkingModeSelect) {
         syncThinkingModeOptions();
         thinkingModeSelect.addEventListener("change", (event) => {
           selectedThinkingMode = event.target.value;
+          updateThinkingModeLabel(currentThinkingOptions, selectedThinkingMode);
+          renderThinkingModeMenu(currentThinkingOptions, selectedThinkingMode);
+        });
+      }
+
+      if (thinkingModeTrigger && thinkingModeMenu) {
+        thinkingModeTrigger.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const isOpen = thinkingModeMenu.classList.contains("is-open");
+          closeAllDropdowns(isOpen ? null : thinkingModeMenu);
+          if (isOpen) {
+            closeThinkingMenu();
+          } else {
+            thinkingModeMenu.classList.add("is-open");
+            thinkingModeTrigger.setAttribute("aria-expanded", "true");
+          }
         });
       }
 
@@ -298,9 +368,15 @@
       setActiveCategory(activeCategory);
 
       document.addEventListener("click", (event) => {
-        const insideControl = event.target.closest(".model-select, .chat-plus");
+        const insideControl = event.target.closest(".model-select, .chat-plus, .chat-mode-select");
         if (!insideControl) {
           closeAllDropdowns();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          closeThinkingMenu();
         }
       });
 
