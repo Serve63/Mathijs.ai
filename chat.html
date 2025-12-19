@@ -180,6 +180,27 @@
         cursor: pointer;
         transition: background 0.2s ease, transform 0.2s ease;
         box-shadow: 0 8px 24px -8px rgba(230, 194, 0, 0.4);
+        position: relative;
+        overflow: visible;
+      }
+
+      .new-chat__mascot {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        width: 118px;
+        height: auto;
+        transform: translate(-50%, -68%) rotate(-4deg);
+        transform-origin: 60% 95%;
+        filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.35));
+        pointer-events: none;
+        user-select: none;
+        z-index: 1;
+      }
+
+      .new-chat__label {
+        position: relative;
+        z-index: 2;
       }
 
       .new-chat:hover {
@@ -2194,7 +2215,8 @@
 		      <aside class="sidebar">
 		        <div class="sidebar-top">
 		          <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
-		            <span>+</span>Nieuw gesprek
+		            <img class="new-chat__mascot" src="assets/mathijs-lean.png" alt="" aria-hidden="true" />
+		            <span class="new-chat__label"><span>+</span>Nieuw gesprek</span>
 		          </button>
 		          <div class="sessions-heading">
 		            <h2>sessies</h2>
