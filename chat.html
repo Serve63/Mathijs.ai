@@ -1929,45 +1929,6 @@
         background: #ffe55a;
       }
 
-      .chat-mode-select {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-      }
-
-      .chat-mode-select select {
-        appearance: none;
-        -webkit-appearance: none;
-        border: 1px solid rgba(16, 21, 32, 0.12);
-        background: #fff;
-        color: #1a1a1f;
-        font-weight: 600;
-        font-size: 0.78rem;
-        padding: 8px 28px 8px 12px;
-        border-radius: 12px;
-        height: 38px;
-        min-width: 130px;
-        cursor: pointer;
-        outline: none;
-      }
-
-      .chat-mode-select select:disabled {
-        opacity: 0.65;
-        cursor: default;
-      }
-
-      .chat-mode-select::after {
-        content: "";
-        position: absolute;
-        right: 12px;
-        width: 8px;
-        height: 8px;
-        border-right: 2px solid rgba(26, 26, 31, 0.6);
-        border-bottom: 2px solid rgba(26, 26, 31, 0.6);
-        transform: rotate(45deg);
-        pointer-events: none;
-      }
-
       .chat-plus {
         position: relative;
         border: 1px solid rgba(16, 21, 32, 0.12);
@@ -2502,13 +2463,6 @@
                   </div>
                 </div>
               </div>
-              <div class="chat-mode-select">
-                <select id="thinking-mode-select" aria-label="Denkmodus">
-                  <option value="instant">Instant</option>
-                  <option value="snel">Snel</option>
-                  <option value="nadenken">Nadenken</option>
-                </select>
-              </div>
               <span class="chat-search-pill" id="chat-search-indicator" title="Web zoeken">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="11" cy="11" r="6" />
@@ -2566,7 +2520,6 @@
       const profileModalDialog = profileModal ? profileModal.querySelector(".profile-modal__dialog") : null;
       const chatPlus = document.getElementById("chat-plus");
       const chatPlusMenu = document.getElementById("chat-plus-menu");
-      const thinkingModeSelect = document.getElementById("thinking-mode-select");
       const toggleWebSearch = document.getElementById("toggle-web-search");
       const webSearchState = document.getElementById("web-search-state");
       const chatSearchIndicator = document.getElementById("chat-search-indicator");
@@ -2603,42 +2556,9 @@
 		        deepseekv2: "gpt-4o", // Fallback to OpenAI until DeepSeek API is implemented
 		        grok4: "gpt-4o", // Fallback to OpenAI until Grok API is implemented
 		      };
-      let selectedModel = "chatgpt52";
-      let selectedModelLabel = "ChatGPT 5.2";
-      let thinkingIndicator = null;
-      let selectedThinkingMode = "instant";
-      const thinkingModeLabels = {
-        instant: "Instant",
-        snel: "Snel",
-        nadenken: "Nadenken",
-      };
-      const thinkingModeOptions = {
-        chatgpt52: ["instant", "snel", "nadenken"],
-        gemini3: ["instant", "snel"],
-        grok4: ["instant"],
-        opus45: ["instant", "nadenken"],
-        sonnet4: ["instant", "nadenken"],
-        haiku45: ["instant", "snel"],
-        llama4: ["instant", "snel"],
-        qwen: ["instant", "snel"],
-        deepseekv2: ["instant", "snel"],
-      };
-
-      const syncThinkingModeOptions = () => {
-        if (!thinkingModeSelect) return;
-        const modes = thinkingModeOptions[selectedModel] || ["instant"];
-        const nextMode = modes.includes(selectedThinkingMode) ? selectedThinkingMode : modes[0];
-        selectedThinkingMode = nextMode;
-        thinkingModeSelect.innerHTML = "";
-        modes.forEach((mode) => {
-          const option = document.createElement("option");
-          option.value = mode;
-          option.textContent = thinkingModeLabels[mode] || mode;
-          thinkingModeSelect.appendChild(option);
-        });
-        thinkingModeSelect.value = nextMode;
-        thinkingModeSelect.disabled = modes.length === 1;
-      };
+		      let selectedModel = "chatgpt52";
+		      let selectedModelLabel = "ChatGPT 5.2";
+		      let thinkingIndicator = null;
 
 	      // Toggle fullscreen chat (hide header + sidebar)
 	      if (layoutToggleBtn) {
@@ -2650,51 +2570,42 @@
 	        });
 	      }
 
-      const updateSelectedModel = (label) => {
-        selectedModelLabel = label || "ChatGPT 5.2";
-        if (label && label.startsWith("Opus 4.5")) {
-          selectedModel = "opus45";
-          syncThinkingModeOptions();
-          return;
-        }
-        if (label && label.startsWith("Sonnet 4")) {
-          selectedModel = "sonnet4";
-          syncThinkingModeOptions();
-          return;
-        }
-        if (label && label.startsWith("Haiku 4.5")) {
-          selectedModel = "haiku45";
-          syncThinkingModeOptions();
-          return;
-        }
-        if (label && label.startsWith("Gemini 3")) {
-          selectedModel = "gemini3";
-          syncThinkingModeOptions();
-          return;
-        }
-        if (label && label.startsWith("Llama 4")) {
-          selectedModel = "llama4";
-          syncThinkingModeOptions();
-          return;
-        }
-        if (label && label.startsWith("QWEN")) {
-          selectedModel = "qwen";
-          syncThinkingModeOptions();
-          return;
-        }
-        if (label && label.startsWith("DeepSeek V2")) {
-          selectedModel = "deepseekv2";
-          syncThinkingModeOptions();
-          return;
-        }
-        if (label && label.startsWith("Grok 4")) {
-          selectedModel = "grok4";
-          syncThinkingModeOptions();
-          return;
-        }
-        selectedModel = "chatgpt52";
-        syncThinkingModeOptions();
-      };
+	      const updateSelectedModel = (label) => {
+	        selectedModelLabel = label || "ChatGPT 5.2";
+	        if (label && label.startsWith("Opus 4.5")) {
+	          selectedModel = "opus45";
+	          return;
+	        }
+	        if (label && label.startsWith("Sonnet 4")) {
+	          selectedModel = "sonnet4";
+	          return;
+	        }
+	        if (label && label.startsWith("Haiku 4.5")) {
+	          selectedModel = "haiku45";
+	          return;
+	        }
+	        if (label && label.startsWith("Gemini 3")) {
+	          selectedModel = "gemini3";
+	          return;
+	        }
+	        if (label && label.startsWith("Llama 4")) {
+	          selectedModel = "llama4";
+	          return;
+	        }
+	        if (label && label.startsWith("QWEN")) {
+	          selectedModel = "qwen";
+	          return;
+	        }
+	        if (label && label.startsWith("DeepSeek V2")) {
+	          selectedModel = "deepseekv2";
+	          return;
+	        }
+	        if (label && label.startsWith("Grok 4")) {
+	          selectedModel = "grok4";
+	          return;
+	        }
+	        selectedModel = "chatgpt52";
+	      };
 
       let activeCategory = "chat";
 
@@ -2728,13 +2639,6 @@
           if (chatPlus) chatPlus.setAttribute("aria-expanded", "false");
         }
       };
-
-      if (thinkingModeSelect) {
-        syncThinkingModeOptions();
-        thinkingModeSelect.addEventListener("change", (event) => {
-          selectedThinkingMode = event.target.value;
-        });
-      }
 
       const setStatus = (label, state = "idle") => {
         if (!statusIndicator) return;
@@ -3215,24 +3119,9 @@
 	        return client;
 	      };
 
-      const supabaseClient = getSupabaseClient();
+	      const supabaseClient = getSupabaseClient();
       let currentUser = null;
       let profileEnhancementsInitialized = false;
-
-      const ensureSupabaseSession = async () => {
-        if (!supabaseClient) return null;
-        try {
-          const { data } = await supabaseClient.auth.getSession();
-          if (data?.session) {
-            return data.session;
-          }
-          const { data: refreshed } = await supabaseClient.auth.refreshSession();
-          return refreshed?.session || null;
-        } catch (error) {
-          console.warn("Sessierefresh mislukt", error);
-          return null;
-        }
-      };
 
       const safeUpsertProfile = async (fields = {}) => {
         if (!supabaseClient || !currentUser?.id) return;
@@ -4267,36 +4156,24 @@
 	          return currentUser;
 	        }
 	        try {
-	          const session = await ensureSupabaseSession();
-	          const sessionUser = session?.user || null;
-	          if (sessionUser) {
-	            currentUser = sessionUser;
-	            titleOverrides = loadTitleOverrides(currentUser.id);
-	            updateProfileSidebar(currentUser);
-	            initProfileEnhancements();
-	            initLogoutButton();
-	          }
-	        } catch (error) {
-	          console.warn("Kon sessie niet ophalen", error);
-	        }
-	        try {
 	          const { data, error } = await supabaseClient.auth.getUser();
 	          if (error || !data?.user) {
 	            console.error("Geen actieve gebruiker gevonden", error);
-	            if (currentUser) {
-	              return currentUser;
+	            try {
+	              await supabaseClient.auth.signOut();
+	            } catch {
+	              // ignore
 	            }
-	            renderEmptyState();
-	            renderEmptySessionMessage("Inloggen is nodig om je chats te laden.");
-	            ensureSessionEmptyActions();
 	            window.location.href = "login.html";
 	            return null;
 	          }
 	          currentUser = data.user;
 	        } catch (error) {
 	          console.error("Kon gebruiker niet ophalen", error);
-	          if (currentUser) {
-	            return currentUser;
+	          try {
+	            await supabaseClient.auth.signOut();
+	          } catch {
+	            // ignore
 	          }
 	          renderEmptyState();
 	          renderEmptySessionMessage("Kon je login niet controleren. Probeer opnieuw in te loggen.");
@@ -4523,11 +4400,10 @@
 	              "Content-Type": "application/json",
 	              Authorization: `Bearer ${accessToken}`,
 	            },
-            body: JSON.stringify({
-              messages,
-              webSearch: webSearchEnabled,
-              model: engine,
-              thinkingMode: selectedThinkingMode,
+	            body: JSON.stringify({
+	              messages,
+	              webSearch: webSearchEnabled,
+	              model: engine,
             }),
           });
 
