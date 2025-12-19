@@ -15,7 +15,7 @@
 	        if (!sidebar || !chatHeader) return;
 	        const headerHeight = chatHeader.getBoundingClientRect().height || 0;
 	        const selectorTop = chatModelSelector ? parseFloat(getComputedStyle(chatModelSelector).top) || 0 : 0;
-        const extraOffset = -120;
+        const extraOffset = -126;
 	        document.documentElement.style.setProperty(
 	          "--sidebar-top-offset",
 	          `${Math.round(headerHeight + selectorTop + extraOffset)}px`
