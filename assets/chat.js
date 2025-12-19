@@ -1,3 +1,9 @@
+	      const inlineScripts = Array.from(document.querySelectorAll("script:not([src])"))
+	        .filter((script) => script.textContent && script.textContent.trim().length);
+	      if (inlineScripts.length) {
+	        inlineScripts.forEach((script) => script.remove());
+	        console.warn("[chat] Inline scripts detected in chat.html. Keep scripts in assets/chat.js to avoid CSP issues.");
+	      }
 
 	      const modelSelects = Array.from(document.querySelectorAll(".model-select"));
 	      const statusIndicator = null;
