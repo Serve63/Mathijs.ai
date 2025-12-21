@@ -102,7 +102,7 @@
           { value: "expert", label: "Expert" },
         ],
       };
-      const noThinkingModels = new Set(["opus45", "sonnet45", "haiku45"]);
+      const noThinkingModels = new Set(["opus45", "sonnet45", "haiku45", "llama4"]);
 
       const updateToolMenuLabels = () => {
         let photoInfoText = "";
@@ -157,6 +157,9 @@
         if (actionGenerateVideo) {
           const showVideo = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "qwen";
           actionGenerateVideo.style.display = showVideo ? "flex" : "none";
+        }
+        if (chatPlus) {
+          chatPlus.style.display = selectedModel === "llama4" ? "none" : "";
         }
       };
 
