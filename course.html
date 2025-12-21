@@ -461,6 +461,65 @@
         margin-top: 40px;
       }
 
+      body.course-locked {
+        overflow: hidden;
+      }
+
+      .coming-soon-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.72);
+        backdrop-filter: blur(4px);
+        z-index: 12000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .coming-soon-card {
+        width: min(460px, 100%);
+        background: rgba(15, 18, 28, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 20px;
+        padding: 28px 26px;
+        text-align: center;
+        box-shadow: 0 28px 80px -30px rgba(0, 0, 0, 0.75);
+        color: #fff;
+      }
+
+      .coming-soon-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 16px;
+        background: rgba(230, 194, 0, 0.18);
+        border: 1px solid rgba(230, 194, 0, 0.45);
+        color: #f5d742;
+      }
+
+      .coming-soon-icon svg {
+        width: 26px;
+        height: 26px;
+      }
+
+      .coming-soon-title {
+        margin: 0 0 8px;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .coming-soon-subtitle {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.98rem;
+        line-height: 1.5;
+      }
+
       @media (max-width: 768px) {
         header {
           padding: 16px 20px;
@@ -515,7 +574,7 @@
       }
     </style>
   </head>
-  <body>
+  <body class="course-locked">
     <section class="hero">
     <header>
         <a class="back-link" href="chat.html">
@@ -923,5 +982,17 @@
         });
       })();
     </script>
+    <div class="coming-soon-overlay" role="status" aria-live="polite">
+      <div class="coming-soon-card">
+        <div class="coming-soon-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="10" width="16" height="10" rx="2" />
+            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+          </svg>
+        </div>
+        <h2 class="coming-soon-title">Coming soon</h2>
+        <p class="coming-soon-subtitle">Deze omgeving is nog niet beschikbaar.</p>
+      </div>
+    </div>
   </body>
 </html>

@@ -980,14 +980,66 @@
                 return;
               }
 
+              const readFileAsDataUrl = (sourceFile) =>
+                new Promise((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onload = () => resolve(reader.result);
+                  reader.onerror = () => reject(reader.error || new Error("Bestand lezen mislukt."));
+                  reader.readAsDataURL(sourceFile);
+                });
+
+              let apiPayload = null;
+              try {
+                if (!supabaseClient) throw new Error("Supabase client ontbreekt.");
+                const { data: sessionData } = await supabaseClient.auth.getSession();
+                const accessToken = sessionData?.session?.access_token;
+                if (!accessToken) throw new Error("Geen geldige sessie.");
+                const dataUrl = await readFileAsDataUrl(file);
+                const resp = await fetch("/api/avatar-upload", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                  },
+                  body: JSON.stringify({
+                    fileName: file.name,
+                    contentType: file.type,
+                    dataUrl,
+                  }),
+                });
+                const payload = await resp.json().catch(() => ({}));
+                if (!resp.ok) {
+                  const apiError = new Error(payload?.error || payload?.message || "Avatar upload mislukt.");
+                  apiError.detail = payload;
+                  throw apiError;
+                }
+                apiPayload = payload;
+              } catch (error) {
+                console.warn("Server avatar upload faalde:", error?.message || error);
+              }
+
+              if (apiPayload?.avatar_url) {
+                const refreshed = await supabaseClient.auth.getUser();
+                if (refreshed?.data?.user) {
+                  currentUser = refreshed.data.user;
+                } else {
+                  currentUser.user_metadata = {
+                    ...(currentUser.user_metadata || {}),
+                    avatar_url: apiPayload.avatar_url,
+                    avatar_bucket: apiPayload.avatar_bucket,
+                    avatar_path: apiPayload.avatar_path,
+                  };
+                }
+                updateProfileSidebar(currentUser);
+                resetInput();
+                return;
+              }
+
               const fileExt = (file.name.split(".").pop() || "jpg").toLowerCase();
               const safeExt = fileExt.replace(/[^a-z0-9]/g, "") || "jpg";
               const timestamp = Date.now();
               const fileName = `${timestamp}.${safeExt}`;
-              const candidatePaths = [
-                `${currentUser.id}/${fileName}`,
-                `avatars/${currentUser.id}-${fileName}`,
-              ];
+              const candidatePaths = [`${currentUser.id}/${fileName}`, `avatars/${currentUser.id}-${fileName}`];
               const candidateBuckets = ["profile-images", "avatars"];
 
               const uploadToBucket = async (bucketName, path) => {
@@ -1047,9 +1099,10 @@
               resetInput();
             } catch (error) {
               console.error("Profielfoto upload mislukt:", error);
-              alert(
-                "Profielfoto uploaden mislukt. Check of er een Supabase Storage bucket bestaat (bijv. 'profile-images' of 'avatars') en dat je sessie rechten heeft."
-              );
+              const message =
+                error?.message ||
+                "Profielfoto uploaden mislukt. Check of er een Supabase Storage bucket bestaat (bijv. 'profile-images' of 'avatars') en dat je sessie rechten heeft.";
+              alert(message);
               resetInput();
             }
           });
