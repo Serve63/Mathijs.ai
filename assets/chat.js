@@ -47,7 +47,10 @@
       const actionGeneratePhoto = document.getElementById("action-generate-photo");
       const actionGenerateVideo = document.getElementById("action-generate-video");
       const actionGenerateVideoLabel = actionGenerateVideo
-        ? actionGenerateVideo.querySelector(".chat-plus__label")
+        ? actionGenerateVideo.querySelector(".chat-plus__label-text")
+        : null;
+      const actionGenerateVideoInfo = actionGenerateVideo
+        ? actionGenerateVideo.querySelector(".chat-plus__info")
         : null;
       const actionGeneratePhotoLabel = actionGeneratePhoto
         ? actionGeneratePhoto.querySelector(".chat-plus__label")
@@ -94,14 +97,16 @@
         if (actionGeneratePhotoLabel) {
           actionGeneratePhotoLabel.textContent = "Foto maken";
         }
-        if (!actionGenerateVideoLabel) return;
-        let suffix = "";
+        if (!actionGenerateVideoLabel || !actionGenerateVideoInfo) return;
+        let infoText = "";
         if (selectedModel === "gemini3") {
-          suffix = " (Veo 3.1)";
+          infoText = "Veo 3.1";
         } else if (selectedModel === "chatgpt52") {
-          suffix = " (Sora 1)";
+          infoText = "Sora 1";
         }
-        actionGenerateVideoLabel.textContent = `Video maken${suffix}`;
+        actionGenerateVideoLabel.textContent = "Video maken";
+        actionGenerateVideoInfo.title = infoText ? `Video model: ${infoText}` : "";
+        actionGenerateVideoInfo.style.display = infoText ? "inline-flex" : "none";
       };
 
       const updateToolMenuVisibility = () => {
@@ -114,6 +119,12 @@
           actionGenerateVideo.style.display = showVideo ? "flex" : "none";
         }
       };
+
+      if (actionGenerateVideoInfo) {
+        actionGenerateVideoInfo.addEventListener("click", (event) => {
+          event.stopPropagation();
+        });
+      }
 
       let currentThinkingOptions = defaultThinkingOptions;
 

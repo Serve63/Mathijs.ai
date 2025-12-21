@@ -2115,6 +2115,37 @@
         text-overflow: ellipsis;
       }
 
+      .chat-plus__label--with-info {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .chat-plus__label-text {
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .chat-plus__info {
+        width: 16px;
+        height: 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(15, 23, 42, 0.35);
+        color: rgba(15, 23, 42, 0.8);
+        font-size: 0.65rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: #fff;
+        cursor: help;
+      }
+
       .chat-plus__arrow {
         margin-left: auto;
         color: #6b7280;
@@ -2495,7 +2526,10 @@
                     <span class="chat-plus__icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="15" height="14" rx="2"/><path d="M21 7l-4 3v4l4 3z"/></svg>
                     </span>
-                    <span class="chat-plus__label">Video's maken</span>
+                    <span class="chat-plus__label chat-plus__label--with-info">
+                      <span class="chat-plus__label-text">Video maken</span>
+                      <span class="chat-plus__info" id="video-model-info" title="" aria-label="Video model info">i</span>
+                    </span>
                   </button>
                 </div>
               </div>
