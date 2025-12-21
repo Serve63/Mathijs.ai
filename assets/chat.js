@@ -136,6 +136,10 @@
       };
 
       const updateToolMenuVisibility = () => {
+        if (toggleWebSearch) {
+          const showWebSearch = selectedModel === "chatgpt52";
+          toggleWebSearch.style.display = showWebSearch ? "flex" : "none";
+        }
         if (actionGeneratePhoto) {
           const showPhoto =
             selectedModel === "chatgpt52" ||
