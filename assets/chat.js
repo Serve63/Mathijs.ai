@@ -97,14 +97,8 @@
       };
 
       const updateToolMenuLabels = () => {
-        let photoInfoText = "";
-        if (selectedModel === "gemini3") {
-          photoInfoText = "Imagen 4";
-        } else if (selectedModel === "chatgpt52") {
-          photoInfoText = "GPT-Image 1";
-        } else if (selectedModel === "grok4") {
-          photoInfoText = "Aurora";
-        }
+        const supportsPhoto = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "grok4";
+        const photoInfoText = supportsPhoto ? "GPT Image 1.5, Imagen 3, grok-2-image" : "";
         if (actionGeneratePhotoLabel) {
           actionGeneratePhotoLabel.textContent = "Foto maken";
         }
