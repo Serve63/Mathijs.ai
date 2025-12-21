@@ -39,6 +39,7 @@
       const thinkingModeTrigger = document.getElementById("thinking-mode-trigger");
       const thinkingModeMenu = document.getElementById("thinking-mode-menu");
       const thinkingModeValue = document.getElementById("thinking-mode-value");
+      const thinkingModeWrap = document.querySelector(".chat-mode-select");
       const toggleWebSearch = document.getElementById("toggle-web-search");
       const webSearchState = document.getElementById("web-search-state");
       const chatSearchIndicator = document.getElementById("chat-search-indicator");
@@ -96,6 +97,7 @@
           { value: "expert", label: "Expert" },
         ],
       };
+      const noThinkingModels = new Set(["opus45", "sonnet45", "haiku45"]);
 
       const updateToolMenuLabels = () => {
         let photoInfoText = "";
@@ -137,8 +139,7 @@
 
       const updateToolMenuVisibility = () => {
         if (toggleWebSearch) {
-          const showWebSearch = selectedModel === "chatgpt52" || selectedModel === "deepseekv2" || selectedModel === "qwen";
-          toggleWebSearch.style.display = showWebSearch ? "flex" : "none";
+          toggleWebSearch.style.display = "flex";
         }
         if (actionGeneratePhoto) {
           const showPhoto =
@@ -219,17 +220,17 @@
         renderThinkingModeMenu(options, nextMode);
       };
 
-		      const modelEngineMap = {
-		        chatgpt52: "gpt-4o",
-		        opus45: "gpt-4o",
-		        sonnet4: "gpt-4o",
-		        haiku45: "gpt-4o",
-		        gemini3: "gemini-3",
-		        llama4: "gpt-4o",
-		        qwen: "gpt-4o",
-		        deepseekv2: "gpt-4o", // Fallback to OpenAI until DeepSeek API is implemented
-		        grok4: "gpt-4o", // Fallback to OpenAI until Grok API is implemented
-		      };
+	      const modelEngineMap = {
+	        chatgpt52: "gpt-4o",
+	        opus45: "gpt-4o",
+	        sonnet45: "gpt-4o",
+	        haiku45: "gpt-4o",
+	        gemini3: "gemini-3",
+	        llama4: "gpt-4o",
+	        qwen: "gpt-4o",
+	        deepseekv2: "gpt-4o", // Fallback to OpenAI until DeepSeek API is implemented
+	        grok4: "gpt-4o", // Fallback to OpenAI until Grok API is implemented
+	      };
 		      let selectedModel = "chatgpt52";
 		      let selectedModelLabel = "ChatGPT 5.2";
 		      let thinkingIndicator = null;
@@ -248,8 +249,8 @@
         selectedModelLabel = label || "ChatGPT 5.2";
         if (label && label.startsWith("Opus 4.5")) {
           selectedModel = "opus45";
-        } else if (label && label.startsWith("Sonnet 4")) {
-          selectedModel = "sonnet4";
+        } else if (label && label.startsWith("Sonnet 4.5")) {
+          selectedModel = "sonnet45";
         } else if (label && label.startsWith("Haiku 4.5")) {
           selectedModel = "haiku45";
         } else if (label && label.startsWith("Gemini 3")) {
@@ -268,6 +269,7 @@
         syncThinkingModeOptions();
         updateToolMenuLabels();
         updateToolMenuVisibility();
+        updateThinkingModeVisibility();
       };
 
       let activeCategory = "chat";
@@ -295,6 +297,15 @@
         thinkingModeTrigger.setAttribute("aria-expanded", "false");
       }
 
+      const updateThinkingModeVisibility = () => {
+        if (!thinkingModeWrap) return;
+        const shouldShow = !noThinkingModels.has(selectedModel);
+        thinkingModeWrap.style.display = shouldShow ? "inline-flex" : "none";
+        if (!shouldShow) {
+          closeThinkingMenu();
+        }
+      };
+
       const closeAllDropdowns = (exception = null) => {
         modelSelects.forEach((select) => {
           const dropdown = select.querySelector(".model-dropdown");
@@ -316,6 +327,7 @@
         syncThinkingModeOptions();
         updateToolMenuLabels();
         updateToolMenuVisibility();
+        updateThinkingModeVisibility();
         thinkingModeSelect.addEventListener("change", (event) => {
           selectedThinkingMode = event.target.value;
           updateThinkingModeLabel(currentThinkingOptions, selectedThinkingMode);
@@ -2002,9 +2014,9 @@
           console.log("Opus 4.5 chat is nog niet geïmplementeerd.");
           return;
         }
-        if (selectedModel === "sonnet4") {
-          alert("Sonnet 4 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
-          console.log("Sonnet 4 chat is nog niet geïmplementeerd.");
+        if (selectedModel === "sonnet45") {
+          alert("Sonnet 4.5 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
+          console.log("Sonnet 4.5 chat is nog niet geïmplementeerd.");
           return;
         }
         if (selectedModel === "haiku45") {
