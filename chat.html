@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="nl" class="sidebar-offset-pending">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -148,6 +148,12 @@
         margin-top: var(--sidebar-top-offset, 100px);
         padding-top: 70px;
         position: relative;
+        opacity: 1;
+        transition: opacity 0.15s ease;
+      }
+
+      html.sidebar-offset-pending .sidebar-top {
+        opacity: 0;
       }
 
       .sidebar-bottom {

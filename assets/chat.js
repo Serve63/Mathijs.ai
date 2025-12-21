@@ -17,13 +17,18 @@
         const buttonTop = newChatButton.getBoundingClientRect().top;
         const delta = Math.round(targetTop - buttonTop);
         document.documentElement.style.setProperty("--sidebar-top-offset", `${delta}px`);
+        if (document.documentElement.classList.contains("sidebar-offset-pending")) {
+          document.documentElement.classList.remove("sidebar-offset-pending");
+          document.documentElement.classList.add("sidebar-offset-ready");
+        }
       };
 
 	      const scheduleSidebarTopOffsetSync = () => {
 	        requestAnimationFrame(syncSidebarTopOffset);
 	      };
 
-	      scheduleSidebarTopOffsetSync();
+      syncSidebarTopOffset();
+      scheduleSidebarTopOffsetSync();
 	      window.addEventListener("resize", scheduleSidebarTopOffsetSync, { passive: true });
 	      window.addEventListener("load", scheduleSidebarTopOffsetSync, { passive: true });
       const profileAvatar = document.querySelector(".profile-avatar");
