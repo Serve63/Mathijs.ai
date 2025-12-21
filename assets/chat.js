@@ -106,7 +106,8 @@
           actionGeneratePhotoLabel.textContent = "Foto maken";
         }
         if (actionGeneratePhotoInfo) {
-          actionGeneratePhotoInfo.title = photoInfoText;
+          actionGeneratePhotoInfo.dataset.tooltip = photoInfoText;
+          actionGeneratePhotoInfo.removeAttribute("title");
           actionGeneratePhotoInfo.style.display = photoInfoText ? "inline-flex" : "none";
         }
 
@@ -121,7 +122,8 @@
         const videoTooltip = videoInfoText
           ? `Video model: ${videoInfoText}\nLaatste update: ${TOOLTIP_UPDATE_DATE}`
           : "";
-        actionGenerateVideoInfo.title = videoTooltip;
+        actionGenerateVideoInfo.dataset.tooltip = videoTooltip;
+        actionGenerateVideoInfo.removeAttribute("title");
         actionGenerateVideoInfo.style.display = videoTooltip ? "inline-flex" : "none";
       };
 
