@@ -46,6 +46,9 @@
       const actionUpload = document.getElementById("action-upload");
       const actionGeneratePhoto = document.getElementById("action-generate-photo");
       const actionGenerateVideo = document.getElementById("action-generate-video");
+      const actionGenerateVideoLabel = actionGenerateVideo
+        ? actionGenerateVideo.querySelector(".chat-plus__label")
+        : null;
       const layoutToggleBtn = document.getElementById("layout-toggle");
       const hiddenFileInput = document.createElement("input");
       hiddenFileInput.type = "file";
@@ -82,6 +85,17 @@
           { value: "snel", label: "Snel" },
           { value: "expert", label: "Expert" },
         ],
+      };
+
+      const updateToolMenuLabels = () => {
+        if (!actionGenerateVideoLabel) return;
+        let suffix = "";
+        if (selectedModel === "gemini3") {
+          suffix = " (Veo 3.1)";
+        } else if (selectedModel === "chatgpt52") {
+          suffix = " (Sora 1)";
+        }
+        actionGenerateVideoLabel.textContent = `Video's maken${suffix}`;
       };
 
       let currentThinkingOptions = defaultThinkingOptions;
@@ -189,6 +203,7 @@
           selectedModel = "chatgpt52";
         }
         syncThinkingModeOptions();
+        updateToolMenuLabels();
       };
 
       let activeCategory = "chat";
@@ -235,6 +250,7 @@
 
       if (thinkingModeSelect) {
         syncThinkingModeOptions();
+        updateToolMenuLabels();
         thinkingModeSelect.addEventListener("change", (event) => {
           selectedThinkingMode = event.target.value;
           updateThinkingModeLabel(currentThinkingOptions, selectedThinkingMode);
