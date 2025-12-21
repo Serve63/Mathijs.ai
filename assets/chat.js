@@ -137,7 +137,7 @@
 
       const updateToolMenuVisibility = () => {
         if (toggleWebSearch) {
-          const showWebSearch = selectedModel === "chatgpt52";
+          const showWebSearch = selectedModel === "chatgpt52" || selectedModel === "deepseekv2" || selectedModel === "qwen";
           toggleWebSearch.style.display = showWebSearch ? "flex" : "none";
         }
         if (actionGeneratePhoto) {
