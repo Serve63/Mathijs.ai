@@ -807,6 +807,7 @@
       const profileEmailEl = document.getElementById("profile-email");
       const profileInitialsEl = document.querySelector(".profile-avatar__initials");
       const profileNameEditBtn = document.querySelector(".profile-name-edit");
+      let avatarSignedFallbackUsed = false;
 
 	      const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
 	      const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
@@ -991,27 +992,39 @@
                 if (uploadError) throw uploadError;
                 const { data } = supabaseClient.storage.from(bucketName).getPublicUrl(filePath);
                 if (!data?.publicUrl) throw new Error("Geen public URL ontvangen.");
-                return data.publicUrl;
+                return { publicUrl: data.publicUrl, bucketName };
               };
 
               let publicUrl = null;
+              let bucketUsed = null;
               try {
-                publicUrl = await uploadToBucket("profile-images");
+                const result = await uploadToBucket("profile-images");
+                publicUrl = result.publicUrl;
+                bucketUsed = result.bucketName;
               } catch (firstError) {
                 console.warn("Upload naar profile-images faalde, probeer avatars:", firstError?.message || firstError);
-                publicUrl = await uploadToBucket("avatars");
+                const result = await uploadToBucket("avatars");
+                publicUrl = result.publicUrl;
+                bucketUsed = result.bucketName;
               }
 
-              const { error: updateError } = await supabaseClient.auth.updateUser({ data: { avatar_url: publicUrl } });
+              const { error: updateError } = await supabaseClient.auth.updateUser({
+                data: { avatar_url: publicUrl, avatar_bucket: bucketUsed, avatar_path: filePath },
+              });
               if (updateError) throw updateError;
 
               const refreshed = await supabaseClient.auth.getUser();
               if (refreshed?.data?.user) {
                 currentUser = refreshed.data.user;
               } else {
-                currentUser.user_metadata = { ...(currentUser.user_metadata || {}), avatar_url: publicUrl };
+                currentUser.user_metadata = {
+                  ...(currentUser.user_metadata || {}),
+                  avatar_url: publicUrl,
+                  avatar_bucket: bucketUsed,
+                  avatar_path: filePath,
+                };
               }
-              await safeUpsertProfile({ avatar_url: publicUrl });
+              await safeUpsertProfile({ avatar_url: publicUrl, avatar_bucket: bucketUsed, avatar_path: filePath });
               updateProfileSidebar(currentUser);
               resetInput();
             } catch (error) {
@@ -1802,12 +1815,47 @@
         }
         if (profileAvatar && profileAvatarImage) {
           const avatarUrl = user.user_metadata && user.user_metadata.avatar_url;
-          if (avatarUrl) {
-            profileAvatarImage.src = avatarUrl;
+          const avatarBucket = user.user_metadata && user.user_metadata.avatar_bucket;
+          const avatarPath = user.user_metadata && user.user_metadata.avatar_path;
+
+          const setAvatarSrc = (src) => {
+            if (!src) return;
+            profileAvatarImage.src = src;
             profileAvatar.classList.add("has-image");
-          } else {
+          };
+
+          const clearAvatar = () => {
             profileAvatarImage.removeAttribute("src");
             profileAvatar.classList.remove("has-image");
+          };
+
+          const loadSignedAvatar = async () => {
+            if (!supabaseClient || !avatarBucket || !avatarPath) return;
+            try {
+              const { data, error } = await supabaseClient.storage
+                .from(avatarBucket)
+                .createSignedUrl(avatarPath, 60 * 60 * 24 * 365);
+              if (error) throw error;
+              if (data?.signedUrl) {
+                setAvatarSrc(data.signedUrl);
+                avatarSignedFallbackUsed = true;
+              }
+            } catch (error) {
+              console.warn("Signed avatar URL failed:", error);
+            }
+          };
+
+          if (avatarUrl) {
+            setAvatarSrc(avatarUrl);
+            avatarSignedFallbackUsed = false;
+            profileAvatarImage.onerror = () => {
+              if (avatarSignedFallbackUsed) return;
+              loadSignedAvatar();
+            };
+          } else if (avatarBucket && avatarPath) {
+            loadSignedAvatar();
+          } else {
+            clearAvatar();
           }
         }
       };
