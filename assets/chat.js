@@ -11,6 +11,14 @@
       const modelTrigger = document.querySelector(".model-select__trigger");
       const newChatButton = document.querySelector(".new-chat");
 
+      let sidebarOffsetRevealed = false;
+      const revealSidebarOffset = () => {
+        if (sidebarOffsetRevealed) return;
+        sidebarOffsetRevealed = true;
+        document.documentElement.classList.remove("sidebar-offset-pending");
+        document.documentElement.classList.add("sidebar-offset-ready");
+      };
+
       const syncSidebarTopOffset = () => {
         if (!sidebarTop || !modelTrigger || !newChatButton) return;
         const targetTop = modelTrigger.getBoundingClientRect().top;
@@ -19,10 +27,6 @@
         const delta = Math.round(targetTop - buttonTop);
         const nextOffset = Math.round(currentOffset + delta);
         document.documentElement.style.setProperty("--sidebar-top-offset", `${nextOffset}px`);
-        if (document.documentElement.classList.contains("sidebar-offset-pending")) {
-          document.documentElement.classList.remove("sidebar-offset-pending");
-          document.documentElement.classList.add("sidebar-offset-ready");
-        }
       };
 
 	      const scheduleSidebarTopOffsetSync = () => {
@@ -31,6 +35,20 @@
 
       syncSidebarTopOffset();
       scheduleSidebarTopOffsetSync();
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => {
+          syncSidebarTopOffset();
+          revealSidebarOffset();
+        });
+      } else {
+        revealSidebarOffset();
+      }
+      setTimeout(() => {
+        if (!sidebarOffsetRevealed) {
+          syncSidebarTopOffset();
+          revealSidebarOffset();
+        }
+      }, 1200);
 	      window.addEventListener("resize", scheduleSidebarTopOffsetSync, { passive: true });
 	      window.addEventListener("load", scheduleSidebarTopOffsetSync, { passive: true });
       const profileAvatar = document.querySelector(".profile-avatar");
