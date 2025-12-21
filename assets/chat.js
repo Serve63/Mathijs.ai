@@ -44,7 +44,6 @@
       const chatSearchIndicator = document.getElementById("chat-search-indicator");
       const chatSearchClose = document.getElementById("chat-search-close");
       const actionUpload = document.getElementById("action-upload");
-      const actionPhotoUpload = document.getElementById("action-photo-upload");
       const actionGeneratePhoto = document.getElementById("action-generate-photo");
       const actionGenerateVideo = document.getElementById("action-generate-video");
       const layoutToggleBtn = document.getElementById("layout-toggle");
@@ -440,17 +439,6 @@
         actionUpload.addEventListener("click", (event) => {
           event.stopPropagation();
           hiddenFileInput.accept = "";
-          hiddenFileInput.dataset.uploadKind = "file";
-          hiddenFileInput.click();
-          closeAllDropdowns();
-        });
-      }
-
-      if (actionPhotoUpload) {
-        actionPhotoUpload.addEventListener("click", (event) => {
-          event.stopPropagation();
-          hiddenFileInput.accept = "image/*";
-          hiddenFileInput.dataset.uploadKind = "photo";
           hiddenFileInput.click();
           closeAllDropdowns();
         });
@@ -458,9 +446,7 @@
 
       hiddenFileInput.addEventListener("change", () => {
         if (hiddenFileInput.files && hiddenFileInput.files.length) {
-          const kind = hiddenFileInput.dataset.uploadKind;
-          const label = kind === "photo" ? "Foto geselecteerd" : "Bestand geselecteerd";
-          alert(`${label}: ${hiddenFileInput.files[0].name}`);
+          alert(`Bestand geselecteerd: ${hiddenFileInput.files[0].name}`);
         }
       });
 
