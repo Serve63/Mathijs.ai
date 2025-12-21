@@ -980,9 +980,9 @@
         const words = normalized.split(" ").filter(Boolean);
         if (!words.length) return "";
         const questionWords = ["wat", "hoe", "waarom", "wanneer", "welke", "wie", "waar", "kan", "mag", "is"];
-        const prefix = sanitized.includes("?") || questionWords.includes(words[0]) ? "vraag" : "chat";
+        const prefix = sanitized.includes("?") || questionWords.includes(words[0]) ? "vraag" : "";
         const snippet = words.slice(0, 5).join(" ");
-        return `${prefix} ${snippet}`.trim();
+        return prefix ? `${prefix} ${snippet}`.trim() : snippet;
       };
 
       const upsertSessionEntry = (session) => {
@@ -1189,11 +1189,13 @@
 	          : "Start nieuw gesprek";
 	      }
 
-		      const getDisplayTitle = (session) => {
-		        if (!session) return "";
-		        if (titleOverrides[session.id]) return titleOverrides[session.id];
-		        return session.title || "Chat";
-		      };
+      const getDisplayTitle = (session) => {
+        if (!session) return "";
+        if (titleOverrides[session.id]) return titleOverrides[session.id];
+        const rawTitle = session.title || "Chat";
+        const cleaned = rawTitle.replace(/^chat\s+/i, "").trim();
+        return cleaned || rawTitle;
+      };
 
       const createLocalSession = () => {
         const session = {
