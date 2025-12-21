@@ -98,10 +98,14 @@
       };
 
       const updateToolMenuLabels = () => {
-        const supportsPhoto = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "grok4";
-        const photoInfoText = supportsPhoto
-          ? `Foto model: GPT Image 1.5, Imagen 3, grok-2-image\nLaatste update: ${TOOLTIP_UPDATE_DATE}`
-          : "";
+        let photoInfoText = "";
+        if (selectedModel === "chatgpt52") {
+          photoInfoText = `Foto model: GPT Image 1.5\nLaatste update: ${TOOLTIP_UPDATE_DATE}`;
+        } else if (selectedModel === "gemini3") {
+          photoInfoText = `Foto model: Imagen 3\nLaatste update: ${TOOLTIP_UPDATE_DATE}`;
+        } else if (selectedModel === "grok4") {
+          photoInfoText = `Foto model: grok-2-image\nLaatste update: ${TOOLTIP_UPDATE_DATE}`;
+        }
         if (actionGeneratePhotoLabel) {
           actionGeneratePhotoLabel.textContent = "Foto maken";
         }
