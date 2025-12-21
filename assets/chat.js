@@ -53,7 +53,10 @@
         ? actionGenerateVideo.querySelector(".chat-plus__info")
         : null;
       const actionGeneratePhotoLabel = actionGeneratePhoto
-        ? actionGeneratePhoto.querySelector(".chat-plus__label")
+        ? actionGeneratePhoto.querySelector(".chat-plus__label-text")
+        : null;
+      const actionGeneratePhotoInfo = actionGeneratePhoto
+        ? actionGeneratePhoto.querySelector(".chat-plus__info")
         : null;
       const layoutToggleBtn = document.getElementById("layout-toggle");
       const hiddenFileInput = document.createElement("input");
@@ -94,19 +97,32 @@
       };
 
       const updateToolMenuLabels = () => {
+        let photoInfoText = "";
+        if (selectedModel === "gemini3") {
+          photoInfoText = "Imagen 4";
+        } else if (selectedModel === "chatgpt52") {
+          photoInfoText = "GPT-Image 1";
+        } else if (selectedModel === "grok4") {
+          photoInfoText = "Aurora";
+        }
         if (actionGeneratePhotoLabel) {
           actionGeneratePhotoLabel.textContent = "Foto maken";
         }
+        if (actionGeneratePhotoInfo) {
+          actionGeneratePhotoInfo.title = photoInfoText ? `Foto model: ${photoInfoText}` : "";
+          actionGeneratePhotoInfo.style.display = photoInfoText ? "inline-flex" : "none";
+        }
+
         if (!actionGenerateVideoLabel || !actionGenerateVideoInfo) return;
-        let infoText = "";
+        let videoInfoText = "";
         if (selectedModel === "gemini3") {
-          infoText = "Veo 3.1";
+          videoInfoText = "Veo 3.1";
         } else if (selectedModel === "chatgpt52") {
-          infoText = "Sora 1";
+          videoInfoText = "Sora 1";
         }
         actionGenerateVideoLabel.textContent = "Video maken";
-        actionGenerateVideoInfo.title = infoText ? `Video model: ${infoText}` : "";
-        actionGenerateVideoInfo.style.display = infoText ? "inline-flex" : "none";
+        actionGenerateVideoInfo.title = videoInfoText ? `Video model: ${videoInfoText}` : "";
+        actionGenerateVideoInfo.style.display = videoInfoText ? "inline-flex" : "none";
       };
 
       const updateToolMenuVisibility = () => {
@@ -120,11 +136,12 @@
         }
       };
 
-      if (actionGenerateVideoInfo) {
-        actionGenerateVideoInfo.addEventListener("click", (event) => {
+      [actionGeneratePhotoInfo, actionGenerateVideoInfo].forEach((infoEl) => {
+        if (!infoEl) return;
+        infoEl.addEventListener("click", (event) => {
           event.stopPropagation();
         });
-      }
+      });
 
       let currentThinkingOptions = defaultThinkingOptions;
 
