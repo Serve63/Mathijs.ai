@@ -2040,16 +2040,17 @@
 
       .chat-plus__menu {
         position: absolute;
-        bottom: calc(100% + 8px);
+        bottom: calc(100% + 10px);
         left: 0;
-        width: 280px;
-        background: #fff;
-        border: 1px solid #e5e5e5;
-        border-radius: 16px;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.12);
-        padding: 8px 0;
+        width: 260px;
+        background: #ffffff;
+        border: 1px solid rgba(26, 26, 31, 0.12);
+        border-radius: 14px;
+        box-shadow: 0 18px 40px -24px rgba(15, 23, 42, 0.45);
+        padding: 6px;
         display: none;
         flex-direction: column;
+        gap: 4px;
         z-index: 100;
       }
 
@@ -2060,104 +2061,79 @@
       .chat-plus__item {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 12px 16px;
+        gap: 10px;
+        padding: 10px 12px;
         background: none;
         border: none;
         width: 100%;
         text-align: left;
         cursor: pointer;
-        font-size: 14px;
-        color: #1a1a1a;
-        transition: background 0.15s;
+        font-size: 0.82rem;
+        color: #0f172a;
+        font-weight: 600;
+        border-radius: 10px;
+        min-height: 38px;
+        transition: background 0.15s ease, transform 0.15s ease;
       }
 
       .chat-plus__item:hover {
-        background: #f5f5f5;
+        background: rgba(15, 23, 42, 0.06);
       }
 
-      #chat-plus-menu button {
-        border-radius: 0 !important;
-        transition: background 0.15s;
-      }
-
-      #chat-plus-menu button:hover {
-        background: #f5f5f5 !important;
+      .chat-plus__item.is-active {
+        background: rgba(230, 194, 0, 0.18);
       }
 
       .chat-plus-more {
         position: relative;
       }
 
-      .chat-plus-more-trigger:hover {
-        background: #f5f5f5 !important;
-      }
-
       .chat-plus-more:hover .chat-plus-more-submenu,
       .chat-plus-more .chat-plus-more-submenu:hover {
-        display: block !important;
-      }
-
-      .chat-plus-more-submenu button:hover {
-        background: #f5f5f5 !important;
-      }
-
-      .chat-plus__item.is-active {
-        background: rgba(255, 212, 0, 0.15);
+        display: flex;
       }
 
       .chat-plus__icon {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
         flex-shrink: 0;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #666;
+        color: #0f172a;
       }
 
       .chat-plus__icon svg {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
       }
 
-      .chat-plus__item-body {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
+      .chat-plus__label {
         flex: 1;
-        min-width: 0;
-      }
-
-      .chat-plus__item-body span {
-        font-weight: 500;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
-      .chat-plus__item-body small {
-        font-size: 12px;
-        color: #888;
-        font-weight: 400;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .chat-plus__item .arrow {
+      .chat-plus__arrow {
         margin-left: auto;
-        color: #999;
-        font-size: 16px;
+        color: #6b7280;
+        width: 16px;
+        height: 16px;
       }
 
       .chat-plus__divider {
         height: 1px;
-        background: #e5e5e5;
+        background: rgba(26, 26, 31, 0.12);
         margin: 8px 0;
       }
 
-      .chat-plus__submenu {
+      .chat-plus-more-submenu {
+        position: absolute;
+        left: 100%;
+        bottom: 0;
+        margin-left: 8px;
+        width: 220px;
         display: none;
       }
 
@@ -2502,46 +2478,64 @@
             <div class="chat-input__inner">
               <div class="chat-plus" id="chat-plus" aria-haspopup="true" aria-expanded="false">
                 <span>+</span>
-                <div id="chat-plus-menu" style="display:none;position:absolute;bottom:calc(100% + 10px);left:0;width:260px;background:#fff;border:1px solid #dedede;border-radius:14px;box-shadow:0 16px 32px rgba(0,0,0,0.12);padding:6px 0;z-index:9999;">
-                  <button type="button" id="action-upload" style="display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:#161616;font-weight:600;line-height:1.4;text-align:left;min-height:40px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <span style="flex:1 1 auto;text-align:left;white-space:nowrap;">Foto's en bestanden toevoegen</span>
+                <div id="chat-plus-menu" class="chat-plus__menu">
+                  <button type="button" id="action-upload" class="chat-plus__item">
+                    <span class="chat-plus__icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </span>
+                    <span class="chat-plus__label">Foto's en bestanden toevoegen</span>
                   </button>
-                  <button type="button" id="action-deep" style="display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:#161616;font-weight:600;line-height:1.4;text-align:left;min-height:40px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <span style="flex:1 1 auto;text-align:left;white-space:nowrap;">Doe diepgaand onderzoek</span>
+                  <button type="button" id="action-deep" class="chat-plus__item">
+                    <span class="chat-plus__icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </span>
+                    <span class="chat-plus__label">Doe diepgaand onderzoek</span>
                   </button>
-                  <button type="button" id="action-shopping" style="display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:#161616;font-weight:600;line-height:1.4;text-align:left;min-height:40px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                    <span style="flex:1 1 auto;text-align:left;white-space:nowrap;">Winkelonderzoek</span>
+                  <button type="button" id="action-shopping" class="chat-plus__item">
+                    <span class="chat-plus__icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    </span>
+                    <span class="chat-plus__label">Winkelonderzoek</span>
                   </button>
-                  <button type="button" id="action-image" style="display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:#161616;font-weight:600;line-height:1.4;text-align:left;min-height:40px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    <span style="flex:1 1 auto;text-align:left;white-space:nowrap;">Maak een afbeelding</span>
+                  <button type="button" id="action-image" class="chat-plus__item">
+                    <span class="chat-plus__icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </span>
+                    <span class="chat-plus__label">Maak een afbeelding</span>
                   </button>
-                  <div class="chat-plus-more" style="position:relative;">
-                    <button type="button" class="chat-plus-more-trigger" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:#161616;font-weight:600;line-height:1.4;text-align:left;min-height:40px;">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-                      <span style="flex:1 1 auto;text-align:left;white-space:nowrap;">Meer</span>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
+                  <div class="chat-plus-more">
+                    <button type="button" class="chat-plus__item chat-plus-more-trigger">
+                      <span class="chat-plus__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                      </span>
+                      <span class="chat-plus__label">Meer</span>
+                      <svg class="chat-plus__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
                     </button>
-                    <div class="chat-plus-more-submenu" style="display:none;position:absolute;left:100%;bottom:0;margin-left:8px;background:#fff;border:1px solid #e5e5e5;border-radius:10px;box-shadow:0 12px 28px -14px rgba(0,0,0,0.25);min-width:200px;z-index:1000;padding:8px 0;">
-                      <button type="button" id="action-agent" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:#161616;font-weight:600;line-height:1.4;text-align:left;min-height:40px;border-radius:0;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="3"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/></svg>
-                    <span style="flex:1 1 auto;text-align:left;white-space:nowrap;">Agentmodus</span>
-                  </button>
-                      <button type="button" id="action-study" style="display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:#161616;font-weight:600;line-height:1.4;text-align:left;min-height:40px;border-radius:0;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                    <span style="flex:1 1 auto;text-align:left;white-space:nowrap;">Studeren en leren</span>
-                  </button>
-                      <button type="button" id="toggle-web-search" style="display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:#161616;font-weight:600;line-height:1.4;text-align:left;min-height:40px;border-radius:0;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                    <span id="web-search-state" style="flex:1 1 auto;text-align:left;white-space:nowrap;">Zoeken op internet</span>
-                  </button>
-                      <button type="button" id="action-canvas" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:#161616;font-weight:600;line-height:1.4;text-align:left;min-height:40px;border-radius:0;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-                    <span style="flex:1 1 auto;text-align:left;white-space:nowrap;">Canvas</span>
-                  </button>
+                    <div class="chat-plus__menu chat-plus-more-submenu">
+                      <button type="button" id="action-agent" class="chat-plus__item">
+                        <span class="chat-plus__icon">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="3"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/></svg>
+                        </span>
+                        <span class="chat-plus__label">Agentmodus</span>
+                      </button>
+                      <button type="button" id="action-study" class="chat-plus__item">
+                        <span class="chat-plus__icon">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                        </span>
+                        <span class="chat-plus__label">Studeren en leren</span>
+                      </button>
+                      <button type="button" id="toggle-web-search" class="chat-plus__item">
+                        <span class="chat-plus__icon">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        </span>
+                        <span class="chat-plus__label" id="web-search-state">Zoeken op internet</span>
+                      </button>
+                      <button type="button" id="action-canvas" class="chat-plus__item">
+                        <span class="chat-plus__icon">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                        </span>
+                        <span class="chat-plus__label">Canvas</span>
+                      </button>
                     </div>
                   </div>
                 </div>

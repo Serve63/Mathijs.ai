@@ -396,9 +396,9 @@
       if (chatPlus && chatPlusMenu) {
         chatPlus.addEventListener("click", (event) => {
           event.stopPropagation();
-          const isOpen = chatPlusMenu.style.display === "block";
+          const isOpen = chatPlusMenu.style.display === "flex";
           closeAllDropdowns(isOpen ? null : chatPlusMenu);
-          chatPlusMenu.style.display = isOpen ? "none" : "block";
+          chatPlusMenu.style.display = isOpen ? "none" : "flex";
           chatPlus.setAttribute("aria-expanded", !isOpen ? "true" : "false");
           
           // Adjust position to keep menu fully visible
@@ -444,15 +444,6 @@
           event.stopPropagation();
           alert("Studeren en leren wordt later toegevoegd.");
           closeAllDropdowns();
-        });
-      }
-
-      // Add hover effects to menu buttons
-      if (chatPlusMenu) {
-        const menuButtons = chatPlusMenu.querySelectorAll("button");
-        menuButtons.forEach(btn => {
-          btn.addEventListener("mouseenter", () => { btn.style.background = "#f5f5f5"; });
-          btn.addEventListener("mouseleave", () => { btn.style.background = "none"; });
         });
       }
 
