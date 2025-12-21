@@ -105,6 +105,8 @@
           photoInfoText = `Foto model: Imagen 3\nLaatste update: ${TOOLTIP_UPDATE_DATE}`;
         } else if (selectedModel === "grok4") {
           photoInfoText = `Foto model: grok-2-image\nLaatste update: ${TOOLTIP_UPDATE_DATE}`;
+        } else if (selectedModel === "qwen") {
+          photoInfoText = `Foto model: qwen-image-plus\nLaatste update: ${TOOLTIP_UPDATE_DATE}`;
         }
         if (actionGeneratePhotoLabel) {
           actionGeneratePhotoLabel.textContent = "Foto maken";
@@ -121,6 +123,8 @@
           videoInfoText = "Veo 3.1";
         } else if (selectedModel === "chatgpt52") {
           videoInfoText = "Sora 1";
+        } else if (selectedModel === "qwen") {
+          videoInfoText = "wan2.6-t2v";
         }
         actionGenerateVideoLabel.textContent = "Video maken";
         const videoTooltip = videoInfoText
@@ -133,11 +137,15 @@
 
       const updateToolMenuVisibility = () => {
         if (actionGeneratePhoto) {
-          const showPhoto = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "grok4";
+          const showPhoto =
+            selectedModel === "chatgpt52" ||
+            selectedModel === "gemini3" ||
+            selectedModel === "grok4" ||
+            selectedModel === "qwen";
           actionGeneratePhoto.style.display = showPhoto ? "flex" : "none";
         }
         if (actionGenerateVideo) {
-          const showVideo = selectedModel === "chatgpt52" || selectedModel === "gemini3";
+          const showVideo = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "qwen";
           actionGenerateVideo.style.display = showVideo ? "flex" : "none";
         }
       };
