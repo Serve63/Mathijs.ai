@@ -982,34 +982,52 @@
 
               const fileExt = (file.name.split(".").pop() || "jpg").toLowerCase();
               const safeExt = fileExt.replace(/[^a-z0-9]/g, "") || "jpg";
-              const filePath = `avatars/${currentUser.id}-${Date.now()}.${safeExt}`;
+              const timestamp = Date.now();
+              const fileName = `${timestamp}.${safeExt}`;
+              const candidatePaths = [
+                `${currentUser.id}/${fileName}`,
+                `avatars/${currentUser.id}-${fileName}`,
+              ];
+              const candidateBuckets = ["profile-images", "avatars"];
 
-              const uploadToBucket = async (bucketName) => {
-                const { error: uploadError } = await supabaseClient.storage.from(bucketName).upload(filePath, file, {
+              const uploadToBucket = async (bucketName, path) => {
+                const { error: uploadError } = await supabaseClient.storage.from(bucketName).upload(path, file, {
                   cacheControl: "3600",
                   upsert: true,
                 });
                 if (uploadError) throw uploadError;
-                const { data } = supabaseClient.storage.from(bucketName).getPublicUrl(filePath);
+                const { data } = supabaseClient.storage.from(bucketName).getPublicUrl(path);
                 if (!data?.publicUrl) throw new Error("Geen public URL ontvangen.");
-                return { publicUrl: data.publicUrl, bucketName };
+                return { publicUrl: data.publicUrl, bucketName, path };
               };
 
               let publicUrl = null;
               let bucketUsed = null;
+              let pathUsed = null;
+              let lastUploadError = null;
               try {
-                const result = await uploadToBucket("profile-images");
-                publicUrl = result.publicUrl;
-                bucketUsed = result.bucketName;
-              } catch (firstError) {
-                console.warn("Upload naar profile-images faalde, probeer avatars:", firstError?.message || firstError);
-                const result = await uploadToBucket("avatars");
-                publicUrl = result.publicUrl;
-                bucketUsed = result.bucketName;
+                for (const bucketName of candidateBuckets) {
+                  for (const path of candidatePaths) {
+                    try {
+                      const result = await uploadToBucket(bucketName, path);
+                      publicUrl = result.publicUrl;
+                      bucketUsed = result.bucketName;
+                      pathUsed = result.path;
+                      break;
+                    } catch (uploadError) {
+                      lastUploadError = uploadError;
+                    }
+                  }
+                  if (publicUrl) break;
+                }
+                if (!publicUrl) throw lastUploadError || new Error("Upload mislukt.");
+              } catch (error) {
+                console.warn("Upload avatar faalde:", error?.message || error);
+                throw error;
               }
 
               const { error: updateError } = await supabaseClient.auth.updateUser({
-                data: { avatar_url: publicUrl, avatar_bucket: bucketUsed, avatar_path: filePath },
+                data: { avatar_url: publicUrl, avatar_bucket: bucketUsed, avatar_path: pathUsed },
               });
               if (updateError) throw updateError;
 
@@ -1021,10 +1039,10 @@
                   ...(currentUser.user_metadata || {}),
                   avatar_url: publicUrl,
                   avatar_bucket: bucketUsed,
-                  avatar_path: filePath,
+                  avatar_path: pathUsed,
                 };
               }
-              await safeUpsertProfile({ avatar_url: publicUrl, avatar_bucket: bucketUsed, avatar_path: filePath });
+              await safeUpsertProfile({ avatar_url: publicUrl, avatar_bucket: bucketUsed, avatar_path: pathUsed });
               updateProfileSidebar(currentUser);
               resetInput();
             } catch (error) {
