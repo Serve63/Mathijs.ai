@@ -15,8 +15,10 @@
         if (!sidebarTop || !modelTrigger || !newChatButton) return;
         const targetTop = modelTrigger.getBoundingClientRect().top;
         const buttonTop = newChatButton.getBoundingClientRect().top;
+        const currentOffset = parseFloat(getComputedStyle(sidebarTop).marginTop) || 0;
         const delta = Math.round(targetTop - buttonTop);
-        document.documentElement.style.setProperty("--sidebar-top-offset", `${delta}px`);
+        const nextOffset = Math.round(currentOffset + delta);
+        document.documentElement.style.setProperty("--sidebar-top-offset", `${nextOffset}px`);
         if (document.documentElement.classList.contains("sidebar-offset-pending")) {
           document.documentElement.classList.remove("sidebar-offset-pending");
           document.documentElement.classList.add("sidebar-offset-ready");
