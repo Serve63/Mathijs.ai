@@ -49,6 +49,9 @@
       const actionGenerateVideoLabel = actionGenerateVideo
         ? actionGenerateVideo.querySelector(".chat-plus__label")
         : null;
+      const actionGeneratePhotoLabel = actionGeneratePhoto
+        ? actionGeneratePhoto.querySelector(".chat-plus__label")
+        : null;
       const layoutToggleBtn = document.getElementById("layout-toggle");
       const hiddenFileInput = document.createElement("input");
       hiddenFileInput.type = "file";
@@ -88,6 +91,9 @@
       };
 
       const updateToolMenuLabels = () => {
+        if (actionGeneratePhotoLabel) {
+          actionGeneratePhotoLabel.textContent = "Foto maken";
+        }
         if (!actionGenerateVideoLabel) return;
         let suffix = "";
         if (selectedModel === "gemini3") {
@@ -95,7 +101,18 @@
         } else if (selectedModel === "chatgpt52") {
           suffix = " (Sora 1)";
         }
-        actionGenerateVideoLabel.textContent = `Video's maken${suffix}`;
+        actionGenerateVideoLabel.textContent = `Video maken${suffix}`;
+      };
+
+      const updateToolMenuVisibility = () => {
+        if (actionGeneratePhoto) {
+          const showPhoto = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "grok4";
+          actionGeneratePhoto.style.display = showPhoto ? "flex" : "none";
+        }
+        if (actionGenerateVideo) {
+          const showVideo = selectedModel === "chatgpt52" || selectedModel === "gemini3";
+          actionGenerateVideo.style.display = showVideo ? "flex" : "none";
+        }
       };
 
       let currentThinkingOptions = defaultThinkingOptions;
@@ -204,6 +221,7 @@
         }
         syncThinkingModeOptions();
         updateToolMenuLabels();
+        updateToolMenuVisibility();
       };
 
       let activeCategory = "chat";
@@ -251,6 +269,7 @@
       if (thinkingModeSelect) {
         syncThinkingModeOptions();
         updateToolMenuLabels();
+        updateToolMenuVisibility();
         thinkingModeSelect.addEventListener("change", (event) => {
           selectedThinkingMode = event.target.value;
           updateThinkingModeLabel(currentThinkingOptions, selectedThinkingMode);
