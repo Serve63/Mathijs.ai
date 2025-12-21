@@ -58,6 +58,7 @@
       const actionGeneratePhotoInfo = actionGeneratePhoto
         ? actionGeneratePhoto.querySelector(".chat-plus__info")
         : null;
+      const TOOLTIP_UPDATE_DATE = "2025-12-21";
       const layoutToggleBtn = document.getElementById("layout-toggle");
       const hiddenFileInput = document.createElement("input");
       hiddenFileInput.type = "file";
@@ -98,12 +99,14 @@
 
       const updateToolMenuLabels = () => {
         const supportsPhoto = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "grok4";
-        const photoInfoText = supportsPhoto ? "GPT Image 1.5, Imagen 3, grok-2-image" : "";
+        const photoInfoText = supportsPhoto
+          ? `Foto model: GPT Image 1.5, Imagen 3, grok-2-image\nLaatste update: ${TOOLTIP_UPDATE_DATE}`
+          : "";
         if (actionGeneratePhotoLabel) {
           actionGeneratePhotoLabel.textContent = "Foto maken";
         }
         if (actionGeneratePhotoInfo) {
-          actionGeneratePhotoInfo.title = photoInfoText ? `Foto model: ${photoInfoText}` : "";
+          actionGeneratePhotoInfo.dataset.tooltip = photoInfoText;
           actionGeneratePhotoInfo.style.display = photoInfoText ? "inline-flex" : "none";
         }
 
@@ -115,8 +118,11 @@
           videoInfoText = "Sora 1";
         }
         actionGenerateVideoLabel.textContent = "Video maken";
-        actionGenerateVideoInfo.title = videoInfoText ? `Video model: ${videoInfoText}` : "";
-        actionGenerateVideoInfo.style.display = videoInfoText ? "inline-flex" : "none";
+        const videoTooltip = videoInfoText
+          ? `Video model: ${videoInfoText}\nLaatste update: ${TOOLTIP_UPDATE_DATE}`
+          : "";
+        actionGenerateVideoInfo.dataset.tooltip = videoTooltip;
+        actionGenerateVideoInfo.style.display = videoTooltip ? "inline-flex" : "none";
       };
 
       const updateToolMenuVisibility = () => {

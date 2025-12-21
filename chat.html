@@ -2131,9 +2131,9 @@
       }
 
       .chat-plus__info {
-        width: 16px;
-        height: 16px;
-        border-radius: 999px;
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
         border: 1px solid rgba(15, 23, 42, 0.35);
         color: rgba(15, 23, 42, 0.8);
         font-size: 0.65rem;
@@ -2144,6 +2144,35 @@
         flex-shrink: 0;
         background: #fff;
         cursor: help;
+        position: relative;
+      }
+
+      .chat-plus__info::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 8px);
+        min-width: 240px;
+        max-width: 320px;
+        background: #dff6e4;
+        border: 1px solid #b9e6c3;
+        color: #0f172a;
+        padding: 10px 12px;
+        border-radius: 8px;
+        box-shadow: 0 16px 36px -24px rgba(15, 23, 42, 0.45);
+        font-size: 0.72rem;
+        line-height: 1.35;
+        white-space: pre-line;
+        opacity: 0;
+        transform: translateY(6px);
+        pointer-events: none;
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        z-index: 30;
+      }
+
+      .chat-plus__info:hover::after {
+        opacity: 1;
+        transform: translateY(0);
       }
 
       .chat-plus__arrow {
@@ -2522,7 +2551,7 @@
                     </span>
                     <span class="chat-plus__label chat-plus__label--with-info">
                       <span class="chat-plus__label-text">Foto maken</span>
-                      <span class="chat-plus__info" id="photo-model-info" title="" aria-label="Foto model info">i</span>
+                      <span class="chat-plus__info" id="photo-model-info" aria-label="Foto model info">?</span>
                     </span>
                   </button>
                   <button type="button" id="action-generate-video" class="chat-plus__item">
@@ -2531,7 +2560,7 @@
                     </span>
                     <span class="chat-plus__label chat-plus__label--with-info">
                       <span class="chat-plus__label-text">Video maken</span>
-                      <span class="chat-plus__info" id="video-model-info" title="" aria-label="Video model info">i</span>
+                      <span class="chat-plus__info" id="video-model-info" aria-label="Video model info">?</span>
                     </span>
                   </button>
                 </div>
