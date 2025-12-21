@@ -43,13 +43,10 @@
       const webSearchState = document.getElementById("web-search-state");
       const chatSearchIndicator = document.getElementById("chat-search-indicator");
       const chatSearchClose = document.getElementById("chat-search-close");
-      const actionStudy = document.getElementById("action-study");
       const actionUpload = document.getElementById("action-upload");
-      const actionDeep = document.getElementById("action-deep");
-      const actionShopping = document.getElementById("action-shopping");
-      const actionImage = document.getElementById("action-image");
-      const actionAgent = document.getElementById("action-agent");
-      const actionCanvas = document.getElementById("action-canvas");
+      const actionPhotoUpload = document.getElementById("action-photo-upload");
+      const actionGeneratePhoto = document.getElementById("action-generate-photo");
+      const actionGenerateVideo = document.getElementById("action-generate-video");
       const layoutToggleBtn = document.getElementById("layout-toggle");
       const hiddenFileInput = document.createElement("input");
       hiddenFileInput.type = "file";
@@ -439,22 +436,21 @@
         });
       }
 
-      if (actionStudy) {
-        actionStudy.addEventListener("click", (event) => {
+      if (actionUpload) {
+        actionUpload.addEventListener("click", (event) => {
           event.stopPropagation();
-          alert("Studeren en leren wordt later toegevoegd.");
+          hiddenFileInput.accept = "";
+          hiddenFileInput.dataset.uploadKind = "file";
+          hiddenFileInput.click();
           closeAllDropdowns();
         });
       }
 
-      const placeholderAction = (msg) => () => {
-        alert(msg);
-        closeAllDropdowns();
-      };
-
-      if (actionUpload) {
-        actionUpload.addEventListener("click", (event) => {
+      if (actionPhotoUpload) {
+        actionPhotoUpload.addEventListener("click", (event) => {
           event.stopPropagation();
+          hiddenFileInput.accept = "image/*";
+          hiddenFileInput.dataset.uploadKind = "photo";
           hiddenFileInput.click();
           closeAllDropdowns();
         });
@@ -462,37 +458,21 @@
 
       hiddenFileInput.addEventListener("change", () => {
         if (hiddenFileInput.files && hiddenFileInput.files.length) {
-          alert(`Bestand geselecteerd: ${hiddenFileInput.files[0].name}`);
+          const kind = hiddenFileInput.dataset.uploadKind;
+          const label = kind === "photo" ? "Foto geselecteerd" : "Bestand geselecteerd";
+          alert(`${label}: ${hiddenFileInput.files[0].name}`);
         }
       });
 
-      actionDeep?.addEventListener("click", (event) => {
+      actionGeneratePhoto?.addEventListener("click", (event) => {
         event.stopPropagation();
-        alert("Diepgaand onderzoek wordt later toegevoegd.");
+        alert("Foto's maken wordt later toegevoegd.");
         closeAllDropdowns();
       });
 
-      actionShopping?.addEventListener("click", (event) => {
+      actionGenerateVideo?.addEventListener("click", (event) => {
         event.stopPropagation();
-        alert("Winkelonderzoek wordt later toegevoegd.");
-        closeAllDropdowns();
-      });
-
-      actionImage?.addEventListener("click", (event) => {
-        event.stopPropagation();
-        alert("Afbeelding genereren wordt later toegevoegd.");
-        closeAllDropdowns();
-      });
-
-      actionAgent?.addEventListener("click", (event) => {
-        event.stopPropagation();
-        alert("Agentmodus wordt later toegevoegd.");
-        closeAllDropdowns();
-      });
-
-      actionCanvas?.addEventListener("click", (event) => {
-        event.stopPropagation();
-        alert("Canvas wordt later toegevoegd.");
+        alert("Video's maken wordt later toegevoegd.");
         closeAllDropdowns();
       });
 
