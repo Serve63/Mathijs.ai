@@ -256,7 +256,7 @@
           selectedModel = "gemini3";
         } else if (label && label.startsWith("Llama 4")) {
           selectedModel = "llama4";
-        } else if (label && label.startsWith("QWEN")) {
+        } else if (label && label.startsWith("Qwen3-MAX")) {
           selectedModel = "qwen";
         } else if (label && label.startsWith("DeepSeek V2")) {
           selectedModel = "deepseekv2";
@@ -2018,8 +2018,8 @@
           return;
         }
         if (selectedModel === "qwen") {
-          alert("QWEN is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
-          console.log("QWEN chat is nog niet geïmplementeerd.");
+          alert("Qwen3-MAX is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
+          console.log("Qwen3-MAX chat is nog niet geïmplementeerd.");
           return;
         }
         if (selectedModel === "gemini25pro") {
