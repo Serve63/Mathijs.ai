@@ -772,10 +772,18 @@
       .team-inner {
         display: grid;
         grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-        gap: 52px;
+        gap: 64px;
         align-items: stretch;
         position: relative;
         z-index: 1;
+      }
+
+      .team-content {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 26px;
+        padding: 32px;
+        box-shadow: 0 22px 50px -34px rgba(0, 0, 0, 0.65);
       }
 
       .team-title {
@@ -783,6 +791,7 @@
         font-size: clamp(2.2rem, 3.4vw, 3rem);
         margin: 0 0 16px;
         max-width: 520px;
+        line-height: 1.1;
       }
 
       .team-title-line {
@@ -1377,7 +1386,7 @@
 
       <section class="team-section" id="team">
         <div class="section-inner team-inner">
-          <div>
+          <div class="team-content">
             <h2 class="team-title">
               <span class="team-title-line">Gemaakt door ondernemers</span>
               <span>voor ondernemers</span>
