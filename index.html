@@ -751,6 +751,39 @@
         width: 100%;
       }
 
+      /* Team */
+      .team-section {
+        padding: 90px 40px 110px;
+      }
+
+      .team-inner {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 40px;
+        align-items: center;
+      }
+
+      .team-title {
+        font-family: "Sora", sans-serif;
+        font-size: clamp(2rem, 3vw, 2.6rem);
+        margin: 0;
+      }
+
+      .team-photo {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: 0 18px 40px -30px rgba(15, 52, 96, 0.5);
+      }
+
+      .team-photo img {
+        width: 100%;
+        height: auto;
+        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(26, 26, 46, 0.8), rgba(15, 52, 96, 0.9));
+      }
+
       /* CTA */
       .cta-section {
         background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 60%, var(--hero-3) 100%);
@@ -918,6 +951,10 @@
 
         .cta-section {
           margin: 0 20px 40px;
+        }
+
+        .team-inner {
+          grid-template-columns: 1fr;
         }
       }
 
@@ -1259,6 +1296,15 @@
               </ul>
               <a href="subscribe.html" class="btn primary pricing-cta">Start Nu</a>
             </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="team-section" id="team">
+        <div class="section-inner team-inner">
+          <h2 class="team-title">Met wie heb je te maken</h2>
+          <div class="team-photo">
+            <img src="assets/team-duo.svg" alt="Twee jongens van het Mathijs.ai team" />
           </div>
         </div>
       </section>
