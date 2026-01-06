@@ -13,18 +13,21 @@
     <style>
       :root {
         color-scheme: light;
-        --bg: #f8f3ee;
-        --bg-alt: #f1e7dc;
-        --ink: #191612;
-        --muted: #5c5852;
-        --accent: #f06543;
-        --accent-strong: #da5432;
-        --accent-cool: #1e6f5c;
-        --accent-sun: #f7c04a;
-        --dark: #101a17;
+        --bg: #fafafa;
+        --bg-alt: #f3f4f9;
+        --ink: #1a1a1f;
+        --muted: #6b6b76;
+        --accent: #e6c200;
+        --accent-strong: #c9a900;
+        --accent-cool: #16213e;
+        --accent-sun: #e6c200;
+        --dark: #1a1a2e;
         --card: #ffffff;
-        --border: rgba(24, 24, 28, 0.08);
-        --shadow: 0 24px 60px -30px rgba(16, 26, 23, 0.35);
+        --border: rgba(0, 0, 0, 0.08);
+        --shadow: 0 24px 60px -30px rgba(15, 52, 96, 0.45);
+        --hero-1: #1a1a2e;
+        --hero-2: #16213e;
+        --hero-3: #0f3460;
       }
 
       * {
@@ -47,9 +50,9 @@
         position: fixed;
         inset: 0;
         background:
-          radial-gradient(circle at 15% 15%, rgba(240, 101, 67, 0.15), transparent 45%),
-          radial-gradient(circle at 85% 20%, rgba(30, 111, 92, 0.16), transparent 50%),
-          radial-gradient(circle at 50% 85%, rgba(247, 192, 74, 0.18), transparent 55%);
+          radial-gradient(circle at 15% 15%, rgba(230, 194, 0, 0.18), transparent 45%),
+          radial-gradient(circle at 85% 20%, rgba(15, 52, 96, 0.18), transparent 50%),
+          radial-gradient(circle at 50% 85%, rgba(230, 194, 0, 0.14), transparent 55%);
         pointer-events: none;
         z-index: -2;
       }
@@ -96,8 +99,8 @@
 
       .btn.primary {
         background: var(--accent);
-        color: #2b110a;
-        box-shadow: 0 12px 30px rgba(240, 101, 67, 0.35);
+        color: #1a1600;
+        box-shadow: 0 12px 30px rgba(230, 194, 0, 0.35);
       }
 
       .btn.primary:hover {
@@ -192,8 +195,8 @@
       .hero {
         position: relative;
         padding: 90px 40px 120px;
-        background: radial-gradient(circle at 30% 20%, rgba(247, 192, 74, 0.18), transparent 45%),
-          linear-gradient(135deg, #0e1b17 0%, #123127 48%, #1a3f35 100%);
+        background: radial-gradient(circle at 30% 20%, rgba(230, 194, 0, 0.16), transparent 45%),
+          linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 48%, var(--hero-3) 100%);
         color: #fff;
         overflow: hidden;
       }
@@ -224,8 +227,8 @@
         gap: 10px;
         padding: 8px 18px;
         border-radius: 999px;
-        background: rgba(240, 101, 67, 0.16);
-        border: 1px solid rgba(240, 101, 67, 0.4);
+        background: rgba(230, 194, 0, 0.16);
+        border: 1px solid rgba(230, 194, 0, 0.4);
         color: var(--accent);
         font-size: 0.78rem;
         font-weight: 700;
@@ -378,7 +381,7 @@
       .hero-float--b {
         bottom: 20px;
         right: 30px;
-        background: #1e6f5c;
+        background: var(--hero-3);
         color: #fff;
       }
 
@@ -539,7 +542,7 @@
       .feature-icon {
         width: 52px;
         height: 52px;
-        background: linear-gradient(135deg, rgba(240, 101, 67, 0.25), rgba(30, 111, 92, 0.25));
+        background: linear-gradient(135deg, rgba(230, 194, 0, 0.25), rgba(15, 52, 96, 0.25));
         border-radius: 18px;
         display: flex;
         align-items: center;
@@ -565,7 +568,7 @@
       }
 
       .section.dark {
-        background: linear-gradient(150deg, #0f1a17 0%, #1a2f2a 70%, #203b35 100%);
+        background: linear-gradient(150deg, var(--hero-1) 0%, var(--hero-2) 70%, var(--hero-3) 100%);
         color: #fff;
         border-radius: 40px;
         margin: 0 40px;
@@ -642,7 +645,7 @@
         width: 42px;
         height: 42px;
         border-radius: 16px;
-        background: linear-gradient(135deg, rgba(30, 111, 92, 0.25), rgba(240, 101, 67, 0.25));
+        background: linear-gradient(135deg, rgba(15, 52, 96, 0.25), rgba(230, 194, 0, 0.25));
         display: flex;
         align-items: center;
         justify-content: center;
@@ -678,7 +681,7 @@
         background: #fff;
         border-radius: 28px;
         padding: 38px 30px;
-        border: 2px solid rgba(240, 101, 67, 0.15);
+        border: 2px solid rgba(230, 194, 0, 0.15);
         text-align: center;
         box-shadow: 0 18px 40px -30px rgba(16, 26, 23, 0.5);
       }
@@ -686,7 +689,7 @@
       .pricing-card.featured {
         border-color: var(--accent);
         position: relative;
-        background: linear-gradient(180deg, #fff 0%, #fff7f1 100%);
+        background: linear-gradient(180deg, #ffffff 0%, #f4f6ff 100%);
       }
 
       .pricing-badge {
@@ -749,7 +752,7 @@
 
       /* CTA */
       .cta-section {
-        background: linear-gradient(135deg, #101a17 0%, #1f3a33 60%, #2c4b40 100%);
+        background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 60%, var(--hero-3) 100%);
         color: #fff;
         padding: 80px 40px;
         margin: 0 40px 60px;
@@ -762,7 +765,7 @@
         content: "";
         position: absolute;
         inset: 0;
-        background: radial-gradient(circle at 20% 20%, rgba(240, 101, 67, 0.25), transparent 40%);
+        background: radial-gradient(circle at 20% 20%, rgba(230, 194, 0, 0.2), transparent 40%);
         pointer-events: none;
       }
 
