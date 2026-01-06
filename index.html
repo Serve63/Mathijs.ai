@@ -753,35 +753,103 @@
 
       /* Team */
       .team-section {
-        padding: 90px 40px 110px;
+        padding: 110px 40px 120px;
+        position: relative;
+        background: linear-gradient(140deg, var(--hero-1) 0%, var(--hero-2) 55%, var(--hero-3) 100%);
+        color: #fff;
+        overflow: hidden;
+        margin-top: 40px;
+      }
+
+      .team-section::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 15% 20%, rgba(230, 194, 0, 0.22), transparent 40%),
+          radial-gradient(circle at 85% 80%, rgba(230, 194, 0, 0.16), transparent 45%);
+        pointer-events: none;
       }
 
       .team-inner {
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 40px;
+        gap: 48px;
         align-items: center;
+        position: relative;
+        z-index: 1;
+      }
+
+      .team-card {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 28px;
+        padding: 32px;
+        box-shadow: 0 24px 50px -30px rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(10px);
+      }
+
+      .team-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--accent);
+        margin-bottom: 16px;
       }
 
       .team-title {
         font-family: "Sora", sans-serif;
         font-size: clamp(2rem, 3vw, 2.6rem);
+        margin: 0 0 14px;
+      }
+
+      .team-subtitle {
+        margin: 0 0 24px;
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 1rem;
+      }
+
+      .team-points {
+        display: grid;
+        gap: 12px;
         margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .team-points li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.95rem;
+      }
+
+      .team-points svg {
+        width: 18px;
+        height: 18px;
+        color: var(--accent);
+        flex-shrink: 0;
+        margin-top: 2px;
       }
 
       .team-photo {
-        background: #fff;
-        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: 28px;
-        padding: 24px;
-        box-shadow: 0 18px 40px -30px rgba(15, 52, 96, 0.5);
+        padding: 18px;
+        box-shadow: 0 26px 60px -35px rgba(0, 0, 0, 0.7);
       }
 
       .team-photo img {
         width: 100%;
         height: auto;
         border-radius: 20px;
-        background: linear-gradient(135deg, rgba(26, 26, 46, 0.8), rgba(15, 52, 96, 0.9));
+        background: linear-gradient(135deg, rgba(26, 26, 46, 0.85), rgba(15, 52, 96, 0.95));
       }
 
       /* CTA */
@@ -1302,7 +1370,31 @@
 
       <section class="team-section" id="team">
         <div class="section-inner team-inner">
-          <h2 class="team-title">Met wie heb je te maken</h2>
+          <div class="team-card">
+            <span class="team-eyebrow">Vertrouwen</span>
+            <h2 class="team-title">Met wie heb je te maken</h2>
+            <p class="team-subtitle">Twee founders die dagelijks met AI bouwen en jouw team praktisch begeleiden.</p>
+            <ul class="team-points">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Persoonlijke support en heldere implementatie</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Praktische workflows, geen theoretische praat</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Gericht op resultaat: tijdswinst en duidelijkheid</span>
+              </li>
+            </ul>
+          </div>
           <div class="team-photo">
             <img src="assets/team-duo.svg" alt="Twee jongens van het Mathijs.ai team" />
           </div>
