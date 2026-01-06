@@ -755,7 +755,7 @@
       .team-section {
         padding: 120px 40px;
         position: relative;
-        background: linear-gradient(120deg, var(--hero-1) 0%, var(--hero-2) 50%, var(--hero-3) 100%);
+        background: linear-gradient(125deg, var(--hero-1) 0%, var(--hero-2) 48%, var(--hero-3) 100%);
         color: #fff;
         overflow: hidden;
         margin-top: 40px;
@@ -766,35 +766,60 @@
         position: absolute;
         inset: 0;
         background:
-          radial-gradient(circle at 18% 20%, rgba(230, 194, 0, 0.22), transparent 42%),
-          radial-gradient(circle at 80% 70%, rgba(230, 194, 0, 0.12), transparent 45%);
+          radial-gradient(circle at 18% 22%, rgba(230, 194, 0, 0.22), transparent 42%),
+          radial-gradient(circle at 85% 78%, rgba(230, 194, 0, 0.12), transparent 45%);
+        pointer-events: none;
+      }
+
+      .team-section::after {
+        content: "";
+        position: absolute;
+        right: -10%;
+        top: -15%;
+        width: 55%;
+        height: 130%;
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0.12), transparent 70%);
+        transform: rotate(8deg);
         pointer-events: none;
       }
 
       .team-shell {
         display: grid;
         grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-        gap: 56px;
+        gap: 72px;
         align-items: center;
         position: relative;
         z-index: 1;
       }
 
+      .team-copy {
+        max-width: 560px;
+      }
+
       .team-label {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         font-size: 0.78rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.18em;
+        letter-spacing: 0.2em;
         color: var(--accent);
-        margin-bottom: 16px;
+        margin-bottom: 18px;
+      }
+
+      .team-label::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 6px rgba(230, 194, 0, 0.18);
       }
 
       .team-title {
         font-family: "Sora", sans-serif;
-        font-size: clamp(2.4rem, 3.6vw, 3.1rem);
+        font-size: clamp(2.5rem, 3.7vw, 3.3rem);
         margin: 0 0 16px;
         line-height: 1.1;
       }
@@ -805,62 +830,90 @@
       }
 
       .team-subtitle {
-        margin: 0 0 28px;
+        margin: 0 0 18px;
         color: rgba(255, 255, 255, 0.75);
         font-size: 1.05rem;
-        max-width: 520px;
       }
 
-      .team-chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-
-      .team-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 16px;
+      .team-divider {
+        width: 140px;
+        height: 2px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.85);
+        background: linear-gradient(90deg, rgba(230, 194, 0, 0.9), rgba(230, 194, 0, 0));
+        margin: 18px 0 22px;
+      }
+
+      .team-points {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 24px;
+      }
+
+      .team-points li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .team-points svg {
+        width: 18px;
+        height: 18px;
+        color: var(--accent);
+        flex-shrink: 0;
+        margin-top: 2px;
       }
 
       .team-media {
         position: relative;
       }
 
-      .team-media-frame {
+      .team-photo {
         position: relative;
+        background: #fdfdfd;
         border-radius: 30px;
         padding: 16px;
-        background: linear-gradient(140deg, rgba(230, 194, 0, 0.25), rgba(15, 52, 96, 0.7));
         box-shadow: 0 34px 70px -42px rgba(0, 0, 0, 0.75);
       }
 
-      .team-media-frame::after {
+      .team-photo::before {
         content: "";
         position: absolute;
-        inset: 10px;
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        inset: -12px;
+        border-radius: 36px;
+        border: 1px solid rgba(230, 194, 0, 0.35);
         pointer-events: none;
       }
 
-      .team-media-frame img {
+      .team-photo img {
         width: 100%;
         height: auto;
-        border-radius: 24px;
-        background: linear-gradient(135deg, rgba(26, 26, 46, 0.85), rgba(15, 52, 96, 0.95));
+        border-radius: 22px;
+        background: #0d1f3d;
+      }
+
+      .team-photo-badge {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        background: var(--accent);
+        color: #1a1600;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        padding: 8px 12px;
+        border-radius: 999px;
       }
 
       .team-caption {
-        margin-top: 16px;
+        margin-top: 14px;
         font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.75);
+        color: rgba(255, 255, 255, 0.7);
         text-align: left;
       }
 
@@ -1074,6 +1127,14 @@
         .cta-section {
           margin: 0 20px 40px;
           padding: 60px 20px;
+        }
+
+        .team-title-line {
+          white-space: normal;
+        }
+
+        .team-points {
+          grid-template-columns: 1fr;
         }
 
         .site-footer {
@@ -1386,17 +1447,34 @@
             <span class="team-label">Over ons</span>
             <h2 class="team-title">
               <span class="team-title-line">Gemaakt door ondernemers</span>
-              <span>voor ondernemers</span>
+              <span class="team-title-line">voor ondernemers</span>
             </h2>
             <p class="team-subtitle">We bouwen dit platform zoals we onze eigen bedrijven runnen: snel, praktisch en gericht op impact.</p>
-            <div class="team-chips">
-              <span class="team-chip">2 founders</span>
-              <span class="team-chip">Praktische begeleiding</span>
-              <span class="team-chip">Korte lijnen</span>
-            </div>
+            <div class="team-divider"></div>
+            <ul class="team-points">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Persoonlijke begeleiding door founders</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Korte lijnen en snelle feedback</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Focus op tijdswinst en kwaliteit</span>
+              </li>
+            </ul>
           </div>
           <div class="team-media">
-            <div class="team-media-frame">
+            <div class="team-photo">
+              <span class="team-photo-badge">Team</span>
               <img src="assets/team-duo.svg" alt="Twee jongens van het Mathijs.ai team" />
             </div>
             <p class="team-caption">Direct contact, korte lijnen en begeleiding die je echt verder helpt.</p>
