@@ -724,6 +724,115 @@
         margin: 0;
       }
 
+      /* Pricing */
+      .pricing-section {
+        background: var(--bg);
+        padding: 100px 40px;
+        position: relative;
+      }
+
+      .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 32px;
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+
+      .pricing-card {
+        background: var(--card-bg);
+        border: 2px solid var(--border);
+        border-radius: 24px;
+        padding: 40px 32px;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .pricing-card.featured {
+        border-color: var(--accent);
+        box-shadow: 0 20px 60px -20px rgba(230, 194, 0, 0.3);
+        transform: scale(1.05);
+      }
+
+      .pricing-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.2);
+      }
+
+      .pricing-card.featured:hover {
+        transform: scale(1.05) translateY(-8px);
+      }
+
+      .pricing-badge {
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--accent);
+        color: #1a1600;
+        padding: 6px 16px;
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .pricing-name {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 0 0 12px;
+      }
+
+      .pricing-price {
+        margin: 24px 0;
+      }
+
+      .pricing-amount {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--fg);
+        line-height: 1;
+      }
+
+      .pricing-period {
+        font-size: 0.9rem;
+        color: var(--fg-muted);
+        margin-top: 4px;
+      }
+
+      .pricing-features {
+        list-style: none;
+        padding: 0;
+        margin: 32px 0;
+        text-align: left;
+      }
+
+      .pricing-features li {
+        padding: 12px 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 0.95rem;
+        color: var(--fg);
+      }
+
+      .pricing-features li svg {
+        width: 20px;
+        height: 20px;
+        color: var(--accent);
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .pricing-cta {
+        margin-top: 32px;
+        width: 100%;
+      }
+
       /* CTA */
       .cta-section {
         background: linear-gradient(180deg, var(--hero-1) 0%, var(--hero-2) 55%, var(--hero-3) 100%);
@@ -864,6 +973,18 @@
 
         .section {
           padding: 60px 20px;
+        }
+
+        .pricing-section {
+          padding: 60px 20px;
+        }
+
+        .pricing-card.featured {
+          transform: scale(1);
+        }
+
+        .pricing-card.featured:hover {
+          transform: translateY(-8px);
         }
 
         .trust-bar {
@@ -1013,6 +1134,19 @@
         </div>
       </section>
 
+      <!-- Trust Bar -->
+      <section class="trust-bar">
+        <div class="trust-inner">
+          <span class="trust-label">Vertrouwd door</span>
+          <div class="trust-logos">
+            <span>Scale-ups</span>
+            <span>Digital Agencies</span>
+            <span>E-commerce</span>
+            <span>Marketing Teams</span>
+          </div>
+        </div>
+      </section>
+
       <section class="section" id="features">
         <div class="section-inner">
           <div class="section-header">
@@ -1144,6 +1278,73 @@
                   <p class="testimonial-role">E-commerce</p>
                 </div>
               </div>
+            </article>
+          </div>
+        </div>
+        <!-- Divider: Soft curve into CTA -->
+        <div class="section-divider divider-cta">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 80" preserveAspectRatio="none">
+            <path class="fill-dark" d="M0,80 Q720,0 1440,80 L1440,80 L0,80 Z"></path>
+          </svg>
+        </div>
+        <!-- Divider: Soft curve into Pricing -->
+        <div class="section-divider divider-soft">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 70" preserveAspectRatio="none">
+            <path class="fill-light" d="M0,70 L0,40 Q720,0 1440,40 L1440,70 Z"></path>
+          </svg>
+        </div>
+      </section>
+
+      <section class="pricing-section" id="pricing">
+        <div class="section-inner">
+          <div class="section-header">
+            <span class="section-eyebrow">Prijzen</span>
+            <h2 class="section-title">Eenvoudige, transparante prijzen</h2>
+            <p class="section-subtitle">
+              Eén abonnement, toegang tot alle modellen en features. Geen verborgen kosten.
+            </p>
+          </div>
+          <div class="pricing-grid">
+            <article class="pricing-card featured">
+              <div class="pricing-badge">Populair</div>
+              <h3 class="pricing-name">Standaard</h3>
+              <div class="pricing-price">
+                <div class="pricing-amount">€25</div>
+                <div class="pricing-period">per maand</div>
+              </div>
+              <ul class="pricing-features">
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span>Toegang tot alle AI-modellen (GPT, Gemini, Grok, etc.)</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span>Kant-en-klare workflows voor marketing, sales & operations</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span>50+ video lessen en workshops</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span>Onbeperkt chatten en vergelijken</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span>Model-advies per use case</span>
+                </li>
+              </ul>
+              <a href="subscribe.html" class="btn primary pricing-cta">Start Nu</a>
             </article>
           </div>
         </div>
