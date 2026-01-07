@@ -30,5 +30,5 @@ Chat endpoint: `POST /api/chat` met body `{ model, messages }`.
 ```bash
 curl -X POST http://localhost:3000/api/chat \
   -H "Content-Type: application/json" \
-  -d '{"model":"gpt-5.2-chat-latest","messages":[{"role":"user","content":"Zeg hallo"}]}'
+  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"Zeg hallo"}]}'
 ```

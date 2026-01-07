@@ -5,8 +5,10 @@ const { getUserFromAccessToken } = require("./_lib/supabase");
 const { SUPABASE_URL } = require("./_lib/supabase");
 const { getOpenAIApiKey, getGeminiApiKey, getSupabaseServiceRoleKey } = require("./_lib/env");
 
-const OPENAI_DEFAULT_MODEL = "gpt-5.2-chat-latest";
-const OPENAI_ALLOWED_MODELS = ["gpt-5.2-chat-latest", "gpt-5.2", "gpt-5-mini"];
+// NOTE: UI labels may map to marketing names; server maps them to real OpenAI model IDs.
+// Keep this conservative and stable across accounts/keys.
+const OPENAI_DEFAULT_MODEL = "gpt-4o-mini";
+const OPENAI_ALLOWED_MODELS = ["gpt-4o", "gpt-4o-mini"];
 
 // Gemini model IDs vary by API version and rollout. We keep a conservative default and
 // map UI labels/legacy names to something likely to exist, then we try both v1 and v1beta endpoints.
@@ -40,9 +42,18 @@ function resolveOpenAIModel(requested) {
   if (typeof requested !== "string" || !requested.trim()) {
     return OPENAI_DEFAULT_MODEL;
   }
-  const normalized = requested.trim();
+  const raw = requested.trim();
+  // Backwards compatible aliases (used by UI labels / older clients)
+  const aliasMap = {
+    "gpt-5.2-chat-latest": "gpt-4o",
+    "gpt-5.2": "gpt-4o",
+    "gpt-5-mini": "gpt-4o-mini",
+    // Some older names we used in docs/clients
+    "gpt-4o-latest": "gpt-4o",
+  };
+  const normalized = aliasMap[raw] || raw;
   if (!OPENAI_ALLOWED_MODELS.includes(normalized)) {
-    console.warn(`Niet toegestane OpenAI model requested: ${normalized}. Valt terug op ${OPENAI_DEFAULT_MODEL}`);
+    console.warn(`Niet toegestane OpenAI model requested: ${raw} (→ ${normalized}). Valt terug op ${OPENAI_DEFAULT_MODEL}`);
     return OPENAI_DEFAULT_MODEL;
   }
   return normalized;
@@ -342,6 +353,26 @@ module.exports = async function handler(req, res) {
       return json(res, 500, { error: "Supabase service role key missing; tokens cannot be initialized." });
     }
 
+    // Parse & validate request FIRST so we don't deduct tokens for invalid requests.
+    let body = {};
+    try {
+      body = await readJson(req, { maxBytes: 64 * 1024 });
+    } catch (error) {
+      const status = error?.code === "payload_too_large" ? 413 : 400;
+      return json(res, status, { error: "Invalid request body" });
+    }
+
+    const { messages, model, provider } = body || {};
+    const normalizedMessages = validateAndNormalizeMessages(messages);
+
+    const requestedProvider = typeof provider === "string" ? provider.trim().toLowerCase() : "";
+    const inferredProvider =
+      requestedProvider ||
+      (typeof model === "string" && model.trim().startsWith("gemini-") ? "gemini" : "openai");
+
+    const requestedModel = typeof model === "string" ? model : "";
+
+    // Initialize / read token balance AFTER we know request is valid.
     let appMeta = user?.app_metadata || {};
     const tokensPerEur = getTokensPerEur();
     const starterTokens = Math.max(0, Math.round(STARTER_CREDITS_EUR * tokensPerEur));
@@ -361,17 +392,7 @@ module.exports = async function handler(req, res) {
     const isPaid = userPlan === "standard" || userPlan === "lifetime" || appMeta?.lifetime_free === true;
     const limit = isPaid ? CHAT_LIMIT_PAID : CHAT_LIMIT_FREE;
 
-    // Token gating + deduct (stored server-side in app_metadata.tokens)
-    const tokenBalance = Number(appMeta?.tokens || 0);
-    if (!Number.isFinite(tokenBalance) || tokenBalance < TOKENS_PER_CHAT) {
-      return json(res, 402, {
-        error: "Je tokens zijn op. Waardeer je account op om door te chatten.",
-        topup_required: true,
-        tokens_required: TOKENS_PER_CHAT,
-        tokens_available: Math.max(0, Number.isFinite(tokenBalance) ? tokenBalance : 0),
-      });
-    }
-
+    // Rate limit before deducting tokens.
     const userLimit = rateLimit({ key: `chat:user:${user.id}`, limit, windowMs: CHAT_WINDOW_MS });
     if (!userLimit.ok) {
       return json(res, 429, { error: "Te veel chatverzoeken. Probeer zo opnieuw." }, rateLimitHeaders(userLimit, limit));
@@ -383,8 +404,17 @@ module.exports = async function handler(req, res) {
       return json(res, 429, { error: "Te veel verzoeken. Probeer zo opnieuw." }, rateLimitHeaders(ipLimit, limit * 2));
     }
 
-    // Deduct tokens upfront to prevent free usage on failed streams.
-    // Note: app_metadata update is not atomic across concurrent requests; rate limiting mitigates abuse.
+    // Token gating + deduct (stored server-side in app_metadata.tokens)
+    const tokenBalance = Number(appMeta?.tokens || 0);
+    if (!Number.isFinite(tokenBalance) || tokenBalance < TOKENS_PER_CHAT) {
+      return json(res, 402, {
+        error: "Je tokens zijn op. Waardeer je account op om door te chatten.",
+        topup_required: true,
+        tokens_required: TOKENS_PER_CHAT,
+        tokens_available: Math.max(0, Number.isFinite(tokenBalance) ? tokenBalance : 0),
+      });
+    }
+
     const nextTokens = Math.max(0, Math.floor(tokenBalance - TOKENS_PER_CHAT));
     await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
       method: "PUT",
@@ -392,49 +422,62 @@ module.exports = async function handler(req, res) {
       body: { app_metadata: { ...(appMeta || {}), tokens: nextTokens } },
     });
 
-    let body = {};
-    try {
-      body = await readJson(req, { maxBytes: 64 * 1024 });
-    } catch (error) {
-      const status = error?.code === "payload_too_large" ? 413 : 400;
-      return json(res, status, { error: "Invalid request body" });
-    }
-
-    const { messages, model, provider } = body || {};
-    const normalizedMessages = validateAndNormalizeMessages(messages);
-
-    const requestedProvider = typeof provider === "string" ? provider.trim().toLowerCase() : "";
-    const inferredProvider =
-      requestedProvider ||
-      (typeof model === "string" && model.trim().startsWith("gemini-") ? "gemini" : "openai");
-
-    const requestedModel = typeof model === "string" ? model : "";
-
-    if (inferredProvider === "gemini") {
-      const geminiModel = resolveGeminiModel(requestedModel);
-      const apiKey = getGeminiApiKey();
-      console.log(`[gemini] key ${apiKey ? "present" : "missing"}`);
-      if (!apiKey) {
-        return json(res, 500, { error: "Missing GEMINI_API_KEY" });
+    const refundTokensBestEffort = async () => {
+      try {
+        await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
+          method: "PUT",
+          accessKey: serviceRoleKey,
+          body: { app_metadata: { ...(appMeta || {}), tokens: tokenBalance } },
+        });
+      } catch (e) {
+        console.error("Token refund failed", e?.message || e);
       }
-      const text = await runGeminiChat({ apiKey, model: geminiModel, messages: normalizedMessages });
+    };
+
+    try {
+      if (inferredProvider === "gemini") {
+        const geminiModel = resolveGeminiModel(requestedModel);
+        const apiKey = getGeminiApiKey();
+        console.log(`[gemini] key ${apiKey ? "present" : "missing"}`);
+        if (!apiKey) {
+          await refundTokensBestEffort();
+          return json(res, 500, { error: "Missing GEMINI_API_KEY" });
+        }
+        const text = await runGeminiChat({ apiKey, model: geminiModel, messages: normalizedMessages });
+        return json(res, 200, { text: text || "" });
+      }
+
+      const openaiModel = resolveOpenAIModel(requestedModel);
+      const apiKey = getOpenAIApiKey();
+      console.log(`[openai] key ${apiKey ? "present" : "missing"}`);
+      if (!apiKey) {
+        await refundTokensBestEffort();
+        return json(res, 500, { error: "Missing OPEN_AI_KEY" });
+      }
+
+      const client = new OpenAI({ apiKey });
+      let response;
+      try {
+        response = await client.responses.create({
+          model: openaiModel,
+          input: normalizedMessages.map((message) => ({ role: message.role, content: message.content })),
+        });
+      } catch (err) {
+        await refundTokensBestEffort();
+        const safe = sanitizeProviderErrorMessage(err?.message || "");
+        const wrapped = new Error("openai_failed");
+        wrapped.statusCode = 502;
+        wrapped.publicMessage = safe ? `OpenAI request mislukte: ${safe}` : "OpenAI request mislukte.";
+        wrapped.cause = err;
+        throw wrapped;
+      }
+      const text = extractResponseText(response);
       return json(res, 200, { text: text || "" });
+    } catch (err) {
+      // Refund tokens for provider errors (best effort). If this throws, the outer catch handles it.
+      // Note: for successful responses we never enter here.
+      throw err;
     }
-
-    const openaiModel = resolveOpenAIModel(requestedModel);
-    const apiKey = getOpenAIApiKey();
-    console.log(`[openai] key ${apiKey ? "present" : "missing"}`);
-    if (!apiKey) {
-      return json(res, 500, { error: "Missing OPEN_AI_KEY" });
-    }
-
-    const client = new OpenAI({ apiKey });
-    const response = await client.responses.create({
-      model: openaiModel,
-      input: normalizedMessages.map((message) => ({ role: message.role, content: message.content })),
-    });
-    const text = extractResponseText(response);
-    return json(res, 200, { text: text || "" });
   } catch (error) {
     const status = Number(error?.statusCode) || (error?.code === "payload_too_large" ? 413 : 500);
     if (res.headersSent) return;
@@ -446,6 +489,7 @@ module.exports = async function handler(req, res) {
       message_too_large: "Bericht is te lang.",
       messages_too_large: "Te veel tekst/context meegestuurd.",
       gemini_failed: "Gemini kon geen antwoord geven. Probeer opnieuw.",
+      openai_failed: "OpenAI kon geen antwoord geven. Probeer opnieuw.",
     };
     const publicMsg = error?.publicMessage || map[error?.message] || "Er ging iets mis. Probeer opnieuw.";
     publicError(res, status, publicMsg, error);

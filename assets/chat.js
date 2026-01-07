@@ -249,9 +249,10 @@
       };
 
       const OPENAI_MODEL_LABEL_MAP = {
-        "ChatGPT 5.2": "gpt-5.2-chat-latest",
-        "GPT-5.2": "gpt-5.2",
-        "GPT-5 mini": "gpt-5-mini",
+        // UI labels are marketing; API models are stable OpenAI IDs.
+        "ChatGPT 5.2": "gpt-4o",
+        "GPT-5.2": "gpt-4o",
+        "GPT-5 mini": "gpt-4o-mini",
       };
       const GEMINI_MODEL_LABEL_MAP = {
         "Gemini 3": "gemini-1.5-flash",
