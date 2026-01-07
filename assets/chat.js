@@ -1455,22 +1455,35 @@
       };
 
 		      const requireAccessToken = async () => {
+		        // Ensure Supabase client is loaded
 		        if (!supabaseClient) {
-		          window.location.href = "login.html";
+		          supabaseClient = await waitForSupabase();
+		        }
+		        if (!supabaseClient) {
+		          console.error("Supabase client ontbreekt in requireAccessToken");
 		          return null;
 		        }
-		        const { data: sessionData } = await supabaseClient.auth.getSession();
-		        const accessToken = sessionData?.session?.access_token;
-		        if (!accessToken) {
-		          window.location.href = "login.html";
-		          return null;
-	        }
+		        try {
+		          const { data: sessionData } = await supabaseClient.auth.getSession();
+		          const accessToken = sessionData?.session?.access_token;
+		          if (!accessToken) {
+		            console.warn("Geen access token gevonden");
+		            return null;
+		        }
 	        return accessToken;
+		        } catch (error) {
+		          console.error("Fout bij ophalen access token:", error);
+		          return null;
+		        }
 	      };
 
 		      const apiFetchJson = async (url, { method = "GET", body } = {}) => {
 		        const accessToken = await requireAccessToken();
-		        if (!accessToken) return { ok: false, status: 401, payload: { error: "Unauthorized" } };
+		        if (!accessToken) {
+		          console.warn("Geen access token, redirect naar login");
+		          window.location.href = "login.html";
+		          return { ok: false, status: 401, payload: { error: "Unauthorized" } };
+		        }
 		        const resp = await fetch(url, {
 	          method,
 	          headers: {
