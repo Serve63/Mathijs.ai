@@ -1233,18 +1233,28 @@
         }
       };
 
+      const removeSessionEmptyActions = () => {
+        const actionsEl = document.getElementById("session-empty-actions");
+        if (actionsEl) actionsEl.remove();
+      };
+
       const renderSessionList = () => {
         if (!sessionListEl) return;
         sessionListEl.innerHTML = "";
         if (!sessionState.list.length) {
           if (sessionEmptyEl) {
+            sessionEmptyEl.textContent = "Nog geen gesprekken. Start je eerste chat.";
             sessionEmptyEl.style.removeProperty("display");
           }
+          // Verwijder de actieknoppen als de lijst leeg is maar er geen error was
+          removeSessionEmptyActions();
           return;
         }
         if (sessionEmptyEl) {
           sessionEmptyEl.style.display = "none";
         }
+        // Verwijder de actieknoppen als er sessies zijn
+        removeSessionEmptyActions();
         sessionState.list.forEach((session) => {
           const row = document.createElement("div");
           row.className = `session-row${session.id === sessionState.activeId ? " is-active" : ""}`;
@@ -2113,13 +2123,13 @@
 	            console.log("refreshSessionsFromSupabase: geen legacy, probeer direct");
 	            const recovered = await tryDirectSessions();
 	            if (recovered) return;
-	            console.log("refreshSessionsFromSupabase: geen sessies gevonden, toon lege state");
+	            console.log("refreshSessionsFromSupabase: geen sessies gevonden - dit kan normaal zijn voor nieuwe gebruikers");
 	            sessionState.list = [];
 	            sessionState.activeId = null;
 	            sessionState.untitledCount = 0;
 	            renderSessionList();
-	            renderEmptySessionMessage("Geen gesprekken gevonden. Start een nieuw gesprek of herstel je geschiedenis.");
-	            ensureSessionEmptyActions();
+	            // Geen actieknoppen tonen als dit een nieuwe gebruiker is zonder chat geschiedenis
+	            // (de "Nieuw gesprek" knop is al beschikbaar)
 	            return;
 	          }
 
