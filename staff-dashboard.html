@@ -237,6 +237,115 @@
         margin-top: 16px;
       }
 
+      .api-status {
+        grid-column: span 3;
+      }
+
+      .api-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .api-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.3rem;
+        margin: 0 0 6px;
+      }
+
+      .api-sub {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .api-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+
+      .api-item {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 18px;
+      }
+
+      .api-item h3 {
+        margin: 0 0 8px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+      }
+
+      .api-value {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .api-meta {
+        margin-top: 6px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .api-limit-row {
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
+      .api-progress {
+        width: 100%;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+        margin-top: 8px;
+      }
+
+      .api-progress > span {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #00b894 0%, #e6c200 100%);
+        transition: width 0.3s ease;
+      }
+
+      .api-progress > span.warn {
+        background: linear-gradient(90deg, #e6c200 0%, #ff6b6b 100%);
+      }
+
+      .api-progress > span.danger {
+        background: linear-gradient(90deg, #ff6b6b 0%, #ff6b6b 100%);
+      }
+
+      .api-foot {
+        margin-top: 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .api-error {
+        margin-top: 12px;
+        font-size: 0.85rem;
+        color: var(--danger);
+        display: none;
+      }
+
       .list-head {
         display: flex;
         align-items: center;
@@ -738,6 +847,9 @@
         .free-period-form {
           flex-direction: column;
         }
+        .api-grid {
+          grid-template-columns: 1fr;
+        }
       }
 
       @media (max-width: 960px) {
@@ -746,6 +858,12 @@
         }
         .list {
           grid-column: span 1;
+        }
+        .api-status {
+          grid-column: span 1;
+        }
+        .api-grid {
+          grid-template-columns: 1fr;
         }
         .error {
           grid-column: span 1;
@@ -894,6 +1012,57 @@
           <p class="kpi-label">Deze maand opgezegd</p>
           <p class="kpi-value" id="kpi-cancelled-month">—</p>
           <div class="kpi-foot">Vanaf 1e</div>
+        </section>
+
+        <section class="card api-status" id="api-status-card">
+          <div class="api-head">
+            <div>
+              <h2 class="api-title">API situatie</h2>
+              <p class="api-sub">Schatting op basis van chatverzoeken (tokens).</p>
+            </div>
+            <button class="btn" id="api-refresh-btn" type="button">Ververs</button>
+          </div>
+
+          <div class="api-grid">
+            <div class="api-item">
+              <h3>Vandaag</h3>
+              <p class="api-value" id="api-spend-today">—</p>
+              <div class="api-meta"><span id="api-chats-today">—</span> chats</div>
+              <div class="api-limit-row">
+                <span>Limiet</span>
+                <span id="api-limit-today">—</span>
+              </div>
+              <div class="api-progress"><span id="api-progress-today"></span></div>
+            </div>
+
+            <div class="api-item">
+              <h3>Deze maand</h3>
+              <p class="api-value" id="api-spend-month">—</p>
+              <div class="api-meta"><span id="api-chats-month">—</span> chats</div>
+              <div class="api-limit-row">
+                <span>Limiet</span>
+                <span id="api-limit-month">—</span>
+              </div>
+              <div class="api-progress"><span id="api-progress-month"></span></div>
+            </div>
+
+            <div class="api-item">
+              <h3>Dit jaar</h3>
+              <p class="api-value" id="api-spend-year">—</p>
+              <div class="api-meta"><span id="api-chats-year">—</span> chats</div>
+              <div class="api-limit-row">
+                <span>Limiet</span>
+                <span id="api-limit-year">—</span>
+              </div>
+              <div class="api-progress"><span id="api-progress-year"></span></div>
+            </div>
+          </div>
+
+          <div class="api-foot">
+            <span id="api-usage-updated">Laatst bijgewerkt: —</span>
+            <span>Limieten instellen via env: API_*_LIMIT_EUR</span>
+          </div>
+          <div class="api-error" id="api-usage-error"></div>
         </section>
 
         <section class="card list">
@@ -1076,6 +1245,80 @@
           el.textContent = msg;
         };
 
+        const formatMaybeMoney = (value) => (Number.isFinite(value) ? money(value) : "—");
+        const formatMaybeLimit = (value) => (Number.isFinite(value) ? money(value) : "Niet ingesteld");
+        const formatCount = (value) =>
+          Number.isFinite(value) ? Number(value).toLocaleString("nl-NL") : "—";
+
+        const setApiError = (msg) => {
+          const el = document.getElementById("api-usage-error");
+          if (!el) return;
+          if (!msg) {
+            el.style.display = "none";
+            el.textContent = "";
+            return;
+          }
+          el.style.display = "block";
+          el.textContent = msg;
+        };
+
+        const setApiProgress = (id, spent, limit) => {
+          const bar = document.getElementById(id);
+          if (!bar) return;
+          if (!Number.isFinite(spent) || !Number.isFinite(limit) || limit <= 0) {
+            bar.style.width = "0%";
+            bar.className = "";
+            return;
+          }
+          const pct = Math.min(100, Math.max(0, (spent / limit) * 100));
+          bar.style.width = `${pct.toFixed(1)}%`;
+          bar.className = pct >= 90 ? "danger" : pct >= 70 ? "warn" : "";
+        };
+
+        const fetchApiUsage = async (accessToken) => {
+          const resp = await fetch("/api/staff/api-usage", {
+            method: "GET",
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          let payload = null;
+          try {
+            payload = await resp.json();
+          } catch {
+            payload = null;
+          }
+          if (!resp.ok) {
+            const msg = payload?.error || resp.statusText || "API error";
+            throw new Error(`API ${resp.status}: ${msg}`);
+          }
+          return payload || {};
+        };
+
+        const renderApiUsage = (payload) => {
+          const usage = payload?.usage || {};
+          const limits = payload?.limits || {};
+
+          const today = usage?.today || {};
+          const month = usage?.month || {};
+          const year = usage?.year || {};
+
+          setText("api-spend-today", formatMaybeMoney(today.spend_eur));
+          setText("api-chats-today", formatCount(today.chats));
+          setText("api-limit-today", formatMaybeLimit(limits.daily_eur));
+          setApiProgress("api-progress-today", today.spend_eur, limits.daily_eur);
+
+          setText("api-spend-month", formatMaybeMoney(month.spend_eur));
+          setText("api-chats-month", formatCount(month.chats));
+          setText("api-limit-month", formatMaybeLimit(limits.monthly_eur));
+          setApiProgress("api-progress-month", month.spend_eur, limits.monthly_eur);
+
+          setText("api-spend-year", formatMaybeMoney(year.spend_eur));
+          setText("api-chats-year", formatCount(year.chats));
+          setText("api-limit-year", formatMaybeLimit(limits.yearly_eur));
+          setApiProgress("api-progress-year", year.spend_eur, limits.yearly_eur);
+
+          setText("api-usage-updated", `Laatst bijgewerkt: ${fmtDate(new Date().toISOString())}`);
+        };
+
         const fetchStaffCustomers = async (supabase) => {
           const { data: s } = await supabase.auth.getSession();
           const accessToken = s?.session?.access_token;
@@ -1153,6 +1396,24 @@
             await supabase.auth.signOut();
             window.location.href = "index.html";
           });
+
+          const apiRefreshBtn = document.getElementById("api-refresh-btn");
+          const loadApiUsage = async () => {
+            if (!token) return;
+            if (apiRefreshBtn) apiRefreshBtn.disabled = true;
+            setApiError("");
+            try {
+              const payload = await fetchApiUsage(token);
+              renderApiUsage(payload);
+            } catch (e) {
+              console.error(e);
+              setApiError(`API-usage kon niet worden geladen. ${String(e?.message || e)}`);
+            } finally {
+              if (apiRefreshBtn) apiRefreshBtn.disabled = false;
+            }
+          };
+          apiRefreshBtn?.addEventListener("click", loadApiUsage);
+          await loadApiUsage();
 
           // === Customer Modal Management (moet buiten try-catch) ===
           let allCustomers = [];

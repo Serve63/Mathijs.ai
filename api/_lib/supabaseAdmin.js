@@ -42,8 +42,34 @@ async function adminRestFetch(pathWithQuery, { method = "GET", body } = {}) {
   return payload;
 }
 
+async function adminRestCount(pathWithQuery) {
+  const serviceRoleKey = getServiceRoleKey();
+  const url = `${SUPABASE_URL}/rest/v1/${pathWithQuery.replace(/^\//, "")}`;
+  const resp = await fetch(url, {
+    method: "GET",
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      Prefer: "count=exact",
+      "Content-Type": "application/json",
+    },
+  });
+
+  const text = await resp.text();
+  if (!resp.ok) {
+    const err = new Error(`supabase_rest_failed:${resp.status}`);
+    err.statusCode = resp.status;
+    err.detail = text;
+    throw err;
+  }
+
+  const range = resp.headers.get("content-range") || "";
+  const total = Number(range.split("/")[1]);
+  return Number.isFinite(total) ? total : 0;
+}
+
 module.exports = {
   getServiceRoleKey,
   adminRestFetch,
+  adminRestCount,
 };
-

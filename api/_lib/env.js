@@ -5,7 +5,15 @@ function pickEnv(names = []) {
   for (const name of names) {
     const value = process.env[name];
     if (typeof value === "string" && value.trim()) {
-      return value.trim();
+      const trimmed = value.trim();
+      if (trimmed.length >= 2) {
+        const first = trimmed[0];
+        const last = trimmed[trimmed.length - 1];
+        if ((first === "\"" && last === "\"") || (first === "'" && last === "'")) {
+          return trimmed.slice(1, -1);
+        }
+      }
+      return trimmed;
     }
   }
   return null;
