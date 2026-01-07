@@ -355,10 +355,13 @@ module.exports = async function handler(req, res) {
     const user = await getUserFromAccessToken(token);
     if (!user?.id) return json(res, 401, { error: "Unauthorized" });
 
+    // Token management is best-effort. If service role is missing/misconfigured, we still allow chat to work.
     const serviceRoleKey = getSupabaseServiceRoleKey();
-    if (!serviceRoleKey) {
-      console.error("Supabase service role key missing (expected SUPABASE_SERVICE_ROLE_KEY or supabase_service_role_key)");
-      return json(res, 500, { error: "Supabase service role key missing; tokens cannot be initialized." });
+    const tokenOpsEnabled = Boolean(serviceRoleKey);
+    if (!tokenOpsEnabled) {
+      console.error(
+        "Supabase service role key missing (expected SUPABASE_SERVICE_ROLE_KEY or supabase_service_role_key). Token gating disabled."
+      );
     }
 
     // Parse & validate request FIRST so we don't deduct tokens for invalid requests.
@@ -386,8 +389,8 @@ module.exports = async function handler(req, res) {
     const starterTokens = Math.max(0, Math.round(STARTER_CREDITS_EUR * tokensPerEur));
     const tokenMetaValue = Number(appMeta?.tokens);
 
-    // Initialize starter credits once for users missing a token balance.
-    if (!Number.isFinite(tokenMetaValue)) {
+    // Initialize starter credits once for users missing a token balance (best-effort).
+    if (tokenOpsEnabled && !Number.isFinite(tokenMetaValue)) {
       try {
         appMeta = {
           ...(appMeta || {}),
@@ -401,12 +404,7 @@ module.exports = async function handler(req, res) {
           body: { app_metadata: appMeta },
         });
       } catch (e) {
-        const err = new Error("token_init_failed");
-        err.statusCode = 502;
-        err.publicMessage =
-          "Tokens konden niet worden geïnitialiseerd. Controleer Supabase service role instellingen (SUPABASE_SERVICE_ROLE_KEY).";
-        err.cause = e;
-        throw err;
+        console.error("Token init failed; continuing without token gating.", e?.message || e);
       }
     }
 
@@ -426,34 +424,32 @@ module.exports = async function handler(req, res) {
       return json(res, 429, { error: "Te veel verzoeken. Probeer zo opnieuw." }, rateLimitHeaders(ipLimit, limit * 2));
     }
 
-    // Token gating + deduct (stored server-side in app_metadata.tokens)
+    // Token gating + deduct (stored server-side in app_metadata.tokens) - best-effort.
     const tokenBalance = Number(appMeta?.tokens || 0);
-    if (!Number.isFinite(tokenBalance) || tokenBalance < TOKENS_PER_CHAT) {
-      return json(res, 402, {
-        error: "Je tokens zijn op. Waardeer je account op om door te chatten.",
-        topup_required: true,
-        tokens_required: TOKENS_PER_CHAT,
-        tokens_available: Math.max(0, Number.isFinite(tokenBalance) ? tokenBalance : 0),
-      });
-    }
+    if (tokenOpsEnabled) {
+      if (!Number.isFinite(tokenBalance) || tokenBalance < TOKENS_PER_CHAT) {
+        return json(res, 402, {
+          error: "Je tokens zijn op. Waardeer je account op om door te chatten.",
+          topup_required: true,
+          tokens_required: TOKENS_PER_CHAT,
+          tokens_available: Math.max(0, Number.isFinite(tokenBalance) ? tokenBalance : 0),
+        });
+      }
 
-    const nextTokens = Math.max(0, Math.floor(tokenBalance - TOKENS_PER_CHAT));
-    try {
-      await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
-        method: "PUT",
-        accessKey: serviceRoleKey,
-        body: { app_metadata: { ...(appMeta || {}), tokens: nextTokens } },
-      });
-    } catch (e) {
-      const err = new Error("token_deduct_failed");
-      err.statusCode = 502;
-      err.publicMessage =
-        "Tokens konden niet worden bijgewerkt. Controleer Supabase service role instellingen (SUPABASE_SERVICE_ROLE_KEY).";
-      err.cause = e;
-      throw err;
+      const nextTokens = Math.max(0, Math.floor(tokenBalance - TOKENS_PER_CHAT));
+      try {
+        await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
+          method: "PUT",
+          accessKey: serviceRoleKey,
+          body: { app_metadata: { ...(appMeta || {}), tokens: nextTokens } },
+        });
+      } catch (e) {
+        console.error("Token deduct failed; continuing without blocking chat.", e?.message || e);
+      }
     }
 
     const refundTokensBestEffort = async () => {
+      if (!tokenOpsEnabled) return;
       try {
         await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
           method: "PUT",
