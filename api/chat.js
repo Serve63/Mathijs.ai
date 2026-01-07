@@ -158,9 +158,9 @@ function extractResponseText(response) {
   return text;
 }
 
-function splitGeminiMessages(normalizedMessages) {
+function buildGeminiPrompt(normalizedMessages) {
   const developerParts = [];
-  const contents = [];
+  const lines = [];
 
   normalizedMessages.forEach((message) => {
     if (!message || typeof message.content !== "string") return;
@@ -168,33 +168,49 @@ function splitGeminiMessages(normalizedMessages) {
       developerParts.push(message.content);
       return;
     }
-    const role = message.role === "assistant" ? "model" : "user";
-    contents.push({ role, parts: [{ text: message.content }] });
+    if (message.role === "user") {
+      lines.push(`User: ${message.content}`);
+      return;
+    }
+    if (message.role === "assistant") {
+      lines.push(`Assistant: ${message.content}`);
+    }
   });
 
   const systemInstruction = developerParts.filter(Boolean).join("\n\n").trim();
-  return { systemInstruction: systemInstruction || null, contents };
+  const header = systemInstruction ? `System: ${systemInstruction}\n\n` : "";
+  return `${header}${lines.join("\n\n")}`.trim();
+}
+
+function sanitizeProviderErrorMessage(message) {
+  if (!message) return "";
+  return String(message)
+    .replace(/\bsk-[A-Za-z0-9_-]{10,}\b/g, "***REDACTED***")
+    .replace(/\b(?:sk_live|rk_live|whsec)_[A-Za-z0-9]{10,}\b/g, "***REDACTED***")
+    .replace(/\bAIza[0-9A-Za-z_-]{20,}\b/g, "***REDACTED***");
 }
 
 async function runGeminiChat({ apiKey, model, messages }) {
-  const { systemInstruction, contents } = splitGeminiMessages(messages);
   const genAI = new GoogleGenerativeAI(apiKey);
-  const gemini = genAI.getGenerativeModel({
-    model,
-    systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined,
-  });
+  const gemini = genAI.getGenerativeModel({ model });
+  const prompt = buildGeminiPrompt(messages);
 
-  const result = await gemini.generateContent({ contents });
-  const response = result?.response;
-  if (!response) return "";
-
-  if (typeof response.text === "function") {
-    return response.text() || "";
+  try {
+    const result = await gemini.generateContent(prompt);
+    const response = result?.response;
+    if (!response) return "";
+    if (typeof response.text === "function") {
+      return response.text() || "";
+    }
+    return "";
+  } catch (err) {
+    const safe = sanitizeProviderErrorMessage(err?.message || "");
+    const wrapped = new Error("gemini_failed");
+    wrapped.statusCode = 502;
+    wrapped.publicMessage = safe ? `Gemini request mislukte: ${safe}` : "Gemini request mislukte.";
+    wrapped.cause = err;
+    throw wrapped;
   }
-
-  const candidates = Array.isArray(response.candidates) ? response.candidates : [];
-  const parts = candidates?.[0]?.content?.parts || [];
-  return parts.map((p) => (p && typeof p.text === "string" ? p.text : "")).filter(Boolean).join("\n");
 }
 
 module.exports = async function handler(req, res) {
@@ -319,8 +335,9 @@ module.exports = async function handler(req, res) {
       messages_too_many: "Te veel context meegestuurd. Start een nieuw gesprek.",
       message_too_large: "Bericht is te lang.",
       messages_too_large: "Te veel tekst/context meegestuurd.",
+      gemini_failed: "Gemini kon geen antwoord geven. Probeer opnieuw.",
     };
-    const publicMsg = map[error?.message] || "Er ging iets mis. Probeer opnieuw.";
+    const publicMsg = error?.publicMessage || map[error?.message] || "Er ging iets mis. Probeer opnieuw.";
     publicError(res, status, publicMsg, error);
   }
 };
