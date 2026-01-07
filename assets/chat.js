@@ -1476,6 +1476,23 @@
         return session.id;
       };
 
+      const getStoredAuthSession = () => {
+        try {
+          const ref = new URL(SUPABASE_URL).hostname.split(".")[0];
+          const key = `sb-${ref}-auth-token`;
+          const raw = localStorage.getItem(key);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (!parsed) return null;
+          if (parsed.access_token) return parsed;
+          if (parsed.currentSession?.access_token) return parsed.currentSession;
+          return null;
+        } catch (error) {
+          console.warn("getStoredAuthSession: kon sessie niet lezen", error);
+          return null;
+        }
+      };
+
 		      const requireAccessToken = async () => {
 		        // Ensure Supabase client is loaded
 		        if (!supabaseClient) {
@@ -1489,6 +1506,11 @@
 		          const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
 		          if (sessionError) {
 		            console.error("requireAccessToken: getSession error", sessionError);
+		            const storedSession = getStoredAuthSession();
+		            if (storedSession?.access_token) {
+		              console.warn("requireAccessToken: fallback op lokale sessie");
+		              return storedSession.access_token;
+		            }
 		            return null;
 		          }
 		          const accessToken = sessionData?.session?.access_token;
@@ -1498,6 +1520,11 @@
 		            const { data: refreshData, error: refreshError } = await supabaseClient.auth.refreshSession();
 		            if (refreshError || !refreshData?.session?.access_token) {
 		              console.error("requireAccessToken: refresh mislukt", refreshError);
+		              const storedSession = getStoredAuthSession();
+		              if (storedSession?.access_token) {
+		                console.warn("requireAccessToken: fallback op lokale sessie");
+		                return storedSession.access_token;
+		              }
 		              return null;
 		            }
 		            console.log("requireAccessToken: sessie succesvol gerefreshed");
@@ -2523,8 +2550,11 @@
 		        }
 		      })();
 
-      const buildRequestMessages = () =>
-        messages
+      const MAX_REQUEST_MESSAGES = 24;
+      const MAX_REQUEST_CHARS = 16000;
+
+      const buildRequestMessages = () => {
+        const cleaned = (messages || [])
           .filter(
             (message) =>
               message &&
@@ -2533,6 +2563,30 @@
               (message.role === "user" || message.role === "assistant" || message.role === "developer")
           )
           .map((message) => ({ role: message.role, content: message.content }));
+
+        const developer = cleaned.filter((m) => m.role === "developer");
+        const convo = cleaned.filter((m) => m.role !== "developer");
+
+        // Keep latest N conversational messages
+        let tail = convo.slice(-MAX_REQUEST_MESSAGES);
+
+        // Enforce char budget from the end (keep most recent)
+        let total = 0;
+        const kept = [];
+        for (let i = tail.length - 1; i >= 0; i -= 1) {
+          const msg = tail[i];
+          const len = (msg?.content || "").length;
+          if (!len) continue;
+          if (total + len > MAX_REQUEST_CHARS && kept.length) break;
+          total += len;
+          kept.push(msg);
+        }
+        kept.reverse();
+
+        // Prepend the latest developer/system instruction (if any)
+        const sys = developer.length ? [developer[developer.length - 1]] : [];
+        return [...sys, ...kept];
+      };
 
 	      const sendMessage = async () => {
 	        await workspaceReady;
