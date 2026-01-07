@@ -96,7 +96,15 @@ async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {})
   });
   const text = await resp.text();
   if (!resp.ok) {
-    throw new Error(`auth_admin_failed:${resp.status}:${text}`);
+    const safe = sanitizeProviderErrorMessage(text || "");
+    const err = new Error("supabase_auth_admin_failed");
+    err.statusCode = 502;
+    err.publicMessage =
+      `Supabase admin call faalde (${resp.status}). ` +
+      `Controleer of SUPABASE_SERVICE_ROLE_KEY klopt en voldoende rechten heeft.` +
+      (safe ? ` Details: ${safe}` : "");
+    err.detail = safe;
+    throw err;
   }
   if (!text) return null;
   try {
@@ -380,12 +388,26 @@ module.exports = async function handler(req, res) {
 
     // Initialize starter credits once for users missing a token balance.
     if (!Number.isFinite(tokenMetaValue)) {
-      appMeta = { ...(appMeta || {}), tokens: starterTokens, credits_initialized: true, starter_credits_eur: STARTER_CREDITS_EUR };
-      await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
-        method: "PUT",
-        accessKey: serviceRoleKey,
-        body: { app_metadata: appMeta },
-      });
+      try {
+        appMeta = {
+          ...(appMeta || {}),
+          tokens: starterTokens,
+          credits_initialized: true,
+          starter_credits_eur: STARTER_CREDITS_EUR,
+        };
+        await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
+          method: "PUT",
+          accessKey: serviceRoleKey,
+          body: { app_metadata: appMeta },
+        });
+      } catch (e) {
+        const err = new Error("token_init_failed");
+        err.statusCode = 502;
+        err.publicMessage =
+          "Tokens konden niet worden geïnitialiseerd. Controleer Supabase service role instellingen (SUPABASE_SERVICE_ROLE_KEY).";
+        err.cause = e;
+        throw err;
+      }
     }
 
     const userPlan = String(appMeta?.plan || "free").toLowerCase();
@@ -416,11 +438,20 @@ module.exports = async function handler(req, res) {
     }
 
     const nextTokens = Math.max(0, Math.floor(tokenBalance - TOKENS_PER_CHAT));
-    await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
-      method: "PUT",
-      accessKey: serviceRoleKey,
-      body: { app_metadata: { ...(appMeta || {}), tokens: nextTokens } },
-    });
+    try {
+      await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
+        method: "PUT",
+        accessKey: serviceRoleKey,
+        body: { app_metadata: { ...(appMeta || {}), tokens: nextTokens } },
+      });
+    } catch (e) {
+      const err = new Error("token_deduct_failed");
+      err.statusCode = 502;
+      err.publicMessage =
+        "Tokens konden niet worden bijgewerkt. Controleer Supabase service role instellingen (SUPABASE_SERVICE_ROLE_KEY).";
+      err.cause = e;
+      throw err;
+    }
 
     const refundTokensBestEffort = async () => {
       try {
@@ -490,6 +521,9 @@ module.exports = async function handler(req, res) {
       messages_too_large: "Te veel tekst/context meegestuurd.",
       gemini_failed: "Gemini kon geen antwoord geven. Probeer opnieuw.",
       openai_failed: "OpenAI kon geen antwoord geven. Probeer opnieuw.",
+      supabase_auth_admin_failed: "Tokenbeheer faalde door Supabase. Controleer SUPABASE_SERVICE_ROLE_KEY.",
+      token_init_failed: "Tokens konden niet worden geïnitialiseerd. Controleer SUPABASE_SERVICE_ROLE_KEY.",
+      token_deduct_failed: "Tokens konden niet worden bijgewerkt. Controleer SUPABASE_SERVICE_ROLE_KEY.",
     };
     const publicMsg = error?.publicMessage || map[error?.message] || "Er ging iets mis. Probeer opnieuw.";
     publicError(res, status, publicMsg, error);

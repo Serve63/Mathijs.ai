@@ -1511,20 +1511,32 @@
 	      };
 
 	      const apiFetchJson = async (url, { method = "GET", body } = {}) => {
-	        const accessToken = await requireAccessToken();
+	        const buildOptions = (token) => ({
+	          method,
+	          headers: {
+	            "Content-Type": "application/json",
+	            Authorization: `Bearer ${token}`,
+	          },
+	          body: body ? JSON.stringify(body) : undefined,
+	        });
+	        let accessToken = await requireAccessToken();
 	        if (!accessToken) {
 	          console.warn("apiFetchJson: geen access token beschikbaar voor", url);
 	          return { ok: false, status: 401, payload: { error: "Unauthorized - geen access token" } };
 	        }
 	        try {
-	          const resp = await fetch(url, {
-	            method,
-	            headers: {
-	              "Content-Type": "application/json",
-	              Authorization: `Bearer ${accessToken}`,
-	            },
-	            body: body ? JSON.stringify(body) : undefined,
-	          });
+	          let resp = await fetch(url, buildOptions(accessToken));
+	          if (resp.status === 401) {
+	            const { error: refreshError } = await supabaseClient?.auth?.refreshSession();
+	            if (refreshError) {
+	              console.warn("apiFetchJson: refreshSession faalde", refreshError);
+	            } else {
+	              accessToken = await requireAccessToken();
+	              if (accessToken) {
+	                resp = await fetch(url, buildOptions(accessToken));
+	              }
+	            }
+	          }
 	          const payload = await resp.json().catch(() => ({}));
 	          if (!resp.ok) {
 	            console.warn("apiFetchJson: API error", url, resp.status, payload?.error);
