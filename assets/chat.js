@@ -1480,8 +1480,7 @@
 		      const apiFetchJson = async (url, { method = "GET", body } = {}) => {
 		        const accessToken = await requireAccessToken();
 		        if (!accessToken) {
-		          console.warn("Geen access token, redirect naar login");
-		          window.location.href = "login.html";
+		          console.warn("Geen access token beschikbaar");
 		          return { ok: false, status: 401, payload: { error: "Unauthorized" } };
 		        }
 		        const resp = await fetch(url, {
@@ -1939,8 +1938,10 @@
 		          updateNewChatButtonState();
 		        } catch (error) {
 		          console.error("Berichten ophalen mislukt", error);
+	          const errorMsg = error?.message || "Onbekende fout";
+	          console.error("Fout details:", errorMsg, error);
 	          appendMessage(
-	            "Berichten konden niet geladen worden. Controleer je verbinding en probeer het opnieuw.",
+	            `Berichten konden niet geladen worden: ${errorMsg}. Controleer je verbinding en probeer het opnieuw.`,
 	            "assistant",
 	            { persist: false }
 	          );
@@ -2063,12 +2064,16 @@
       };
 
 	      const requireAuthenticatedUser = async () => {
+	        // Ensure Supabase client is loaded
 	        if (!supabaseClient) {
-	          console.error("Supabase client ontbreekt.");
+	          console.log("Supabase client ontbreekt, wachten op Supabase...");
+	          supabaseClient = await waitForSupabase();
+	        }
+	        if (!supabaseClient) {
+	          console.error("Supabase client kon niet worden geïnitialiseerd na wachten");
 	          renderEmptyState();
-	          renderEmptySessionMessage("Inloggen is nodig om je chats te laden.");
+	          renderEmptySessionMessage("Fout bij verbinden met Supabase. Ververs de pagina.");
 	          ensureSessionEmptyActions();
-	          window.location.href = "login.html";
 	          return null;
 	        }
 	        if (currentUser) {
