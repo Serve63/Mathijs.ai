@@ -860,16 +860,21 @@
 	      const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
 
       const getSupabaseClient = () => {
-        if (window.mathijsSupabase) return window.mathijsSupabase;
+        if (window.mathijsSupabase) {
+          console.log("Hergebruik bestaande Supabase client");
+          return window.mathijsSupabase;
+        }
         if (!window.supabase || typeof window.supabase.createClient !== "function") {
-          console.warn("Supabase library nog niet geladen, wachten...");
+          console.warn("Supabase library nog niet geladen");
           return null;
         }
         try {
+          console.log("Aanmaken nieuwe Supabase client");
           const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
           });
           window.mathijsSupabase = client;
+          console.log("Supabase client aangemaakt");
           return client;
         } catch (error) {
           console.error("Fout bij aanmaken Supabase client:", error);
@@ -878,15 +883,21 @@
       };
 
       // Wait for Supabase library to load
-      const waitForSupabase = async (maxWait = 5000) => {
+      const waitForSupabase = async (maxWait = 10000) => {
         const start = Date.now();
         while (Date.now() - start < maxWait) {
           if (window.supabase && typeof window.supabase.createClient === "function") {
-            return getSupabaseClient();
+            const client = getSupabaseClient();
+            if (client) {
+              console.log("Supabase client succesvol geïnitialiseerd");
+              return client;
+            }
           }
           await new Promise(resolve => setTimeout(resolve, 100));
         }
         console.error("Supabase library laadt niet binnen", maxWait, "ms");
+        console.error("window.supabase:", window.supabase);
+        console.error("window.supabase?.createClient:", typeof window.supabase?.createClient);
         return null;
       };
 
