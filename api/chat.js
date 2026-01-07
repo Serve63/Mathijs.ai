@@ -1,22 +1,12 @@
-let GoogleGenerativeAI = null;
-let geminiSdkAvailable = false;
+const OpenAI = require("openai");
 
-try {
-  ({ GoogleGenerativeAI } = require("@google/generative-ai"));
-  geminiSdkAvailable = typeof GoogleGenerativeAI === "function";
-} catch (error) {
-  console.warn("Gemini SDK niet beschikbaar:", error.message);
-}
-
-const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, redactSecrets, setCommonApiHeaders } = require("./_lib/security");
+const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, readJson } = require("./_lib/security");
 const { getUserFromAccessToken } = require("./_lib/supabase");
 const { SUPABASE_URL } = require("./_lib/supabase");
 const { getOpenAIApiKey, getSupabaseServiceRoleKey } = require("./_lib/env");
 
-const GEMINI_MODEL_ID = "gemini-1.5-flash";
-const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
-const OPENAI_DEFAULT_MODEL = "gpt-4o";
-const OPENAI_ALLOWED_MODELS = ["gpt-4o", "gpt-4o-mini"];
+const OPENAI_DEFAULT_MODEL = "gpt-5.2-chat-latest";
+const OPENAI_ALLOWED_MODELS = ["gpt-5.2-chat-latest", "gpt-5.2", "gpt-5-mini"];
 
 const MAX_MESSAGES = 30;
 const MAX_MESSAGE_CHARS = 8000;
@@ -68,21 +58,6 @@ async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {})
   }
 }
 
-function parseBody(req) {
-  if (!req) return {};
-  if (typeof req.body === "string") {
-    try {
-      return JSON.parse(req.body);
-    } catch (error) {
-      return {};
-    }
-  }
-  if (typeof req.body === "object" && req.body !== null) {
-    return req.body;
-  }
-  return {};
-}
-
 function normalizeContent(content) {
   if (typeof content === "string") return content;
   if (Array.isArray(content)) {
@@ -104,33 +79,6 @@ function normalizeContent(content) {
   return "";
 }
 
-function splitGeminiHistory(messages = []) {
-  const history = [];
-  let prompt = "";
-
-  for (let i = 0; i < messages.length; i += 1) {
-    const message = messages[i];
-    const text = normalizeContent(message?.content);
-    if (!text) continue;
-    const role = (message?.role || "user").toLowerCase();
-    const geminiRole = role === "assistant" ? "model" : "user";
-    history.push({
-      role: geminiRole,
-      parts: [{ text }],
-    });
-  }
-
-  for (let i = history.length - 1; i >= 0; i -= 1) {
-    if (history[i].role === "user") {
-      prompt = history[i].parts?.[0]?.text || "";
-      history.splice(i, 1);
-      break;
-    }
-  }
-
-  return { history, prompt };
-}
-
 function validateAndNormalizeMessages(messages) {
   if (!Array.isArray(messages)) {
     const err = new Error("messages_required");
@@ -149,6 +97,7 @@ function validateAndNormalizeMessages(messages) {
 
   for (const message of messages) {
     const role = (message?.role || "user").toLowerCase();
+    if (role !== "user" && role !== "assistant" && role !== "developer") continue;
     const content = normalizeContent(message?.content);
     if (!content) continue;
 
@@ -177,142 +126,24 @@ function validateAndNormalizeMessages(messages) {
   return normalized;
 }
 
-async function streamGeminiResponse(res, messages) {
-  if (!geminiSdkAvailable || !GoogleGenerativeAI) {
-    return json(res, 500, { error: "AI provider niet beschikbaar. Probeer later opnieuw." });
-  }
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return json(res, 500, { error: "AI provider is niet geconfigureerd." });
-  }
-
-  const { history, prompt } = splitGeminiHistory(messages);
-  if (!prompt) {
-    return json(res, 400, { error: "Geen gebruikersprompt aangetroffen." });
-  }
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_ID });
-  const chat = model.startChat({ history });
-  const stream = await chat.sendMessageStream(prompt);
-
-  res.statusCode = 200;
-  setCommonApiHeaders(res);
-  res.setHeader("Content-Type", "text/plain; charset=utf-8");
-  res.setHeader("Transfer-Encoding", "chunked");
-  if (typeof res.flushHeaders === "function") res.flushHeaders();
-
-  for await (const chunk of stream.stream) {
-    const chunkText = chunk.text();
-    if (chunkText) {
-      res.write(chunkText);
-    }
-  }
-
-  res.end();
-}
-
-async function streamOpenAIResponse(res, messages, { model = OPENAI_DEFAULT_MODEL, requestId = "" } = {}) {
-  const apiKey = getOpenAIApiKey();
-  if (!apiKey) {
-    console.warn("OpenAI key missing (expected: OPEN_AI_KEY, OPENAI_API_KEY, or open_ai_key)");
-    return json(res, 500, { error: "OpenAI key missing (set OPEN_AI_KEY, OPENAI_API_KEY, or open_ai_key)." });
-  }
-
-  const response = await fetch(OPENAI_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
-      stream: true,
-    }),
-  });
-
-  if (!response.ok || !response.body) {
-    let details = "";
-    try {
-      details = await response.text();
-    } catch {
-      /* ignore */
-    }
-    console.error(`OpenAI request failed (${requestId})`, response.status, redactSecrets(details));
-    const status = response.status === 429 ? 429 : 502;
-    const message = response.status === 429 ? "Te veel AI-verzoeken. Probeer zo opnieuw." : "AI-request mislukt. Probeer later opnieuw.";
-    return json(res, status, { error: `${message} [${requestId || "no-request-id"}]` });
-  }
-
-  res.statusCode = 200;
-  setCommonApiHeaders(res);
-  res.setHeader("Content-Type", "text/plain; charset=utf-8");
-  res.setHeader("Transfer-Encoding", "chunked");
-  if (typeof res.flushHeaders === "function") res.flushHeaders();
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  const handleEvent = (eventChunk) => {
-    const trimmed = eventChunk.trim();
-    if (!trimmed) return false;
-    const lines = trimmed.split("\n");
-    let shouldStop = false;
-
-    lines.forEach((line) => {
-      if (!line.startsWith("data:")) return;
-      const payload = line.replace(/^data:\s*/, "");
-      if (!payload || payload === "[DONE]") {
-        shouldStop = payload === "[DONE]";
-        return;
-      }
-      try {
-        const parsed = JSON.parse(payload);
-        const delta = parsed?.choices?.[0]?.delta?.content;
-        if (delta) {
-          res.write(delta);
-        }
-      } catch (error) {
-        console.warn("Kon OpenAI stream chunk niet parsen:", error);
+function extractResponseText(response) {
+  if (!response) return "";
+  if (typeof response.output_text === "string") return response.output_text;
+  const output = Array.isArray(response.output) ? response.output : [];
+  let text = "";
+  output.forEach((item) => {
+    if (!item || !Array.isArray(item.content)) return;
+    item.content.forEach((part) => {
+      if (part?.type === "output_text" && typeof part.text === "string") {
+        text += part.text;
       }
     });
-
-    return shouldStop;
-  };
-
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    let boundary = buffer.indexOf("\n\n");
-    while (boundary !== -1) {
-      const eventChunk = buffer.slice(0, boundary);
-      buffer = buffer.slice(boundary + 2);
-      const shouldStop = handleEvent(eventChunk);
-      if (shouldStop) {
-        res.end();
-        return;
-      }
-      boundary = buffer.indexOf("\n\n");
-    }
-  }
-
-  if (buffer.length) {
-    const shouldStop = handleEvent(buffer);
-    if (shouldStop) {
-      res.end();
-      return;
-    }
-  }
-
-  res.end();
+  });
+  return text;
 }
 
 module.exports = async function handler(req, res) {
   try {
-    const requestId = `chat-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     if (req.method !== "POST") {
       res.setHeader("Allow", "POST");
       return json(res, 405, { error: "Method not allowed" });
@@ -380,19 +211,33 @@ module.exports = async function handler(req, res) {
       body: { app_metadata: { ...(appMeta || {}), tokens: nextTokens } },
     });
 
-    const { messages, model } = parseBody(req);
+    let body = {};
+    try {
+      body = await readJson(req, { maxBytes: 64 * 1024 });
+    } catch (error) {
+      const status = error?.code === "payload_too_large" ? 413 : 400;
+      return json(res, status, { error: "Invalid request body" });
+    }
+
+    const { messages, model } = body || {};
     const normalizedMessages = validateAndNormalizeMessages(messages);
 
     const requestedModel = typeof model === "string" ? model : "";
-    const wantsGemini = requestedModel.toLowerCase().includes("gemini");
+    const openaiModel = resolveOpenAIModel(requestedModel);
 
-    if (wantsGemini) {
-      await streamGeminiResponse(res, normalizedMessages);
-      return;
+    const apiKey = getOpenAIApiKey();
+    console.log(`[openai] key ${apiKey ? "present" : "missing"}`);
+    if (!apiKey) {
+      return json(res, 500, { error: "Missing OPEN_AI_KEY" });
     }
 
-    const openaiModel = resolveOpenAIModel(requestedModel);
-    await streamOpenAIResponse(res, normalizedMessages, { model: openaiModel, requestId });
+    const client = new OpenAI({ apiKey });
+    const response = await client.responses.create({
+      model: openaiModel,
+      input: normalizedMessages.map((message) => ({ role: message.role, content: message.content })),
+    });
+    const text = extractResponseText(response);
+    return json(res, 200, { text: text || "" });
   } catch (error) {
     const status = Number(error?.statusCode) || (error?.code === "payload_too_large" ? 413 : 500);
     if (res.headersSent) return;

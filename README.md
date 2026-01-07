@@ -25,8 +25,10 @@
 
 Vereist: `OPEN_AI_KEY`.
 
+Chat endpoint: `POST /api/chat` met body `{ model, messages }`.
+
 ```bash
-curl -X POST http://localhost:3000/api/openai/chat \
+curl -X POST http://localhost:3000/api/chat \
   -H "Content-Type: application/json" \
   -d '{"model":"gpt-5.2-chat-latest","messages":[{"role":"user","content":"Zeg hallo"}]}'
 ```

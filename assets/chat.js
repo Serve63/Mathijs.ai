@@ -1531,7 +1531,7 @@
 
 	          if (!sessions.length) return false;
 
-	          const resp = await apiFetchJson("/api/messages/import-legacy", {
+	          const resp = await apiFetchJson("/api/messages?action=import-legacy", {
 	            method: "POST",
 	            body: { sessions },
 	          });
@@ -1745,7 +1745,7 @@
 	      };
 
 	      const saveMessageToApi = async (sessionId, role, content) => {
-	        return await apiFetchJson("/api/messages/add", {
+	        return await apiFetchJson("/api/messages?action=add", {
 	          method: "POST",
 	          body: { session_id: sessionId, role, message_text: content },
 	        });
@@ -1755,7 +1755,7 @@
 	        const user = await requireAuthenticatedUser();
 	        if (!user) return;
 	        try {
-	          const resp = await apiFetchJson("/api/messages/delete-session", {
+	          const resp = await apiFetchJson("/api/messages?action=delete-session", {
 	            method: "POST",
 	            body: { session_id: isLegacy ? LEGACY_SESSION_ID : sessionId },
 	          });
@@ -1778,7 +1778,7 @@
 	        const user = await requireAuthenticatedUser();
 	        if (!user?.id) return;
 	        try {
-	          const { ok, payload } = await apiFetchJson("/api/messages/sessions");
+	          const { ok, payload } = await apiFetchJson("/api/messages?action=sessions");
 	          if (!ok) {
 	            throw new Error(payload?.error || "Kon sessies niet laden");
 	          }
@@ -1835,7 +1835,7 @@
 	        messages = [createSystemMessage()];
 	        try {
 	          const qs = new URLSearchParams({ session_id: sessionId });
-	          const { ok, payload } = await apiFetchJson(`/api/messages/session?${qs.toString()}`);
+	          const { ok, payload } = await apiFetchJson(`/api/messages?action=session&${qs.toString()}`);
 	          if (!ok) throw new Error(payload?.error || "Kon berichten niet laden");
 	          const data = payload?.messages || [];
 
@@ -2213,7 +2213,7 @@
             throw new Error("Je sessie is verlopen. Log opnieuw in.");
           }
           const requestMessages = buildRequestMessages();
-          const response = await fetch("/api/openai/chat", {
+          const response = await fetch("/api/chat", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
