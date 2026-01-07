@@ -8,9 +8,40 @@
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, readJson } = require("../_lib/security");
 const { SUPABASE_URL, getUserFromAccessToken } = require("../_lib/supabase");
 const { isStaffUser } = require("../_lib/staff");
+const { adminRestCount } = require("../_lib/supabaseAdmin");
 
 const STAFF_WINDOW_MS = 60_000;
 const STAFF_LIMIT = 120;
+const TOKENS_PER_CHAT = 1;
+
+function getTokensPerEur() {
+  const tokensPerEur = Number(process.env.TOPUP_TOKENS_PER_EUR || 100);
+  if (!Number.isFinite(tokensPerEur) || tokensPerEur <= 0) return 100;
+  return Math.floor(tokensPerEur);
+}
+
+function parseLimit(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n;
+}
+
+function startOfDayUtc(now) {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
+function startOfMonthUtc(now) {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+}
+
+function startOfYearUtc(now) {
+  return new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+}
+
+async function countChatsSince(iso) {
+  const query = `messages?select=id&role=eq.user&created_at=gte.${encodeURIComponent(iso)}&limit=1`;
+  return adminRestCount(query);
+}
 
 async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {}) {
   const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/${path}`, {
@@ -73,7 +104,47 @@ module.exports = async (req, res) => {
     if (!confirmedAt) return json(res, 403, { error: "Forbidden (email not verified)" });
     if (!isStaffUser(user)) return json(res, 403, { error: "Forbidden (not staff)" });
 
+    const url = new URL(req.url, "http://localhost");
+    const actionFromQuery = (url.searchParams.get("action") || "").toLowerCase();
+
     if (req.method === "GET") {
+      if (actionFromQuery === "api-usage") {
+        const now = new Date();
+        const todayIso = startOfDayUtc(now).toISOString();
+        const monthIso = startOfMonthUtc(now).toISOString();
+        const yearIso = startOfYearUtc(now).toISOString();
+
+        const [countToday, countMonth, countYear] = await Promise.all([
+          countChatsSince(todayIso),
+          countChatsSince(monthIso),
+          countChatsSince(yearIso),
+        ]);
+
+        const tokensPerEur = getTokensPerEur();
+        const eurPerChat = TOKENS_PER_CHAT / tokensPerEur;
+        const toEur = (count) => Math.round(count * eurPerChat * 100) / 100;
+
+        const limits = {
+          daily_eur: parseLimit(process.env.API_DAILY_LIMIT_EUR),
+          monthly_eur: parseLimit(process.env.API_MONTHLY_LIMIT_EUR),
+          yearly_eur: parseLimit(process.env.API_YEARLY_LIMIT_EUR),
+        };
+
+        return json(res, 200, {
+          ok: true,
+          currency: "EUR",
+          tokens_per_chat: TOKENS_PER_CHAT,
+          tokens_per_eur: tokensPerEur,
+          usage: {
+            today: { chats: countToday, spend_eur: toEur(countToday), since: todayIso },
+            month: { chats: countMonth, spend_eur: toEur(countMonth), since: monthIso },
+            year: { chats: countYear, spend_eur: toEur(countYear), since: yearIso },
+          },
+          limits,
+          note: "Schatting op basis van chatverzoeken (TOKENS_PER_CHAT).",
+        });
+      }
+
       // Return all customers from Supabase Auth users (no DB table needed)
       // Note: Supabase admin list is paginated. We pull first 1000 for now.
       const out = [];
