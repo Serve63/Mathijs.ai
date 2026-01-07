@@ -259,11 +259,35 @@ async function geminiGenerateViaRest({ apiKey, model, prompt }) {
   throw lastErr || new Error("gemini_rest_failed");
 }
 
+async function listGeminiModels(apiKey) {
+  const versions = ["v1", "v1beta"];
+  for (const version of versions) {
+    const url = `https://generativelanguage.googleapis.com/${version}/models?key=${apiKey}`;
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) continue;
+      const payload = await resp.json().catch(() => ({}));
+      const models = Array.isArray(payload?.models) ? payload.models : [];
+      const names = models
+        .filter((m) => m?.name && m?.supportedGenerationMethods?.includes("generateContent"))
+        .map((m) => {
+          const name = m.name || "";
+          return name.startsWith("models/") ? name.slice(7) : name;
+        })
+        .filter(Boolean);
+      if (names.length) return names;
+    } catch {
+      continue;
+    }
+  }
+  return [];
+}
+
 async function runGeminiChat({ apiKey, model, messages }) {
   const prompt = buildGeminiPrompt(messages);
 
   try {
-    // First try the requested model (mapped). If it fails with 404-like errors, try a small fallback set.
+    // First try the requested model (mapped). If it fails with 404-like errors, list available models and try those.
     const candidates = [model, "gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"].filter(Boolean);
     let lastError = null;
     for (const candidateModel of candidates) {
@@ -275,6 +299,19 @@ async function runGeminiChat({ apiKey, model, messages }) {
         lastError = e;
       }
     }
+
+    // If all candidates failed, list available models and try the first one
+    console.log("[gemini] All hardcoded models failed. Listing available models...");
+    const availableModels = await listGeminiModels(apiKey);
+    console.log(`[gemini] Available models: ${availableModels.join(", ") || "none"}`);
+    if (availableModels.length) {
+      const firstAvailable = availableModels[0];
+      console.log(`[gemini] Trying first available model: ${firstAvailable}`);
+      const text = await geminiGenerateViaRest({ apiKey, model: firstAvailable, prompt });
+      if (text) return text;
+      return "";
+    }
+
     throw lastError || new Error("gemini_rest_failed");
   } catch (err) {
     const safe = sanitizeProviderErrorMessage(err?.message || "");
