@@ -1,5 +1,4 @@
 const OpenAI = require("openai");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, readJson } = require("./_lib/security");
 const { getUserFromAccessToken } = require("./_lib/supabase");
@@ -9,8 +8,17 @@ const { getOpenAIApiKey, getGeminiApiKey, getSupabaseServiceRoleKey } = require(
 const OPENAI_DEFAULT_MODEL = "gpt-5.2-chat-latest";
 const OPENAI_ALLOWED_MODELS = ["gpt-5.2-chat-latest", "gpt-5.2", "gpt-5-mini"];
 
-const GEMINI_DEFAULT_MODEL = "gemini-pro";
-const GEMINI_ALLOWED_MODELS = ["gemini-pro", "gemini-1.5-flash-001", "gemini-1.5-pro-001"];
+// Gemini model IDs vary by API version and rollout. We keep a conservative default and
+// map UI labels/legacy names to something likely to exist, then we try both v1 and v1beta endpoints.
+const GEMINI_DEFAULT_MODEL = "gemini-1.5-flash";
+const GEMINI_ALLOWED_MODELS = [
+  "gemini-1.5-flash",
+  "gemini-1.5-pro",
+  "gemini-pro",
+  "gemini-1.0-pro",
+  "gemini-1.5-flash-001",
+  "gemini-1.5-pro-001",
+];
 
 const MAX_MESSAGES = 30;
 const MAX_MESSAGE_CHARS = 8000;
@@ -51,8 +59,8 @@ function resolveGeminiModel(requested) {
     "gemini-1.5-flash-latest": "gemini-1.5-flash-001",
     "gemini-1.5-pro": "gemini-1.5-pro-001",
     "gemini-1.5-pro-latest": "gemini-1.5-pro-001",
-    "gemini-2.0-flash": "gemini-pro",
-    "gemini-2.0-flash-latest": "gemini-pro",
+    "gemini-2.0-flash": "gemini-1.5-flash",
+    "gemini-2.0-flash-latest": "gemini-1.5-flash",
   };
   if (modelMap[normalized]) {
     normalized = modelMap[normalized];
@@ -203,19 +211,71 @@ function sanitizeProviderErrorMessage(message) {
     .replace(/\bAIza[0-9A-Za-z_-]{20,}\b/g, "***REDACTED***");
 }
 
+function extractGeminiText(payload) {
+  const candidates = Array.isArray(payload?.candidates) ? payload.candidates : [];
+  const parts = candidates?.[0]?.content?.parts || [];
+  return parts
+    .map((p) => (p && typeof p.text === "string" ? p.text : ""))
+    .filter(Boolean)
+    .join("\n");
+}
+
+async function geminiGenerateViaRest({ apiKey, model, prompt }) {
+  const body = {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+  };
+
+  const versions = ["v1", "v1beta"];
+  let lastErr = null;
+
+  for (const version of versions) {
+    const url = `https://generativelanguage.googleapis.com/${version}/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`;
+    try {
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const payload = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+        const err = new Error(msg);
+        err.status = resp.status;
+        err.versionTried = version;
+        err.payload = payload;
+        lastErr = err;
+        // try next version
+        continue;
+      }
+
+      return extractGeminiText(payload);
+    } catch (e) {
+      lastErr = e;
+      continue;
+    }
+  }
+
+  throw lastErr || new Error("gemini_rest_failed");
+}
+
 async function runGeminiChat({ apiKey, model, messages }) {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const gemini = genAI.getGenerativeModel({ model });
   const prompt = buildGeminiPrompt(messages);
 
   try {
-    const result = await gemini.generateContent(prompt);
-    const response = result?.response;
-    if (!response) return "";
-    if (typeof response.text === "function") {
-      return response.text() || "";
+    // First try the requested model (mapped). If it fails with 404-like errors, try a small fallback set.
+    const candidates = [model, "gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"].filter(Boolean);
+    let lastError = null;
+    for (const candidateModel of candidates) {
+      try {
+        const text = await geminiGenerateViaRest({ apiKey, model: candidateModel, prompt });
+        if (text) return text;
+        return "";
+      } catch (e) {
+        lastError = e;
+      }
     }
-    return "";
+    throw lastError || new Error("gemini_rest_failed");
   } catch (err) {
     const safe = sanitizeProviderErrorMessage(err?.message || "");
     const wrapped = new Error("gemini_failed");
