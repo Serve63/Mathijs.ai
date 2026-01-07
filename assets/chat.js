@@ -859,19 +859,38 @@
 	      const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
 	      const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
 
-	      const getSupabaseClient = () => {
-	        if (window.mathijsSupabase) return window.mathijsSupabase;
-	        if (!window.supabase || typeof window.supabase.createClient !== "function") {
-	          return null;
-	        }
-	        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-	          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
-	        });
-	        window.mathijsSupabase = client;
-	        return client;
-	      };
+      const getSupabaseClient = () => {
+        if (window.mathijsSupabase) return window.mathijsSupabase;
+        if (!window.supabase || typeof window.supabase.createClient !== "function") {
+          console.warn("Supabase library nog niet geladen, wachten...");
+          return null;
+        }
+        try {
+          const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+          });
+          window.mathijsSupabase = client;
+          return client;
+        } catch (error) {
+          console.error("Fout bij aanmaken Supabase client:", error);
+          return null;
+        }
+      };
 
-	      const supabaseClient = getSupabaseClient();
+      // Wait for Supabase library to load
+      const waitForSupabase = async (maxWait = 5000) => {
+        const start = Date.now();
+        while (Date.now() - start < maxWait) {
+          if (window.supabase && typeof window.supabase.createClient === "function") {
+            return getSupabaseClient();
+          }
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        console.error("Supabase library laadt niet binnen", maxWait, "ms");
+        return null;
+      };
+
+      let supabaseClient = getSupabaseClient();
       let currentUser = null;
       let profileEnhancementsInitialized = false;
 
@@ -2187,6 +2206,17 @@
 
 		      const workspaceReady = (async () => {
 		        try {
+		          // Ensure Supabase client is loaded
+		          if (!supabaseClient) {
+		            supabaseClient = await waitForSupabase();
+		          }
+		          if (!supabaseClient) {
+		            console.error("Kan Supabase client niet initialiseren");
+		            renderEmptyState();
+		            renderEmptySessionMessage("Fout bij laden. Probeer de pagina te verversen.");
+		            ensureSessionEmptyActions();
+		            return null;
+		          }
 		          const user = await requireAuthenticatedUser();
 		          if (!user) {
 		            return null;
