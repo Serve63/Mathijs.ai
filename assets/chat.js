@@ -253,6 +253,9 @@
         "GPT-5.2": "gpt-5.2",
         "GPT-5 mini": "gpt-5-mini",
       };
+      const GEMINI_MODEL_LABEL_MAP = {
+        "Gemini 3": "gemini-1.5-flash",
+      };
       const MODEL_PROVIDER_MAP = {
         chatgpt52: "openai",
         opus45: "anthropic",
@@ -266,6 +269,7 @@
       };
       const getSelectedProvider = () => MODEL_PROVIDER_MAP[selectedModel] || "unknown";
       const getSelectedOpenAIModel = () => OPENAI_MODEL_LABEL_MAP[selectedModelLabel] || null;
+      const getSelectedGeminiModel = () => GEMINI_MODEL_LABEL_MAP[selectedModelLabel] || null;
 		      let selectedModel = "chatgpt52";
 		      let selectedModelLabel = "ChatGPT 5.2";
 		      let thinkingIndicator = null;
@@ -412,15 +416,26 @@
 
       updateActiveSelectStyles();
 
-      const handleModelChange = (categoryLabel, value) => {
+      const handleModelChange = async (categoryLabel, value) => {
         if (connectTimeout) clearTimeout(connectTimeout);
         const provider = categoryLabel.toLowerCase() === "model" ? getSelectedProvider() : "unknown";
-        const isOpenAI = provider === "openai";
-        const statusLabel = isOpenAI ? "Verbonden" : "Niet gekoppeld";
+        const status = await refreshProviderStatus();
+
+        const connected =
+          (provider === "openai" && status.openai === true) || (provider === "gemini" && status.gemini === true);
+        const statusLabel = connected ? "Verbonden" : "Niet gekoppeld";
         setStatus(statusLabel, "idle");
-        const message = isOpenAI
-          ? `${categoryLabel} ${value} is verbonden via OpenAI.`
-          : `${categoryLabel} ${value} is nog niet gekoppeld.`;
+
+        let message = `${categoryLabel} ${value} is nog niet gekoppeld.`;
+        if (connected) {
+          message =
+            provider === "gemini"
+              ? `${categoryLabel} ${value} is verbonden via Gemini.`
+              : `${categoryLabel} ${value} is verbonden via OpenAI.`;
+        } else if (provider === "gemini") {
+          message = `${categoryLabel} ${value} is nog niet gekoppeld. Voeg GEMINI_API_KEY toe om Gemini te gebruiken.`;
+        }
+
         appendMessage(message, "system", { persist: false });
       };
 
@@ -810,13 +825,36 @@
       }
 
       const chatLog = document.querySelector(".chat-log");
+      const chatScrollContainer = document.querySelector(".chat-content-wrapper");
       const chatInput = document.querySelector(".chat-input textarea");
-      const sendButton = document.querySelector(".chat-input button");
+      const sendButton = document.querySelector('.chat-input__inner > button[aria-label="Stuur bericht"]');
       const profileNameEl = document.getElementById("profile-name");
       const profileEmailEl = document.getElementById("profile-email");
       const profileInitialsEl = document.querySelector(".profile-avatar__initials");
       const profileNameEditBtn = document.querySelector(".profile-name-edit");
       let avatarSignedFallbackUsed = false;
+
+      // Sticky auto-scroll: keep pinned to bottom until user scrolls up.
+      const AUTO_SCROLL_THRESHOLD_PX = 80;
+      let autoScrollEnabled = true;
+      const isNearBottom = () => {
+        if (!chatScrollContainer) return true;
+        const distance = chatScrollContainer.scrollHeight - (chatScrollContainer.scrollTop + chatScrollContainer.clientHeight);
+        return distance <= AUTO_SCROLL_THRESHOLD_PX;
+      };
+      const syncAutoScrollFromUserScroll = () => {
+        autoScrollEnabled = isNearBottom();
+      };
+      if (chatScrollContainer) {
+        chatScrollContainer.addEventListener("scroll", syncAutoScrollFromUserScroll, { passive: true });
+      }
+      const scrollToBottomIfPinned = () => {
+        if (!chatScrollContainer) return;
+        if (!autoScrollEnabled) return;
+        requestAnimationFrame(() => {
+          chatScrollContainer.scrollTop = chatScrollContainer.scrollHeight;
+        });
+      };
 
 	      const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
 	      const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
@@ -1425,6 +1463,21 @@
 		        const payload = await resp.json().catch(() => ({}));
 		        return { ok: resp.ok, status: resp.status, payload };
 		      };
+
+      let providerStatusCache = { openai: null, gemini: null };
+      const refreshProviderStatus = async () => {
+        try {
+          const { ok, payload } = await apiFetchJson("/api/provider-status");
+          if (!ok) return providerStatusCache;
+          providerStatusCache = {
+            openai: payload?.openai === true,
+            gemini: payload?.gemini === true,
+          };
+          return providerStatusCache;
+        } catch {
+          return providerStatusCache;
+        }
+      };
 
 		      const creditsBalanceEl = document.getElementById("credits-balance");
 		      const creditsBalanceValueEl = document.getElementById("credits-balance-value");
@@ -2065,7 +2118,7 @@
         bubble.appendChild(label);
         article.appendChild(bubble);
         chatLog.appendChild(article);
-        chatLog.scrollTop = chatLog.scrollHeight;
+        scrollToBottomIfPinned();
         thinkingIndicator = article;
       };
 
@@ -2106,7 +2159,7 @@
 
         article.appendChild(bubble);
         chatLog.appendChild(article);
-        chatLog.scrollTop = chatLog.scrollHeight;
+        scrollToBottomIfPinned();
 
         const shouldPersist =
           options.persist !== false && (role === "user" || role === "assistant" || role === "developer");
@@ -2128,7 +2181,7 @@
         bubble.innerHTML = "";
         article.appendChild(bubble);
         chatLog.appendChild(article);
-        chatLog.scrollTop = chatLog.scrollHeight;
+        scrollToBottomIfPinned();
         return { article, bubble };
       };
 
@@ -2173,13 +2226,26 @@
 	        const value = chatInput.value.trim();
 	        if (!value) return;
 
-                const provider = getSelectedProvider();
-        if (provider !== "openai") {
-          appendMessage("Provider nog niet gekoppeld. Kies ChatGPT 5.2 om te chatten.", "assistant", { persist: false });
+        const provider = getSelectedProvider();
+        const status = await refreshProviderStatus();
+
+        if (provider === "openai" && status.openai !== true) {
+          appendMessage("OpenAI is niet gekoppeld. Voeg OPEN_AI_KEY toe om te chatten.", "assistant", { persist: false });
           return;
         }
-        const openaiModel = getSelectedOpenAIModel();
-        if (!openaiModel) {
+        if (provider === "gemini" && status.gemini !== true) {
+          appendMessage("Gemini is niet gekoppeld. Voeg GEMINI_API_KEY toe om te chatten.", "assistant", { persist: false });
+          return;
+        }
+        if (provider !== "openai" && provider !== "gemini") {
+          appendMessage("Provider nog niet gekoppeld. Kies ChatGPT of Gemini om te chatten.", "assistant", { persist: false });
+          return;
+        }
+
+        const openaiModel = provider === "openai" ? getSelectedOpenAIModel() : null;
+        const geminiModel = provider === "gemini" ? getSelectedGeminiModel() : null;
+        const selectedApiModel = openaiModel || geminiModel;
+        if (!selectedApiModel) {
           appendMessage("Ongeldig model geselecteerd. Kies opnieuw.", "assistant", { persist: false });
           return;
         }
@@ -2220,7 +2286,8 @@
               Authorization: `Bearer ${accessToken}`,
             },
             body: JSON.stringify({
-              model: openaiModel,
+              provider,
+              model: selectedApiModel,
               messages: requestMessages,
             }),
           });

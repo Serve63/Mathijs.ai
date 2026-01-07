@@ -1,12 +1,16 @@
 const OpenAI = require("openai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, readJson } = require("./_lib/security");
 const { getUserFromAccessToken } = require("./_lib/supabase");
 const { SUPABASE_URL } = require("./_lib/supabase");
-const { getOpenAIApiKey, getSupabaseServiceRoleKey } = require("./_lib/env");
+const { getOpenAIApiKey, getGeminiApiKey, getSupabaseServiceRoleKey } = require("./_lib/env");
 
 const OPENAI_DEFAULT_MODEL = "gpt-5.2-chat-latest";
 const OPENAI_ALLOWED_MODELS = ["gpt-5.2-chat-latest", "gpt-5.2", "gpt-5-mini"];
+
+const GEMINI_DEFAULT_MODEL = "gemini-1.5-flash";
+const GEMINI_ALLOWED_MODELS = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash"];
 
 const MAX_MESSAGES = 30;
 const MAX_MESSAGE_CHARS = 8000;
@@ -32,6 +36,18 @@ function resolveOpenAIModel(requested) {
   if (!OPENAI_ALLOWED_MODELS.includes(normalized)) {
     console.warn(`Niet toegestane OpenAI model requested: ${normalized}. Valt terug op ${OPENAI_DEFAULT_MODEL}`);
     return OPENAI_DEFAULT_MODEL;
+  }
+  return normalized;
+}
+
+function resolveGeminiModel(requested) {
+  if (typeof requested !== "string" || !requested.trim()) {
+    return GEMINI_DEFAULT_MODEL;
+  }
+  const normalized = requested.trim();
+  if (!GEMINI_ALLOWED_MODELS.includes(normalized)) {
+    console.warn(`Niet toegestane Gemini model requested: ${normalized}. Valt terug op ${GEMINI_DEFAULT_MODEL}`);
+    return GEMINI_DEFAULT_MODEL;
   }
   return normalized;
 }
@@ -142,6 +158,45 @@ function extractResponseText(response) {
   return text;
 }
 
+function splitGeminiMessages(normalizedMessages) {
+  const developerParts = [];
+  const contents = [];
+
+  normalizedMessages.forEach((message) => {
+    if (!message || typeof message.content !== "string") return;
+    if (message.role === "developer") {
+      developerParts.push(message.content);
+      return;
+    }
+    const role = message.role === "assistant" ? "model" : "user";
+    contents.push({ role, parts: [{ text: message.content }] });
+  });
+
+  const systemInstruction = developerParts.filter(Boolean).join("\n\n").trim();
+  return { systemInstruction: systemInstruction || null, contents };
+}
+
+async function runGeminiChat({ apiKey, model, messages }) {
+  const { systemInstruction, contents } = splitGeminiMessages(messages);
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const gemini = genAI.getGenerativeModel({
+    model,
+    systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined,
+  });
+
+  const result = await gemini.generateContent({ contents });
+  const response = result?.response;
+  if (!response) return "";
+
+  if (typeof response.text === "function") {
+    return response.text() || "";
+  }
+
+  const candidates = Array.isArray(response.candidates) ? response.candidates : [];
+  const parts = candidates?.[0]?.content?.parts || [];
+  return parts.map((p) => (p && typeof p.text === "string" ? p.text : "")).filter(Boolean).join("\n");
+}
+
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== "POST") {
@@ -219,12 +274,28 @@ module.exports = async function handler(req, res) {
       return json(res, status, { error: "Invalid request body" });
     }
 
-    const { messages, model } = body || {};
+    const { messages, model, provider } = body || {};
     const normalizedMessages = validateAndNormalizeMessages(messages);
 
-    const requestedModel = typeof model === "string" ? model : "";
-    const openaiModel = resolveOpenAIModel(requestedModel);
+    const requestedProvider = typeof provider === "string" ? provider.trim().toLowerCase() : "";
+    const inferredProvider =
+      requestedProvider ||
+      (typeof model === "string" && model.trim().startsWith("gemini-") ? "gemini" : "openai");
 
+    const requestedModel = typeof model === "string" ? model : "";
+
+    if (inferredProvider === "gemini") {
+      const geminiModel = resolveGeminiModel(requestedModel);
+      const apiKey = getGeminiApiKey();
+      console.log(`[gemini] key ${apiKey ? "present" : "missing"}`);
+      if (!apiKey) {
+        return json(res, 500, { error: "Missing GEMINI_API_KEY" });
+      }
+      const text = await runGeminiChat({ apiKey, model: geminiModel, messages: normalizedMessages });
+      return json(res, 200, { text: text || "" });
+    }
+
+    const openaiModel = resolveOpenAIModel(requestedModel);
     const apiKey = getOpenAIApiKey();
     console.log(`[openai] key ${apiKey ? "present" : "missing"}`);
     if (!apiKey) {
