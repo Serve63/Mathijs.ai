@@ -9,8 +9,8 @@ const { getOpenAIApiKey, getGeminiApiKey, getSupabaseServiceRoleKey } = require(
 const OPENAI_DEFAULT_MODEL = "gpt-5.2-chat-latest";
 const OPENAI_ALLOWED_MODELS = ["gpt-5.2-chat-latest", "gpt-5.2", "gpt-5-mini"];
 
-const GEMINI_DEFAULT_MODEL = "gemini-1.5-flash-latest";
-const GEMINI_ALLOWED_MODELS = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"];
+const GEMINI_DEFAULT_MODEL = "gemini-pro";
+const GEMINI_ALLOWED_MODELS = ["gemini-pro", "gemini-1.5-flash-001", "gemini-1.5-pro-001"];
 
 const MAX_MESSAGES = 30;
 const MAX_MESSAGE_CHARS = 8000;
@@ -45,9 +45,18 @@ function resolveGeminiModel(requested) {
     return GEMINI_DEFAULT_MODEL;
   }
   let normalized = requested.trim();
-  // Map older names to -latest variants expected by v1beta endpoint
-  if (normalized === "gemini-1.5-flash") normalized = "gemini-1.5-flash-latest";
-  if (normalized === "gemini-1.5-pro") normalized = "gemini-1.5-pro-latest";
+  // Map various names to actual Google model identifiers
+  const modelMap = {
+    "gemini-1.5-flash": "gemini-1.5-flash-001",
+    "gemini-1.5-flash-latest": "gemini-1.5-flash-001",
+    "gemini-1.5-pro": "gemini-1.5-pro-001",
+    "gemini-1.5-pro-latest": "gemini-1.5-pro-001",
+    "gemini-2.0-flash": "gemini-pro",
+    "gemini-2.0-flash-latest": "gemini-pro",
+  };
+  if (modelMap[normalized]) {
+    normalized = modelMap[normalized];
+  }
 
   if (!GEMINI_ALLOWED_MODELS.includes(normalized)) {
     console.warn(`Niet toegestane/ongekende Gemini model requested: ${normalized}. Valt terug op ${GEMINI_DEFAULT_MODEL}`);

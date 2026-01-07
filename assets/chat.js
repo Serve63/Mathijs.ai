@@ -254,7 +254,7 @@
         "GPT-5 mini": "gpt-5-mini",
       };
       const GEMINI_MODEL_LABEL_MAP = {
-        "Gemini 3": "gemini-1.5-flash-latest",
+        "Gemini 3": "gemini-pro",
       };
       const MODEL_PROVIDER_MAP = {
         chatgpt52: "openai",
