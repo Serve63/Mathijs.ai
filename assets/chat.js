@@ -1488,23 +1488,180 @@
 		        }
 	      };
 
-		      const apiFetchJson = async (url, { method = "GET", body } = {}) => {
-		        const accessToken = await requireAccessToken();
-		        if (!accessToken) {
-		          console.warn("Geen access token beschikbaar");
-		          return { ok: false, status: 401, payload: { error: "Unauthorized" } };
-		        }
-		        const resp = await fetch(url, {
-	          method,
-	          headers: {
-	            "Content-Type": "application/json",
-	            Authorization: `Bearer ${accessToken}`,
-	          },
-	          body: body ? JSON.stringify(body) : undefined,
-	        });
-		        const payload = await resp.json().catch(() => ({}));
-		        return { ok: resp.ok, status: resp.status, payload };
-		      };
+	      const apiFetchJson = async (url, { method = "GET", body } = {}) => {
+	        const accessToken = await requireAccessToken();
+	        if (!accessToken) {
+	          console.warn("Geen access token beschikbaar");
+	          return { ok: false, status: 401, payload: { error: "Unauthorized" } };
+	        }
+	        const resp = await fetch(url, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: body ? JSON.stringify(body) : undefined,
+        });
+	        const payload = await resp.json().catch(() => ({}));
+	        return { ok: resp.ok, status: resp.status, payload };
+	      };
+
+      const normalizeIso = (value) => {
+        if (!value) return null;
+        const text = String(value).trim();
+        if (!text) return null;
+        const date = new Date(text);
+        if (Number.isNaN(date.getTime())) return null;
+        return date.toISOString();
+      };
+
+      const buildSessionsFromRows = (rows) => {
+        if (!Array.isArray(rows) || !rows.length) return [];
+        const sessionMap = new Map();
+        rows.forEach((entry) => {
+          if (!entry) return;
+          const sessionId = entry.session_id || LEGACY_SESSION_ID;
+          const createdAt = entry.created_at || null;
+          const existing = sessionMap.get(sessionId);
+          if (!existing) {
+            sessionMap.set(sessionId, {
+              id: sessionId,
+              createdAt,
+              updatedAt: createdAt,
+              firstUserMessage: entry.role === "user" ? entry.message_text : "",
+              isLegacy: !entry.session_id,
+            });
+            return;
+          }
+          if (createdAt) {
+            if (!existing.updatedAt || new Date(createdAt) > new Date(existing.updatedAt)) {
+              existing.updatedAt = createdAt;
+            }
+            if (!existing.createdAt || new Date(createdAt) < new Date(existing.createdAt)) {
+              existing.createdAt = createdAt;
+            }
+          }
+          if (!existing.firstUserMessage && entry.role === "user") {
+            existing.firstUserMessage = entry.message_text || "";
+          }
+        });
+        return Array.from(sessionMap.values()).sort(
+          (a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+        );
+      };
+
+      const fetchSessionsDirect = async (userId) => {
+        if (!supabaseClient || !userId) return { ok: false, sessions: [] };
+        try {
+          const { data, error } = await supabaseClient
+            .from("messages")
+            .select("session_id,role,message_text,created_at")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(5000);
+          if (error) {
+            console.warn("Directe sessielading mislukt", error);
+            return { ok: false, sessions: [] };
+          }
+          return { ok: true, sessions: buildSessionsFromRows(data) };
+        } catch (error) {
+          console.warn("Directe sessielading faalde", error);
+          return { ok: false, sessions: [] };
+        }
+      };
+
+      const fetchMessagesDirect = async (userId, sessionId) => {
+        if (!supabaseClient || !userId || !sessionId) return { ok: false, messages: [] };
+        try {
+          let query = supabaseClient
+            .from("messages")
+            .select("role,message_text,created_at,session_id")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: true })
+            .limit(5000);
+          if (sessionId === LEGACY_SESSION_ID) {
+            query = query.is("session_id", null);
+          } else {
+            query = query.eq("session_id", sessionId);
+          }
+          const { data, error } = await query;
+          if (error) {
+            console.warn("Directe berichtenlading mislukt", error);
+            return { ok: false, messages: [] };
+          }
+          return { ok: true, messages: Array.isArray(data) ? data : [] };
+        } catch (error) {
+          console.warn("Directe berichtenlading faalde", error);
+          return { ok: false, messages: [] };
+        }
+      };
+
+      const insertMessageDirect = async (userId, sessionId, role, content) => {
+        if (!supabaseClient || !userId) return { ok: false };
+        const payload = {
+          user_id: userId,
+          session_id: sessionId === LEGACY_SESSION_ID ? null : sessionId,
+          role,
+          message_text: content,
+        };
+        try {
+          const { error } = await supabaseClient.from("messages").insert(payload);
+          if (error) {
+            console.warn("Direct bericht opslaan mislukt", error);
+            return { ok: false };
+          }
+          return { ok: true };
+        } catch (error) {
+          console.warn("Direct bericht opslaan faalde", error);
+          return { ok: false };
+        }
+      };
+
+      const importLegacySessionsDirect = async (userId, sessions) => {
+        if (!supabaseClient || !userId) return false;
+        if (!Array.isArray(sessions) || !sessions.length) return false;
+        const rows = [];
+        sessions.forEach((session) => {
+          if (rows.length >= 5000) return;
+          const sessionId = typeof session?.id === "string" && session.id.trim() ? session.id.trim() : null;
+          const msgs = Array.isArray(session?.messages) ? session.messages : [];
+          msgs.forEach((msg) => {
+            if (rows.length >= 5000) return;
+            const role = msg?.role === "user" ? "user" : "assistant";
+            const text =
+              typeof msg?.content === "string"
+                ? msg.content
+                : typeof msg?.message_text === "string"
+                ? msg.message_text
+                : "";
+            const trimmed = text.trim();
+            if (!trimmed) return;
+            const createdAt = normalizeIso(msg?.created_at || msg?.createdAt);
+            const row = {
+              user_id: userId,
+              session_id: sessionId,
+              role,
+              message_text: trimmed,
+            };
+            if (createdAt) row.created_at = createdAt;
+            rows.push(row);
+          });
+        });
+        if (!rows.length) return false;
+        const chunkSize = 500;
+        for (let i = 0; i < rows.length; i += chunkSize) {
+          const slice = rows.slice(i, i + chunkSize);
+          const { error } = await supabaseClient.from("messages").insert(slice);
+          if (!error) continue;
+          const withoutCreatedAt = slice.map(({ created_at, ...rest }) => rest);
+          const fallback = await supabaseClient.from("messages").insert(withoutCreatedAt);
+          if (fallback.error) {
+            console.warn("Directe legacy import mislukt", fallback.error);
+            return false;
+          }
+        }
+        return true;
+      };
 
       let providerStatusCache = { openai: null, gemini: null };
       const refreshProviderStatus = async () => {
@@ -1626,16 +1783,19 @@
 
 	          if (!sessions.length) return false;
 
-	          const resp = await apiFetchJson("/api/messages?action=import-legacy", {
-	            method: "POST",
-	            body: { sessions },
-	          });
-	          if (!resp.ok) {
-	            console.error("Legacy import failed", resp);
-	            return false;
-	          }
-	          markMigratedLegacy(userId);
-	          return true;
+          const resp = await apiFetchJson("/api/messages?action=import-legacy", {
+            method: "POST",
+            body: { sessions },
+          });
+          if (!resp.ok) {
+            console.error("Legacy import failed", resp);
+            const directImported = await importLegacySessionsDirect(userId, sessions);
+            if (!directImported) return false;
+            markMigratedLegacy(userId);
+            return true;
+          }
+          markMigratedLegacy(userId);
+          return true;
 	        } finally {
 	          legacyImportInFlight = false;
 	        }
@@ -1840,10 +2000,17 @@
 	      };
 
 	      const saveMessageToApi = async (sessionId, role, content) => {
-	        return await apiFetchJson("/api/messages?action=add", {
+	        const resp = await apiFetchJson("/api/messages?action=add", {
 	          method: "POST",
 	          body: { session_id: sessionId, role, message_text: content },
 	        });
+          if (resp.ok) return resp;
+          const userId = currentUser?.id;
+          const direct = await insertMessageDirect(userId, sessionId, role, content);
+          if (direct.ok) {
+            return { ok: true, status: 200, payload: { ok: true, fallback: true } };
+          }
+          return resp;
 	      };
 
 	      const deleteSession = async (sessionId, isLegacy) => {
@@ -1872,9 +2039,37 @@
 	        const { goToLatest = false } = options;
 	        const user = await requireAuthenticatedUser();
 	        if (!user?.id) return;
+	        const applySessions = (data) => {
+	          const derivedSessions = data.map((session) => ({
+	            ...session,
+	            title:
+	              titleOverrides[session.id] ||
+	              generateSessionTitleFromPrompt(session.firstUserMessage) ||
+	              "Chat",
+	          }));
+
+	          derivedSessions.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+	          sessionState.list = derivedSessions;
+	          sessionState.untitledCount = derivedSessions.length;
+	          const hasActiveSession = derivedSessions.some((session) => session.id === sessionState.activeId);
+	          if (goToLatest || !sessionState.activeId || !hasActiveSession) {
+	            sessionState.activeId = derivedSessions[0] ? derivedSessions[0].id : null;
+	          }
+	          renderSessionList();
+	        };
+	        const tryDirectSessions = async () => {
+	          const direct = await fetchSessionsDirect(user.id);
+	          if (direct.ok && direct.sessions.length) {
+	            applySessions(direct.sessions);
+	            return true;
+	          }
+	          return false;
+	        };
 	        try {
 	          const { ok, payload } = await apiFetchJson("/api/messages?action=sessions");
 	          if (!ok) {
+	            const recovered = await tryDirectSessions();
+	            if (recovered) return;
 	            throw new Error(payload?.error || "Kon sessies niet laden");
 	          }
 
@@ -1885,6 +2080,8 @@
 	              // Try again after import.
 	              return await refreshSessionsFromSupabase(options);
 	            }
+	            const recovered = await tryDirectSessions();
+	            if (recovered) return;
 	            sessionState.list = [];
 	            sessionState.activeId = null;
 	            sessionState.untitledCount = 0;
@@ -1894,24 +2091,11 @@
 	            return;
 	          }
 
-		          const derivedSessions = data.map((session, index) => ({
-		            ...session,
-		            title:
-		              titleOverrides[session.id] ||
-		              generateSessionTitleFromPrompt(session.firstUserMessage) ||
-		              "Chat",
-		          }));
-
-          derivedSessions.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-          sessionState.list = derivedSessions;
-          sessionState.untitledCount = derivedSessions.length;
-          const hasActiveSession = derivedSessions.some((session) => session.id === sessionState.activeId);
-          if (goToLatest || !sessionState.activeId || !hasActiveSession) {
-            sessionState.activeId = derivedSessions[0] ? derivedSessions[0].id : null;
-          }
-	          renderSessionList();
+	          applySessions(data);
 	        } catch (error) {
 	          console.error("Sessies ophalen mislukt", error);
+	          const recovered = await tryDirectSessions();
+	          if (recovered) return;
 	          renderSessionList();
 	          renderEmptySessionMessage("Kon gesprekken niet laden. Probeer opnieuw laden.");
 	          ensureSessionEmptyActions();
@@ -1928,27 +2112,40 @@
 	        }
 	        chatLog.innerHTML = "";
 	        messages = [createSystemMessage()];
-	        try {
-	          const qs = new URLSearchParams({ session_id: sessionId });
-	          const { ok, payload } = await apiFetchJson(`/api/messages?action=session&${qs.toString()}`);
-	          if (!ok) throw new Error(payload?.error || "Kon berichten niet laden");
-	          const data = payload?.messages || [];
-
-	          if (!Array.isArray(data) || !data.length) {
-	            renderEmptyState();
-	            return;
-	          }
-
+	        const applyMessages = (data) => {
 	          const history = [];
 	          data.forEach((entry) => {
 	            const normalizedRole = entry.role === "user" ? "user" : "assistant";
 	            appendMessage(entry.message_text, normalizedRole, { persist: false });
 	            history.push({ role: normalizedRole, content: entry.message_text });
 	          });
-		          messages = [createSystemMessage(), ...history];
-		          updateNewChatButtonState();
-		        } catch (error) {
-		          console.error("Berichten ophalen mislukt", error);
+	          messages = [createSystemMessage(), ...history];
+	          updateNewChatButtonState();
+	        };
+	        try {
+	          const qs = new URLSearchParams({ session_id: sessionId });
+	          const { ok, payload } = await apiFetchJson(`/api/messages?action=session&${qs.toString()}`);
+	          if (!ok) throw new Error(payload?.error || "Kon berichten niet laden");
+	          let data = payload?.messages || [];
+
+	          if (!Array.isArray(data) || !data.length) {
+	            const direct = await fetchMessagesDirect(user.id, sessionId);
+	            if (direct.ok && direct.messages.length) {
+	              data = direct.messages;
+	            } else {
+	              renderEmptyState();
+	              return;
+	            }
+	          }
+
+	          applyMessages(data);
+	        } catch (error) {
+	          console.error("Berichten ophalen mislukt", error);
+	          const direct = await fetchMessagesDirect(user.id, sessionId);
+	          if (direct.ok && direct.messages.length) {
+	            applyMessages(direct.messages);
+	            return;
+	          }
 	          const errorMsg = error?.message || "Onbekende fout";
 	          console.error("Fout details:", errorMsg, error);
 	          appendMessage(
@@ -2415,6 +2612,3 @@
 	        });
 	      }
     
-
-
-
