@@ -1471,19 +1471,30 @@
 		          supabaseClient = await waitForSupabase();
 		        }
 		        if (!supabaseClient) {
-		          console.error("Supabase client ontbreekt in requireAccessToken");
+		          console.error("requireAccessToken: Supabase client ontbreekt");
 		          return null;
 		        }
 		        try {
-		          const { data: sessionData } = await supabaseClient.auth.getSession();
+		          const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+		          if (sessionError) {
+		            console.error("requireAccessToken: getSession error", sessionError);
+		            return null;
+		          }
 		          const accessToken = sessionData?.session?.access_token;
 		          if (!accessToken) {
-		            console.warn("Geen access token gevonden");
-		            return null;
-		        }
-	        return accessToken;
+		            console.warn("requireAccessToken: geen access token in sessie, sessie expired?");
+		            // Probeer te refreshen
+		            const { data: refreshData, error: refreshError } = await supabaseClient.auth.refreshSession();
+		            if (refreshError || !refreshData?.session?.access_token) {
+		              console.error("requireAccessToken: refresh mislukt", refreshError);
+		              return null;
+		            }
+		            console.log("requireAccessToken: sessie succesvol gerefreshed");
+		            return refreshData.session.access_token;
+		          }
+		          return accessToken;
 		        } catch (error) {
-		          console.error("Fout bij ophalen access token:", error);
+		          console.error("requireAccessToken: fout bij ophalen", error);
 		          return null;
 		        }
 	      };
@@ -1491,19 +1502,27 @@
 	      const apiFetchJson = async (url, { method = "GET", body } = {}) => {
 	        const accessToken = await requireAccessToken();
 	        if (!accessToken) {
-	          console.warn("Geen access token beschikbaar");
-	          return { ok: false, status: 401, payload: { error: "Unauthorized" } };
+	          console.warn("apiFetchJson: geen access token beschikbaar voor", url);
+	          return { ok: false, status: 401, payload: { error: "Unauthorized - geen access token" } };
 	        }
-	        const resp = await fetch(url, {
-          method,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: body ? JSON.stringify(body) : undefined,
-        });
-	        const payload = await resp.json().catch(() => ({}));
-	        return { ok: resp.ok, status: resp.status, payload };
+	        try {
+	          const resp = await fetch(url, {
+	            method,
+	            headers: {
+	              "Content-Type": "application/json",
+	              Authorization: `Bearer ${accessToken}`,
+	            },
+	            body: body ? JSON.stringify(body) : undefined,
+	          });
+	          const payload = await resp.json().catch(() => ({}));
+	          if (!resp.ok) {
+	            console.warn("apiFetchJson: API error", url, resp.status, payload?.error);
+	          }
+	          return { ok: resp.ok, status: resp.status, payload };
+	        } catch (error) {
+	          console.error("apiFetchJson: fetch error", url, error);
+	          return { ok: false, status: 0, payload: { error: error?.message || "Network error" } };
+	        }
 	      };
 
       const normalizeIso = (value) => {
@@ -1551,8 +1570,12 @@
       };
 
       const fetchSessionsDirect = async (userId) => {
-        if (!supabaseClient || !userId) return { ok: false, sessions: [] };
+        if (!supabaseClient || !userId) {
+          console.warn("fetchSessionsDirect: geen supabaseClient of userId", { hasClient: !!supabaseClient, userId });
+          return { ok: false, sessions: [], reason: "no_client_or_user" };
+        }
         try {
+          console.log("fetchSessionsDirect: ophalen voor user", userId);
           const { data, error } = await supabaseClient
             .from("messages")
             .select("session_id,role,message_text,created_at")
@@ -1561,12 +1584,13 @@
             .limit(5000);
           if (error) {
             console.warn("Directe sessielading mislukt", error);
-            return { ok: false, sessions: [] };
+            return { ok: false, sessions: [], reason: error?.message || "query_error" };
           }
+          console.log("fetchSessionsDirect: gevonden", data?.length || 0, "berichten");
           return { ok: true, sessions: buildSessionsFromRows(data) };
         } catch (error) {
           console.warn("Directe sessielading faalde", error);
-          return { ok: false, sessions: [] };
+          return { ok: false, sessions: [], reason: error?.message || "exception" };
         }
       };
 
@@ -2058,7 +2082,9 @@
 	          renderSessionList();
 	        };
 	        const tryDirectSessions = async () => {
+	          console.log("tryDirectSessions: proberen direct te laden voor user", user.id);
 	          const direct = await fetchSessionsDirect(user.id);
+	          console.log("tryDirectSessions: resultaat", { ok: direct.ok, count: direct.sessions?.length, reason: direct.reason });
 	          if (direct.ok && direct.sessions.length) {
 	            applySessions(direct.sessions);
 	            return true;
@@ -2066,8 +2092,11 @@
 	          return false;
 	        };
 	        try {
+	          console.log("refreshSessionsFromSupabase: ophalen via API");
 	          const { ok, payload } = await apiFetchJson("/api/messages?action=sessions");
+	          console.log("refreshSessionsFromSupabase: API resultaat", { ok, sessionsCount: payload?.sessions?.length });
 	          if (!ok) {
+	            console.warn("refreshSessionsFromSupabase: API mislukt, probeer direct", payload?.error);
 	            const recovered = await tryDirectSessions();
 	            if (recovered) return;
 	            throw new Error(payload?.error || "Kon sessies niet laden");
@@ -2075,18 +2104,21 @@
 
 	          const data = payload?.sessions || [];
 	          if (!Array.isArray(data) || !data.length) {
+	            console.log("refreshSessionsFromSupabase: geen sessies van API, probeer legacy import");
 	            const imported = await tryImportLegacySessions(user.id);
 	            if (imported) {
 	              // Try again after import.
 	              return await refreshSessionsFromSupabase(options);
 	            }
+	            console.log("refreshSessionsFromSupabase: geen legacy, probeer direct");
 	            const recovered = await tryDirectSessions();
 	            if (recovered) return;
+	            console.log("refreshSessionsFromSupabase: geen sessies gevonden, toon lege state");
 	            sessionState.list = [];
 	            sessionState.activeId = null;
 	            sessionState.untitledCount = 0;
 	            renderSessionList();
-	            renderEmptySessionMessage("Geen gesprekken gevonden. Probeer opnieuw laden of herstel je geschiedenis.");
+	            renderEmptySessionMessage("Geen gesprekken gevonden. Start een nieuw gesprek of herstel je geschiedenis.");
 	            ensureSessionEmptyActions();
 	            return;
 	          }
@@ -2274,23 +2306,25 @@
 	      const requireAuthenticatedUser = async () => {
 	        // Ensure Supabase client is loaded
 	        if (!supabaseClient) {
-	          console.log("Supabase client ontbreekt, wachten op Supabase...");
+	          console.log("requireAuthenticatedUser: Supabase client ontbreekt, wachten...");
 	          supabaseClient = await waitForSupabase();
 	        }
 	        if (!supabaseClient) {
-	          console.error("Supabase client kon niet worden geïnitialiseerd na wachten");
+	          console.error("requireAuthenticatedUser: Supabase client kon niet worden geïnitialiseerd");
 	          renderEmptyState();
 	          renderEmptySessionMessage("Fout bij verbinden met Supabase. Ververs de pagina.");
 	          ensureSessionEmptyActions();
 	          return null;
 	        }
 	        if (currentUser) {
+	          console.log("requireAuthenticatedUser: gebruiker al bekend", currentUser.id, currentUser.email);
 	          return currentUser;
 	        }
 	        try {
+	          console.log("requireAuthenticatedUser: ophalen gebruiker via getUser()");
 	          const { data, error } = await supabaseClient.auth.getUser();
 	          if (error || !data?.user) {
-	            console.error("Geen actieve gebruiker gevonden", error);
+	            console.error("requireAuthenticatedUser: geen actieve gebruiker", error);
 	            try {
 	              await supabaseClient.auth.signOut();
 	            } catch {
@@ -2300,8 +2334,9 @@
 	            return null;
 	          }
 	          currentUser = data.user;
+	          console.log("requireAuthenticatedUser: gebruiker gevonden", currentUser.id, currentUser.email);
 	        } catch (error) {
-	          console.error("Kon gebruiker niet ophalen", error);
+	          console.error("requireAuthenticatedUser: kon gebruiker niet ophalen", error);
 	          try {
 	            await supabaseClient.auth.signOut();
 	          } catch {
