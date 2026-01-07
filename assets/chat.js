@@ -93,7 +93,7 @@
       let connectTimeout;
       const selectionState = {};
       const createSystemMessage = () => ({
-        role: "system",
+        role: "developer",
         content: "Je bent een behulpzame AI-assistent in de AI-leeromgeving van Mathijs.ai. Je helpt ondernemers kiezen en toepassen wanneer ze welk model gebruiken.",
       });
       let messages = [createSystemMessage()];
@@ -248,17 +248,24 @@
         renderThinkingModeMenu(options, nextMode);
       };
 
-	      const modelEngineMap = {
-	        chatgpt52: "gpt-4o",
-	        opus45: "gpt-4o",
-	        sonnet45: "gpt-4o",
-	        haiku45: "gpt-4o",
-	        gemini3: "gemini-3",
-	        llama4: "gpt-4o",
-	        qwen: "gpt-4o",
-	        deepseekv2: "gpt-4o", // Fallback to OpenAI until DeepSeek API is implemented
-	        grok4: "gpt-4o", // Fallback to OpenAI until Grok API is implemented
-	      };
+      const OPENAI_MODEL_LABEL_MAP = {
+        "ChatGPT 5.2": "gpt-5.2-chat-latest",
+        "GPT-5.2": "gpt-5.2",
+        "GPT-5 mini": "gpt-5-mini",
+      };
+      const MODEL_PROVIDER_MAP = {
+        chatgpt52: "openai",
+        opus45: "anthropic",
+        sonnet45: "anthropic",
+        haiku45: "anthropic",
+        gemini3: "gemini",
+        llama4: "meta",
+        qwen: "qwen",
+        deepseekv2: "deepseek",
+        grok4: "grok",
+      };
+      const getSelectedProvider = () => MODEL_PROVIDER_MAP[selectedModel] || "unknown";
+      const getSelectedOpenAIModel = () => OPENAI_MODEL_LABEL_MAP[selectedModelLabel] || null;
 		      let selectedModel = "chatgpt52";
 		      let selectedModelLabel = "ChatGPT 5.2";
 		      let thinkingIndicator = null;
@@ -407,12 +414,14 @@
 
       const handleModelChange = (categoryLabel, value) => {
         if (connectTimeout) clearTimeout(connectTimeout);
-        setStatus("Verbinding makenâ€¦", "connecting");
-
-        connectTimeout = setTimeout(() => {
-          setStatus("Verbonden", "idle");
-          appendMessage(`${categoryLabel} ${value} is verbonden.`, "system");
-        }, 900);
+        const provider = categoryLabel.toLowerCase() === "model" ? getSelectedProvider() : "unknown";
+        const isOpenAI = provider === "openai";
+        const statusLabel = isOpenAI ? "Verbonden" : "Niet gekoppeld";
+        setStatus(statusLabel, "idle");
+        const message = isOpenAI
+          ? `${categoryLabel} ${value} is verbonden via OpenAI.`
+          : `${categoryLabel} ${value} is nog niet gekoppeld.`;
+        appendMessage(message, "system", { persist: false });
       };
 
 	      modelSelects.forEach((select) => {
@@ -2099,7 +2108,9 @@
         chatLog.appendChild(article);
         chatLog.scrollTop = chatLog.scrollHeight;
 
-        if (options.persist === false) {
+        const shouldPersist =
+          options.persist !== false && (role === "user" || role === "assistant" || role === "developer");
+        if (!shouldPersist) {
           return;
         }
 	        messages.push({ role, content });
@@ -2145,45 +2156,31 @@
 		        }
 		      })();
 
+      const buildRequestMessages = () =>
+        messages
+          .filter(
+            (message) =>
+              message &&
+              typeof message.content === "string" &&
+              message.content.trim() &&
+              (message.role === "user" || message.role === "assistant" || message.role === "developer")
+          )
+          .map((message) => ({ role: message.role, content: message.content }));
+
 	      const sendMessage = async () => {
 	        await workspaceReady;
 	        if (!chatInput) return;
 	        const value = chatInput.value.trim();
 	        if (!value) return;
 
-        if (selectedModel === "grok4") {
-          alert("Grok 4 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
-          console.log("Grok 4 chat is nog niet geïmplementeerd.");
+                const provider = getSelectedProvider();
+        if (provider !== "openai") {
+          appendMessage("Provider nog niet gekoppeld. Kies ChatGPT 5.2 om te chatten.", "assistant", { persist: false });
           return;
         }
-        if (selectedModel === "opus45") {
-          alert("Opus 4.5 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
-          console.log("Opus 4.5 chat is nog niet geïmplementeerd.");
-          return;
-        }
-        if (selectedModel === "sonnet45") {
-          alert("Sonnet 4.5 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
-          console.log("Sonnet 4.5 chat is nog niet geïmplementeerd.");
-          return;
-        }
-        if (selectedModel === "haiku45") {
-          alert("Haiku 4.5 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
-          console.log("Haiku 4.5 chat is nog niet geïmplementeerd.");
-          return;
-        }
-        if (selectedModel === "llama4") {
-          alert("Llama 4 is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
-          console.log("Llama 4 chat is nog niet geïmplementeerd.");
-          return;
-        }
-        if (selectedModel === "qwen") {
-          alert("Qwen3-MAX is nog niet gekoppeld. Kies ChatGPT 5.2 om verder te chatten.");
-          console.log("Qwen3-MAX chat is nog niet geïmplementeerd.");
-          return;
-        }
-        if (selectedModel === "gemini25pro") {
-          alert("Gemini 2.5 Pro is nog niet gekoppeld. Kies GPT-5 om verder te chatten.");
-          console.log("Gemini 2.5 Pro chat is nog niet geïmplementeerd.");
+        const openaiModel = getSelectedOpenAIModel();
+        if (!openaiModel) {
+          appendMessage("Ongeldig model geselecteerd. Kies opnieuw.", "assistant", { persist: false });
           return;
         }
 
@@ -2210,108 +2207,58 @@
 
         showThinkingIndicator();
 
-		        let assistantStreamMessage = null;
-		        let assistantResponseBuffer = "";
-
-			        try {
-		          const engine = modelEngineMap[selectedModel] || "gpt-4o";
-		          const accessToken = await requireAccessToken();
-		          if (!accessToken) {
-		            throw new Error("Je sessie is verlopen. Log opnieuw in.");
-		          }
-		          const response = await fetch("/api/chat", {
-	            method: "POST",
-	            headers: {
-	              "Content-Type": "application/json",
-	              Authorization: `Bearer ${accessToken}`,
-	            },
+		                try {
+          const accessToken = await requireAccessToken();
+          if (!accessToken) {
+            throw new Error("Je sessie is verlopen. Log opnieuw in.");
+          }
+          const requestMessages = buildRequestMessages();
+          const response = await fetch("/api/openai/chat", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
             body: JSON.stringify({
-              messages,
-              webSearch: webSearchEnabled,
-              model: engine,
-              thinkingMode: selectedThinkingMode,
+              model: openaiModel,
+              messages: requestMessages,
             }),
           });
 
-		            if (!response.ok || !response.body) {
-		            let errorMessage = "Er ging iets mis bij het ophalen van een antwoord.";
-		            try {
-		              const errorPayload = await response.json();
-		              if (response.status === 402 && errorPayload?.topup_required) {
-		                hideThinkingIndicator();
-		                openTopupModal({
-		                  message: errorPayload?.error || "Je tokens zijn op.",
-		                  tokensAvailable:
-		                    typeof errorPayload?.tokens_available === "number" ? errorPayload.tokens_available : null,
-		                });
-		                return;
-		              }
-		              if (errorPayload && errorPayload.error) {
-		                errorMessage = errorPayload.error;
-		              }
-		            } catch (jsonError) {
-	              try {
-	                errorMessage = (await response.text()) || errorMessage;
-	              } catch (textError) {
-	                /* ignore */
-	              }
-	            }
-	            errorMessage = String(errorMessage)
-	              .replace(/\bsk-[A-Za-z0-9_-]{10,}\b/g, "***REDACTED***")
-	              .replace(/\b(?:sk_live|rk_live|whsec)_[A-Za-z0-9]{10,}\b/g, "***REDACTED***")
-	              .replace(/\bAIza[0-9A-Za-z_-]{20,}\b/g, "***REDACTED***");
-	            if (response.status === 401) {
-	              window.location.href = "login.html";
-	            }
-	            throw new Error(errorMessage);
-	          }
+          let payload = null;
+          try {
+            payload = await response.json();
+          } catch {
+            payload = null;
+          }
 
-          hideThinkingIndicator();
-          assistantStreamMessage = createAssistantStreamMessage();
-          const targetBubble = assistantStreamMessage?.bubble || null;
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder();
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            const chunkText = decoder.decode(value, { stream: true });
-            if (!chunkText) continue;
-            assistantResponseBuffer += chunkText;
-            if (targetBubble) {
-              targetBubble.innerHTML = formatMessageContent(assistantResponseBuffer);
-              chatLog.scrollTop = chatLog.scrollHeight;
+          if (!response.ok) {
+            let errorMessage = payload?.error || "Er ging iets mis bij het ophalen van een antwoord.";
+            errorMessage = String(errorMessage)
+              .replace(/\bsk-[A-Za-z0-9_-]{10,}\b/g, "***REDACTED***")
+              .replace(/\b(?:sk_live|rk_live|whsec)_[A-Za-z0-9]{10,}\b/g, "***REDACTED***")
+              .replace(/\bAIza[0-9A-Za-z_-]{20,}\b/g, "***REDACTED***");
+            if (response.status === 401) {
+              window.location.href = "login.html";
             }
+            throw new Error(errorMessage);
           }
 
-          const finalContent =
-            (assistantResponseBuffer || "").trim() || "Ik heb even geen antwoord. Probeer het later nog eens.";
+          const finalContent = (payload?.text || "").trim() || "Ik heb even geen antwoord. Probeer het later nog eens.";
+          appendMessage(finalContent, "assistant");
 
-          if (targetBubble) {
-            targetBubble.innerHTML = formatMessageContent(finalContent);
-          } else {
-            appendMessage(finalContent, "assistant");
+          const assistantSave = await saveMessageToApi(sessionId, "assistant", finalContent);
+          if (!assistantSave.ok) {
+            console.error("AI-antwoord opslaan mislukt", assistantSave?.payload?.error || assistantSave);
           }
-
-	          messages.push({ role: "assistant", content: finalContent });
-	          updateSessionMetaAfterMessage("assistant", finalContent);
-
-	          const assistantSave = await saveMessageToApi(sessionId, "assistant", finalContent);
-	          if (!assistantSave.ok) {
-	            console.error("AI-antwoord opslaan mislukt", assistantSave?.payload?.error || assistantSave);
-	          }
-	          await refreshSessionsFromSupabase();
-			        } catch (error) {
+          await refreshSessionsFromSupabase();
+	        } catch (error) {
 	          console.error("Chat request failed", error);
-          console.error("Selected model:", selectedModel);
-          console.error("Engine:", modelEngineMap[selectedModel] || "gpt-4o");
+          console.error("Selected model:", selectedModelLabel);
+          console.error("OpenAI model:", openaiModel);
           console.error("Error details:", error.message, error.stack);
           const fallbackMessage = `De AI-request mislukte: ${error.message || "Onbekende fout"}. Controleer je verbinding en probeer opnieuw.`;
-	          if (assistantStreamMessage?.bubble) {
-	            assistantStreamMessage.bubble.innerHTML = formatMessageContent(fallbackMessage);
-	          } else {
-	            appendMessage(fallbackMessage, "assistant");
-	          }
+	          appendMessage(fallbackMessage, "assistant", { persist: false });
 	        } finally {
 	          hideThinkingIndicator();
 	          await refreshCreditsBalance();
@@ -2342,3 +2289,6 @@
 	        });
 	      }
     
+
+
+

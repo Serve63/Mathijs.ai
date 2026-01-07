@@ -12,7 +12,7 @@ function pickEnv(names = []) {
 }
 
 function getOpenAIApiKey() {
-  return pickEnv(["OPENAI_API_KEY", "open_ai_key"]);
+  return pickEnv(["OPEN_AI_KEY", "OPENAI_API_KEY", "open_ai_key"]);
 }
 
 function getSupabaseServiceRoleKey() {

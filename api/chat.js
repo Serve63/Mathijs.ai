@@ -215,8 +215,8 @@ async function streamGeminiResponse(res, messages) {
 async function streamOpenAIResponse(res, messages, { model = OPENAI_DEFAULT_MODEL, requestId = "" } = {}) {
   const apiKey = getOpenAIApiKey();
   if (!apiKey) {
-    console.warn("OpenAI key missing (expected: OPENAI_API_KEY or open_ai_key)");
-    return json(res, 500, { error: "OpenAI key missing (set OPENAI_API_KEY or open_ai_key)." });
+    console.warn("OpenAI key missing (expected: OPEN_AI_KEY, OPENAI_API_KEY, or open_ai_key)");
+    return json(res, 500, { error: "OpenAI key missing (set OPEN_AI_KEY, OPENAI_API_KEY, or open_ai_key)." });
   }
 
   const response = await fetch(OPENAI_ENDPOINT, {

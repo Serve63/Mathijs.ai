@@ -1,7 +1,7 @@
 # Mathijs.ai
 
 ## Config quick notes
-- OpenAI key: `OPENAI_API_KEY` of `open_ai_key` (beide toegestaan).
+- OpenAI key: `OPEN_AI_KEY` (primair), met fallback `OPENAI_API_KEY` of `open_ai_key`.
 - Supabase service role: `SUPABASE_SERVICE_ROLE_KEY` (init tokens vereist).
 - Supabase URL/anon: `SUPABASE_URL`/`SUPABASE_ANON_KEY` of `NEXT_PUBLIC_...` fallbacks.
 - Default chat model: `gpt-4o`; allowed list: `gpt-4o`, `gpt-4o-mini`.
@@ -20,3 +20,13 @@
 1. Ga naar `/signup.html`, maak een account aan en volg de bevestigingsmail.
 2. Log daarna in via `/login.html` en controleer dat je naar `/dashboard.html` wordt gestuurd.
 3. Op `/dashboard.html` zie je je e-mailadres en kun je via "Uitloggen" terug naar `/login.html`. Een directe hit op `/dashboard.html` zonder sessie stuurt je meteen naar de loginpagina.
+
+## OpenAI smoke test
+
+Vereist: `OPEN_AI_KEY`.
+
+```bash
+curl -X POST http://localhost:3000/api/openai/chat \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gpt-5.2-chat-latest","messages":[{"role":"user","content":"Zeg hallo"}]}'
+```
