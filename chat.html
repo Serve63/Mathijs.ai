@@ -93,11 +93,15 @@
         padding-top: 24px;
       }
 
+      .chat-fullscreen .chat-model-selector {
+        left: 16px;
+      }
+
 	      .layout-toggle {
-	        position: absolute;
+	        position: fixed;
 	        top: 16px;
 	        right: 16px;
-	        z-index: 5;
+	        z-index: 50;
 	        border: 1px solid rgba(26, 26, 46, 0.12);
 	        background: rgba(255, 255, 255, 0.9);
 	        border-radius: 999px;
@@ -1271,10 +1275,10 @@
       }
 
       .chat-model-selector {
-        position: absolute;
+        position: fixed;
         top: 16px;
-        left: 16px;
-        z-index: 5;
+        left: 296px;
+        z-index: 50;
         padding: 0;
         margin: 0;
         width: auto;
@@ -2328,6 +2332,7 @@
         .chat-model-selector {
           top: 12px;
           left: 12px;
+          position: fixed;
         }
         
         .chat-model-selector > *:first-child {
