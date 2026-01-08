@@ -855,11 +855,12 @@
 
       /* Team */
       .team-section {
-        padding: 120px 40px;
+        padding: 120px 40px 120px 40px;
+        padding-right: 80px;
         position: relative;
         background: linear-gradient(125deg, var(--hero-1) 0%, var(--hero-2) 48%, var(--hero-3) 100%);
         color: #fff;
-        overflow: hidden;
+        overflow: visible;
         margin-top: 40px;
       }
 
@@ -887,7 +888,7 @@
 
       .team-shell {
         display: grid;
-        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
         gap: 72px;
         align-items: center;
         position: relative;
@@ -974,7 +975,7 @@
         position: relative;
         justify-self: end;
         margin-left: auto;
-        transform: translateX(120px);
+        transform: translateX(180px);
       }
 
       .team-photo {
