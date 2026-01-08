@@ -1250,6 +1250,20 @@
 	        position: relative;
 	      }
 
+      /* Keep top controls visible while scrolling inside chat */
+      .chat-topbar {
+        position: sticky;
+        top: 0;
+        height: 0;
+        z-index: 30;
+        pointer-events: none;
+      }
+
+      .chat-topbar .layout-toggle,
+      .chat-topbar .chat-model-selector {
+        pointer-events: auto;
+      }
+
 	      .chat-log-container {
 	        width: 100%;
 	        max-width: 880px;
@@ -2491,53 +2505,55 @@
 	            <a href="course.html" class="header-course-btn">Bekijk Cursus</a>
 	          </div>
 	        </header>
-	        <div class="chat-content-wrapper">
-	          <button class="layout-toggle" id="layout-toggle" type="button" aria-label="Vergroot chat" title="Vergroot chat">
-	            <div class="layout-toggle__icon" aria-hidden="true"></div>
-	          </button>
-		          <div class="chat-model-selector">
-		            <div class="model-selects">
-		              <div class="model-select" data-category="chat" data-label="Model">
-		                <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-			                  <span class="selected-label">ChatGPT 5.2</span>
-		                  <svg viewBox="0 0 24 24">
-		                    <path d="M6 9l6 6 6-6" />
-		                  </svg>
-		                </button>
-				                <div class="model-dropdown" role="listbox" aria-label="Kies een model">
-				                  <div class="model-option" data-model="ChatGPT 5.2" role="option" aria-selected="true">
-				                    <span class="model-option__label">ChatGPT 5.2</span>
-				                  </div>
-				                  <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">
-				                    <span class="model-option__label">Gemini 3</span>
-				                  </div>
-				                  <div class="model-option" data-model="Grok 4" role="option" aria-selected="false">
-				                    <span class="model-option__label">Grok 4</span>
-				                  </div>
-				                  <div class="model-option" data-model="Opus 4.5" role="option" aria-selected="false">
-				                    <span class="model-option__label">Opus 4.5</span>
-				                  </div>
-				                  <div class="model-option" data-model="Sonnet 4.5" role="option" aria-selected="false">
-				                    <span class="model-option__label">Sonnet 4.5</span>
-				                  </div>
-				                  <div class="model-option" data-model="Haiku 4.5" role="option" aria-selected="false">
-				                    <span class="model-option__label">Haiku 4.5</span>
-				                  </div>
-				                  <div class="model-option" data-model="Llama 4" role="option" aria-selected="false">
-				                    <span class="model-option__label">Llama 4</span>
-				                  </div>
-				                  <div class="model-option" data-model="Qwen3-MAX" role="option" aria-selected="false">
-				                    <span class="model-option__label">Qwen3-MAX</span>
-				                  </div>
-				                  <div class="model-option" data-model="DeepSeek V2" role="option" aria-selected="false">
-				                    <span class="model-option__label">DeepSeek V2</span>
-				                  </div>
-				                </div>
-			              </div>
-			            </div>
-			          </div>
-	        <section class="chat-log"></section>
-	        </div>
+        <div class="chat-content-wrapper">
+          <div class="chat-topbar" aria-hidden="true">
+            <button class="layout-toggle" id="layout-toggle" type="button" aria-label="Vergroot chat" title="Vergroot chat">
+              <div class="layout-toggle__icon" aria-hidden="true"></div>
+            </button>
+            <div class="chat-model-selector">
+              <div class="model-selects">
+                <div class="model-select" data-category="chat" data-label="Model">
+                  <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="selected-label">ChatGPT 5.2</span>
+                    <svg viewBox="0 0 24 24">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                  <div class="model-dropdown" role="listbox" aria-label="Kies een model">
+                    <div class="model-option" data-model="ChatGPT 5.2" role="option" aria-selected="true">
+                      <span class="model-option__label">ChatGPT 5.2</span>
+                    </div>
+                    <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">
+                      <span class="model-option__label">Gemini 3</span>
+                    </div>
+                    <div class="model-option" data-model="Grok 4" role="option" aria-selected="false">
+                      <span class="model-option__label">Grok 4</span>
+                    </div>
+                    <div class="model-option" data-model="Opus 4.5" role="option" aria-selected="false">
+                      <span class="model-option__label">Opus 4.5</span>
+                    </div>
+                    <div class="model-option" data-model="Sonnet 4.5" role="option" aria-selected="false">
+                      <span class="model-option__label">Sonnet 4.5</span>
+                    </div>
+                    <div class="model-option" data-model="Haiku 4.5" role="option" aria-selected="false">
+                      <span class="model-option__label">Haiku 4.5</span>
+                    </div>
+                    <div class="model-option" data-model="Llama 4" role="option" aria-selected="false">
+                      <span class="model-option__label">Llama 4</span>
+                    </div>
+                    <div class="model-option" data-model="Qwen3-MAX" role="option" aria-selected="false">
+                      <span class="model-option__label">Qwen3-MAX</span>
+                    </div>
+                    <div class="model-option" data-model="DeepSeek V2" role="option" aria-selected="false">
+                      <span class="model-option__label">DeepSeek V2</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <section class="chat-log"></section>
+        </div>
         <footer class="chat-footer">
           <div class="chat-input">
             <div class="chat-input__inner">
