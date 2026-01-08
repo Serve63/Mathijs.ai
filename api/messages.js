@@ -95,12 +95,29 @@ module.exports = async (req, res) => {
         message_text: messageText,
       };
       
-      // Add provider if provided and valid
+      // Add provider if provided and valid (only if column exists in DB)
       if (provider === "gemini" || provider === "openai") {
         payload.provider = provider;
       }
 
-      await adminRestFetch("messages", { method: "POST", body: payload });
+      try {
+        await adminRestFetch("messages", { method: "POST", body: payload });
+      } catch (e) {
+        // If error is about unknown column (provider), try without provider
+        const errorDetail = e?.detail;
+        const isColumnError = 
+          (typeof errorDetail === "string" && errorDetail.includes("column") && errorDetail.includes("provider")) ||
+          (typeof errorDetail === "object" && errorDetail?.message && errorDetail.message.includes("provider")) ||
+          (typeof errorDetail === "object" && errorDetail?.code === "42703"); // PostgreSQL undefined_column error code
+        
+        if (isColumnError && payload.provider) {
+          // Retry without provider column
+          delete payload.provider;
+          await adminRestFetch("messages", { method: "POST", body: payload });
+        } else {
+          throw e;
+        }
+      }
       return json(res, 200, { ok: true });
     }
 

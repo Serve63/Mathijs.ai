@@ -1684,6 +1684,22 @@
         try {
           const { error } = await supabaseClient.from("messages").insert(payload);
           if (error) {
+            // If error is about unknown column (provider), try without provider
+            const isColumnError = 
+              (error.message && error.message.includes("provider")) ||
+              (error.code === "42703") || // PostgreSQL undefined_column
+              (error.hint && error.hint.includes("provider"));
+            
+            if (isColumnError && payload.provider) {
+              // Retry without provider column
+              delete payload.provider;
+              const { error: retryError } = await supabaseClient.from("messages").insert(payload);
+              if (retryError) {
+                console.warn("Direct bericht opslaan mislukt (zonder provider)", retryError);
+                return { ok: false };
+              }
+              return { ok: true };
+            }
             console.warn("Direct bericht opslaan mislukt", error);
             return { ok: false };
           }
