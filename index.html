@@ -4,12 +4,68 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mathijs.ai | De Complete AI-Leeromgeving</title>
+    <meta name="description" content="Stop met model-chaos. Test GPT, Gemini, Grok en meer in één omgeving, leer wanneer je welk model inzet en krijg kant-en-klare workflows voor marketing, sales en operations." />
+    <meta name="keywords" content="AI, GPT, Gemini, Grok, AI-modellen, AI-leeromgeving, AI-workflows, marketing AI, sales AI" />
+    <meta name="author" content="Mathijs.ai" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://mathijs.ai/" />
+    <meta property="og:title" content="Mathijs.ai | De Complete AI-Leeromgeving" />
+    <meta property="og:description" content="Stop met model-chaos. Test GPT, Gemini, Grok en meer in één omgeving, leer wanneer je welk model inzet en krijg kant-en-klare workflows voor marketing, sales en operations." />
+    <meta property="og:image" content="https://mathijs.ai/assets/mathijs-avatar.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://mathijs.ai/" />
+    <meta property="twitter:title" content="Mathijs.ai | De Complete AI-Leeromgeving" />
+    <meta property="twitter:description" content="Stop met model-chaos. Test GPT, Gemini, Grok en meer in één omgeving, leer wanneer je welk model inzet en krijg kant-en-klare workflows voor marketing, sales en operations." />
+    <meta property="twitter:image" content="https://mathijs.ai/assets/mathijs-avatar.png" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/mathijs-avatar.png" />
+    
+    <!-- Preconnect voor performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://nl.trustpilot.com" />
+    
+    <!-- Font loading met font-display swap voor betere performance -->
     <link
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    
+    <!-- Preload kritieke afbeeldingen -->
+    <link rel="preload" as="image" href="assets/mathijs-avatar.png" />
+    
+    <!-- Structured Data voor SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Mathijs.ai",
+      "description": "De Complete AI-Leeromgeving voor bedrijven. Test GPT, Gemini, Grok en meer in één omgeving.",
+      "url": "https://mathijs.ai",
+      "applicationCategory": "BusinessApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "25",
+        "priceCurrency": "EUR",
+        "priceValidUntil": "2025-12-31"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "128"
+      },
+      "provider": {
+        "@type": "Organization",
+        "name": "Mathijs.ai",
+        "url": "https://mathijs.ai"
+      }
+    }
+    </script>
     <style>
       :root {
         color-scheme: light;
@@ -34,6 +90,10 @@
         box-sizing: border-box;
       }
 
+      html {
+        scroll-behavior: smooth;
+      }
+
       body {
         margin: 0;
         background: var(--bg);
@@ -43,6 +103,12 @@
         -webkit-font-smoothing: antialiased;
         position: relative;
         overflow-x: hidden;
+      }
+      
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
       }
 
       body::before {
@@ -77,6 +143,32 @@
         height: auto;
         display: block;
       }
+      
+      img[loading="lazy"] {
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      
+      img[loading="lazy"].loaded {
+        opacity: 1;
+      }
+      
+      /* Skip link voor accessibility */
+      .skip-link {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background: var(--accent);
+        color: #1a1600;
+        padding: 8px 16px;
+        text-decoration: none;
+        z-index: 1000;
+        font-weight: 600;
+      }
+      
+      .skip-link:focus {
+        top: 0;
+      }
 
       .container {
         max-width: 1200px;
@@ -95,6 +187,11 @@
         transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
         border: none;
         cursor: pointer;
+      }
+      
+      .btn:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
       }
 
       .btn.primary {
@@ -173,6 +270,11 @@
         font-weight: 600;
         color: rgba(255, 255, 255, 0.7);
         transition: all 0.2s ease;
+      }
+      
+      .main-nav a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
       }
 
       .main-nav a:hover {
@@ -1151,17 +1253,18 @@
     </style>
   </head>
   <body>
+    <a href="#main-content" class="skip-link">Spring naar hoofdinhoud</a>
     <header class="site-header">
       <div class="header-inner">
-        <a href="index.html" class="brand">
-          <img src="assets/mathijs-avatar.png" alt="Mathijs.ai" class="brand-logo" />
+        <a href="index.html" class="brand" aria-label="Mathijs.ai homepage">
+          <img src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" class="brand-logo" width="40" height="40" />
           <span class="brand-text">MATHIJS<span class="brand-dot">.AI</span></span>
         </a>
-        <nav class="main-nav">
-          <a href="#features">Waarom</a>
-          <a href="#how">Flow</a>
-          <a href="#reviews">Reviews</a>
-          <a href="#pricing">Prijzen</a>
+        <nav class="main-nav" aria-label="Hoofdnavigatie">
+          <a href="#features" aria-label="Ga naar Waarom sectie">Waarom</a>
+          <a href="#how" aria-label="Ga naar Flow sectie">Flow</a>
+          <a href="#reviews" aria-label="Ga naar Reviews sectie">Reviews</a>
+          <a href="#pricing" aria-label="Ga naar Prijzen sectie">Prijzen</a>
         </nav>
         <div class="header-actions">
           <a class="btn secondary" href="signup.html">Registreren</a>
@@ -1170,7 +1273,7 @@
       </div>
     </header>
 
-    <main>
+    <main id="main-content">
       <section class="hero">
         <div class="hero-inner">
           <div class="hero-content">
@@ -1204,7 +1307,7 @@
           <div class="hero-visual">
             <div class="hero-panel">
               <div class="hero-card__header">
-                <img src="assets/mathijs-avatar.png" alt="Mathijs.ai" class="hero-card__avatar" />
+                <img src="assets/mathijs-avatar.png" alt="Mathijs.ai avatar" class="hero-card__avatar" width="46" height="46" loading="lazy" />
                 <div>
                   <p class="hero-card__title">Mathijs.ai</p>
                   <p class="hero-card__subtitle">Jouw AI-coach</p>
@@ -1236,7 +1339,7 @@
               </div>
             </div>
             <div class="trustpilot-widget">
-              <a href="https://nl.trustpilot.com/review/mathijs.ai" target="_blank" rel="noopener" class="trustpilot-link">
+              <a href="https://nl.trustpilot.com/review/mathijs.ai" target="_blank" rel="noopener noreferrer" class="trustpilot-link" aria-label="Bekijk onze Trustpilot reviews (opent in nieuw tabblad)">
                 <div class="trustpilot-score">
                   <span class="trustpilot-rating">4.8</span>
                   <div class="trustpilot-stars">
@@ -1488,7 +1591,7 @@
           <div class="team-media">
             <div class="team-photo">
               <span class="team-photo-badge">Team</span>
-              <img src="assets/team-duo.svg" alt="Twee jongens van het Mathijs.ai team" />
+              <img src="assets/team-duo.svg" alt="Twee jongens van het Mathijs.ai team" loading="lazy" />
             </div>
             <p class="team-caption">Direct contact, korte lijnen en begeleiding die je echt verder helpt.</p>
           </div>
@@ -1512,5 +1615,39 @@
         <p class="footer-copy">© 2024 Mathijs.ai · Alle rechten voorbehouden</p>
       </div>
     </footer>
+    
+    <script>
+      // Lazy loading voor afbeeldingen
+      if ('loading' in HTMLImageElement.prototype) {
+        const images = document.querySelectorAll('img[loading="lazy"]');
+        images.forEach(img => {
+          img.addEventListener('load', function() {
+            this.classList.add('loaded');
+          });
+        });
+      } else {
+        // Fallback voor browsers zonder native lazy loading
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/lazysizes@5/lazysizes.min.js';
+        document.body.appendChild(script);
+      }
+      
+      // Smooth scroll voor anchor links
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          const href = this.getAttribute('href');
+          if (href !== '#' && href !== '') {
+            const target = document.querySelector(href);
+            if (target) {
+              e.preventDefault();
+              target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }
+          }
+        });
+      });
+    </script>
   </body>
 </html>
