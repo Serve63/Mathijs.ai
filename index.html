@@ -156,7 +156,7 @@
       /* Skip link voor accessibility */
       .skip-link {
         position: absolute;
-        top: -40px;
+        top: 0;
         left: 0;
         background: var(--accent);
         color: #1a1600;
@@ -164,10 +164,12 @@
         text-decoration: none;
         z-index: 1000;
         font-weight: 600;
+        transform: translateY(-140%);
+        transition: transform 0.2s ease;
       }
       
       .skip-link:focus {
-        top: 0;
+        transform: translateY(0);
       }
 
       .container {
@@ -1267,12 +1269,6 @@
           <img src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" class="brand-logo" width="40" height="40" />
           <span class="brand-text">MATHIJS<span class="brand-dot">.AI</span></span>
         </a>
-        <nav class="main-nav" aria-label="Hoofdnavigatie">
-          <a href="#features" aria-label="Ga naar Waarom sectie">Waarom</a>
-          <a href="#how" aria-label="Ga naar Flow sectie">Flow</a>
-          <a href="#reviews" aria-label="Ga naar Reviews sectie">Reviews</a>
-          <a href="#pricing" aria-label="Ga naar Prijzen sectie">Prijzen</a>
-        </nav>
         <div class="header-actions">
           <a class="btn secondary" href="signup.html">Registreren</a>
           <a class="btn primary" href="login.html">Inloggen</a>
