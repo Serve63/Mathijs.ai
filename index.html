@@ -855,8 +855,7 @@
 
       /* Team */
       .team-section {
-        padding: 120px 40px 120px 40px;
-        padding-right: 200px;
+        padding: 120px 40px;
         position: relative;
         background: linear-gradient(125deg, var(--hero-1) 0%, var(--hero-2) 48%, var(--hero-3) 100%);
         color: #fff;
@@ -888,13 +887,11 @@
 
       .team-shell {
         display: grid;
-        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
         gap: 72px;
         align-items: center;
         position: relative;
         z-index: 1;
-        max-width: 1400px;
-        margin: 0 auto;
       }
 
       .team-copy {
@@ -977,8 +974,9 @@
         position: relative;
         justify-self: end;
         margin-left: auto;
-        transform: translateX(250px);
-        margin-right: -200px;
+        width: 100%;
+        max-width: 520px;
+        transform: translateX(80px);
       }
 
       .team-photo {
