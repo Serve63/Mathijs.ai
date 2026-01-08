@@ -2606,8 +2606,14 @@
         }
         kept.reverse();
 
-        // Prepend the latest developer/system instruction (if any)
-        const sys = developer.length ? [developer[developer.length - 1]] : [];
+        // Build system message with provider information
+        const provider = getSelectedProvider();
+        const providerName = provider === "gemini" ? "Google Gemini" : provider === "openai" ? "OpenAI" : "een AI-model";
+        const baseSystemMessage = "Je bent een behulpzame AI-assistent in de AI-leeromgeving van Mathijs.ai. Je helpt ondernemers kiezen en toepassen wanneer ze welk model gebruiken.";
+        const providerInfo = `\n\nBelangrijk: Je wordt momenteel uitgevoerd via ${providerName}. Wanneer gebruikers vragen welke tool, API of model er gebruikt wordt, moet je duidelijk aangeven dat je ${providerName} gebruikt.`;
+        
+        const systemMessage = baseSystemMessage + providerInfo;
+        const sys = [{ role: "developer", content: systemMessage }];
         return [...sys, ...kept];
       };
 
