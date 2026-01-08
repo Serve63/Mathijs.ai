@@ -259,6 +259,10 @@ async function geminiGenerateViaRest({ apiKey, model, prompt }) {
       const payload = await resp.json().catch(() => ({}));
       if (!resp.ok) {
         const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+        console.error(`[gemini] API error (${version}, model: ${model}, status: ${resp.status}):`, msg);
+        if (payload?.error) {
+          console.error(`[gemini] Error details:`, JSON.stringify(payload.error, null, 2));
+        }
         const err = new Error(msg);
         err.status = resp.status;
         err.versionTried = version;
@@ -270,6 +274,7 @@ async function geminiGenerateViaRest({ apiKey, model, prompt }) {
 
       return extractGeminiText(payload);
     } catch (e) {
+      console.error(`[gemini] Network/parse error (${version}, model: ${model}):`, e?.message || e);
       lastErr = e;
       continue;
     }
@@ -470,6 +475,13 @@ module.exports = async function handler(req, res) {
           await refundTokensBestEffort();
           return json(res, 500, { error: "Missing GEMINI_API_KEY" });
         }
+        // Validate API key format (should start with AIza)
+        if (!apiKey.startsWith("AIza")) {
+          console.error(`[gemini] Invalid API key format (should start with AIza)`);
+          await refundTokensBestEffort();
+          return json(res, 500, { error: "Invalid GEMINI_API_KEY format. API key should start with 'AIza'" });
+        }
+        console.log(`[gemini] Using model: ${geminiModel}, messages: ${normalizedMessages.length}`);
         const text = await runGeminiChat({ apiKey, model: geminiModel, messages: normalizedMessages });
         return json(res, 200, { text: text || "" });
       }

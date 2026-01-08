@@ -83,6 +83,7 @@ module.exports = async (req, res) => {
       const sessionIdRaw = typeof body?.session_id === "string" ? body.session_id.trim() : "";
       const sessionId = sessionIdRaw || LEGACY_SESSION_ID;
       const messageText = typeof body?.message_text === "string" ? body.message_text : "";
+      const provider = typeof body?.provider === "string" ? body.provider.trim().toLowerCase() : null;
 
       if (role !== "user" && role !== "assistant") return json(res, 400, { error: "Invalid role" });
       if (!messageText || messageText.length > MAX_MESSAGE_CHARS) return json(res, 413, { error: "Message too large" });
@@ -93,6 +94,11 @@ module.exports = async (req, res) => {
         role,
         message_text: messageText,
       };
+      
+      // Add provider if provided and valid
+      if (provider === "gemini" || provider === "openai") {
+        payload.provider = provider;
+      }
 
       await adminRestFetch("messages", { method: "POST", body: payload });
       return json(res, 200, { ok: true });

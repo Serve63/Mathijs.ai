@@ -1670,7 +1670,7 @@
         }
       };
 
-      const insertMessageDirect = async (userId, sessionId, role, content) => {
+      const insertMessageDirect = async (userId, sessionId, role, content, provider = null) => {
         if (!supabaseClient || !userId) return { ok: false };
         const payload = {
           user_id: userId,
@@ -1678,6 +1678,9 @@
           role,
           message_text: content,
         };
+        if (provider === "gemini" || provider === "openai") {
+          payload.provider = provider;
+        }
         try {
           const { error } = await supabaseClient.from("messages").insert(payload);
           if (error) {
@@ -2073,14 +2076,18 @@
 	        setTimeout(() => input.focus(), 50);
 	      };
 
-	      const saveMessageToApi = async (sessionId, role, content) => {
+	      const saveMessageToApi = async (sessionId, role, content, provider = null) => {
+	        const body = { session_id: sessionId, role, message_text: content };
+	        if (provider) {
+	          body.provider = provider;
+	        }
 	        const resp = await apiFetchJson("/api/messages?action=add", {
 	          method: "POST",
-	          body: { session_id: sessionId, role, message_text: content },
+	          body,
 	        });
           if (resp.ok) return resp;
           const userId = currentUser?.id;
-          const direct = await insertMessageDirect(userId, sessionId, role, content);
+          const direct = await insertMessageDirect(userId, sessionId, role, content, provider);
           if (direct.ok) {
             return { ok: true, status: 200, payload: { ok: true, fallback: true } };
           }
@@ -2629,7 +2636,7 @@
         chatInput.focus();
 
 	        try {
-	          const save = await saveMessageToApi(sessionId, "user", value);
+	          const save = await saveMessageToApi(sessionId, "user", value, provider);
 	          if (!save.ok) throw new Error(save?.payload?.error || "Opslaan mislukt");
 	        } catch (error) {
 	          console.error("Gebruikersbericht opslaan mislukt", error);
@@ -2682,7 +2689,7 @@
           const finalContent = (payload?.text || "").trim() || "Ik heb even geen antwoord. Probeer het later nog eens.";
           appendMessage(finalContent, "assistant");
 
-          const assistantSave = await saveMessageToApi(sessionId, "assistant", finalContent);
+          const assistantSave = await saveMessageToApi(sessionId, "assistant", finalContent, provider);
           if (!assistantSave.ok) {
             console.error("AI-antwoord opslaan mislukt", assistantSave?.payload?.error || assistantSave);
           }
