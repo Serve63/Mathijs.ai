@@ -1392,10 +1392,20 @@
 
           // Logout
           const logoutBtn = document.getElementById("staff-logout-btn");
-          logoutBtn?.addEventListener("click", async () => {
-            await supabase.auth.signOut();
-            window.location.href = "index.html";
-          });
+          if (logoutBtn) {
+            logoutBtn.addEventListener("click", async (e) => {
+              e.preventDefault();
+              try {
+                logoutBtn.disabled = true;
+                logoutBtn.textContent = "Uitloggen...";
+                await supabase.auth.signOut();
+              } catch (err) {
+                console.error("Logout error:", err);
+              } finally {
+                window.location.href = "index.html";
+              }
+            });
+          }
 
           const apiRefreshBtn = document.getElementById("api-refresh-btn");
           const loadApiUsage = async () => {
@@ -1818,6 +1828,30 @@
         };
 
         document.addEventListener("DOMContentLoaded", init);
+        
+        // Fallback logout handler (werkt altijd, ook als init faalt)
+        document.addEventListener("DOMContentLoaded", () => {
+          const logoutBtn = document.getElementById("staff-logout-btn");
+          if (logoutBtn && !logoutBtn.hasAttribute("data-listener-added")) {
+            logoutBtn.setAttribute("data-listener-added", "true");
+            logoutBtn.addEventListener("click", async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              try {
+                logoutBtn.disabled = true;
+                logoutBtn.textContent = "Uitloggen...";
+                if (window.supabase?.createClient) {
+                  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                  await supabase.auth.signOut();
+                }
+              } catch (err) {
+                console.error("Logout error:", err);
+              } finally {
+                window.location.href = "index.html";
+              }
+            });
+          }
+        });
       })();
     </script>
   </body>
