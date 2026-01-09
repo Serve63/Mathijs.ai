@@ -1128,14 +1128,18 @@
         font-size: 0.85rem;
       }
 
-      .footer-brand .footer-links {
+      .footer-disclaimer {
         margin-top: 14px;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        line-height: 1.5;
+        max-width: 500px;
       }
 
       .footer-links {
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
+        align-items: flex-end;
         gap: 10px;
       }
 
@@ -1293,6 +1297,15 @@
 
         .site-footer {
           padding: 40px 20px;
+        }
+
+        .footer-inner {
+          flex-direction: column;
+        }
+
+        .footer-links {
+          align-items: flex-start;
+          margin-top: 20px;
         }
       }
     </style>
@@ -1673,12 +1686,13 @@
         <div class="footer-brand">
           <p class="brand-text">MATHIJS<span class="brand-dot">.AI</span></p>
           <p>Leren met AI, maar dan menselijk.</p>
-          <div class="footer-links" aria-label="Footer links">
-            <a href="course.html">Cursus</a>
-            <a href="chat.html">Chat</a>
-            <a href="login.html">Account</a>
-            <a href="staff-login.html">Personeel</a>
-          </div>
+          <p class="footer-disclaimer">Mathijs.ai is een onafhankelijk platform. Merknamen en logo's zijn eigendom van hun eigenaren en betekenen geen affiliatie of goedkeuring. AI-output kan fouten bevatten; check belangrijke beslissingen altijd.</p>
+        </div>
+        <div class="footer-links" aria-label="Footer links">
+          <a href="course.html">Cursus</a>
+          <a href="chat.html">Chat</a>
+          <a href="login.html">Account</a>
+          <a href="staff-login.html">Personeel</a>
         </div>
         <p class="footer-copy">© 2024 Mathijs.ai · Alle rechten voorbehouden</p>
       </div>
