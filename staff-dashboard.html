@@ -880,7 +880,7 @@
   <body>
     <header class="topbar">
       <div class="topbar-inner">
-        <button class="btn primary" id="staff-logout-btn" type="button">Uitloggen</button>
+        <button class="btn primary" id="staff-logout-btn" type="button" onclick="window.location.href='index.html'; return false;">Uitloggen</button>
       </div>
     </header>
 
@@ -1826,20 +1826,33 @@
         document.addEventListener("DOMContentLoaded", init);
         
         // Fallback logout handler (werkt altijd, ook als init faalt)
-        document.addEventListener("DOMContentLoaded", () => {
+        const setupLogout = () => {
           const logoutBtn = document.getElementById("staff-logout-btn");
-          if (logoutBtn && !logoutBtn.hasAttribute("data-listener-added")) {
-            logoutBtn.setAttribute("data-listener-added", "true");
-            logoutBtn.addEventListener("click", (e) => {
+          if (logoutBtn) {
+            // Verwijder alle bestaande listeners en voeg nieuwe toe
+            const newBtn = logoutBtn.cloneNode(true);
+            logoutBtn.parentNode.replaceChild(newBtn, logoutBtn);
+            
+            newBtn.addEventListener("click", (e) => {
               e.preventDefault();
               e.stopPropagation();
-              logoutBtn.disabled = true;
-              logoutBtn.textContent = "Uitloggen...";
+              newBtn.disabled = true;
+              newBtn.textContent = "Uitloggen...";
               // Direct redirect naar homepage
               window.location.href = "index.html";
             });
           }
-        });
+        };
+        
+        // Probeer meerdere keren om zeker te zijn dat het werkt
+        document.addEventListener("DOMContentLoaded", setupLogout);
+        window.addEventListener("load", setupLogout);
+        // Direct proberen als DOM al geladen is
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", setupLogout);
+        } else {
+          setupLogout();
+        }
       })();
     </script>
   </body>
