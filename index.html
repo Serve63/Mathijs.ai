@@ -853,6 +853,17 @@
         text-align: left;
       }
 
+      .pricing-features-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 22px;
+        margin: 28px 0 0;
+      }
+
+      .pricing-features-grid .pricing-features {
+        margin: 0;
+      }
+
       .pricing-features li {
         display: flex;
         gap: 10px;
@@ -871,6 +882,13 @@
       .pricing-cta {
         margin-top: 28px;
         width: 100%;
+      }
+
+      @media (min-width: 860px) {
+        .pricing-features-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 26px;
+        }
       }
 
       /* Team */
@@ -1474,30 +1492,6 @@
           <div class="testimonials-grid">
             <article class="testimonial-card">
               <p>
-                "Mathijs.ai heeft ons team uren per week bespaard. We weten nu exact welk model we moeten gebruiken voor elke taak."
-              </p>
-              <div class="testimonial-author">
-                <div class="testimonial-avatar">S</div>
-                <div>
-                  <p class="testimonial-name">Sara, Marketing Lead</p>
-                  <p class="testimonial-role">Scale-up Amsterdam</p>
-                </div>
-              </div>
-            </article>
-            <article class="testimonial-card">
-              <p>
-                "De kant-en-klare workflows zijn goud waard. Ik gebruik ze dagelijks voor content creatie en klantcommunicatie."
-              </p>
-              <div class="testimonial-author">
-                <div class="testimonial-avatar">Y</div>
-                <div>
-                  <p class="testimonial-name">Youssef, Founder</p>
-                  <p class="testimonial-role">Digital Agency</p>
-                </div>
-              </div>
-            </article>
-            <article class="testimonial-card">
-              <p>
                 "Eindelijk een plek waar ik alle AI-modellen kan vergelijken zonder 10 verschillende tools te openen."
               </p>
               <div class="testimonial-author">
@@ -1553,38 +1547,72 @@
                 <div class="pricing-amount">€25</div>
                 <div class="pricing-period">per maand</div>
               </div>
-              <ul class="pricing-features">
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Toegang tot alle AI-modellen (GPT, Gemini, Grok, etc.)</span>
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Kant-en-klare workflows voor marketing, sales & operations</span>
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>50+ video lessen en workshops</span>
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Onbeperkt chatten en vergelijken</span>
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Model-advies per use case</span>
-                </li>
-              </ul>
+              <div class="pricing-features-grid">
+                <ul class="pricing-features">
+                  <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Toegang tot alle AI-modellen (GPT, Gemini, Grok, etc.)</span>
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Kant-en-klare workflows voor marketing, sales & operations</span>
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>50+ video lessen en workshops</span>
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Onbeperkt chatten en vergelijken</span>
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Model-advies per use case</span>
+                  </li>
+                </ul>
+                <ul class="pricing-features">
+                  <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Prompts opslaan als sjabloon</span>
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Promptbibliotheek met voorbeelden</span>
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Richtlijnen per model (do’s & don’ts)</span>
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Workflows hergebruiken per project</span>
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Continu nieuwe modellen & updates</span>
+                  </li>
+                </ul>
+              </div>
               <a href="subscribe.html" class="btn primary pricing-cta">Start Nu</a>
             </article>
           </div>
