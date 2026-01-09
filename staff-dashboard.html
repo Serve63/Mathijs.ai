@@ -1393,17 +1393,13 @@
           // Logout
           const logoutBtn = document.getElementById("staff-logout-btn");
           if (logoutBtn) {
-            logoutBtn.addEventListener("click", async (e) => {
+            logoutBtn.addEventListener("click", (e) => {
               e.preventDefault();
-              try {
-                logoutBtn.disabled = true;
-                logoutBtn.textContent = "Uitloggen...";
-                await supabase.auth.signOut();
-              } catch (err) {
-                console.error("Logout error:", err);
-              } finally {
-                window.location.href = "index.html";
-              }
+              e.stopPropagation();
+              logoutBtn.disabled = true;
+              logoutBtn.textContent = "Uitloggen...";
+              // Direct redirect naar homepage
+              window.location.href = "index.html";
             });
           }
 
@@ -1834,21 +1830,13 @@
           const logoutBtn = document.getElementById("staff-logout-btn");
           if (logoutBtn && !logoutBtn.hasAttribute("data-listener-added")) {
             logoutBtn.setAttribute("data-listener-added", "true");
-            logoutBtn.addEventListener("click", async (e) => {
+            logoutBtn.addEventListener("click", (e) => {
               e.preventDefault();
               e.stopPropagation();
-              try {
-                logoutBtn.disabled = true;
-                logoutBtn.textContent = "Uitloggen...";
-                if (window.supabase?.createClient) {
-                  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                  await supabase.auth.signOut();
-                }
-              } catch (err) {
-                console.error("Logout error:", err);
-              } finally {
-                window.location.href = "index.html";
-              }
+              logoutBtn.disabled = true;
+              logoutBtn.textContent = "Uitloggen...";
+              // Direct redirect naar homepage
+              window.location.href = "index.html";
             });
           }
         });
