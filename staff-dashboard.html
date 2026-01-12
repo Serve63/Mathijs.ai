@@ -7,32 +7,29 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
       :root {
-        color-scheme: dark;
-        --bg: #070c0b;
-        --bg-alt: #0b1412;
-        --ink: rgba(225, 250, 242, 0.92);
-        --muted: rgba(225, 250, 242, 0.58);
-        --accent: #3ef4c9;
-        --accent-strong: #21caa4;
-        --accent-cool: #0f2f28;
-        --accent-sun: #ffb020;
-        --danger: #ff5b4d;
-        --dark: #050908;
-        --card: rgba(11, 20, 18, 0.88);
-        --card-2: rgba(9, 16, 14, 0.72);
-        --border: rgba(62, 244, 201, 0.16);
-        --border-soft: rgba(255, 255, 255, 0.06);
-        --shadow: 0 30px 70px -55px rgba(0, 0, 0, 0.95);
-        --hero-1: #050908;
-        --hero-2: #060b0a;
-        --hero-3: #070c0b;
-        --map-land: rgba(62, 244, 201, 0.12);
-        --map-water: rgba(62, 244, 201, 0.06);
+        color-scheme: light;
+        --bg: #fafafa;
+        --bg-alt: #f3f4f9;
+        --ink: #1a1a1f;
+        --muted: #6b6b76;
+        --accent: #e6c200;
+        --accent-strong: #c9a900;
+        --accent-cool: #16213e;
+        --accent-sun: #e6c200;
+        --dark: #1a1a2e;
+        --card: #ffffff;
+        --border: rgba(0, 0, 0, 0.08);
+        --shadow: 0 24px 60px -30px rgba(15, 52, 96, 0.45);
+        --hero-1: #1a1a2e;
+        --hero-2: #16213e;
+        --hero-3: #0f3460;
+        --map-land: #eef1f6;
+        --map-water: #dde6f2;
         --topbar-height: 72px;
       }
 
@@ -51,9 +48,7 @@
         height: 100%;
         font-family: "Manrope", "Segoe UI", sans-serif;
         color: var(--ink);
-        background: radial-gradient(900px 560px at 18% 18%, rgba(62, 244, 201, 0.10) 0%, transparent 55%),
-          radial-gradient(900px 560px at 78% 20%, rgba(255, 91, 77, 0.08) 0%, transparent 60%),
-          linear-gradient(180deg, var(--hero-1) 0%, var(--hero-2) 55%, var(--hero-3) 100%);
+        background: var(--bg);
         line-height: 1.6;
         -webkit-font-smoothing: antialiased;
         position: relative;
@@ -65,9 +60,9 @@
         position: fixed;
         inset: 0;
         background:
-          radial-gradient(circle at 20% 20%, rgba(62, 244, 201, 0.14), transparent 46%),
-          radial-gradient(circle at 70% 25%, rgba(62, 244, 201, 0.10), transparent 52%),
-          radial-gradient(circle at 55% 80%, rgba(255, 176, 32, 0.08), transparent 58%);
+          radial-gradient(circle at 15% 15%, rgba(230, 194, 0, 0.18), transparent 45%),
+          radial-gradient(circle at 85% 20%, rgba(15, 52, 96, 0.18), transparent 50%),
+          radial-gradient(circle at 50% 85%, rgba(230, 194, 0, 0.14), transparent 55%);
         pointer-events: none;
         z-index: -2;
       }
@@ -76,15 +71,10 @@
         content: "";
         position: fixed;
         inset: 0;
-        background:
-          linear-gradient(rgba(62, 244, 201, 0.05) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(62, 244, 201, 0.05) 1px, transparent 1px),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 12%, rgba(255, 255, 255, 0.02) 24%, transparent 36%, rgba(255, 255, 255, 0.02) 48%, transparent 60%, rgba(255, 255, 255, 0.02) 72%, transparent 84%, rgba(255, 255, 255, 0.02) 96%);
-        background-size: 56px 56px, 56px 56px, 100% 140px;
-        background-position: center, center, 0 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23222222' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         pointer-events: none;
         z-index: -1;
-        opacity: 0.45;
+        opacity: 1;
       }
 
       a {
@@ -101,24 +91,12 @@
         font-family: "Sora", sans-serif;
       }
 
-      /* HUD mono */
-      .summary-label,
-      .brand-sub,
-      .time-chip,
-      .legend-label,
-      .legend-metric,
-      .map-hint,
-      .province-status {
-        font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        letter-spacing: 0.14em;
-      }
-
       .topbar {
         position: sticky;
         top: 0;
         z-index: 100;
         padding: 0;
-        background: rgba(5, 9, 8, 0.86);
+        background: var(--dark);
         backdrop-filter: blur(32px) saturate(200%);
         -webkit-backdrop-filter: blur(32px) saturate(200%);
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -182,7 +160,7 @@
         width: 38px;
         height: 38px;
         border-radius: 14px;
-        border: 1.5px solid rgba(62, 244, 201, 0.38);
+        border: 2px solid rgba(230, 194, 0, 0.4);
         background: url("assets/mathijs-avatar.png") center/cover no-repeat;
         box-shadow:
           0 0 0 1px rgba(230, 194, 0, 0.15),
@@ -224,7 +202,7 @@
         height: 10px;
         border-radius: 50%;
         background: var(--accent);
-        box-shadow: 0 0 0 6px rgba(62, 244, 201, 0.16);
+        box-shadow: 0 0 0 6px rgba(230, 194, 0, 0.2);
         animation: pulse 2.4s ease-in-out infinite;
       }
 
@@ -256,8 +234,8 @@
       }
 
       .btn.primary {
-        background: linear-gradient(135deg, rgba(62, 244, 201, 0.95) 0%, rgba(33, 202, 164, 0.95) 100%);
-        color: #04110e;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+        color: #1a1600;
         box-shadow:
           0 0 0 1px rgba(230, 194, 0, 0.3),
           0 4px 16px rgba(230, 194, 0, 0.3),
@@ -282,9 +260,9 @@
       }
 
       .btn.secondary {
-        background: rgba(11, 20, 18, 0.65);
-        color: var(--ink);
-        border: 1px solid rgba(62, 244, 201, 0.14);
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border: 1.5px solid rgba(255, 255, 255, 0.2);
         backdrop-filter: blur(12px) saturate(180%);
         -webkit-backdrop-filter: blur(12px) saturate(180%);
         box-shadow:
@@ -353,11 +331,11 @@
       }
 
       .summary-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 16px;
         padding: 12px 12px;
-        box-shadow: var(--shadow);
+        box-shadow: 0 18px 45px -38px rgba(0, 0, 0, 0.45);
         display: flex;
         flex-direction: column;
         gap: 4px;
@@ -373,14 +351,14 @@
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, rgba(62, 244, 201, 0.10) 0%, transparent 35%, rgba(255, 255, 255, 0.03) 100%);
-        opacity: 0.35;
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0.6) 0%, transparent 55%);
+        opacity: 0.6;
         pointer-events: none;
       }
 
       .summary-card.highlight {
-        background: linear-gradient(135deg, rgba(255, 91, 77, 0.18) 0%, rgba(62, 244, 201, 0.10) 100%);
-        border-color: rgba(255, 91, 77, 0.35);
+        background: linear-gradient(135deg, rgba(230, 194, 0, 0.22) 0%, rgba(15, 52, 96, 0.12) 100%);
+        border-color: rgba(230, 194, 0, 0.4);
       }
 
       .summary-label {
@@ -419,10 +397,10 @@
       }
 
       .card {
-        background: var(--card);
+        background: linear-gradient(180deg, #ffffff 0%, #f7f8fb 100%);
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 14px;
+        border-radius: 20px;
+        padding: 16px;
         box-shadow: var(--shadow);
         position: relative;
         overflow: hidden;
@@ -476,7 +454,7 @@
       .segmented {
         display: inline-flex;
         gap: 4px;
-        background: rgba(62, 244, 201, 0.06); border: 1px solid rgba(62, 244, 201, 0.12);
+        background: rgba(0, 0, 0, 0.05);
         padding: 4px;
         border-radius: 999px;
       }
@@ -499,16 +477,16 @@
       }
 
       .segmented-btn.active {
-        background: rgba(62, 244, 201, 0.10);
+        background: #fff;
         color: var(--ink);
         box-shadow: 0 10px 20px -16px rgba(15, 52, 96, 0.45);
       }
 
       .map-shell {
         position: relative;
-        border-radius: 14px;
-        background: var(--card-2);
-        border: 1px solid rgba(62, 244, 201, 0.14);
+        border-radius: 22px;
+        background: linear-gradient(135deg, #ffffff 0%, var(--bg-alt) 60%, #eef3fb 100%);
+        border: 1px solid var(--border);
         padding: 14px;
         min-height: 280px;
         height: 100%;
@@ -523,12 +501,10 @@
         position: absolute;
         inset: 0;
         background:
-          linear-gradient(rgba(62, 244, 201, 0.06) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(62, 244, 201, 0.06) 1px, transparent 1px),
-          radial-gradient(circle at 20% 30%, rgba(62, 244, 201, 0.10) 0%, transparent 55%),
-          radial-gradient(circle at 90% 60%, rgba(255, 91, 77, 0.08) 0%, transparent 60%);
-        background-size: 48px 48px, 48px 48px, auto, auto;
-        opacity: 0.55;
+          repeating-linear-gradient(120deg, rgba(15, 52, 96, 0.05) 0 2px, transparent 2px 14px),
+          radial-gradient(circle at 15% 35%, rgba(255, 255, 255, 0.6) 0%, transparent 55%),
+          radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.5) 0%, transparent 65%);
+        opacity: 0.5;
         pointer-events: none;
         z-index: 0;
       }
@@ -536,7 +512,7 @@
       .map-scan {
         position: absolute;
         inset: -40% 0 0 0;
-        background: linear-gradient(180deg, transparent 0%, rgba(62, 244, 201, 0.14) 50%, transparent 100%);
+        background: linear-gradient(180deg, transparent 0%, rgba(230, 194, 0, 0.15) 50%, transparent 100%);
         animation: scan 8s linear infinite;
         pointer-events: none;
         z-index: 2;
@@ -555,22 +531,21 @@
       }
 
       .province path {
-        fill: rgba(62, 244, 201, 0.10);
-        stroke: rgba(62, 244, 201, 0.22);
+        fill: #e7ecf8;
+        stroke: rgba(15, 52, 96, 0.35);
         stroke-width: 1.1;
         transition: fill 0.25s ease, stroke 0.25s ease, filter 0.25s ease;
       }
 
       .province:hover path {
-        stroke: rgba(62, 244, 201, 0.95);
-        filter: drop-shadow(0 12px 18px rgba(62, 244, 201, 0.18));
+        stroke: var(--accent);
+        filter: drop-shadow(0 10px 16px rgba(15, 52, 96, 0.2));
       }
 
       .province.selected path {
-        fill: rgba(255, 91, 77, 0.18);
-        stroke: rgba(255, 91, 77, 0.85);
+        stroke: var(--accent);
         stroke-width: 2;
-        filter: drop-shadow(0 14px 22px rgba(255, 91, 77, 0.22));
+        filter: drop-shadow(0 12px 20px rgba(230, 194, 0, 0.35));
       }
 
       .province[tabindex="0"]:focus-visible path {
@@ -581,10 +556,10 @@
       .map-tooltip {
         position: absolute;
         padding: 10px 12px;
-        background: rgba(7, 12, 11, 0.92);
+        background: #fff;
         border: 1px solid var(--border);
         border-radius: 12px;
-        box-shadow: 0 20px 50px -40px rgba(0, 0, 0, 0.9);
+        box-shadow: 0 18px 40px -20px rgba(15, 52, 96, 0.45);
         font-size: 0.85rem;
         color: var(--ink);
         opacity: 0;
@@ -612,7 +587,7 @@
         font-size: 0.74rem;
         color: var(--muted);
         z-index: 3;
-        background: rgba(7, 12, 11, 0.75);
+        background: rgba(255, 255, 255, 0.9);
         padding: 4px 8px;
         border-radius: 999px;
         border: 1px solid var(--border);
@@ -638,7 +613,7 @@
         flex: 1;
         height: 10px;
         border-radius: 999px;
-        background: linear-gradient(90deg, rgba(62, 244, 201, 0.15) 0%, rgba(62, 244, 201, 0.9) 55%, rgba(255, 91, 77, 0.85) 100%);
+        background: linear-gradient(90deg, #e7ecf8 0%, var(--accent) 55%, var(--accent-strong) 100%);
         border: 1px solid var(--border);
       }
 
