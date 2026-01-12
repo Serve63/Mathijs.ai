@@ -963,7 +963,7 @@
       <section class="hero">
         <div class="hero-text">
           <h1>Nederland Live Map</h1>
-          <p>Live overzicht van winkelwagens, checkouts en omzet per provincie in Nederland.</p>
+          <p>Live overzicht van winkelwagens, omzet en abonnees per provincie in Nederland.</p>
         </div>
         <div class="hero-actions">
           <button class="btn primary" id="sync-btn" type="button">Sync nu</button>
@@ -1003,10 +1003,11 @@
           <div class="card-head">
             <div>
               <h2>Nederland per provincie</h2>
-              <p>Realtime omzet, orders en conversie per provincie.</p>
+              <p>Realtime omzet, orders, conversie en abonnees per provincie.</p>
             </div>
             <div class="segmented" id="metric-toggle">
-              <button class="segmented-btn active" data-mode="revenue" type="button">Omzet</button>
+              <button class="segmented-btn active" data-mode="subscribers" type="button">Abonnees</button>
+              <button class="segmented-btn" data-mode="revenue" type="button">Omzet</button>
               <button class="segmented-btn" data-mode="orders" type="button">Orders</button>
               <button class="segmented-btn" data-mode="carts" type="button">Winkelwagens</button>
               <button class="segmented-btn" data-mode="conversion" type="button">Conversie</button>
@@ -1173,10 +1174,17 @@
         };
 
         const modeLabels = {
+          subscribers: "Abonnees",
           revenue: "Omzet",
           orders: "Orders",
           carts: "Winkelwagens",
           conversion: "Conversie",
+        };
+
+        const subscriberPalette = {
+          low: "#ef4444",
+          mid: "#f97316",
+          high: "#22c55e",
         };
 
         const provinceSeed = [
@@ -1189,6 +1197,7 @@
             orders: 1620,
             checkouts: 2450,
             carts: 3200,
+            subscribers: 9800,
             trend: [58, 62, 67, 71, 76, 82, 88, 90, 87, 92, 95, 93],
           },
           {
@@ -1200,6 +1209,7 @@
             orders: 1480,
             checkouts: 2300,
             carts: 3000,
+            subscribers: 9200,
             trend: [54, 59, 63, 68, 72, 78, 84, 86, 83, 88, 92, 96],
           },
           {
@@ -1211,6 +1221,7 @@
             orders: 1180,
             checkouts: 1780,
             carts: 2400,
+            subscribers: 6800,
             trend: [46, 50, 54, 58, 63, 69, 75, 79, 77, 81, 84, 88],
           },
           {
@@ -1222,6 +1233,7 @@
             orders: 820,
             checkouts: 1240,
             carts: 1650,
+            subscribers: 4800,
             trend: [41, 45, 49, 53, 57, 62, 66, 70, 68, 71, 74, 76],
           },
           {
@@ -1233,6 +1245,7 @@
             orders: 760,
             checkouts: 1180,
             carts: 1500,
+            subscribers: 4500,
             trend: [38, 42, 45, 49, 53, 57, 61, 64, 62, 64, 67, 69],
           },
           {
@@ -1244,6 +1257,7 @@
             orders: 610,
             checkouts: 920,
             carts: 1200,
+            subscribers: 3600,
             trend: [35, 39, 43, 47, 51, 55, 59, 63, 61, 64, 66, 68],
           },
           {
@@ -1255,6 +1269,7 @@
             orders: 520,
             checkouts: 780,
             carts: 980,
+            subscribers: 3000,
             trend: [33, 36, 39, 43, 47, 51, 55, 58, 56, 59, 61, 63],
           },
           {
@@ -1266,6 +1281,7 @@
             orders: 480,
             checkouts: 720,
             carts: 940,
+            subscribers: 2500,
             trend: [30, 33, 36, 40, 43, 47, 51, 53, 52, 55, 57, 59],
           },
           {
@@ -1277,6 +1293,7 @@
             orders: 460,
             checkouts: 680,
             carts: 880,
+            subscribers: 2200,
             trend: [28, 31, 34, 38, 41, 45, 48, 50, 49, 52, 54, 56],
           },
           {
@@ -1288,6 +1305,7 @@
             orders: 420,
             checkouts: 620,
             carts: 800,
+            subscribers: 2000,
             trend: [29, 32, 35, 38, 41, 44, 47, 49, 48, 50, 52, 54],
           },
           {
@@ -1299,6 +1317,7 @@
             orders: 390,
             checkouts: 590,
             carts: 760,
+            subscribers: 1700,
             trend: [26, 29, 32, 35, 38, 41, 44, 46, 45, 47, 49, 51],
           },
           {
@@ -1310,6 +1329,7 @@
             orders: 320,
             checkouts: 480,
             carts: 620,
+            subscribers: 1400,
             trend: [24, 27, 30, 33, 36, 39, 41, 43, 42, 45, 47, 49],
           },
         ].map((province) => ({
@@ -1318,13 +1338,14 @@
           prevOrders: province.orders,
           prevCheckouts: province.checkouts,
           prevCarts: province.carts,
+          prevSubscribers: province.subscribers,
         }));
 
         const state = {
           provinces: provinceSeed,
           events: [],
           selectedId: provinceSeed[0].id,
-          mode: "revenue",
+          mode: "subscribers",
           timer: null,
           simulation: true,
           theme: {
@@ -1396,6 +1417,7 @@
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
         const metricValue = (province) => {
+          if (state.mode === "subscribers") return province.subscribers;
           if (state.mode === "revenue") return province.revenue;
           if (state.mode === "orders") return province.orders;
           if (state.mode === "conversion") return province.carts ? province.orders / province.carts : 0;
@@ -1403,6 +1425,7 @@
         };
 
         const metricPrevValue = (province) => {
+          if (state.mode === "subscribers") return province.prevSubscribers;
           if (state.mode === "revenue") return province.prevRevenue;
           if (state.mode === "orders") return province.prevOrders;
           if (state.mode === "conversion") return province.prevCarts ? province.prevOrders / province.prevCarts : 0;
@@ -1410,12 +1433,14 @@
         };
 
         const formatMetric = (value) => {
+          if (state.mode === "subscribers") return formatShort(value);
           if (state.mode === "revenue") return formatEurCompact(value);
           if (state.mode === "conversion") return formatPercent(value);
           return formatShort(value);
         };
 
         const formatMetricDelta = (value) => {
+          if (state.mode === "subscribers") return formatShort(value);
           if (state.mode === "revenue") return formatEurCompact(value);
           if (state.mode === "conversion") return formatPercent(value);
           return formatShort(value);
@@ -1462,6 +1487,15 @@
           return lerpColor(state.theme.accent, state.theme.accentStrong, (t - 0.5) * 2);
         };
 
+        const subscriberColor = (value, min, max) => {
+          const span = max - min || 1;
+          const lowCut = min + span / 3;
+          const midCut = min + (span * 2) / 3;
+          if (value <= lowCut) return subscriberPalette.low;
+          if (value <= midCut) return subscriberPalette.mid;
+          return subscriberPalette.high;
+        };
+
         const getProvince = (id) => state.provinces.find((province) => province.id === id);
 
         const renderMap = () => {
@@ -1469,13 +1503,20 @@
           const values = state.provinces.map((province) => metricValue(province));
           const min = Math.min(...values);
           const max = Math.max(...values);
+          const isSubscriberMode = state.mode === "subscribers";
+          const legendBar = document.querySelector(".legend-bar");
+          if (legendBar) {
+            legendBar.style.background = isSubscriberMode
+              ? `linear-gradient(90deg, ${subscriberPalette.low} 0%, ${subscriberPalette.mid} 50%, ${subscriberPalette.high} 100%)`
+              : `linear-gradient(90deg, ${state.theme.light} 0%, ${state.theme.accent} 55%, ${state.theme.accentStrong} 100%)`;
+          }
 
           document.querySelectorAll(".province").forEach((node) => {
             const provinceId = node.dataset.province;
             const province = getProvince(provinceId);
             if (!province) return;
             const value = metricValue(province);
-            const color = colorFromValue(value, min, max);
+            const color = isSubscriberMode ? subscriberColor(value, min, max) : colorFromValue(value, min, max);
             const path = node.querySelector("path");
             if (path) path.setAttribute("fill", color);
             node.classList.toggle("selected", provinceId === state.selectedId);
@@ -1659,6 +1700,7 @@
             province.prevCheckouts = province.checkouts;
             province.prevOrders = province.orders;
             province.prevRevenue = province.revenue;
+            province.prevSubscribers = province.subscribers;
 
             const nextCarts = Math.max(0, province.carts + cartDelta);
             const nextCheckouts = Math.max(0, province.checkouts + checkoutDelta);
@@ -1673,6 +1715,9 @@
             if (Math.random() > 0.25) {
               province.revenue = Math.max(0, province.revenue + revenueDelta);
             }
+
+            const subscriberDelta = randomBetween(-6, 20);
+            province.subscribers = Math.max(0, province.subscribers + subscriberDelta);
 
             const lastTrend = province.trend[province.trend.length - 1] || 50;
             const trendDelta = randomBetween(-3, 4) + Math.sign(revenueDelta);
