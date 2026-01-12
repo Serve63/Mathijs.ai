@@ -10,6 +10,12 @@
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
     <style>
       :root {
         color-scheme: dark;
@@ -183,53 +189,128 @@
         border-color: rgba(255, 255, 255, 0.2);
       }
 
-      /* Center map */
-      .stage {
-        min-height: calc(100vh - 72px);
-        display: grid;
-        place-items: center;
-        padding: 28px 20px 40px;
+      /* Live View layout */
+      .live-shell {
+        width: min(1400px, 100%);
+        margin: 0 auto;
+        padding: 18px 20px 28px;
       }
 
-      .map-frame {
-        width: min(980px, calc(100% - 24px));
-        aspect-ratio: 743 / 881;
-        border-radius: 22px;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        backdrop-filter: blur(18px) saturate(150%);
-        -webkit-backdrop-filter: blur(18px) saturate(150%);
-        box-shadow:
-          0 24px 70px -50px rgba(0, 0, 0, 0.75),
-          0 1px 0 rgba(255, 255, 255, 0.06) inset;
+      .kpi-strip {
+        background: rgba(12, 18, 44, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px 14px 0 0;
+        box-shadow: 0 24px 70px -55px rgba(0, 0, 0, 0.75);
+        display: grid;
+        grid-template-columns: 1.1fr 1fr 1fr 1.2fr;
         overflow: hidden;
+      }
+
+      .kpi {
+        padding: 16px 18px;
+        border-right: 1px solid rgba(255, 255, 255, 0.10);
         position: relative;
       }
+      .kpi:last-child { border-right: none; }
 
-      .map-frame::before {
-        content: "";
+      .kpi-label {
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.72);
+        font-weight: 700;
+      }
+
+      .kpi-value {
+        font-family: "Sora", sans-serif;
+        font-size: 2.1rem;
+        line-height: 1.1;
+        margin-top: 6px;
+        color: #fff;
+      }
+
+      .kpi-sub {
+        margin-top: 2px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.75);
+      }
+
+      .spark {
         position: absolute;
-        inset: 0;
-        background:
-          radial-gradient(circle at 25% 20%, rgba(230, 194, 0, 0.10), transparent 50%),
-          radial-gradient(circle at 85% 80%, rgba(15, 52, 96, 0.16), transparent 55%);
-        pointer-events: none;
+        right: 16px;
+        top: 18px;
+        width: 56px;
+        height: 22px;
         opacity: 0.9;
       }
 
-      .nl-map-img {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        padding: 18px;
-        filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.28));
+      .map-panel {
+        border-radius: 0 0 14px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-top: none;
+        overflow: hidden;
+        background: rgba(12, 18, 44, 0.55);
+        position: relative;
       }
+
+      #world-map {
+        height: min(560px, calc(100vh - 220px));
+        width: 100%;
+      }
+
+      .legend {
+        position: absolute;
+        left: 16px;
+        top: 16px;
+        z-index: 500;
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+        padding: 8px 10px;
+        border-radius: 999px;
+        background: rgba(10, 14, 26, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.85rem;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .dot.visitor { background: rgba(84, 162, 255, 0.95); box-shadow: 0 0 0 6px rgba(84, 162, 255, 0.18); }
+      .dot.sale { background: rgba(230, 194, 0, 0.95); box-shadow: 0 0 0 6px rgba(230, 194, 0, 0.16); }
+
+      /* Leaflet theming */
+      .leaflet-container {
+        background: #0d1b4a;
+        font-family: "Manrope", "Segoe UI", sans-serif;
+      }
+      .leaflet-control-zoom a {
+        background: rgba(255, 255, 255, 0.92);
+        color: #0b1020;
+        border: none;
+      }
+      .leaflet-control-zoom a:hover { background: #fff; }
+      .leaflet-control-zoom {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 18px 45px -38px rgba(0, 0, 0, 0.65);
+      }
+      .leaflet-control-attribution { display: none; }
 
       @media (max-width: 980px) {
         .header-inner {
           padding: 14px 18px;
+        }
+        .kpi-strip {
+          grid-template-columns: 1fr 1fr;
+        }
+        #world-map {
+          height: min(540px, calc(100vh - 260px));
         }
       }
     </style>
@@ -246,10 +327,167 @@
         </div>
       </div>
     </header>
-    <main class="stage" aria-label="Kaart">
-      <div class="map-frame">
-        <img class="nl-map-img" src="assets/nl-map.svg" alt="Kaart van Nederland" />
-      </div>
+    <main class="live-shell" aria-label="Live View">
+      <section class="kpi-strip" aria-label="Kernstatistieken">
+        <div class="kpi">
+          <div class="kpi-label">Visitors right now</div>
+          <div class="kpi-value" id="kpi-visitors">27</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Today's totals</div>
+          <div class="kpi-value" id="kpi-visits">891</div>
+          <div class="kpi-sub">Visits</div>
+          <svg class="spark" viewBox="0 0 56 22" aria-hidden="true">
+            <polyline points="0,18 10,16 20,17 30,10 40,12 56,6" fill="none" stroke="rgba(84,162,255,0.9)" stroke-width="2" />
+          </svg>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label"> </div>
+          <div class="kpi-value" id="kpi-orders">77</div>
+          <div class="kpi-sub">Orders</div>
+          <svg class="spark" viewBox="0 0 56 22" aria-hidden="true">
+            <polyline points="0,18 12,18 22,14 34,16 44,8 56,10" fill="none" stroke="rgba(84,162,255,0.9)" stroke-width="2" />
+          </svg>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label"> </div>
+          <div class="kpi-value" id="kpi-sales">£22,282.65</div>
+          <div class="kpi-sub">Sales</div>
+          <svg class="spark" viewBox="0 0 56 22" aria-hidden="true">
+            <polyline points="0,18 10,12 20,14 30,9 40,11 56,7" fill="none" stroke="rgba(84,162,255,0.9)" stroke-width="2" />
+          </svg>
+        </div>
+      </section>
+
+      <section class="map-panel" aria-label="Wereldkaart">
+        <div class="legend" aria-label="Legenda">
+          <span class="dot visitor" aria-hidden="true"></span><span>Visitor</span>
+          <span class="dot sale" aria-hidden="true"></span><span>Sale</span>
+        </div>
+        <div id="world-map" role="application" aria-label="Live kaart"></div>
+      </section>
     </main>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script>
+      (() => {
+        const elVisitors = document.getElementById("kpi-visitors");
+        const elVisits = document.getElementById("kpi-visits");
+        const elOrders = document.getElementById("kpi-orders");
+        const elSales = document.getElementById("kpi-sales");
+
+        const fmtGBP = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" });
+        const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+        const rand = (a, b) => a + Math.random() * (b - a);
+        const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+        // clusters used in GA-like live view
+        const clusters = [
+          { name: "UK", lat: 54.5, lng: -2.3, rLat: 4.2, rLng: 6.0 },
+          { name: "NL/BE/DE", lat: 52.2, lng: 5.3, rLat: 4.0, rLng: 7.0 },
+          { name: "US East", lat: 39.0, lng: -77.0, rLat: 6.0, rLng: 9.0 },
+          { name: "US West", lat: 37.5, lng: -122.2, rLat: 6.0, rLng: 10.0 },
+          { name: "Nordics", lat: 60.0, lng: 14.0, rLat: 6.0, rLng: 10.0 },
+          { name: "India", lat: 22.8, lng: 77.2, rLat: 7.0, rLng: 12.0 },
+        ];
+
+        const mkPoint = (c) => {
+          const lat = rand(c.lat - c.rLat, c.lat + c.rLat);
+          const lng = rand(c.lng - c.rLng, c.lng + c.rLng);
+          return { lat, lng };
+        };
+
+        const map = L.map("world-map", {
+          zoomControl: true,
+          worldCopyJump: true,
+          minZoom: 2,
+          maxZoom: 6,
+          attributionControl: false,
+        }).setView([30, 0], 2);
+
+        // Dark tile that matches the screenshot vibe
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+          subdomains: "abcd",
+          maxZoom: 19,
+        }).addTo(map);
+
+        const layerVisitors = L.layerGroup().addTo(map);
+        const layerSales = L.layerGroup().addTo(map);
+
+        const addPulse = (layer, p, color, glow) => {
+          const core = L.circleMarker([p.lat, p.lng], {
+            radius: 3,
+            color,
+            weight: 0,
+            fillColor: color,
+            fillOpacity: 0.95,
+          }).addTo(layer);
+
+          const halo = L.circleMarker([p.lat, p.lng], {
+            radius: 10,
+            color: glow,
+            weight: 0,
+            fillColor: glow,
+            fillOpacity: 0.16,
+          }).addTo(layer);
+
+          // fade out quickly (like live dots)
+          setTimeout(() => {
+            layer.removeLayer(halo);
+          }, 1200);
+
+          // remove core after a bit to keep it “live”
+          setTimeout(() => {
+            layer.removeLayer(core);
+          }, 4500);
+        };
+
+        let visitorsNow = 27;
+        let visitsToday = 891;
+        let ordersToday = 77;
+        let salesToday = 22282.65;
+
+        const tick = () => {
+          // visitors fluctuate
+          visitorsNow = clamp(Math.round(visitorsNow + rand(-4, 6)), 8, 120);
+          elVisitors.textContent = String(visitorsNow);
+
+          // “events”
+          const eventCount = clamp(Math.round(rand(6, 16)), 3, 20);
+          for (let i = 0; i < eventCount; i++) {
+            const c = pick(clusters);
+            const p = mkPoint(c);
+            addPulse(layerVisitors, p, "rgba(84,162,255,0.95)", "rgba(84,162,255,0.85)");
+          }
+
+          const saleChance = Math.random();
+          if (saleChance > 0.55) {
+            const c = pick(clusters);
+            const p = mkPoint(c);
+            addPulse(layerSales, p, "rgba(230,194,0,0.95)", "rgba(230,194,0,0.9)");
+            ordersToday += 1;
+            salesToday += rand(29, 240);
+          }
+
+          visitsToday += clamp(Math.round(rand(1, 5)), 1, 8);
+
+          elVisits.textContent = String(visitsToday);
+          elOrders.textContent = String(ordersToday);
+          elSales.textContent = fmtGBP.format(salesToday);
+        };
+
+        // initial burst
+        for (let i = 0; i < 30; i++) {
+          const c = pick(clusters);
+          addPulse(layerVisitors, mkPoint(c), "rgba(84,162,255,0.95)", "rgba(84,162,255,0.85)");
+        }
+
+        setInterval(tick, 1800);
+      })();
+    </script>
   </body>
 </html>
