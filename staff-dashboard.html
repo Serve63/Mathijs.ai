@@ -4,6 +4,201 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mathijs.ai | Personeel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #fafafa;
+        --ink: #0b1020;
+        --muted: rgba(15, 23, 42, 0.7);
+        --accent: #e6c200;
+        --accent-strong: #c9a900;
+        --dark: #1a1a2e;
+        --hero-1: #1a1a2e;
+        --hero-2: #16213e;
+        --hero-3: #0f3460;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Manrope", "Segoe UI", sans-serif;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        position: relative;
+        overflow-x: hidden;
+        min-height: 100vh;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(circle at 15% 15%, rgba(230, 194, 0, 0.18), transparent 45%),
+          radial-gradient(circle at 85% 20%, rgba(15, 52, 96, 0.18), transparent 50%),
+          radial-gradient(circle at 50% 85%, rgba(230, 194, 0, 0.14), transparent 55%);
+        pointer-events: none;
+        z-index: -2;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23222222' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: -1;
+        opacity: 1;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        padding: 0;
+        background: var(--dark);
+        backdrop-filter: blur(32px) saturate(200%);
+        -webkit-backdrop-filter: blur(32px) saturate(200%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.05) inset,
+          0 4px 24px rgba(0, 0, 0, 0.3),
+          0 0 0 1px rgba(0, 0, 0, 0.1);
+      }
+
+      .site-header::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 80% 50% at 0% 0%, rgba(230, 194, 0, 0.06) 0%, transparent 60%),
+          radial-gradient(ellipse 80% 50% at 100% 0%, rgba(15, 52, 96, 0.06) 0%, transparent 60%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%);
+        pointer-events: none;
+        opacity: 1;
+      }
+
+      .site-header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(230, 194, 0, 0.3) 50%,
+          transparent 100%
+        );
+        pointer-events: none;
+      }
+
+      .header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        position: relative;
+        z-index: 1;
+        padding: 14px 40px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        color: #fff;
+        letter-spacing: 0.05em;
+        position: relative;
+      }
+
+      .brand-logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        border: 2px solid rgba(230, 194, 0, 0.4);
+        box-shadow:
+          0 0 0 1px rgba(230, 194, 0, 0.15),
+          0 2px 12px rgba(230, 194, 0, 0.2);
+      }
+
+      .brand-text {
+        font-family: "Sora", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .brand-dot {
+        color: var(--accent);
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 10px 22px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .btn.secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      @media (max-width: 980px) {
+        .header-inner {
+          padding: 14px 18px;
+        }
+      }
+    </style>
   </head>
-  <body></body>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a href="index.html" class="brand" aria-label="Mathijs.ai homepage">
+          <img src="assets/mathijs-avatar.png" alt="Mathijs.ai logo" class="brand-logo" width="40" height="40" />
+          <span class="brand-text">MATHIJS<span class="brand-dot">.AI</span></span>
+        </a>
+        <div class="header-actions">
+          <a class="btn secondary" href="index.html">Terug</a>
+        </div>
+      </div>
+    </header>
+  </body>
 </html>
