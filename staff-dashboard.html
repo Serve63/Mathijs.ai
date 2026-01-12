@@ -6,30 +6,28 @@
     <title>Mathijs.ai | Personeel Live</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
     <style>
       :root {
-        color-scheme: light;
-        --bg: #fafafa;
-        --bg-alt: #f3f4f9;
-        --ink: #1a1a1f;
-        --muted: #6b6b76;
-        --accent: #e6c200;
-        --accent-strong: #c9a900;
-        --accent-cool: #16213e;
-        --accent-sun: #e6c200;
-        --dark: #1a1a2e;
-        --card: #ffffff;
-        --border: rgba(0, 0, 0, 0.08);
-        --shadow: 0 24px 60px -30px rgba(15, 52, 96, 0.45);
+        color-scheme: dark;
+
+        /* homepage-ish palette */
         --hero-1: #1a1a2e;
         --hero-2: #16213e;
         --hero-3: #0f3460;
-        --map-land: #eef1f6;
-        --map-water: #dde6f2;
+        --accent: #e6c200;
+        --accent-strong: #c9a900;
+        --ink: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.68);
+
+        /* surfaces */
+        --panel: rgba(255, 255, 255, 0.09);
+        --panel-2: rgba(255, 255, 255, 0.075);
+        --border: rgba(255, 255, 255, 0.14);
+        --shadow: 0 30px 70px -55px rgba(0, 0, 0, 0.85);
+        --radius: 18px;
+
         --topbar-height: 72px;
       }
 
@@ -37,22 +35,19 @@
         box-sizing: border-box;
       }
 
-      html {
+      html,
+      body {
         height: 100%;
         overflow: hidden;
       }
 
       body {
         margin: 0;
-        min-height: 100vh;
-        height: 100%;
         font-family: "Manrope", "Segoe UI", sans-serif;
         color: var(--ink);
         background: linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 50%, var(--hero-3) 100%);
-        line-height: 1.6;
         -webkit-font-smoothing: antialiased;
         position: relative;
-        overflow: hidden;
       }
 
       body::before {
@@ -91,90 +86,52 @@
         font-family: "Sora", sans-serif;
       }
 
+      /* Topbar */
       .topbar {
         position: sticky;
         top: 0;
-        z-index: 100;
-        padding: 0;
-        background: var(--dark);
-        backdrop-filter: blur(32px) saturate(200%);
-        -webkit-backdrop-filter: blur(32px) saturate(200%);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow:
-          0 1px 0 rgba(255, 255, 255, 0.05) inset,
-          0 4px 24px rgba(0, 0, 0, 0.3),
-          0 0 0 1px rgba(0, 0, 0, 0.1);
-      }
-
-      .topbar::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background:
-          radial-gradient(ellipse 80% 50% at 0% 0%, rgba(230, 194, 0, 0.06) 0%, transparent 60%),
-          radial-gradient(ellipse 80% 50% at 100% 0%, rgba(15, 52, 96, 0.06) 0%, transparent 60%),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%);
-        pointer-events: none;
-        opacity: 1;
-      }
-
-      .topbar::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg,
-          transparent 0%,
-          rgba(230, 194, 0, 0.3) 50%,
-          transparent 100%);
-        pointer-events: none;
-      }
-
-      .topbar-inner {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 32px;
+        z-index: 50;
         height: var(--topbar-height);
         display: flex;
         align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(10, 14, 26, 0.75);
+        backdrop-filter: blur(18px) saturate(140%);
+        -webkit-backdrop-filter: blur(18px) saturate(140%);
+      }
+
+      .topbar-inner {
+        width: min(1280px, 100%);
+        margin: 0 auto;
+        padding: 0 22px;
+        display: flex;
+        align-items: center;
         justify-content: space-between;
-        gap: 16px;
-        position: relative;
-        z-index: 1;
+        gap: 14px;
       }
 
       .brand {
         display: flex;
         align-items: center;
         gap: 12px;
-        font-weight: 700;
-        font-size: 1rem;
-        color: #fff;
-        letter-spacing: 0.05em;
+        min-width: 220px;
       }
 
       .brand-mark {
-        display: block;
         width: 38px;
         height: 38px;
         border-radius: 14px;
-        border: 2px solid rgba(230, 194, 0, 0.4);
+        border: 2px solid rgba(230, 194, 0, 0.35);
         background: url("assets/mathijs-avatar.png") center/cover no-repeat;
-        box-shadow:
-          0 0 0 1px rgba(230, 194, 0, 0.15),
-          0 2px 12px rgba(230, 194, 0, 0.2);
+        box-shadow: 0 0 0 1px rgba(230, 194, 0, 0.12), 0 10px 26px rgba(0, 0, 0, 0.35);
       }
 
       .brand-title {
         margin: 0;
         font-weight: 700;
-        font-size: 1rem;
+        font-size: 0.95rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: #fff;
-        font-family: "Sora", sans-serif;
       }
 
       .brand-sub {
@@ -182,7 +139,7 @@
         font-size: 0.7rem;
         letter-spacing: 0.18em;
         text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(255, 255, 255, 0.62);
       }
 
       .topbar-status {
@@ -192,26 +149,25 @@
         padding: 8px 14px;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        font-size: 0.85rem;
+        border: 1px solid rgba(255, 255, 255, 0.16);
         color: rgba(255, 255, 255, 0.85);
       }
 
       .live-dot {
         width: 10px;
         height: 10px;
-        border-radius: 50%;
+        border-radius: 999px;
         background: var(--accent);
-        box-shadow: 0 0 0 6px rgba(230, 194, 0, 0.2);
+        box-shadow: 0 0 0 6px rgba(230, 194, 0, 0.18);
         animation: pulse 2.4s ease-in-out infinite;
       }
 
       .time-chip {
         padding: 4px 10px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.10);
         font-size: 0.75rem;
-        color: #fff;
+        color: rgba(255, 255, 255, 0.9);
       }
 
       .btn {
@@ -223,9 +179,10 @@
         border-radius: 999px;
         font-weight: 600;
         font-size: 0.9rem;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
         border: none;
         cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        white-space: nowrap;
       }
 
       .btn:focus-visible {
@@ -236,149 +193,112 @@
       .btn.primary {
         background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
         color: #1a1600;
-        box-shadow:
-          0 0 0 1px rgba(230, 194, 0, 0.3),
-          0 4px 16px rgba(230, 194, 0, 0.3),
-          0 8px 32px rgba(230, 194, 0, 0.2),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 0 0 1px rgba(230, 194, 0, 0.35), 0 10px 30px rgba(0, 0, 0, 0.35);
       }
 
       .btn.primary:hover {
-        background: linear-gradient(135deg, #f5d000 0%, var(--accent-strong) 100%);
-        transform: translateY(-3px) scale(1.02);
-        box-shadow:
-          0 0 0 1px rgba(230, 194, 0, 0.4),
-          0 8px 24px rgba(230, 194, 0, 0.4),
-          0 16px 48px rgba(230, 194, 0, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.3),
-          0 0 60px rgba(230, 194, 0, 0.2);
-      }
-
-      .btn.primary:active {
-        transform: translateY(-1px) scale(1);
+        transform: translateY(-2px);
+        box-shadow: 0 0 0 1px rgba(230, 194, 0, 0.45), 0 16px 40px rgba(0, 0, 0, 0.42);
       }
 
       .btn.secondary {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-        border: 1.5px solid rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(12px) saturate(180%);
-        -webkit-backdrop-filter: blur(12px) saturate(180%);
-        box-shadow:
-          0 1px 0 rgba(255, 255, 255, 0.1) inset,
-          0 4px 16px rgba(0, 0, 0, 0.15);
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        background: rgba(255, 255, 255, 0.10);
+        color: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(12px) saturate(160%);
+        -webkit-backdrop-filter: blur(12px) saturate(160%);
       }
 
       .btn.secondary:hover {
-        background: rgba(255, 255, 255, 0.18);
-        border-color: rgba(255, 255, 255, 0.35);
-        transform: translateY(-3px) scale(1.02);
-        box-shadow:
-          0 1px 0 rgba(255, 255, 255, 0.15) inset,
-          0 8px 24px rgba(0, 0, 0, 0.25),
-          0 0 40px rgba(255, 255, 255, 0.05);
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.14);
       }
 
-      .btn.secondary:active {
-        transform: translateY(-1px) scale(1);
-      }
-
+      /* App layout */
       .shell {
-        max-width: 1280px;
+        width: min(1280px, 100%);
         margin: 0 auto;
-        padding: 18px 20px 20px;
-        min-height: calc(100vh - var(--topbar-height));
+        padding: 16px 22px 20px;
         height: calc(100vh - var(--topbar-height));
         display: grid;
         grid-template-rows: auto auto 1fr;
         gap: 14px;
-        position: relative;
-        z-index: 1;
-        overflow: hidden;
-        background: transparent;
       }
 
       .hero {
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr auto;
         align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 0;
+        gap: 14px;
       }
 
       .hero h1 {
-        font-family: "Sora", sans-serif;
-        font-size: 1.85rem;
-        line-height: 1.08;
         margin: 0;
+        font-size: 2rem;
+        line-height: 1.05;
         letter-spacing: 0.01em;
-        color: #fff;
       }
 
       .hero p {
-        margin: 4px 0 0;
-        max-width: 560px;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.9rem;
+        margin: 6px 0 0;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 0.95rem;
+        max-width: 700px;
       }
 
       .summary {
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 10px;
-        margin-bottom: 0;
+        gap: 12px;
       }
 
       .summary-card {
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid rgba(0, 0, 0, 0.08);
+        background: var(--panel);
+        border: 1px solid var(--border);
         border-radius: 16px;
         padding: 12px 12px;
-        box-shadow: 0 18px 45px -38px rgba(0, 0, 0, 0.45);
+        box-shadow: var(--shadow);
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        min-height: 78px;
+        gap: 6px;
+        min-height: 84px;
+        position: relative;
+        overflow: hidden;
         opacity: 0;
         animation: rise 0.7s ease forwards;
         animation-delay: var(--delay, 0s);
-        position: relative;
-        overflow: hidden;
       }
 
       .summary-card::after {
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(120deg, rgba(255, 255, 255, 0.6) 0%, transparent 55%);
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0.10) 0%, transparent 55%);
         opacity: 0.6;
         pointer-events: none;
       }
 
       .summary-card.highlight {
-        background: linear-gradient(135deg, rgba(230, 194, 0, 0.22) 0%, rgba(15, 52, 96, 0.12) 100%);
-        border-color: rgba(230, 194, 0, 0.4);
+        border-color: rgba(230, 194, 0, 0.35);
+        background: linear-gradient(135deg, rgba(230, 194, 0, 0.16) 0%, rgba(255, 255, 255, 0.06) 100%);
       }
 
       .summary-label {
         font-size: 0.62rem;
         text-transform: uppercase;
         letter-spacing: 0.16em;
-        color: var(--muted);
+        color: rgba(255, 255, 255, 0.65);
       }
 
       .summary-value {
-        font-family: "Sora", sans-serif;
-        font-size: 1.55rem;
+        font-size: 1.5rem;
         position: relative;
         z-index: 1;
       }
 
       .summary-meta {
         margin: 0;
-        color: var(--muted);
+        color: rgba(255, 255, 255, 0.65);
         font-size: 0.78rem;
         position: relative;
         z-index: 1;
@@ -390,74 +310,73 @@
         grid-template-areas:
           "map side"
           "feed side";
-        grid-template-rows: minmax(260px, 1fr) minmax(140px, 0.55fr);
-        gap: 12px;
+        grid-template-rows: minmax(280px, 1fr) minmax(170px, 0.62fr);
+        gap: 14px;
         height: 100%;
-        align-items: stretch;
         min-height: 0;
       }
 
       .card {
-        background: linear-gradient(180deg, #ffffff 0%, #f7f8fb 100%);
+        background: var(--panel);
         border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 16px;
+        border-radius: var(--radius);
+        padding: 14px;
         box-shadow: var(--shadow);
-        position: relative;
         overflow: hidden;
         opacity: 0;
         animation: rise 0.7s ease forwards;
         animation-delay: var(--delay, 0s);
+        min-height: 0;
       }
 
       .map-card {
         grid-area: map;
         display: flex;
         flex-direction: column;
-        min-height: 0;
+        gap: 12px;
       }
 
       .side-panel {
         grid-area: side;
         display: flex;
         flex-direction: column;
-        gap: 14px;
-        min-height: 0;
+        gap: 12px;
       }
 
       .feed-card {
         grid-area: feed;
         display: flex;
         flex-direction: column;
-        min-height: 0;
+        gap: 12px;
       }
 
       .card-head {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 12px;
+        gap: 12px;
       }
 
       .card-head h2 {
         margin: 0;
-        font-family: "Sora", sans-serif;
-        font-size: 1.25rem;
+        font-size: 1.15rem;
       }
 
       .card-head p {
         margin: 6px 0 0;
-        color: var(--muted);
+        color: rgba(255, 255, 255, 0.68);
         font-size: 0.84rem;
       }
 
       .segmented {
         display: inline-flex;
         gap: 4px;
-        background: rgba(0, 0, 0, 0.05);
         padding: 4px;
         border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        flex-wrap: wrap;
+        justify-content: flex-end;
       }
 
       .segmented-btn {
@@ -465,30 +384,30 @@
         background: transparent;
         padding: 6px 10px;
         border-radius: 999px;
-        font-size: 0.75rem;
+        font-size: 0.74rem;
         font-weight: 600;
-        color: var(--muted);
+        color: rgba(255, 255, 255, 0.75);
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: background 0.2s ease, color 0.2s ease;
       }
 
       .segmented-btn:hover {
-        color: var(--ink);
-        background: rgba(230, 194, 0, 0.16);
+        background: rgba(230, 194, 0, 0.14);
+        color: rgba(255, 255, 255, 0.92);
       }
 
       .segmented-btn.active {
-        background: #fff;
-        color: var(--ink);
-        box-shadow: 0 10px 20px -16px rgba(15, 52, 96, 0.45);
+        background: rgba(255, 255, 255, 0.16);
+        color: rgba(255, 255, 255, 0.95);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
       }
 
       .map-shell {
         position: relative;
-        border-radius: 22px;
-        background: linear-gradient(135deg, #ffffff 0%, var(--bg-alt) 60%, #eef3fb 100%);
-        border: 1px solid var(--border);
-        padding: 14px;
+        border-radius: 18px;
+        background: rgba(0, 0, 0, 0.20);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        padding: 12px;
         min-height: 280px;
         height: 100%;
         overflow: hidden;
@@ -502,10 +421,10 @@
         position: absolute;
         inset: 0;
         background:
-          repeating-linear-gradient(120deg, rgba(15, 52, 96, 0.05) 0 2px, transparent 2px 14px),
-          radial-gradient(circle at 15% 35%, rgba(255, 255, 255, 0.6) 0%, transparent 55%),
-          radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.5) 0%, transparent 65%);
-        opacity: 0.5;
+          repeating-linear-gradient(120deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 14px),
+          radial-gradient(circle at 15% 35%, rgba(255, 255, 255, 0.10) 0%, transparent 55%),
+          radial-gradient(circle at 80% 70%, rgba(230, 194, 0, 0.10) 0%, transparent 65%);
+        opacity: 0.45;
         pointer-events: none;
         z-index: 0;
       }
@@ -513,7 +432,7 @@
       .map-scan {
         position: absolute;
         inset: -40% 0 0 0;
-        background: linear-gradient(180deg, transparent 0%, rgba(230, 194, 0, 0.15) 50%, transparent 100%);
+        background: linear-gradient(180deg, transparent 0%, rgba(230, 194, 0, 0.16) 50%, transparent 100%);
         animation: scan 8s linear infinite;
         pointer-events: none;
         z-index: 2;
@@ -523,7 +442,6 @@
         position: relative;
         width: 100%;
         height: 100%;
-        max-height: none;
         z-index: 1;
       }
 
@@ -532,37 +450,36 @@
       }
 
       .province path {
-        fill: #e7ecf8;
-        stroke: rgba(15, 52, 96, 0.35);
+        stroke: rgba(255, 255, 255, 0.25);
         stroke-width: 1.1;
-        transition: fill 0.25s ease, stroke 0.25s ease, filter 0.25s ease;
+        transition: stroke 0.25s ease, filter 0.25s ease;
       }
 
       .province:hover path {
-        stroke: var(--accent);
-        filter: drop-shadow(0 10px 16px rgba(15, 52, 96, 0.2));
+        stroke: rgba(230, 194, 0, 0.95);
+        filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.35));
       }
 
       .province.selected path {
-        stroke: var(--accent);
+        stroke: rgba(230, 194, 0, 0.95);
         stroke-width: 2;
-        filter: drop-shadow(0 12px 20px rgba(230, 194, 0, 0.35));
+        filter: drop-shadow(0 14px 22px rgba(230, 194, 0, 0.22));
       }
 
       .province[tabindex="0"]:focus-visible path {
-        stroke: var(--accent);
+        stroke: rgba(230, 194, 0, 0.95);
         stroke-width: 2;
       }
 
       .map-tooltip {
         position: absolute;
         padding: 10px 12px;
-        background: #fff;
-        border: 1px solid var(--border);
+        background: rgba(10, 14, 26, 0.88);
+        border: 1px solid rgba(255, 255, 255, 0.14);
         border-radius: 12px;
-        box-shadow: 0 18px 40px -20px rgba(15, 52, 96, 0.45);
+        box-shadow: 0 20px 50px -35px rgba(0, 0, 0, 0.9);
         font-size: 0.85rem;
-        color: var(--ink);
+        color: rgba(255, 255, 255, 0.92);
         opacity: 0;
         transform: translate(-50%, -120%);
         transition: opacity 0.15s ease, transform 0.15s ease;
@@ -586,21 +503,21 @@
         bottom: 10px;
         left: 12px;
         font-size: 0.74rem;
-        color: var(--muted);
+        color: rgba(255, 255, 255, 0.72);
         z-index: 3;
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(10, 14, 26, 0.65);
         padding: 4px 8px;
         border-radius: 999px;
-        border: 1px solid var(--border);
+        border: 1px solid rgba(255, 255, 255, 0.12);
       }
 
       .map-legend {
         display: flex;
-        gap: 16px;
+        gap: 12px;
         align-items: center;
-        margin-top: 10px;
+        margin-top: 2px;
         font-size: 0.8rem;
-        color: var(--muted);
+        color: rgba(255, 255, 255, 0.72);
         justify-content: space-between;
       }
 
@@ -614,20 +531,22 @@
         flex: 1;
         height: 10px;
         border-radius: 999px;
-        background: linear-gradient(90deg, #e7ecf8 0%, var(--accent) 55%, var(--accent-strong) 100%);
-        border: 1px solid var(--border);
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.20) 0%, rgba(230, 194, 0, 0.9) 55%, rgba(201, 169, 0, 0.95) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.14);
       }
 
       .legend-metric {
         font-size: 0.75rem;
-        color: var(--muted);
+        color: rgba(255, 255, 255, 0.72);
         text-transform: uppercase;
         letter-spacing: 0.12em;
+        white-space: nowrap;
       }
 
+      /* Side panel */
       .panel-section {
-        background: var(--card);
-        border: 1px solid var(--border);
+        background: var(--panel-2);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 16px;
         padding: 12px;
       }
@@ -654,7 +573,7 @@
       .province-region {
         margin: 4px 0 0;
         font-size: 0.75rem;
-        color: var(--muted);
+        color: rgba(255, 255, 255, 0.70);
       }
 
       .province-status {
@@ -662,8 +581,9 @@
         border-radius: 999px;
         font-size: 0.7rem;
         font-weight: 600;
-        background: rgba(0, 0, 0, 0.06);
-        color: var(--ink);
+        background: rgba(255, 255, 255, 0.10);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.90);
       }
 
       .stat-grid {
@@ -676,8 +596,8 @@
       .stat-item {
         padding: 9px;
         border-radius: 12px;
-        background: rgba(0, 0, 0, 0.04);
-        border: 1px solid rgba(15, 52, 96, 0.06);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .stat-item span {
@@ -685,17 +605,63 @@
         font-size: 0.6rem;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--muted);
+        color: rgba(255, 255, 255, 0.65);
         margin-bottom: 4px;
       }
 
       .stat-item strong {
-        font-size: 1rem;
+        font-size: 0.95rem;
+      }
+
+      .trend-graph {
+        width: 100%;
+        height: 68px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+      }
+
+      .trend-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .funnel {
+        display: grid;
+        gap: 10px;
+      }
+
+      .funnel-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+        font-size: 0.82rem;
+      }
+
+      .funnel-bar {
+        grid-column: 1 / -1;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        overflow: hidden;
+      }
+
+      .funnel-bar span {
+        display: block;
+        height: 100%;
+        width: 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0%, rgba(230, 194, 0, 0.9) 60%, rgba(201, 169, 0, 0.95) 100%);
+        transition: width 0.35s ease;
       }
 
       .top-provinces {
-        display: flex;
-        flex-direction: column;
+        display: grid;
         gap: 8px;
       }
 
@@ -703,171 +669,117 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        padding: 8px 10px;
-        border-radius: 12px;
-        background: var(--card);
-        border: 1px solid var(--border);
+        padding: 9px 10px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.10);
       }
 
-      .province-row p {
-        margin: 0;
+      .province-row .province-name {
+        font-size: 0.92rem;
       }
 
       .province-row .province-region {
-        font-size: 0.74rem;
+        margin-top: 2px;
+        font-size: 0.72rem;
       }
 
       .province-metric {
         display: flex;
-        align-items: center;
-        gap: 6px;
-        font-weight: 700;
-        font-size: 0.95rem;
-      }
-
-      .province-delta {
-        font-size: 0.7rem;
-        color: var(--muted);
-      }
-
-      .trend-card {
-        display: grid;
-        gap: 10px;
-      }
-
-      .trend-graph {
-        width: 100%;
-        height: 68px;
-        border-radius: 12px;
-        background: rgba(15, 52, 96, 0.05);
-        border: 1px solid rgba(15, 52, 96, 0.08);
-        padding: 8px;
-      }
-
-      .trend-meta {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.74rem;
-        color: var(--muted);
-      }
-
-      .funnel {
-        display: flex;
         flex-direction: column;
-        gap: 10px;
-      }
-
-      .funnel-row {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 8px;
-        font-size: 0.78rem;
-        color: var(--muted);
-      }
-
-      .funnel-row strong {
-        color: var(--ink);
-      }
-
-      .funnel-bar {
-        grid-column: span 2;
-        height: 8px;
-        border-radius: 999px;
-        background: rgba(15, 52, 96, 0.08);
-        overflow: hidden;
-      }
-
-      .funnel-bar span {
-        display: block;
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, var(--accent-cool) 0%, var(--accent) 100%);
-        transition: width 0.3s ease;
-      }
-
-      .feed-list {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-        flex: 1;
-        min-height: 0;
-      }
-
-      .feed-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 12px;
-        border-radius: 14px;
-        background: var(--card);
-        border: 1px solid var(--border);
-      }
-
-      .feed-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 10px;
-        display: grid;
-        place-items: center;
-        font-weight: 700;
-        color: #fff;
-        font-size: 0.75rem;
-      }
-
-      .feed-icon.cart {
-        background: var(--accent-cool);
-      }
-
-      .feed-icon.checkout {
-        background: var(--accent);
-        color: #1a1600;
-      }
-
-      .feed-icon.order {
-        background: var(--accent-strong);
-        color: #1a1600;
-      }
-
-      .feed-icon.abandon {
-        background: var(--hero-3);
-      }
-
-      .feed-title {
-        margin: 0;
+        align-items: flex-end;
+        gap: 2px;
         font-weight: 600;
         font-size: 0.9rem;
       }
 
-      .feed-meta {
-        margin: 4px 0 0;
+      .province-delta {
         font-size: 0.72rem;
-        color: var(--muted);
+        color: rgba(255, 255, 255, 0.70);
       }
 
+      /* Feed */
       .feed-pill {
-        padding: 5px 10px;
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
         border-radius: 999px;
-        background: rgba(0, 0, 0, 0.06);
-        font-size: 0.72rem;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+
+      .feed-list {
+        display: grid;
+        gap: 10px;
+        align-content: start;
+      }
+
+      .feed-item {
+        display: grid;
+        grid-template-columns: 40px 1fr;
+        gap: 10px;
+        align-items: center;
+        padding: 10px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+      }
+
+      .feed-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: rgba(0, 0, 0, 0.78);
+        background: rgba(230, 194, 0, 0.95);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
+      }
+
+      .feed-icon.checkout {
+        background: rgba(255, 255, 255, 0.85);
+      }
+
+      .feed-icon.order {
+        background: rgba(230, 194, 0, 0.95);
+      }
+
+      .feed-icon.abandon {
+        background: rgba(255, 120, 120, 0.88);
+      }
+
+      .feed-title {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+
+      .feed-meta {
+        margin: 2px 0 0;
+        color: rgba(255, 255, 255, 0.70);
+        font-size: 0.78rem;
       }
 
       .error {
-        margin-top: 20px;
-        padding: 16px;
-        border-radius: 16px;
-        background: rgba(239, 68, 68, 0.12);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        color: #7f1d1d;
-        font-weight: 600;
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(255, 91, 77, 0.18);
+        border: 1px solid rgba(255, 91, 77, 0.35);
+        color: rgba(255, 255, 255, 0.92);
       }
 
       @keyframes rise {
-        0% {
+        from {
           opacity: 0;
-          transform: translateY(12px);
+          transform: translateY(8px);
         }
-        100% {
+        to {
           opacity: 1;
           transform: translateY(0);
         }
@@ -875,26 +787,11 @@
 
       @keyframes pulse {
         0% {
-          transform: scale(0.9);
-          opacity: 0.7;
-        }
-        50% {
-          transform: scale(1.05);
-          opacity: 1;
-        }
-        100% {
-          transform: scale(0.9);
-          opacity: 0.7;
-        }
-      }
-
-      @keyframes ping {
-        0% {
           transform: scale(0.7);
           opacity: 0.6;
         }
         80% {
-          transform: scale(1.4);
+          transform: scale(1.35);
           opacity: 0;
         }
         100% {
@@ -912,89 +809,38 @@
       }
 
       @media (max-width: 1100px) {
+        html,
         body {
-          overflow-y: auto;
+          height: auto;
+          overflow: auto;
         }
+
         .shell {
           height: auto;
-          min-height: 0;
-          display: block;
-          padding-bottom: 40px;
         }
-        .grid {
-          height: auto;
-          grid-template-rows: none;
-        }
-        .summary {
-          grid-template-columns: repeat(3, 1fr);
-        }
-        .topbar-inner {
-          flex-wrap: wrap;
-          justify-content: center;
-          padding: 12px 24px;
-          height: auto;
-        }
-        .topbar-status {
-          order: 3;
-        }
-        .map-shell {
-          height: auto;
-        }
-      }
 
-      @media (max-height: 860px) {
-        :root {
-          --topbar-height: 64px;
-        }
-        .topbar-inner {
-          height: var(--topbar-height);
-        }
-        .shell {
-          padding: 10px 14px 12px;
-          gap: 10px;
-        }
-        .hero h1 {
-          font-size: 1.6rem;
-        }
-        .hero p {
-          font-size: 0.86rem;
-        }
         .summary {
-          gap: 8px;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
         }
-        .summary-card {
-          min-height: 70px;
-          padding: 10px 10px;
-        }
-        .grid {
-          gap: 10px;
-          grid-template-rows: minmax(230px, 1fr) minmax(120px, 0.5fr);
-        }
-        .card {
-          padding: 12px;
-        }
-        .map-shell {
-          min-height: 0;
-        }
-      }
 
-      @media (max-width: 980px) {
-        .hero {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-        .summary {
-          grid-template-columns: repeat(2, 1fr);
-        }
         .grid {
           grid-template-columns: 1fr;
           grid-template-areas:
             "map"
             "side"
             "feed";
+          grid-template-rows: auto;
         }
-        .feed-list {
-          grid-template-columns: 1fr;
+
+        .topbar-inner {
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 12px;
+          padding: 12px 16px;
+        }
+
+        .brand {
+          min-width: unset;
         }
       }
 
@@ -1002,19 +848,19 @@
         .summary {
           grid-template-columns: 1fr;
         }
-        .topbar-inner {
-          gap: 12px;
-          padding: 12px 18px;
+
+        .hero {
+          grid-template-columns: 1fr;
+          align-items: start;
         }
-        .topbar-status {
-          flex-wrap: wrap;
+
+        .hero h1 {
+          font-size: 1.65rem;
+        }
+
+        .btn {
+          width: 100%;
           justify-content: center;
-        }
-        .segmented {
-          flex-wrap: wrap;
-        }
-        .map-shell {
-          min-height: 300px;
         }
       }
 
@@ -1026,21 +872,24 @@
       }
     </style>
   </head>
+
   <body>
     <header class="topbar">
       <div class="topbar-inner">
         <div class="brand">
-          <span class="brand-mark"></span>
+          <span class="brand-mark" aria-hidden="true"></span>
           <div>
             <p class="brand-title">Mathijs.ai</p>
-            <p class="brand-sub">Personeel Live</p>
+            <p class="brand-sub">Personeel live</p>
           </div>
         </div>
-        <div class="topbar-status">
-          <span class="live-dot"></span>
+
+        <div class="topbar-status" role="status" aria-live="polite">
+          <span class="live-dot" aria-hidden="true"></span>
           <span id="live-status">Live verbinding</span>
           <span class="time-chip" id="last-updated">Laatst bijgewerkt: -</span>
         </div>
+
         <a class="btn secondary" id="staff-logout-btn" href="index.html" role="button">Uitloggen</a>
       </div>
     </header>
@@ -1056,7 +905,7 @@
         </div>
       </section>
 
-      <section class="summary">
+      <section class="summary" aria-label="Kernstatistieken">
         <div class="summary-card highlight" style="--delay: 0.05s">
           <span class="summary-label">Omzet vandaag</span>
           <strong class="summary-value" id="summary-revenue">-</strong>
@@ -1091,7 +940,7 @@
               <h2>Nederland per provincie</h2>
               <p>Realtime omzet, orders, conversie en abonnees per provincie.</p>
             </div>
-            <div class="segmented" id="metric-toggle">
+            <div class="segmented" id="metric-toggle" aria-label="Kies metric">
               <button class="segmented-btn active" data-mode="subscribers" type="button">Abonnees</button>
               <button class="segmented-btn" data-mode="revenue" type="button">Omzet</button>
               <button class="segmented-btn" data-mode="orders" type="button">Orders</button>
@@ -1099,6 +948,7 @@
               <button class="segmented-btn" data-mode="conversion" type="button">Conversie</button>
             </div>
           </div>
+
           <div class="map-shell">
             <svg role="img" aria-label="Kaart van Nederland met provincies" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 743 881" class="nl-map">
               <g data-province="Limburg" class="province">
@@ -1138,10 +988,11 @@
                 <path d="M 570.20703 20.34375 C 569.87138 20.327366 569.53431 20.329722 569.2207 20.349609 C 566.44835 20.525412 556.34117 25.400777 546.49219 24.390625 C 536.6432 23.380472 532.09706 25.401192 529.82422 30.957031 C 527.55138 36.51287 531.59239 41.310547 533.86523 41.310547 C 536.13807 41.310547 535.38009 37.270108 539.92578 34.492188 C 544.47146 31.714268 548.26057 33.987102 553.81641 31.966797 C 559.37225 29.946492 560.48109 27.42831 563.41211 26.158203 C 565.30615 25.337449 566.74727 25.831987 568.30469 25.275391 C 570.8751 24.356771 573.38778 23.506534 572.50391 21.107422 C 572.20696 20.618654 571.21398 20.392902 570.20703 20.34375 z M 497.07812 32.746094 C 494.0595 32.716499 490.93495 32.881861 488.66211 32.976562 C 482.6012 33.229101 477.29725 32.976959 471.23633 34.492188 C 465.17542 36.007416 465.17615 38.280665 459.11523 38.533203 C 453.05432 38.785741 443.96151 36.007813 441.18359 36.007812 C 438.40568 36.007812 435.37638 41.563292 438.1543 44.59375 C 440.93222 47.624207 442.19358 49.39121 448.00195 49.138672 C 453.81033 48.886134 458.86173 41.310547 462.90234 41.310547 C 466.94295 41.310547 465.68048 43.835937 468.71094 43.835938 C 471.7414 43.835938 485.12542 39.542969 491.69141 39.542969 C 498.2574 39.542969 506.84375 39.28944 506.84375 35.753906 C 506.84375 33.386361 502.10916 32.795418 497.07812 32.746094 z M 424.86133 41.179688 C 422.97715 41.093371 420.25597 41.785038 416.94141 42.574219 C 411.63811 43.83691 402.54607 48.886719 396.99023 48.886719 C 391.43439 48.886719 373.50311 55.2002 370.47266 56.462891 C 367.4422 57.725582 356.0791 65.302357 354.81641 68.837891 C 353.55372 72.373425 355.57286 78.687302 357.8457 77.929688 C 360.11854 77.172073 358.85743 76.161902 361.38281 72.878906 C 363.90819 69.59591 363.6553 71.362291 369.96875 67.574219 C 376.2822 63.786147 378.55549 65.301952 381.58594 64.796875 C 384.6164 64.291799 384.11115 63.786911 385.87891 63.029297 C 387.64668 62.271682 388.90821 64.292573 391.43359 62.777344 C 393.95897 61.262116 393.20256 59.493547 398.50586 57.220703 C 403.80916 54.94786 409.11153 57.724798 412.39453 55.957031 C 415.67752 54.189264 412.39454 53.432216 414.91992 50.654297 C 417.4453 47.876377 429.56776 47.876151 427.29492 42.320312 C 426.82141 41.562698 425.99183 41.231477 424.86133 41.179688 z M 529.625 54.0625 C 524.00717 54.13787 507.24545 56.429846 503.8125 57.96875 C 500.1507 59.610248 500.2868 60.010944 496.625 62.03125 C 492.96319 64.051555 490.81425 62.889752 487.53125 64.53125 C 484.24826 66.172748 478.1829 68.699714 475.53125 70.59375 C 472.8796 72.487786 462.13309 74.759675 458.21875 76.90625 C 454.30441 79.052824 439.42656 84.987309 437.40625 86.25 C 435.38595 87.51269 429.94639 95.725888 429.0625 98.125 C 428.17862 100.52411 423.75428 103.32091 420.21875 105.59375 C 416.68322 107.86659 412.658 110.51427 409.375 115.3125 C 406.092 120.11072 405.07646 128.18702 403.6875 131.34375 C 402.29854 134.50048 403.17656 141.06075 401.15625 144.34375 C 399.13595 147.62674 397.35644 147.1131 396.09375 151.40625 C 394.83106 155.6994 400.65752 162.38927 400.53125 167.1875 C 400.40499 171.98572 399.5 172.00587 399.5 174.53125 C 399.5 177.05663 400.64609 181.22081 401.65625 184.125 C 402.6664 187.02919 403.4375 194.85168 403.4375 200.28125 C 403.4375 205.71082 401.91894 208.98604 400.65625 210.375 C 399.39356 211.76396 394.71368 213.92941 395.21875 217.84375 C 395.72383 221.75809 406.09581 227.17861 409 228.0625 C 411.90419 228.94638 415.03966 225.40245 417.3125 225.78125 C 419.58534 226.16006 426.91593 232.34122 429.0625 232.59375 C 431.20908 232.84629 431.95812 231.72256 436.125 231.34375 C 440.29188 230.96495 437.00968 229.07773 439.15625 227.5625 C 441.30282 226.04727 440.55949 227.5635 443.96875 227.4375 C 447.37802 227.31123 446.60469 225.28125 448.625 225.28125 C 450.64531 225.28125 450.79092 227.30108 452.9375 228.4375 C 455.08407 229.57393 462.53791 229.81583 468.09375 232.59375 C 473.00141 235.04758 475.41092 239.6591 475.9375 240.75 C 476.59988 239.93332 478.13082 238.49668 480.84375 238.40625 C 484.63182 238.27998 487.39181 241.06504 491.9375 240.8125 C 496.48319 240.55997 499.38976 235.63134 501.03125 235 C 502.67275 234.36865 505.1921 230.84248 507.84375 230.96875 C 510.4954 231.09502 512.14356 237.1499 513.40625 237.78125 C 514.66894 238.41259 520.73477 235.63515 522.25 234.625 C 523.76523 233.61485 524.6461 230.09375 525.65625 230.09375 C 526.6664 230.09375 527.5625 230.59375 527.5625 230.59375 L 534.375 226.9375 C 535.64765 225.95476 543.40814 219.94671 550.28125 214.9375 C 557.73112 209.50793 557.7373 205.45399 559 203.8125 C 560.26269 202.171 569.96875 202.4375 569.96875 202.4375 C 569.96875 202.4375 570.74778 208.35136 577.1875 207.59375 C 583.62722 206.83613 591.8125 194.10057 591.8125 190.3125 C 591.8125 186.52442 580.95653 178.57947 579.0625 173.78125 C 577.16846 168.98302 579.57519 161.14911 578.3125 158.75 C 577.04981 156.35089 570.48017 155.69765 569.34375 154.6875 C 568.35783 153.81113 569.40985 152.26204 569.71875 151.84375 C 569.39422 151.62555 567.56958 150.33295 566.1875 148.375 C 564.67227 146.22842 565.55156 144.71875 563.53125 144.71875 C 561.51095 144.71875 562.26697 147.89023 557.46875 146.375 C 552.67052 144.85977 544.09502 143.72399 543.96875 133.875 C 543.84248 124.02602 554.3125 120.08835 554.3125 114.40625 C 554.3125 108.72414 550.14863 110.51189 550.90625 106.21875 C 551.66386 101.9256 554.95226 101.28046 556.59375 98.25 C 558.23525 95.219543 557.0836 93.087881 558.09375 90.5625 C 559.1039 88.037119 563.03125 87.389436 563.03125 82.84375 C 563.03125 78.298063 561.88515 75.541403 560.875 74.53125 C 559.99112 73.647367 557.32933 74.010346 556.375 73.9375 C 555.92925 75.164312 555.30475 76.15625 554.4375 76.15625 C 552.16466 76.15625 552.66815 75.642767 548.375 73.875 C 544.08186 72.107233 542.07646 76.157519 540.6875 76.03125 C 539.29854 75.904981 540.29774 74.510629 538.65625 70.34375 C 537.01475 66.176871 539.15752 63.41561 539.03125 59.375 C 538.90498 55.33439 534.88689 54.315038 530.59375 54.0625 C 530.32543 54.04672 529.99952 54.0575 529.625 54.0625 z M 357.55469 85.310547 C 355.07394 85.351979 350.69569 92.35413 352.79492 93.458984 C 355.19403 94.721674 359.86747 86.894234 358.47852 85.757812 C 358.22598 85.44214 357.90908 85.304628 357.55469 85.310547 z M 342.31641 85.496094 C 340.44185 85.458114 337.34287 86.673668 333.34961 89.798828 C 327.54123 94.344514 319.96541 97.753724 314.66211 102.04688 C 309.35881 106.34002 305.06641 111.26416 305.06641 113.1582 C 305.06641 115.05223 311.38008 117.95557 313.40039 117.32422 C 315.42069 116.69288 314.41066 114.54764 318.83008 110.00195 C 323.2495 105.45626 325.01602 106.71884 326.53125 104.57227 C 328.04648 102.42569 324.51066 100.02538 327.91992 97.5 C 331.32919 94.974618 332.33985 98.004879 334.86523 96.742188 C 337.39061 95.479498 347.87205 89.670984 344.08398 86.261719 C 343.76831 85.78821 343.16848 85.513357 342.31641 85.496094 z M 380.15039 99.757812 C 378.89101 99.755269 374.33268 103.12821 377.76562 105.14062 C 381.42743 107.28719 381.20584 100.3729 380.35352 99.804688 C 380.30222 99.77312 380.23435 99.757982 380.15039 99.757812 z M 600.53125 113.71875 C 600.99842 113.90285 601.5348 114.1672 602.125 114.46875 C 601.53832 114.16899 600.99657 113.8987 600.53125 113.71875 z " />
               </g>
             </svg>
-            <div class="map-scan"></div>
+            <div class="map-scan" aria-hidden="true"></div>
             <div class="map-tooltip" id="map-tooltip"></div>
             <div class="map-hint">Klik op een provincie voor details.</div>
           </div>
+
           <div class="map-legend">
             <span class="legend-label">Laag</span>
             <div class="legend-bar" aria-hidden="true"></div>
