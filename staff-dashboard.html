@@ -245,13 +245,10 @@
         overflow: hidden;
         background: rgba(12, 18, 44, 0.55);
         position: relative;
-        width: min(70vh, 70vw, 560px);
-        aspect-ratio: 1;
-        margin: 24px auto 0;
       }
 
       #world-map {
-        height: 100%;
+        height: min(560px, calc(100vh - 220px));
         width: 100%;
         position: relative;
         overflow: hidden;
@@ -278,7 +275,7 @@
       }
 
       .nl-map {
-        width: clamp(300px, 82%, 560px);
+        width: clamp(520px, 65vw, 860px);
         height: auto;
         display: block;
         pointer-events: none;
@@ -319,11 +316,8 @@
         .kpi-strip {
           grid-template-columns: 1fr 1fr;
         }
-        .map-panel {
-          width: min(90vw, 420px);
-        }
         #world-map {
-          height: 100%;
+          height: min(540px, calc(100vh - 260px));
         }
       }
     </style>
@@ -411,6 +405,7 @@
           let originY = 0;
           let panX = 0;
           let panY = 0;
+          let ignoreMouseEvents = false;
 
           const applyPan = () => {
             mapCanvas.style.setProperty("--pan-x", `${panX}px`);
@@ -443,7 +438,9 @@
 
           if (window.PointerEvent) {
             mapViewport.addEventListener("pointerdown", (event) => {
+              if (event.button !== undefined && event.button !== 0) return;
               event.preventDefault();
+              ignoreMouseEvents = true;
               startDrag(event.clientX, event.clientY);
               mapViewport.setPointerCapture(event.pointerId);
             });
@@ -459,12 +456,40 @@
               if (mapViewport.hasPointerCapture(event.pointerId)) {
                 mapViewport.releasePointerCapture(event.pointerId);
               }
+              setTimeout(() => {
+                ignoreMouseEvents = false;
+              }, 0);
             };
 
             mapViewport.addEventListener("pointerup", stopPointer);
             mapViewport.addEventListener("pointercancel", stopPointer);
             mapViewport.addEventListener("pointerleave", stopPointer);
           }
+
+          const handleMouseMove = (event) => {
+            if (!isDragging) return;
+            event.preventDefault();
+            moveDrag(event.clientX, event.clientY);
+          };
+
+          const handleMouseUp = () => {
+            endDrag();
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("mouseup", handleMouseUp);
+          };
+
+          mapViewport.addEventListener("mousedown", (event) => {
+            if (ignoreMouseEvents) return;
+            if (event.button !== 0) return;
+            event.preventDefault();
+            startDrag(event.clientX, event.clientY);
+            window.addEventListener("mousemove", handleMouseMove);
+            window.addEventListener("mouseup", handleMouseUp);
+          });
+
+          mapViewport.addEventListener("dragstart", (event) => {
+            event.preventDefault();
+          });
 
           mapViewport.addEventListener(
             "touchstart",
