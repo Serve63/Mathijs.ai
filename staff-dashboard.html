@@ -30,6 +30,7 @@
         --hero-3: #0f3460;
         --map-land: #eef1f6;
         --map-water: #dde6f2;
+        --topbar-height: 72px;
       }
 
       * {
@@ -45,7 +46,7 @@
         line-height: 1.6;
         -webkit-font-smoothing: antialiased;
         position: relative;
-        overflow-x: hidden;
+        overflow: hidden;
       }
 
       body::before {
@@ -128,7 +129,8 @@
       .topbar-inner {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 14px 40px;
+        padding: 0 32px;
+        height: var(--topbar-height);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -149,8 +151,8 @@
 
       .brand-mark {
         display: block;
-        width: 42px;
-        height: 42px;
+        width: 38px;
+        height: 38px;
         border-radius: 14px;
         border: 2px solid rgba(230, 194, 0, 0.4);
         background: url("assets/mathijs-avatar.png") center/cover no-repeat;
@@ -211,10 +213,10 @@
         align-items: center;
         justify-content: center;
         gap: 10px;
-        padding: 12px 22px;
+        padding: 10px 18px;
         border-radius: 999px;
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
         border: none;
         cursor: pointer;
@@ -280,50 +282,56 @@
       .shell {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 28px 24px 80px;
+        padding: 20px 24px 24px;
+        min-height: calc(100vh - var(--topbar-height));
+        height: calc(100vh - var(--topbar-height));
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+        gap: 16px;
         position: relative;
         z-index: 1;
       }
 
       .hero {
         display: flex;
-        align-items: flex-end;
+        align-items: center;
         justify-content: space-between;
-        gap: 24px;
-        margin-bottom: 24px;
+        gap: 16px;
+        margin-bottom: 0;
       }
 
       .hero h1 {
         font-family: "Sora", sans-serif;
-        font-size: 2.6rem;
+        font-size: 2.1rem;
+        line-height: 1.1;
         margin: 0;
         letter-spacing: 0.02em;
       }
 
       .hero p {
-        margin: 10px 0 0;
+        margin: 6px 0 0;
         max-width: 520px;
         color: var(--muted);
-        font-size: 1rem;
+        font-size: 0.95rem;
       }
 
       .summary {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 0;
       }
 
       .summary-card {
         background: linear-gradient(180deg, #ffffff 0%, #f6f7fb 100%);
         border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 18px;
+        border-radius: 18px;
+        padding: 14px;
         box-shadow: var(--shadow);
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        min-height: 120px;
+        gap: 6px;
+        min-height: 92px;
         opacity: 0;
         animation: rise 0.7s ease forwards;
         animation-delay: var(--delay, 0s);
@@ -346,15 +354,15 @@
       }
 
       .summary-label {
-        font-size: 0.7rem;
+        font-size: 0.62rem;
         text-transform: uppercase;
-        letter-spacing: 0.18em;
+        letter-spacing: 0.16em;
         color: var(--muted);
       }
 
       .summary-value {
         font-family: "Sora", sans-serif;
-        font-size: 1.9rem;
+        font-size: 1.55rem;
         position: relative;
         z-index: 1;
       }
@@ -362,7 +370,7 @@
       .summary-meta {
         margin: 0;
         color: var(--muted);
-        font-size: 0.85rem;
+        font-size: 0.78rem;
         position: relative;
         z-index: 1;
       }
@@ -373,14 +381,17 @@
         grid-template-areas:
           "map side"
           "feed side";
-        gap: 20px;
+        grid-template-rows: minmax(320px, 1fr) minmax(160px, 0.6fr);
+        gap: 16px;
+        height: 100%;
+        align-items: stretch;
       }
 
       .card {
         background: linear-gradient(180deg, #ffffff 0%, #f7f8fb 100%);
         border: 1px solid var(--border);
-        border-radius: 24px;
-        padding: 22px;
+        border-radius: 20px;
+        padding: 16px;
         box-shadow: var(--shadow);
         position: relative;
         overflow: hidden;
@@ -391,17 +402,24 @@
 
       .map-card {
         grid-area: map;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
       }
 
       .side-panel {
         grid-area: side;
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 14px;
+        min-height: 0;
       }
 
       .feed-card {
         grid-area: feed;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
       }
 
       .card-head {
@@ -409,35 +427,35 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
       }
 
       .card-head h2 {
         margin: 0;
         font-family: "Sora", sans-serif;
-        font-size: 1.4rem;
+        font-size: 1.25rem;
       }
 
       .card-head p {
         margin: 6px 0 0;
         color: var(--muted);
-        font-size: 0.9rem;
+        font-size: 0.84rem;
       }
 
       .segmented {
         display: inline-flex;
-        gap: 6px;
+        gap: 4px;
         background: rgba(0, 0, 0, 0.05);
-        padding: 5px;
+        padding: 4px;
         border-radius: 999px;
       }
 
       .segmented-btn {
         border: none;
         background: transparent;
-        padding: 8px 14px;
+        padding: 6px 10px;
         border-radius: 999px;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         font-weight: 600;
         color: var(--muted);
         cursor: pointer;
@@ -460,11 +478,13 @@
         border-radius: 22px;
         background: linear-gradient(135deg, #ffffff 0%, var(--bg-alt) 60%, #eef3fb 100%);
         border: 1px solid var(--border);
-        padding: 20px;
-        min-height: 460px;
+        padding: 14px;
+        min-height: 280px;
+        height: 100%;
         overflow: hidden;
         display: grid;
         place-items: center;
+        flex: 1;
       }
 
       .map-shell::before {
@@ -493,7 +513,7 @@
         position: relative;
         width: 100%;
         height: 100%;
-        max-height: 520px;
+        max-height: none;
         z-index: 1;
       }
 
@@ -553,13 +573,13 @@
 
       .map-hint {
         position: absolute;
-        bottom: 14px;
-        left: 18px;
-        font-size: 0.8rem;
+        bottom: 10px;
+        left: 12px;
+        font-size: 0.74rem;
         color: var(--muted);
         z-index: 3;
         background: rgba(255, 255, 255, 0.9);
-        padding: 6px 10px;
+        padding: 4px 8px;
         border-radius: 999px;
         border: 1px solid var(--border);
       }
@@ -568,7 +588,7 @@
         display: flex;
         gap: 16px;
         align-items: center;
-        margin-top: 16px;
+        margin-top: 10px;
         font-size: 0.8rem;
         color: var(--muted);
         justify-content: space-between;
@@ -598,13 +618,13 @@
       .panel-section {
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 18px;
-        padding: 16px;
+        border-radius: 16px;
+        padding: 12px;
       }
 
       .panel-title {
-        margin: 0 0 12px;
-        font-size: 1rem;
+        margin: 0 0 10px;
+        font-size: 0.95rem;
         font-weight: 700;
       }
 
@@ -618,19 +638,19 @@
       .province-name {
         margin: 0;
         font-weight: 700;
-        font-size: 1.1rem;
+        font-size: 1.02rem;
       }
 
       .province-region {
         margin: 4px 0 0;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: var(--muted);
       }
 
       .province-status {
-        padding: 4px 10px;
+        padding: 3px 8px;
         border-radius: 999px;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 600;
         background: rgba(0, 0, 0, 0.06);
         color: var(--ink);
@@ -639,34 +659,34 @@
       .stat-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        margin-top: 14px;
+        gap: 8px;
+        margin-top: 10px;
       }
 
       .stat-item {
-        padding: 12px;
-        border-radius: 14px;
+        padding: 9px;
+        border-radius: 12px;
         background: rgba(0, 0, 0, 0.04);
         border: 1px solid rgba(15, 52, 96, 0.06);
       }
 
       .stat-item span {
         display: block;
-        font-size: 0.68rem;
+        font-size: 0.6rem;
         letter-spacing: 0.12em;
         text-transform: uppercase;
         color: var(--muted);
-        margin-bottom: 6px;
+        margin-bottom: 4px;
       }
 
       .stat-item strong {
-        font-size: 1.1rem;
+        font-size: 1rem;
       }
 
       .top-provinces {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
       }
 
       .province-row {
@@ -674,8 +694,8 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 10px 12px;
-        border-radius: 14px;
+        padding: 8px 10px;
+        border-radius: 12px;
         background: var(--card);
         border: 1px solid var(--border);
       }
@@ -693,46 +713,46 @@
         align-items: center;
         gap: 6px;
         font-weight: 700;
-        font-size: 1rem;
+        font-size: 0.95rem;
       }
 
       .province-delta {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         color: var(--muted);
       }
 
       .trend-card {
         display: grid;
-        gap: 12px;
+        gap: 10px;
       }
 
       .trend-graph {
         width: 100%;
-        height: 80px;
-        border-radius: 14px;
+        height: 68px;
+        border-radius: 12px;
         background: rgba(15, 52, 96, 0.05);
         border: 1px solid rgba(15, 52, 96, 0.08);
-        padding: 10px;
+        padding: 8px;
       }
 
       .trend-meta {
         display: flex;
         justify-content: space-between;
-        font-size: 0.8rem;
+        font-size: 0.74rem;
         color: var(--muted);
       }
 
       .funnel {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
       }
 
       .funnel-row {
         display: grid;
         grid-template-columns: 1fr auto;
         gap: 8px;
-        font-size: 0.85rem;
+        font-size: 0.78rem;
         color: var(--muted);
       }
 
@@ -757,30 +777,32 @@
       }
 
       .feed-list {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        flex: 1;
+        min-height: 0;
       }
 
       .feed-item {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 12px 14px;
-        border-radius: 16px;
+        padding: 10px 12px;
+        border-radius: 14px;
         background: var(--card);
         border: 1px solid var(--border);
       }
 
       .feed-icon {
-        width: 38px;
-        height: 38px;
-        border-radius: 12px;
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
         display: grid;
         place-items: center;
         font-weight: 700;
         color: #fff;
-        font-size: 0.85rem;
+        font-size: 0.75rem;
       }
 
       .feed-icon.cart {
@@ -804,19 +826,20 @@
       .feed-title {
         margin: 0;
         font-weight: 600;
+        font-size: 0.9rem;
       }
 
       .feed-meta {
         margin: 4px 0 0;
-        font-size: 0.8rem;
+        font-size: 0.72rem;
         color: var(--muted);
       }
 
       .feed-pill {
-        padding: 6px 12px;
+        padding: 5px 10px;
         border-radius: 999px;
         background: rgba(0, 0, 0, 0.06);
-        font-size: 0.8rem;
+        font-size: 0.72rem;
       }
 
       .error {
@@ -878,20 +901,53 @@
         }
       }
 
-      @media (max-width: 1200px) {
+      @media (max-width: 1100px) {
+        body {
+          overflow-y: auto;
+        }
+        .shell {
+          height: auto;
+          min-height: 0;
+          display: block;
+          padding-bottom: 40px;
+        }
+        .grid {
+          height: auto;
+          grid-template-rows: none;
+        }
         .summary {
           grid-template-columns: repeat(3, 1fr);
         }
-      }
-
-      @media (max-width: 1100px) {
         .topbar-inner {
           flex-wrap: wrap;
           justify-content: center;
-          padding: 14px 24px;
+          padding: 12px 24px;
+          height: auto;
         }
         .topbar-status {
           order: 3;
+        }
+        .map-shell {
+          height: auto;
+        }
+      }
+
+      @media (max-height: 860px) {
+        body {
+          overflow-y: auto;
+        }
+        .shell {
+          height: auto;
+          min-height: 0;
+          display: block;
+          padding-bottom: 40px;
+        }
+        .grid {
+          height: auto;
+          grid-template-rows: none;
+        }
+        .map-shell {
+          height: auto;
         }
       }
 
@@ -909,6 +965,9 @@
             "map"
             "side"
             "feed";
+        }
+        .feed-list {
+          grid-template-columns: 1fr;
         }
       }
 
@@ -928,7 +987,7 @@
           flex-wrap: wrap;
         }
         .map-shell {
-          min-height: 360px;
+          min-height: 300px;
         }
       }
 
@@ -1604,7 +1663,7 @@
           const list = document.getElementById("top-provinces");
           if (!list) return;
 
-          const sorted = [...state.provinces].sort((a, b) => metricValue(b) - metricValue(a)).slice(0, 5);
+          const sorted = [...state.provinces].sort((a, b) => metricValue(b) - metricValue(a)).slice(0, 4);
           list.textContent = "";
 
           sorted.forEach((province) => {
@@ -1672,7 +1731,7 @@
 
         const addEvent = (event) => {
           state.events.unshift(event);
-          state.events = state.events.slice(0, 8);
+          state.events = state.events.slice(0, 4);
         };
 
         const randomBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;

@@ -80,20 +80,41 @@
         left: 0;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 600;
         text-decoration: none;
-        transition: color 0.2s ease;
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 12px 30px -24px rgba(0, 0, 0, 0.55);
+        transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
       }
 
       .back-link:hover {
         color: #fff;
+        background: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.28);
+        transform: translateY(-1px);
       }
 
       .back-link svg {
         width: 18px;
         height: 18px;
+        opacity: 0.95;
+      }
+
+      .back-link:active {
+        transform: translateY(0);
+      }
+
+      .back-link:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(230, 194, 0, 0.25), 0 12px 30px -24px rgba(0, 0, 0, 0.55);
       }
 
       .auth-headline {
