@@ -77,7 +77,7 @@
           return;
         }
         setFeedback(feedbackEl, "Inloggen gelukt, je wordt doorgestuurd...", "success");
-        window.location.href = "chat.html";
+        window.location.href = "course.html";
       } catch (err) {
         console.error("Onverwachte fout tijdens login", err);
         setFeedback(feedbackEl, "Er ging iets mis, probeer het opnieuw.");
