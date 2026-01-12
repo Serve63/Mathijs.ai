@@ -1392,25 +1392,26 @@
       }
 
 		      .model-select__trigger {
-		        padding: 6px 14px;
-		        border-radius: 12px;
+		        padding: 5px 10px;
+		        border-radius: 10px;
 		        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
 		        color: #fff;
-		        font-size: 0.7rem;
+		        font-size: 0.65rem;
 		        font-weight: 600;
 		        letter-spacing: 0.01em;
 		        text-transform: none;
-		        border: 2px solid rgba(230, 194, 0, 0.35);
+		        border: 1.5px solid rgba(230, 194, 0, 0.35);
 		        cursor: pointer;
 	        display: inline-flex;
 	        align-items: center;
-	        gap: 6px;
-	        min-width: 150px;
+	        gap: 5px;
+	        min-width: 120px;
+	        max-width: 140px;
 	        justify-content: space-between;
 	        white-space: nowrap;
 	        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 		        box-shadow: 
-		          0 6px 24px -10px rgba(230, 194, 0, 0.3),
+		          0 4px 16px -8px rgba(230, 194, 0, 0.3),
 		          inset 0 1px 0 rgba(255, 255, 255, 0.1);
 		        position: relative;
 		        overflow: hidden;
@@ -1444,21 +1445,24 @@
 	      .model-select__trigger .selected-label {
 	        display: inline-flex;
 	        align-items: center;
-	        gap: 8px;
+	        gap: 6px;
 	        white-space: nowrap;
 	        font-weight: 600;
 	        letter-spacing: 0.01em;
 	        color: #fff;
 	        flex: 1 1 auto;
 	        justify-content: center;
+	        overflow: hidden;
+	        text-overflow: ellipsis;
 	      }
 
       .model-select__trigger svg {
-        width: 12px;
-        height: 12px;
+        width: 10px;
+        height: 10px;
         fill: currentColor;
         opacity: 0.7;
         transition: all 0.3s ease;
+        flex-shrink: 0;
       }
 
       .model-select__trigger:hover svg {
