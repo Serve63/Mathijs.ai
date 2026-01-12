@@ -266,36 +266,6 @@
         display: none !important;
       }
 
-      .load-more-wrap {
-        display: flex;
-        justify-content: center;
-        margin-top: 18px;
-      }
-
-      .load-more-btn {
-        appearance: none;
-        border: 1px solid rgba(230, 194, 0, 0.35);
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        color: #fff;
-        padding: 12px 18px;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 0.95rem;
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-        box-shadow: 0 10px 22px -12px rgba(16, 21, 32, 0.25);
-      }
-
-      .load-more-btn:hover {
-        transform: translateY(-2px);
-        border-color: rgba(230, 194, 0, 0.65);
-        box-shadow: 0 16px 28px -14px rgba(230, 194, 0, 0.22);
-      }
-
-      .load-more-btn:active {
-        transform: translateY(0);
-      }
-
       /* Lesson video modal */
       .lesson-modal {
         position: fixed;
@@ -913,9 +883,6 @@
           <div class="lesson-meta">Duur: 12 min · Niveau: Pro</div>
         </div>
       </div>
-      <div class="load-more-wrap">
-        <button class="load-more-btn" id="load-more-btn" type="button">Bekijk meer</button>
-      </div>
     </main>
     <footer>© Mathijs.ai 2024 · Mathijs.ai Academy</footer>
     <div class="lesson-modal is-hidden" id="lesson-modal" role="dialog" aria-modal="true" aria-label="Les video">
@@ -933,32 +900,6 @@
       </div>
     </div>
     <script>
-      (function initLessonLoadMore() {
-        const grid = document.getElementById("lesson-grid");
-        const btn = document.getElementById("load-more-btn");
-        if (!grid || !btn) return;
-
-        const tiles = Array.from(grid.querySelectorAll(".lesson-tile"));
-        const STEP = 12;
-        let visibleCount = STEP;
-
-        function applyVisibility() {
-          tiles.forEach((tile, idx) => {
-            tile.classList.toggle("is-hidden", idx >= visibleCount);
-          });
-          const done = visibleCount >= tiles.length;
-          btn.classList.toggle("is-hidden", done);
-        }
-
-        btn.addEventListener("click", () => {
-          visibleCount = Math.min(visibleCount + STEP, tiles.length);
-          applyVisibility();
-        });
-
-        // start state
-        applyVisibility();
-      })();
-
       (function initLessonVideoModal() {
         const DEFAULT_VIDEO_SRC = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
         const grid = document.getElementById("lesson-grid");
