@@ -3,27 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mathijs.ai | Personeel dashboard</title>
+    <title>Mathijs.ai | Personeel Live</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Sora:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
       :root {
-        --accent: #e6c200;
-        --accent-dark: #c9a900;
-        --hero-1: #1a1a2e;
-        --hero-2: #16213e;
-        --hero-3: #0f3460;
-        --bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-        --card: rgba(255, 255, 255, 0.06);
-        --card-border: rgba(255, 255, 255, 0.1);
-        --fg: #ffffff;
-        --muted: rgba(255, 255, 255, 0.6);
-        --danger: #ff6b6b;
-        --success: #00b894;
+        --ink: #14213d;
+        --ink-soft: #2f3e46;
+        --muted: #5f6c7b;
+        --bg: #f5f1e8;
+        --bg-2: #e7f1f6;
+        --accent: #ff6b35;
+        --accent-2: #1d9a8a;
+        --accent-3: #f4d35e;
+        --card: rgba(255, 255, 255, 0.9);
+        --border: rgba(20, 33, 61, 0.12);
+        --shadow: 0 24px 60px -36px rgba(15, 23, 42, 0.4);
+        --map-land: #d6ead6;
+        --map-water: #cfe6ff;
       }
 
       * {
@@ -33,22 +34,21 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: var(--bg);
-        background-attachment: fixed;
-        color: var(--fg);
+        font-family: "Sora", sans-serif;
+        color: var(--ink);
+        background: linear-gradient(130deg, var(--bg) 0%, #eef3ea 45%, var(--bg-2) 100%);
+        position: relative;
+        overflow-x: hidden;
       }
 
       body::before {
-        content: '';
+        content: "";
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: 
-          radial-gradient(ellipse 80% 50% at 20% 30%, rgba(230, 194, 0, 0.08) 0%, transparent 50%),
-          radial-gradient(ellipse 60% 40% at 85% 70%, rgba(230, 194, 0, 0.06) 0%, transparent 50%);
+        inset: 0;
+        background:
+          radial-gradient(circle at 12% 18%, rgba(255, 107, 53, 0.12) 0%, transparent 55%),
+          radial-gradient(circle at 85% 20%, rgba(29, 154, 138, 0.14) 0%, transparent 60%),
+          radial-gradient(circle at 80% 78%, rgba(244, 211, 94, 0.2) 0%, transparent 55%);
         pointer-events: none;
         z-index: 0;
       }
@@ -58,22 +58,105 @@
         text-decoration: none;
       }
 
+      .ambient-shape {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(0px);
+        opacity: 0.25;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .shape-a {
+        width: 460px;
+        height: 460px;
+        background: radial-gradient(circle, rgba(255, 107, 53, 0.55) 0%, transparent 70%);
+        top: -180px;
+        right: -140px;
+      }
+
+      .shape-b {
+        width: 520px;
+        height: 520px;
+        background: radial-gradient(circle, rgba(29, 154, 138, 0.45) 0%, transparent 72%);
+        bottom: -220px;
+        left: -200px;
+      }
+
       .topbar {
         position: sticky;
         top: 0;
-        z-index: 10;
-        background: rgba(26, 26, 46, 0.85);
+        z-index: 5;
         backdrop-filter: blur(16px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(245, 241, 232, 0.7);
+        border-bottom: 1px solid rgba(20, 33, 61, 0.08);
       }
 
       .topbar-inner {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 14px 16px;
+        padding: 16px 24px;
         display: flex;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-3) 100%);
+        box-shadow: 0 12px 24px -18px rgba(255, 107, 53, 0.6);
+      }
+
+      .brand-title {
+        margin: 0;
+        font-family: "Fraunces", serif;
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+
+      .brand-sub {
+        margin: 2px 0 0;
+        font-size: 0.7rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .topbar-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid var(--border);
+        font-size: 0.85rem;
+        color: var(--ink-soft);
+      }
+
+      .live-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent-2);
+        box-shadow: 0 0 0 6px rgba(29, 154, 138, 0.15);
+        animation: pulse 2.4s ease-in-out infinite;
+      }
+
+      .time-chip {
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(20, 33, 61, 0.06);
+        font-size: 0.75rem;
       }
 
       .btn {
@@ -81,1161 +164,821 @@
         align-items: center;
         justify-content: center;
         padding: 10px 18px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.92);
+        border-radius: 999px;
+        border: 1px solid rgba(20, 33, 61, 0.15);
+        background: rgba(255, 255, 255, 0.7);
+        color: var(--ink);
         font-weight: 600;
-        font-size: 0.88rem;
+        font-size: 0.9rem;
         cursor: pointer;
         transition: all 0.2s ease;
       }
 
       .btn:hover {
-        background: rgba(255, 255, 255, 0.14);
-        border-color: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 107, 53, 0.4);
+        box-shadow: 0 12px 28px -20px rgba(255, 107, 53, 0.5);
         transform: translateY(-1px);
       }
 
-      .btn.primary {
-        background: var(--accent);
-        border-color: transparent;
-        color: #1a1600;
+      .btn.ghost {
+        background: transparent;
       }
 
-      .btn.primary:hover {
-        background: var(--accent-dark);
-        box-shadow: 0 4px 20px rgba(230, 194, 0, 0.3);
-      }
-
-      .container {
+      .shell {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 40px 24px 80px;
+        padding: 28px 24px 80px;
         position: relative;
         z-index: 1;
       }
 
-      .welcome {
-        margin-bottom: 40px;
+      .hero {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 24px;
       }
 
-      .welcome h1 {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 2rem;
-        font-weight: 700;
-        margin: 0 0 8px;
-        color: #fff;
-      }
-
-      .welcome p {
+      .hero h1 {
+        font-family: "Fraunces", serif;
+        font-size: 2.7rem;
         margin: 0;
+        letter-spacing: 0.02em;
+      }
+
+      .hero p {
+        margin: 10px 0 0;
+        max-width: 520px;
         color: var(--muted);
         font-size: 1rem;
       }
 
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .summary-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 120px;
+        opacity: 0;
+        animation: rise 0.7s ease forwards;
+        animation-delay: var(--delay, 0s);
+      }
+
+      .summary-card span {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: var(--muted);
+      }
+
+      .summary-card strong {
+        font-family: "Fraunces", serif;
+        font-size: 1.8rem;
+      }
+
+      .summary-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
       .grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
+        grid-template-columns: 2.2fr 1fr;
+        grid-template-areas:
+          "map side"
+          "feed side";
+        gap: 20px;
       }
 
       .card {
         background: var(--card);
-        backdrop-filter: blur(12px);
-        border: 1px solid var(--card-border);
-        border-radius: 20px;
-        padding: 28px;
-        transition: all 0.3s ease;
-      }
-
-      .card:hover {
-        border-color: rgba(230, 194, 0, 0.3);
-        transform: translateY(-2px);
-        box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.4);
-      }
-
-      .kpi {
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 22px;
+        box-shadow: var(--shadow);
         position: relative;
         overflow: hidden;
+        opacity: 0;
+        animation: rise 0.7s ease forwards;
+        animation-delay: var(--delay, 0s);
       }
 
-      .kpi::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle, rgba(230, 194, 0, 0.08) 0%, transparent 70%);
-        pointer-events: none;
+      .map-card {
+        grid-area: map;
       }
 
-      .kpi-icon {
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-        border-radius: 14px;
+      .side-panel {
+        grid-area: side;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .feed-card {
+        grid-area: feed;
+      }
+
+      .card-head {
         display: flex;
         align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
-      }
-
-      .kpi-icon svg {
-        width: 24px;
-        height: 24px;
-        color: #1a1600;
-      }
-
-      .kpi-label {
-        font-size: 0.8rem;
-        color: var(--muted);
-        margin: 0 0 8px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        font-weight: 600;
-      }
-
-      .kpi-value {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 3rem;
-        font-weight: 700;
-        margin: 0;
-        background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-
-      .kpi-foot {
-        margin-top: 12px;
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-
-      .kpi-danger::before {
-        background: radial-gradient(circle, rgba(255, 107, 107, 0.12) 0%, transparent 70%);
-      }
-
-      .kpi-icon-danger {
-        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
-      }
-
-      .kpi-success::before {
-        background: radial-gradient(circle, rgba(0, 184, 148, 0.12) 0%, transparent 70%);
-      }
-
-      .kpi-icon-success {
-        background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
-      }
-
-      .list {
-        grid-column: span 3;
-        padding: 0;
-        overflow: hidden;
-        margin-top: 16px;
-      }
-
-      .api-status {
-        grid-column: span 3;
-      }
-
-      .api-head {
-        display: flex;
-        align-items: flex-start;
         justify-content: space-between;
         gap: 16px;
         margin-bottom: 16px;
       }
 
-      .api-title {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 1.3rem;
-        margin: 0 0 6px;
+      .card-head h2 {
+        margin: 0;
+        font-family: "Fraunces", serif;
+        font-size: 1.4rem;
       }
 
-      .api-sub {
-        margin: 0;
+      .card-head p {
+        margin: 6px 0 0;
         color: var(--muted);
         font-size: 0.9rem;
       }
 
-      .api-grid {
+      .segmented {
+        display: inline-flex;
+        gap: 6px;
+        background: rgba(20, 33, 61, 0.08);
+        padding: 5px;
+        border-radius: 999px;
+      }
+
+      .segmented-btn {
+        border: none;
+        background: transparent;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .segmented-btn.active {
+        background: #fff;
+        color: var(--ink);
+        box-shadow: 0 10px 20px -16px rgba(20, 33, 61, 0.5);
+      }
+
+      .map-shell {
+        position: relative;
+        border-radius: 22px;
+        background: linear-gradient(140deg, #fdf7ee 0%, #eaf3eb 60%, #e1eff9 100%);
+        border: 1px solid rgba(20, 33, 61, 0.08);
+        padding: 20px;
+        min-height: 420px;
+        overflow: hidden;
+      }
+
+      .map-shell::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          repeating-linear-gradient(120deg, rgba(20, 33, 61, 0.04) 0 2px, transparent 2px 14px),
+          radial-gradient(circle at 15% 35%, rgba(255, 255, 255, 0.6) 0%, transparent 55%),
+          radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.5) 0%, transparent 65%);
+        opacity: 0.5;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .map-scan {
+        position: absolute;
+        inset: -40% 0 0 0;
+        background: linear-gradient(180deg, transparent 0%, rgba(255, 107, 53, 0.15) 50%, transparent 100%);
+        animation: scan 8s linear infinite;
+        pointer-events: none;
+        z-index: 2;
+      }
+
+      .nl-map {
+        position: absolute;
+        inset: 6% 10% 8% 10%;
+        width: 80%;
+        height: 86%;
+        z-index: 1;
+      }
+
+      .nl-land {
+        fill: var(--map-land);
+        stroke: rgba(20, 33, 61, 0.18);
+        stroke-width: 2;
+      }
+
+      .nl-water {
+        fill: var(--map-water);
+        opacity: 0.9;
+      }
+
+      .map-pins {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+      }
+
+      .map-pin {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        transform: translate(-50%, -50%);
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-      }
-
-      .api-item {
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid var(--card-border);
-        border-radius: 16px;
-        padding: 18px;
-      }
-
-      .api-item h3 {
-        margin: 0 0 8px;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: var(--muted);
-      }
-
-      .api-value {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 2rem;
+        place-items: center;
+        border: 2px solid #fff;
         font-weight: 700;
-        margin: 0;
+        font-size: 0.78rem;
+        letter-spacing: 0.02em;
+        color: #fff;
+        background: var(--accent-2);
+        cursor: pointer;
+        box-shadow: 0 16px 32px -20px rgba(20, 33, 61, 0.6);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
 
-      .api-meta {
-        margin-top: 6px;
-        font-size: 0.85rem;
+      .map-pin::after {
+        content: "";
+        position: absolute;
+        inset: -8px;
+        border-radius: 999px;
+        border: 2px solid rgba(29, 154, 138, 0.35);
+        animation: ping 2.8s ease-out infinite;
+      }
+
+      .map-pin.load-mid {
+        background: #f4a259;
+      }
+
+      .map-pin.load-mid::after {
+        border-color: rgba(244, 162, 89, 0.4);
+      }
+
+      .map-pin.load-high {
+        background: var(--accent);
+      }
+
+      .map-pin.load-high::after {
+        border-color: rgba(255, 107, 53, 0.45);
+      }
+
+      .map-pin.active {
+        transform: translate(-50%, -50%) scale(1.08);
+        box-shadow: 0 20px 36px -18px rgba(255, 107, 53, 0.6);
+      }
+
+      .pin-label {
+        position: absolute;
+        left: 50%;
+        top: -10px;
+        transform: translate(-50%, -100%);
+        background: #fff;
+        color: var(--ink);
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(20, 33, 61, 0.15);
+        font-size: 0.72rem;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+
+      .map-pin:hover .pin-label,
+      .map-pin.active .pin-label {
+        opacity: 1;
+      }
+
+      .map-hint {
+        position: absolute;
+        bottom: 14px;
+        left: 18px;
+        font-size: 0.8rem;
         color: var(--muted);
+        z-index: 3;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(20, 33, 61, 0.08);
       }
 
-      .api-limit-row {
-        margin-top: 12px;
+      .map-legend {
         display: flex;
+        gap: 16px;
         align-items: center;
-        justify-content: space-between;
+        margin-top: 16px;
         font-size: 0.8rem;
         color: var(--muted);
       }
 
-      .api-progress {
-        width: 100%;
-        height: 6px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-        overflow: hidden;
-        margin-top: 8px;
-      }
-
-      .api-progress > span {
-        display: block;
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, #00b894 0%, #e6c200 100%);
-        transition: width 0.3s ease;
-      }
-
-      .api-progress > span.warn {
-        background: linear-gradient(90deg, #e6c200 0%, #ff6b6b 100%);
-      }
-
-      .api-progress > span.danger {
-        background: linear-gradient(90deg, #ff6b6b 0%, #ff6b6b 100%);
-      }
-
-      .api-foot {
-        margin-top: 16px;
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-
-      .api-error {
-        margin-top: 12px;
-        font-size: 0.85rem;
-        color: var(--danger);
-        display: none;
-      }
-
-      .list-head {
-        display: flex;
+      .legend-item {
+        display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 24px 28px;
-        border-bottom: 1px solid var(--card-border);
+        gap: 6px;
       }
 
-      .list-title {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 1.2rem;
+      .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+
+      .legend-low {
+        background: var(--accent-2);
+      }
+
+      .legend-mid {
+        background: #f4a259;
+      }
+
+      .legend-high {
+        background: var(--accent);
+      }
+
+      .panel-section {
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(20, 33, 61, 0.08);
+        border-radius: 18px;
+        padding: 16px;
+      }
+
+      .panel-title {
+        margin: 0 0 12px;
+        font-size: 1rem;
         font-weight: 700;
-        margin: 0;
+      }
+
+      .store-header {
         display: flex;
+        justify-content: space-between;
         align-items: center;
         gap: 12px;
       }
 
-      .list-title-icon {
-        width: 32px;
-        height: 32px;
-        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      .store-name {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.1rem;
       }
 
-      .list-title-icon svg {
-        width: 18px;
-        height: 18px;
-        color: #1a1600;
-      }
-
-      .list-sub {
-        font-size: 0.85rem;
+      .store-region {
+        margin: 4px 0 0;
+        font-size: 0.8rem;
         color: var(--muted);
       }
 
-      .rows {
+      .store-status {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: rgba(20, 33, 61, 0.08);
+      }
+
+      .focus-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .focus-item {
+        padding: 12px;
+        border-radius: 14px;
+        background: rgba(20, 33, 61, 0.05);
+      }
+
+      .focus-item span {
+        display: block;
+        font-size: 0.68rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      .focus-item strong {
+        font-size: 1.1rem;
+      }
+
+      .top-stores {
         display: flex;
         flex-direction: column;
+        gap: 10px;
       }
 
-      .row {
+      .store-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(20, 33, 61, 0.08);
+      }
+
+      .store-row p {
+        margin: 0;
+      }
+
+      .store-row .store-region {
+        font-size: 0.74rem;
+      }
+
+      .store-metric {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 700;
+        font-size: 1rem;
+      }
+
+      .store-delta {
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+
+      .feed-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .feed-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(20, 33, 61, 0.08);
+      }
+
+      .feed-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
         display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 16px;
-        padding: 18px 28px;
-        border-bottom: 1px solid var(--card-border);
-        transition: background 0.2s ease;
-      }
-
-      .row:hover {
-        background: rgba(255, 255, 255, 0.03);
-      }
-
-      .row:last-child {
-        border-bottom: none;
-      }
-
-      .row-email {
-        font-weight: 600;
+        place-items: center;
+        font-weight: 700;
         color: #fff;
+        font-size: 0.85rem;
       }
 
-      .row-date {
-        color: var(--muted);
-        font-size: 0.9rem;
-        text-align: right;
+      .feed-icon.cart {
+        background: var(--accent-2);
       }
 
-      .empty-rows {
-        padding: 40px 28px;
-        text-align: center;
+      .feed-icon.checkout {
+        background: var(--accent);
+      }
+
+      .feed-icon.abandon {
+        background: #ffb703;
+        color: #3d2f00;
+      }
+
+      .feed-title {
+        margin: 0;
+        font-weight: 600;
+      }
+
+      .feed-meta {
+        margin: 4px 0 0;
+        font-size: 0.8rem;
         color: var(--muted);
+      }
+
+      .feed-pill {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(20, 33, 61, 0.08);
+        font-size: 0.8rem;
       }
 
       .error {
-        grid-column: span 3;
-        margin-top: 16px;
-        padding: 20px 24px;
-        background: rgba(255, 107, 107, 0.1);
-        border: 1px solid rgba(255, 107, 107, 0.3);
-        border-radius: 14px;
-        color: var(--danger);
-        font-weight: 600;
-      }
-
-      /* Clickable KPI */
-      .kpi.clickable {
-        cursor: pointer;
-      }
-
-      .kpi.clickable:hover {
-        border-color: var(--accent);
-        box-shadow: 0 0 30px rgba(230, 194, 0, 0.2);
-      }
-
-      /* Modal */
-      .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(8px);
-        z-index: 100;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-      }
-
-      .modal-overlay.active {
-        display: flex;
-      }
-
-      .modal {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border: 1px solid var(--card-border);
-        border-radius: 24px;
-        width: 100%;
-        max-width: 900px;
-        max-height: 85vh;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.6);
-      }
-
-      .modal-header {
-        padding: 24px 28px;
-        border-bottom: 1px solid var(--card-border);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-      }
-
-      .modal-title {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 1.4rem;
-        font-weight: 700;
-        margin: 0;
-      }
-
-      .modal-close {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        border: 1px solid var(--card-border);
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
-        font-size: 1.4rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-      }
-
-      .modal-close:hover {
-        background: rgba(255, 107, 107, 0.2);
-        border-color: var(--danger);
-      }
-
-      .modal-body {
-        flex: 1;
-        overflow-y: auto;
-        padding: 24px 28px;
-      }
-
-      .modal-search {
-        margin-bottom: 20px;
-      }
-
-      .modal-search input {
-        width: 100%;
-        padding: 14px 18px;
-        border-radius: 12px;
-        border: 1px solid var(--card-border);
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
-        font-size: 0.95rem;
-        font-family: inherit;
-      }
-
-      .modal-search input::placeholder {
-        color: var(--muted);
-      }
-
-      .modal-search input:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(230, 194, 0, 0.15);
-      }
-
-      .customer-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .customer-row {
-        display: grid;
-        grid-template-columns: 1fr auto auto;
-        gap: 16px;
-        align-items: center;
-        padding: 16px 20px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--card-border);
-        border-radius: 14px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-      }
-
-      .customer-row:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: var(--accent);
-      }
-
-      .customer-email {
-        font-weight: 600;
-      }
-
-      .customer-date {
-        color: var(--muted);
-        font-size: 0.85rem;
-      }
-
-      .customer-badge {
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-      }
-
-      .customer-badge.active {
-        background: rgba(0, 184, 148, 0.2);
-        color: var(--success);
-      }
-
-      .customer-badge.cancelled {
-        background: rgba(255, 107, 107, 0.2);
-        color: var(--danger);
-      }
-
-      /* Customer Detail */
-      .customer-detail {
-        display: none;
-      }
-
-      .customer-detail.active {
-        display: block;
-      }
-
-      .detail-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 16px;
-        border-radius: 10px;
-        border: 1px solid var(--card-border);
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
-        font-size: 0.9rem;
-        cursor: pointer;
-        margin-bottom: 24px;
-        transition: all 0.2s ease;
-      }
-
-      .detail-back:hover {
-        background: rgba(255, 255, 255, 0.1);
-      }
-
-      .detail-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 20px;
-        margin-bottom: 32px;
-      }
-
-      .detail-info h2 {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 1.6rem;
-        font-weight: 700;
-        margin: 0 0 8px;
-      }
-
-      .detail-info p {
-        color: var(--muted);
-        margin: 0;
-      }
-
-      .detail-stats {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin-bottom: 32px;
-      }
-
-      .detail-stat {
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid var(--card-border);
+        margin-top: 20px;
+        padding: 16px;
         border-radius: 16px;
-        padding: 20px;
-        text-align: center;
-      }
-
-      .detail-stat-value {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: var(--accent);
-        margin: 0 0 4px;
-      }
-
-      .detail-stat-value.danger {
-        color: var(--danger);
-      }
-
-      .detail-stat-value.success {
-        color: var(--success);
-      }
-
-      .detail-stat-label {
-        font-size: 0.8rem;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-
-      .detail-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-      }
-
-      .action-section {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--card-border);
-        border-radius: 16px;
-        padding: 24px;
-      }
-
-      .action-section h3 {
-        font-family: "Space Grotesk", sans-serif;
-        font-size: 1rem;
+        background: rgba(255, 107, 53, 0.12);
+        border: 1px solid rgba(255, 107, 53, 0.3);
+        color: #9a3412;
         font-weight: 600;
-        margin: 0 0 16px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
       }
 
-      .action-section h3 svg {
-        width: 20px;
-        height: 20px;
-        color: var(--accent);
+      @keyframes rise {
+        0% {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
-      .free-period-form {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
+      @keyframes pulse {
+        0% {
+          transform: scale(0.9);
+          opacity: 0.7;
+        }
+        50% {
+          transform: scale(1.05);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(0.9);
+          opacity: 0.7;
+        }
       }
 
-      .toggle-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 14px;
-        flex-wrap: wrap;
+      @keyframes ping {
+        0% {
+          transform: scale(0.7);
+          opacity: 0.6;
+        }
+        80% {
+          transform: scale(1.4);
+          opacity: 0;
+        }
+        100% {
+          opacity: 0;
+        }
       }
 
-      .toggle {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 12px;
-        border-radius: 12px;
-        border: 1px solid var(--card-border);
-        background: rgba(255, 255, 255, 0.04);
-        color: #fff;
-        font-weight: 600;
-        font-size: 0.9rem;
+      @keyframes scan {
+        0% {
+          transform: translateY(-80%);
+        }
+        100% {
+          transform: translateY(80%);
+        }
       }
 
-      .toggle input {
-        width: 18px;
-        height: 18px;
-        accent-color: var(--accent);
+      @media (max-width: 1100px) {
+        .topbar-inner {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .topbar-status {
+          order: 3;
+        }
       }
 
-      .free-period-form input {
-        width: 80px;
-        padding: 12px 14px;
-        border-radius: 10px;
-        border: 1px solid var(--card-border);
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
-        font-size: 0.95rem;
-        text-align: center;
-      }
-
-      .free-period-form select {
-        padding: 12px 14px;
-        border-radius: 10px;
-        border: 1px solid var(--card-border);
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
-        font-size: 0.95rem;
-        cursor: pointer;
-      }
-
-      .free-period-form select option {
-        background: #1a1a2e;
-      }
-
-      .btn-action {
-        padding: 12px 20px;
-        border-radius: 10px;
-        border: none;
-        font-weight: 600;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-      }
-
-      .btn-action.success {
-        background: var(--success);
-        color: #fff;
-      }
-
-      .btn-action.success:hover {
-        background: #00a085;
-      }
-
-      .btn-action.danger {
-        background: var(--danger);
-        color: #fff;
-      }
-
-      .btn-action.danger:hover {
-        background: #ee5a5a;
-      }
-
-      .danger-zone {
-        border-color: rgba(255, 107, 107, 0.3);
-      }
-
-      .danger-zone h3 {
-        color: var(--danger);
-      }
-
-      .danger-zone h3 svg {
-        color: var(--danger);
-      }
-
-      .danger-zone p {
-        color: var(--muted);
-        margin: 0 0 16px;
-        font-size: 0.9rem;
-      }
-
-      .action-feedback {
-        margin-top: 12px;
-        padding: 10px 14px;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        display: none;
-      }
-
-      .action-feedback.success {
-        background: rgba(0, 184, 148, 0.15);
-        color: var(--success);
-        display: block;
-      }
-
-      .action-feedback.error {
-        background: rgba(255, 107, 107, 0.15);
-        color: var(--danger);
-        display: block;
-      }
-
-      @media (max-width: 768px) {
-        .detail-stats {
+      @media (max-width: 980px) {
+        .hero {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .summary {
           grid-template-columns: repeat(2, 1fr);
         }
-        .customer-row {
+        .grid {
           grid-template-columns: 1fr;
-          gap: 8px;
-        }
-        .free-period-form {
-          flex-direction: column;
-        }
-        .api-grid {
-          grid-template-columns: 1fr;
+          grid-template-areas:
+            "map"
+            "side"
+            "feed";
         }
       }
 
-      @media (max-width: 960px) {
-        .grid {
+      @media (max-width: 640px) {
+        .summary {
           grid-template-columns: 1fr;
         }
-        .list {
-          grid-column: span 1;
+        .topbar-inner {
+          gap: 12px;
         }
-        .api-status {
-          grid-column: span 1;
+        .topbar-status {
+          flex-wrap: wrap;
+          justify-content: center;
         }
-        .api-grid {
-          grid-template-columns: 1fr;
+        .segmented {
+          flex-wrap: wrap;
         }
-        .error {
-          grid-column: span 1;
+        .map-shell {
+          min-height: 360px;
         }
-        .welcome h1 {
-          font-size: 1.6rem;
-        }
-        .kpi-value {
-          font-size: 2.4rem;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
         }
       }
     </style>
   </head>
   <body>
+    <div class="ambient-shape shape-a"></div>
+    <div class="ambient-shape shape-b"></div>
+
     <header class="topbar">
       <div class="topbar-inner">
-        <a class="btn primary" id="staff-logout-btn" href="index.html" role="button">Uitloggen</a>
+        <div class="brand">
+          <span class="brand-mark"></span>
+          <div>
+            <p class="brand-title">Mathijs.ai</p>
+            <p class="brand-sub">Personeel Live</p>
+          </div>
+        </div>
+        <div class="topbar-status">
+          <span class="live-dot"></span>
+          <span id="live-status">Live verbinding</span>
+          <span class="time-chip" id="last-updated">Laatst bijgewerkt: -</span>
+        </div>
+        <a class="btn" id="staff-logout-btn" href="index.html" role="button">Uitloggen</a>
       </div>
     </header>
 
-    <main class="container">
-      <div class="welcome">
-        <h1>👋 Welkom terug</h1>
-        <p>Hier vind je een overzicht van alle klanten en recente activiteit.</p>
-      </div>
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-text">
+          <h1>Nederland Live Map</h1>
+          <p>Live overzicht van winkelwagens, checkouts en omzet per locatie in Nederland.</p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn ghost" id="sync-btn" type="button">Sync nu</button>
+        </div>
+      </section>
 
-      <div class="grid">
-        <section class="card kpi clickable" id="kpi-total-card" title="Klik om alle klanten te bekijken">
-          <div class="kpi-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-          </div>
-          <p class="kpi-label">Actieve klanten</p>
-          <p class="kpi-value" id="kpi-active">—</p>
-          <div class="kpi-foot">
-            Klik om alle klanten te bekijken →
-            <div style="margin-top: 8px; color: rgba(255, 255, 255, 0.55); font-size: 0.82rem;">
-              All time klanten: <span id="kpi-alltime-customers">—</span>
-            </div>
-          </div>
-        </section>
+      <section class="summary">
+        <div class="summary-card" style="--delay: 0.05s">
+          <span>Live winkelwagens</span>
+          <strong id="summary-carts">-</strong>
+          <p>Actieve sessies nu</p>
+        </div>
+        <div class="summary-card" style="--delay: 0.1s">
+          <span>Actieve locaties</span>
+          <strong id="summary-locations">-</strong>
+          <p>Winkels met verkeer</p>
+        </div>
+        <div class="summary-card" style="--delay: 0.15s">
+          <span>Checkouts 15m</span>
+          <strong id="summary-checkouts">-</strong>
+          <p>Afgeronde orders</p>
+        </div>
+        <div class="summary-card" style="--delay: 0.2s">
+          <span>Omzet vandaag</span>
+          <strong id="summary-revenue">-</strong>
+          <p>Gemiddelde order: <span id="summary-avg">-</span></p>
+        </div>
+      </section>
 
-        <section class="card kpi">
-          <div class="kpi-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 3v18h18"/>
-              <path d="M7 14l4-4 4 2 5-7"/>
-            </svg>
-          </div>
-          <p class="kpi-label">Nieuwe klanten dit jaar</p>
-          <p class="kpi-value" id="kpi-new-year">—</p>
-          <div class="kpi-foot">Vanaf 1 jan</div>
-        </section>
-
-        <section class="card kpi">
-          <div class="kpi-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-          </div>
-          <p class="kpi-label">Nieuwe klanten deze maand</p>
-          <p class="kpi-value" id="kpi-new-month">—</p>
-          <div class="kpi-foot">Vanaf 1e</div>
-        </section>
-
-        <section class="card kpi kpi-success">
-          <div class="kpi-icon kpi-icon-success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
-          </div>
-          <p class="kpi-label">ALL TIME INKOMSTEN</p>
-          <p class="kpi-value" id="kpi-revenue-all-net">—</p>
-          <div class="kpi-foot">Netto (btw eraf)</div>
-        </section>
-
-        <section class="card kpi kpi-success">
-          <div class="kpi-icon kpi-icon-success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 3v18h18"/>
-              <path d="M7 14l4-4 4 2 5-7"/>
-            </svg>
-          </div>
-          <p class="kpi-label">Inkomsten dit jaar</p>
-          <p class="kpi-value" id="kpi-revenue-year-net">—</p>
-          <div class="kpi-foot">Netto (btw eraf)</div>
-        </section>
-
-        <section class="card kpi kpi-success">
-          <div class="kpi-icon kpi-icon-success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="1" x2="12" y2="23"/>
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-            </svg>
-          </div>
-          <p class="kpi-label">Inkomsten deze maand</p>
-          <p class="kpi-value" id="kpi-revenue-month-net">—</p>
-          <div class="kpi-foot">Betalende leden × €20</div>
-        </section>
-
-        <section class="card kpi kpi-danger">
-          <div class="kpi-icon kpi-icon-danger">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="8.5" cy="7" r="4"/>
-              <line x1="18" y1="8" x2="23" y2="13"/>
-              <line x1="23" y1="8" x2="18" y2="13"/>
-            </svg>
-          </div>
-          <p class="kpi-label">all time Opgezegd</p>
-          <p class="kpi-value" id="kpi-cancelled-all">—</p>
-          <div class="kpi-foot">Totaal opgezegd</div>
-        </section>
-
-        <section class="card kpi kpi-danger">
-          <div class="kpi-icon kpi-icon-danger">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="8.5" cy="7" r="4"/>
-              <line x1="18" y1="8" x2="23" y2="13"/>
-              <line x1="23" y1="8" x2="18" y2="13"/>
-            </svg>
-          </div>
-          <p class="kpi-label">dit jaar opgezegd</p>
-          <p class="kpi-value" id="kpi-cancelled-year">—</p>
-          <div class="kpi-foot">Vanaf 1 jan</div>
-        </section>
-
-        <section class="card kpi kpi-danger">
-          <div class="kpi-icon kpi-icon-danger">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="8.5" cy="7" r="4"/>
-              <line x1="18" y1="8" x2="23" y2="13"/>
-              <line x1="23" y1="8" x2="18" y2="13"/>
-            </svg>
-          </div>
-          <p class="kpi-label">Deze maand opgezegd</p>
-          <p class="kpi-value" id="kpi-cancelled-month">—</p>
-          <div class="kpi-foot">Vanaf 1e</div>
-        </section>
-
-        <section class="card api-status" id="api-status-card">
-          <div class="api-head">
+      <section class="grid">
+        <section class="card map-card" style="--delay: 0.1s">
+          <div class="card-head">
             <div>
-              <h2 class="api-title">API situatie</h2>
-              <p class="api-sub">Schatting op basis van chatverzoeken (tokens).</p>
+              <h2>Kaart overzicht</h2>
+              <p>Bekijk live drukte per stad op de kaart van Nederland.</p>
             </div>
-            <button class="btn" id="api-refresh-btn" type="button">Ververs</button>
-          </div>
-
-          <div class="api-grid">
-            <div class="api-item">
-              <h3>Vandaag</h3>
-              <p class="api-value" id="api-spend-today">—</p>
-              <div class="api-meta"><span id="api-chats-today">—</span> chats</div>
-              <div class="api-limit-row">
-                <span>Limiet</span>
-                <span id="api-limit-today">—</span>
-              </div>
-              <div class="api-progress"><span id="api-progress-today"></span></div>
-            </div>
-
-            <div class="api-item">
-              <h3>Deze maand</h3>
-              <p class="api-value" id="api-spend-month">—</p>
-              <div class="api-meta"><span id="api-chats-month">—</span> chats</div>
-              <div class="api-limit-row">
-                <span>Limiet</span>
-                <span id="api-limit-month">—</span>
-              </div>
-              <div class="api-progress"><span id="api-progress-month"></span></div>
-            </div>
-
-            <div class="api-item">
-              <h3>Dit jaar</h3>
-              <p class="api-value" id="api-spend-year">—</p>
-              <div class="api-meta"><span id="api-chats-year">—</span> chats</div>
-              <div class="api-limit-row">
-                <span>Limiet</span>
-                <span id="api-limit-year">—</span>
-              </div>
-              <div class="api-progress"><span id="api-progress-year"></span></div>
+            <div class="segmented" id="metric-toggle">
+              <button class="segmented-btn active" data-mode="carts" type="button">Winkelwagens</button>
+              <button class="segmented-btn" data-mode="checkouts" type="button">Checkouts</button>
+              <button class="segmented-btn" data-mode="revenue" type="button">Omzet</button>
             </div>
           </div>
-
-          <div class="api-foot">
-            <span id="api-usage-updated">Laatst bijgewerkt: —</span>
-            <span>Limieten instellen via env: API_*_LIMIT_EUR</span>
+          <div class="map-shell">
+            <svg class="nl-map" viewBox="0 0 200 320" aria-hidden="true" focusable="false">
+              <path
+                class="nl-land"
+                d="M92 10 L74 18 L64 30 L58 44 L52 60 L48 76 L52 94 L46 110 L54 126 L50 142 L56 160 L60 176 L58 192 L64 210 L70 228 L78 244 L86 260 L96 276 L108 292 L122 304 L138 300 L148 286 L154 270 L150 254 L144 238 L146 222 L154 206 L158 190 L154 174 L150 158 L152 140 L158 126 L154 110 L150 96 L142 84 L136 72 L128 62 L122 52 L114 40 L106 28 L98 18 Z"
+              />
+              <path
+                class="nl-water"
+                d="M94 108 C84 120 82 138 94 152 C106 166 120 156 118 136 C116 116 104 104 94 108 Z"
+              />
+            </svg>
+            <div class="map-scan"></div>
+            <div class="map-pins" id="map-pins"></div>
+            <div class="map-hint">Klik op een pin voor details.</div>
           </div>
-          <div class="api-error" id="api-usage-error"></div>
+          <div class="map-legend">
+            <span class="legend-item"><span class="legend-dot legend-low"></span>Rustig</span>
+            <span class="legend-item"><span class="legend-dot legend-mid"></span>Normaal</span>
+            <span class="legend-item"><span class="legend-dot legend-high"></span>Druk</span>
+          </div>
         </section>
 
-        <section class="card list">
-          <div class="list-head">
-            <h2 class="list-title">
-              <span class="list-title-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
-                </svg>
-              </span>
-              Recente klanten
-            </h2>
-            <div class="list-sub" id="last-updated">—</div>
+        <aside class="card side-panel" style="--delay: 0.2s">
+          <div class="panel-section">
+            <h3 class="panel-title">Geselecteerde locatie</h3>
+            <div class="store-header">
+              <div>
+                <p class="store-name" id="selected-name">-</p>
+                <p class="store-region" id="selected-region">-</p>
+              </div>
+              <span class="store-status" id="selected-status">-</span>
+            </div>
+            <div class="focus-grid">
+              <div class="focus-item">
+                <span>Live winkelwagens</span>
+                <strong id="selected-carts">-</strong>
+              </div>
+              <div class="focus-item">
+                <span>Checkouts 15m</span>
+                <strong id="selected-checkouts">-</strong>
+              </div>
+              <div class="focus-item">
+                <span>Omzet vandaag</span>
+                <strong id="selected-revenue">-</strong>
+              </div>
+              <div class="focus-item">
+                <span>Trend</span>
+                <strong id="selected-trend">-</strong>
+              </div>
+            </div>
           </div>
-          <div class="rows" id="recent-rows"></div>
-        </section>
 
-        <div class="error" id="staff-error" style="display:none;"></div>
-      </div>
+          <div class="panel-section">
+            <h3 class="panel-title">Drukste locaties</h3>
+            <div class="top-stores" id="top-stores"></div>
+          </div>
+        </aside>
+
+        <section class="card feed-card" style="--delay: 0.3s">
+          <div class="card-head">
+            <div>
+              <h2>Live feed</h2>
+              <p>Nieuwe winkelwagens, checkouts en verlaten sessies.</p>
+            </div>
+            <span class="feed-pill" id="feed-count">0 events</span>
+          </div>
+          <div class="feed-list" id="live-feed" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <div class="error" id="staff-error" style="display: none"></div>
     </main>
 
-    <!-- Customer Modal -->
-    <div class="modal-overlay" id="customer-modal">
-      <div class="modal">
-        <div class="modal-header">
-          <h2 class="modal-title" id="modal-title">Alle klanten</h2>
-          <button class="modal-close" id="modal-close" type="button">×</button>
-        </div>
-        <div class="modal-body">
-          <!-- Customer List View -->
-          <div id="customer-list-view">
-            <div class="modal-search">
-              <input type="text" id="customer-search" placeholder="Zoek op e-mail..." />
-            </div>
-            <div class="customer-list" id="customer-list"></div>
-          </div>
-
-          <!-- Customer Detail View -->
-          <div class="customer-detail" id="customer-detail-view">
-            <button class="detail-back" id="detail-back" type="button">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-              Terug naar lijst
-            </button>
-
-            <div class="detail-header">
-              <div class="detail-info">
-                <h2 id="detail-email">klant@email.com</h2>
-                <p id="detail-id">Klantnummer: —</p>
-              </div>
-              <span class="customer-badge active" id="detail-status">Actief</span>
-            </div>
-
-            <div class="detail-stats">
-              <div class="detail-stat">
-                <p class="detail-stat-value" id="detail-member-since">—</p>
-                <p class="detail-stat-label">Lid sinds</p>
-              </div>
-              <div class="detail-stat">
-                <p class="detail-stat-value" id="detail-months">—</p>
-                <p class="detail-stat-label">Maanden lid</p>
-              </div>
-              <div class="detail-stat">
-                <p class="detail-stat-value" id="detail-paid">€0</p>
-                <p class="detail-stat-label">Totaal betaald</p>
-              </div>
-              <div class="detail-stat">
-                <p class="detail-stat-value" id="detail-free">0</p>
-                <p class="detail-stat-label">Gratis maanden</p>
-              </div>
-            </div>
-
-            <div class="detail-actions">
-              <div class="action-section">
-                <h3>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3 3-7z"/>
-                  </svg>
-                  Lifetime gratis
-                </h3>
-                <div class="toggle-row">
-                  <label class="toggle">
-                    <input type="checkbox" id="lifetime-toggle" />
-                    Lifetime gratis (altijd €0)
-                  </label>
-                  <button class="btn-action success" id="save-lifetime-btn" type="button">Opslaan</button>
-                </div>
-                <div class="action-feedback" id="lifetime-feedback"></div>
-              </div>
-
-              <div class="action-section">
-                <h3>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/>
-                    <path d="M12 15l9-9"/>
-                    <path d="M16 3h5v5"/>
-                  </svg>
-                  Gratis periode toekennen
-                </h3>
-                <div class="free-period-form">
-                  <input type="number" id="free-amount" value="1" min="1" max="24" />
-                  <select id="free-unit">
-                    <option value="month">Maand(en)</option>
-                    <option value="year">Jaar</option>
-                  </select>
-                  <button class="btn-action success" id="add-free-btn" type="button">Toevoegen</button>
-                </div>
-                <div class="action-feedback" id="free-feedback"></div>
-              </div>
-
-              <div class="action-section danger-zone">
-                <h3>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                  </svg>
-                  Gevarenzone
-                </h3>
-                <p>Deze acties kunnen niet ongedaan worden gemaakt.</p>
-                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                  <button class="btn-action danger" id="cancel-sub-btn" type="button">Abonnement opzeggen</button>
-                  <button class="btn-action danger" id="delete-customer-btn" type="button">Klant verwijderen</button>
-                </div>
-                <div class="action-feedback" id="danger-feedback"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-	    <script defer src="assets/vendor/supabase.min.js"></script>
+    <script defer src="assets/vendor/supabase.min.js"></script>
     <script>
       (() => {
         const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
 
-	        const fmtDate = (iso) => {
-	          try {
-	            return new Date(iso).toLocaleString("nl-NL", { year: "numeric", month: "short", day: "2-digit" });
-	          } catch {
-            return iso || "";
+        const fmtNumber = new Intl.NumberFormat("nl-NL");
+        const fmtNumberShort = new Intl.NumberFormat("nl-NL", { maximumFractionDigits: 1 });
+        const formatEur = (value) => `€${fmtNumber.format(Math.round(value || 0))}`;
+        const formatShort = (value) => fmtNumber.format(Math.round(value || 0));
+        const formatEurCompact = (value) => {
+          const amount = Math.round(value || 0);
+          if (amount >= 1000) {
+            return `${fmtNumberShort.format(amount / 1000)}k`;
           }
+          return formatShort(amount);
         };
 
-        const money = (n) => `€${Number(n || 0).toLocaleString("nl-NL")}`;
+        const storeSeed = [
+          { id: "ams", name: "Amsterdam", region: "Noord-Holland", x: 40, y: 32, carts: 18, checkouts: 6, revenue: 1840 },
+          { id: "rtm", name: "Rotterdam", region: "Zuid-Holland", x: 33, y: 50, carts: 24, checkouts: 8, revenue: 2320 },
+          { id: "utr", name: "Utrecht", region: "Utrecht", x: 44, y: 42, carts: 12, checkouts: 4, revenue: 1280 },
+          { id: "grn", name: "Groningen", region: "Groningen", x: 58, y: 16, carts: 7, checkouts: 3, revenue: 720 },
+          { id: "lee", name: "Leeuwarden", region: "Friesland", x: 44, y: 18, carts: 5, checkouts: 2, revenue: 560 },
+          { id: "zwl", name: "Zwolle", region: "Overijssel", x: 52, y: 32, carts: 8, checkouts: 3, revenue: 760 },
+          { id: "arn", name: "Arnhem", region: "Gelderland", x: 58, y: 46, carts: 10, checkouts: 4, revenue: 980 },
+          { id: "ens", name: "Enschede", region: "Overijssel", x: 66, y: 50, carts: 6, checkouts: 2, revenue: 610 },
+          { id: "ein", name: "Eindhoven", region: "Noord-Brabant", x: 48, y: 68, carts: 9, checkouts: 3, revenue: 860 },
+          { id: "maa", name: "Maastricht", region: "Limburg", x: 60, y: 86, carts: 4, checkouts: 1, revenue: 420 }
+        ].map((store) => ({ ...store, prevCarts: store.carts }));
 
-        const monthsBetweenApprox = (startIso, endIso) => {
-          try {
-            const start = new Date(startIso);
-            const end = new Date(endIso);
-            const ms = Math.max(0, end - start);
-            const days = ms / (1000 * 60 * 60 * 24);
-            const months = Math.ceil(days / 30);
-            return Math.max(0, months);
-          } catch {
-            return 0;
-          }
+        const state = {
+          stores: storeSeed,
+          events: [],
+          selectedId: storeSeed[0].id,
+          mode: "carts",
+          timer: null,
+          simulation: true,
         };
 
-        const overlapMonthsApprox = (aStart, aEnd, bStart, bEnd) => {
-          const start = new Date(Math.max(new Date(aStart).getTime(), new Date(bStart).getTime()));
-          const end = new Date(Math.min(new Date(aEnd).getTime(), new Date(bEnd).getTime()));
-          if (end <= start) return 0;
-          return monthsBetweenApprox(start.toISOString(), end.toISOString());
-        };
+        const eventTemplates = [
+          { type: "cart", label: "Nieuwe winkelwagen", tone: "cart", short: "WG", valueMin: 35, valueMax: 120 },
+          { type: "checkout", label: "Checkout afgerond", tone: "checkout", short: "OK", valueMin: 45, valueMax: 220 },
+          { type: "abandon", label: "Winkelwagen verlaten", tone: "abandon", short: "AF", valueMin: 15, valueMax: 80 },
+        ];
 
-        const setText = (id, v) => {
+        const setText = (id, value) => {
           const el = document.getElementById(id);
-          if (el) el.textContent = v;
+          if (el) el.textContent = value;
         };
 
         const showError = (msg) => {
@@ -1245,614 +988,285 @@
           el.textContent = msg;
         };
 
-        const formatMaybeMoney = (value) => (Number.isFinite(value) ? money(value) : "—");
-        const formatMaybeLimit = (value) => (Number.isFinite(value) ? money(value) : "Niet ingesteld");
-        const formatCount = (value) =>
-          Number.isFinite(value) ? Number(value).toLocaleString("nl-NL") : "—";
+        const getTotals = () =>
+          state.stores.reduce(
+            (acc, store) => {
+              acc.carts += store.carts;
+              acc.checkouts += store.checkouts;
+              acc.revenue += store.revenue;
+              acc.active += store.carts > 0 ? 1 : 0;
+              return acc;
+            },
+            { carts: 0, checkouts: 0, revenue: 0, active: 0 }
+          );
 
-        const setApiError = (msg) => {
-          const el = document.getElementById("api-usage-error");
-          if (!el) return;
-          if (!msg) {
-            el.style.display = "none";
-            el.textContent = "";
-            return;
-          }
-          el.style.display = "block";
-          el.textContent = msg;
+        const statusFromCarts = (carts) => {
+          if (carts >= 18) return "Druk";
+          if (carts >= 10) return "Normaal";
+          return "Rustig";
         };
 
-        const setApiProgress = (id, spent, limit) => {
-          const bar = document.getElementById(id);
-          if (!bar) return;
-          if (!Number.isFinite(spent) || !Number.isFinite(limit) || limit <= 0) {
-            bar.style.width = "0%";
-            bar.className = "";
-            return;
-          }
-          const pct = Math.min(100, Math.max(0, (spent / limit) * 100));
-          bar.style.width = `${pct.toFixed(1)}%`;
-          bar.className = pct >= 90 ? "danger" : pct >= 70 ? "warn" : "";
+        const loadClassFromCarts = (carts) => {
+          if (carts >= 18) return "load-high";
+          if (carts >= 10) return "load-mid";
+          return "load-low";
         };
 
-        const fetchApiUsage = async (accessToken) => {
-          const resp = await fetch("/api/staff/customers?action=api-usage", {
-            method: "GET",
-            headers: { Authorization: `Bearer ${accessToken}` },
+        const metricValue = (store) => {
+          if (state.mode === "checkouts") return store.checkouts;
+          if (state.mode === "revenue") return store.revenue;
+          return store.carts;
+        };
+
+        const formatMetric = (value) => {
+          if (state.mode === "revenue") return formatEurCompact(value);
+          return formatShort(value);
+        };
+
+        const renderPins = () => {
+          const mapPins = document.getElementById("map-pins");
+          if (!mapPins) return;
+          mapPins.textContent = "";
+
+          state.stores.forEach((store) => {
+            const pin = document.createElement("button");
+            pin.type = "button";
+            pin.className = `map-pin ${loadClassFromCarts(store.carts)}${
+              store.id === state.selectedId ? " active" : ""
+            }`;
+            pin.style.setProperty("--x", `${store.x}%`);
+            pin.style.setProperty("--y", `${store.y}%`);
+            const modeLabel =
+              state.mode === "checkouts" ? "Checkouts" : state.mode === "revenue" ? "Omzet" : "Winkelwagens";
+            pin.setAttribute("aria-label", `${store.name} - ${modeLabel}: ${formatMetric(metricValue(store))}`);
+            pin.innerHTML = `
+              <span>${formatMetric(metricValue(store))}</span>
+              <span class="pin-label">${store.name}</span>
+            `;
+            pin.addEventListener("click", () => {
+              state.selectedId = store.id;
+              renderSelection();
+              renderPins();
+            });
+            mapPins.appendChild(pin);
           });
-          let payload = null;
-          try {
-            payload = await resp.json();
-          } catch {
-            payload = null;
-          }
-          if (!resp.ok) {
-            const msg = payload?.error || resp.statusText || "API error";
-            throw new Error(`API ${resp.status}: ${msg}`);
-          }
-          return payload || {};
         };
 
-        const renderApiUsage = (payload) => {
-          const usage = payload?.usage || {};
-          const limits = payload?.limits || {};
-
-          const today = usage?.today || {};
-          const month = usage?.month || {};
-          const year = usage?.year || {};
-
-          setText("api-spend-today", formatMaybeMoney(today.spend_eur));
-          setText("api-chats-today", formatCount(today.chats));
-          setText("api-limit-today", formatMaybeLimit(limits.daily_eur));
-          setApiProgress("api-progress-today", today.spend_eur, limits.daily_eur);
-
-          setText("api-spend-month", formatMaybeMoney(month.spend_eur));
-          setText("api-chats-month", formatCount(month.chats));
-          setText("api-limit-month", formatMaybeLimit(limits.monthly_eur));
-          setApiProgress("api-progress-month", month.spend_eur, limits.monthly_eur);
-
-          setText("api-spend-year", formatMaybeMoney(year.spend_eur));
-          setText("api-chats-year", formatCount(year.chats));
-          setText("api-limit-year", formatMaybeLimit(limits.yearly_eur));
-          setApiProgress("api-progress-year", year.spend_eur, limits.yearly_eur);
-
-          setText("api-usage-updated", `Laatst bijgewerkt: ${fmtDate(new Date().toISOString())}`);
+        const renderSummary = () => {
+          const totals = getTotals();
+          setText("summary-carts", formatShort(totals.carts));
+          setText("summary-locations", formatShort(totals.active));
+          setText("summary-checkouts", formatShort(totals.checkouts));
+          setText("summary-revenue", formatEur(totals.revenue));
+          const avg = totals.checkouts > 0 ? totals.revenue / totals.checkouts : 0;
+          setText("summary-avg", formatEur(avg));
         };
 
-        const fetchStaffCustomers = async (supabase) => {
-          const { data: s } = await supabase.auth.getSession();
-          const accessToken = s?.session?.access_token;
-          if (!accessToken) throw new Error("Geen access token (log opnieuw in).");
+        const renderSelection = () => {
+          const store = state.stores.find((item) => item.id === state.selectedId) || state.stores[0];
+          if (!store) return;
 
-          const resp = await fetch("/api/staff/customers", {
-            method: "GET",
-            headers: { Authorization: `Bearer ${accessToken}` },
+          setText("selected-name", store.name);
+          setText("selected-region", store.region);
+          setText("selected-status", statusFromCarts(store.carts));
+          setText("selected-carts", formatShort(store.carts));
+          setText("selected-checkouts", formatShort(store.checkouts));
+          setText("selected-revenue", formatEur(store.revenue));
+
+          const delta = store.carts - (store.prevCarts || 0);
+          const deltaLabel = delta === 0 ? "0" : delta > 0 ? `+${delta}` : `${delta}`;
+          setText("selected-trend", `${deltaLabel} sinds laatste update`);
+        };
+
+        const renderTopStores = () => {
+          const list = document.getElementById("top-stores");
+          if (!list) return;
+
+          const sorted = [...state.stores].sort((a, b) => metricValue(b) - metricValue(a)).slice(0, 5);
+          list.textContent = "";
+
+          sorted.forEach((store) => {
+            const row = document.createElement("div");
+            row.className = "store-row";
+            const delta = store.carts - (store.prevCarts || 0);
+            const deltaLabel = delta === 0 ? "0" : delta > 0 ? `+${delta}` : `${delta}`;
+            row.innerHTML = `
+              <div>
+                <p class="store-name">${store.name}</p>
+                <p class="store-region">${store.region}</p>
+              </div>
+              <div class="store-metric">
+                <span>${formatMetric(metricValue(store))}</span>
+                <span class="store-delta">${deltaLabel}</span>
+              </div>
+            `;
+            list.appendChild(row);
+          });
+        };
+
+        const renderFeed = () => {
+          const feed = document.getElementById("live-feed");
+          if (!feed) return;
+          feed.textContent = "";
+
+          state.events.forEach((event) => {
+            const item = document.createElement("div");
+            item.className = "feed-item";
+            item.innerHTML = `
+              <div class="feed-icon ${event.tone}">${event.short}</div>
+              <div>
+                <p class="feed-title">${event.label}</p>
+                <p class="feed-meta">${event.store} · ${event.time} · ${formatEur(event.value)}</p>
+              </div>
+            `;
+            feed.appendChild(item);
           });
 
-          let payload = null;
-          try {
-            payload = await resp.json();
-          } catch {
-            // ignore
-          }
-
-          if (!resp.ok) {
-            const msg = payload?.error || resp.statusText || "API error";
-            throw new Error(`API ${resp.status}: ${msg}`);
-          }
-
-          return payload?.customers || [];
+          setText("feed-count", `${state.events.length} events`);
         };
 
-        const startOfMonthISO = () => {
-          const d = new Date();
-          const s = new Date(d.getFullYear(), d.getMonth(), 1);
-          return s.toISOString();
+        const updateTimestamp = () => {
+          const now = new Date();
+          const time = now.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+          setText("last-updated", `Laatst bijgewerkt: ${time}`);
         };
 
-        const daysAgoISO = (days) => {
-          const d = new Date();
-          d.setDate(d.getDate() - days);
-          return d.toISOString();
+        const addEvent = (event) => {
+          state.events.unshift(event);
+          state.events = state.events.slice(0, 8);
+        };
+
+        const randomBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        const createRandomEvent = () => {
+          const store = state.stores[randomBetween(0, state.stores.length - 1)];
+          const template = eventTemplates[randomBetween(0, eventTemplates.length - 1)];
+          return {
+            label: template.label,
+            tone: template.tone,
+            short: template.short,
+            store: store.name,
+            value: randomBetween(template.valueMin, template.valueMax),
+            time: new Date().toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" }),
+          };
+        };
+
+        const simulateTick = () => {
+          state.stores = state.stores.map((store) => {
+            const delta = randomBetween(-3, 4);
+            const checkoutDelta = randomBetween(0, 2);
+            const revenueDelta = randomBetween(20, 160);
+
+            store.prevCarts = store.carts;
+            store.carts = Math.max(0, store.carts + delta);
+            store.checkouts = Math.max(0, store.checkouts + checkoutDelta);
+            if (Math.random() > 0.5) {
+              store.revenue += revenueDelta;
+            }
+            return store;
+          });
+
+          if (Math.random() > 0.2) {
+            addEvent(createRandomEvent());
+          }
+
+          renderSummary();
+          renderSelection();
+          renderTopStores();
+          renderPins();
+          renderFeed();
+          updateTimestamp();
+        };
+
+        const setMode = (mode) => {
+          state.mode = mode;
+          const buttons = document.querySelectorAll(".segmented-btn");
+          buttons.forEach((btn) => {
+            btn.classList.toggle("active", btn.dataset.mode === mode);
+          });
+          renderPins();
+          renderTopStores();
+        };
+
+        const seedFeed = () => {
+          state.events = [];
+          for (let i = 0; i < 5; i += 1) {
+            addEvent(createRandomEvent());
+          }
+        };
+
+        const startSimulation = () => {
+          seedFeed();
+          renderSummary();
+          renderSelection();
+          renderTopStores();
+          renderPins();
+          renderFeed();
+          updateTimestamp();
+
+          if (state.timer) clearInterval(state.timer);
+          state.timer = setInterval(simulateTick, 4000);
         };
 
         const init = async () => {
           if (!window.supabase?.createClient) return;
-	          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-	            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
-	          });
+          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+          });
 
-          // Auth gate
           const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
           if (sessionError) {
             showError("Kan sessie niet ophalen.");
             return;
           }
-	          const session = sessionData?.session;
-	          const token = session?.access_token;
-	          if (!session || !token) {
-	            window.location.href = "staff-login.html";
-	            return;
-	          }
+          const session = sessionData?.session;
+          const token = session?.access_token;
+          if (!session || !token) {
+            window.location.href = "staff-login.html";
+            return;
+          }
 
-	          const verifyResp = await fetch("/api/staff/me", {
-	            method: "GET",
-	            headers: { Authorization: `Bearer ${token}` },
-	          });
-	          const verifyPayload = await verifyResp.json().catch(() => ({}));
-	          if (!verifyResp.ok || !verifyPayload?.staff) {
-	            try {
-	              await supabase.auth.signOut();
-	            } catch {
-	              // ignore
-	            }
-	            window.location.href = "staff-login.html";
-	            return;
-	          }
+          const verifyResp = await fetch("/api/staff/me", {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const verifyPayload = await verifyResp.json().catch(() => ({}));
+          if (!verifyResp.ok || !verifyPayload?.staff) {
+            try {
+              await supabase.auth.signOut();
+            } catch {
+              // ignore
+            }
+            window.location.href = "staff-login.html";
+            return;
+          }
 
-          // Logout
           const logoutBtn = document.getElementById("staff-logout-btn");
           if (logoutBtn) {
-            logoutBtn.addEventListener("click", (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              logoutBtn.disabled = true;
+            logoutBtn.addEventListener("click", (event) => {
+              event.preventDefault();
               logoutBtn.textContent = "Uitloggen...";
-              // Direct redirect naar homepage
               window.location.href = "index.html";
             });
           }
 
-          const apiRefreshBtn = document.getElementById("api-refresh-btn");
-          const loadApiUsage = async () => {
-            if (!token) return;
-            if (apiRefreshBtn) apiRefreshBtn.disabled = true;
-            setApiError("");
-            try {
-              const payload = await fetchApiUsage(token);
-              renderApiUsage(payload);
-            } catch (e) {
-              console.error(e);
-              setApiError(`API-usage kon niet worden geladen. ${String(e?.message || e)}`);
-            } finally {
-              if (apiRefreshBtn) apiRefreshBtn.disabled = false;
-            }
-          };
-          apiRefreshBtn?.addEventListener("click", loadApiUsage);
-          await loadApiUsage();
-
-          // === Customer Modal Management (moet buiten try-catch) ===
-          let allCustomers = [];
-          let selectedCustomer = null;
-
-          const modal = document.getElementById("customer-modal");
-          const modalClose = document.getElementById("modal-close");
-          const customerListView = document.getElementById("customer-list-view");
-          const customerDetailView = document.getElementById("customer-detail-view");
-          const customerListEl = document.getElementById("customer-list");
-          const customerSearch = document.getElementById("customer-search");
-          const detailBack = document.getElementById("detail-back");
-
-          const openModal = () => {
-            if (modal) {
-              modal.classList.add("active");
-              document.body.style.overflow = "hidden";
-            }
-          };
-
-          const closeModal = () => {
-            if (modal) {
-              modal.classList.remove("active");
-              document.body.style.overflow = "";
-              showCustomerList();
-            }
-          };
-
-          const showCustomerList = () => {
-            if (customerListView) customerListView.style.display = "block";
-            if (customerDetailView) customerDetailView.classList.remove("active");
-            const titleEl = document.getElementById("modal-title");
-            if (titleEl) titleEl.textContent = `Alle klanten (${allCustomers.length})`;
-          };
-
-          const showCustomerDetail = (customer) => {
-            selectedCustomer = customer;
-            if (customerListView) customerListView.style.display = "none";
-            if (customerDetailView) customerDetailView.classList.add("active");
-            const titleEl = document.getElementById("modal-title");
-            if (titleEl) titleEl.textContent = "Klantdetails";
-
-            document.getElementById("detail-email").textContent = customer.email || "(geen email)";
-            document.getElementById("detail-id").textContent = `Klantnummer: ${customer.id?.substring(0, 8) || "—"}`;
-            
-            const isCancelled = !!customer.cancelled_at;
-            const statusEl = document.getElementById("detail-status");
-            if (statusEl) {
-              const lf = !!customer.lifetime_free;
-              statusEl.textContent = isCancelled ? "Opgezegd" : lf ? "Lifetime gratis" : "Actief";
-              statusEl.className = `customer-badge ${isCancelled ? "cancelled" : "active"}`;
-            }
-
-              const createdDate = customer.created_at ? new Date(customer.created_at) : new Date();
-              const endDate = customer.cancelled_at ? new Date(customer.cancelled_at) : new Date();
-              const monthsDiff = Math.max(0, monthsBetweenApprox(createdDate.toISOString(), endDate.toISOString())) || 1;
-            const freeMonths = customer.free_months || 0;
-            const paidMonths = customer.lifetime_free ? 0 : Math.max(0, monthsDiff - freeMonths);
-            const totalPaid = paidMonths * 20;
-
-            setText("detail-member-since", fmtDate(customer.created_at));
-            setText("detail-months", String(monthsDiff));
-            setText("detail-paid", `€${totalPaid.toLocaleString("nl-NL")}`);
-            setText("detail-free", customer.lifetime_free ? "∞" : String(freeMonths));
-
-            const lfToggle = document.getElementById("lifetime-toggle");
-            if (lfToggle) lfToggle.checked = !!customer.lifetime_free;
-
-            const freeFb = document.getElementById("free-feedback");
-            if (freeFb) { freeFb.className = "action-feedback"; freeFb.textContent = ""; }
-            const dangerFb = document.getElementById("danger-feedback");
-            if (dangerFb) { dangerFb.className = "action-feedback"; dangerFb.textContent = ""; }
-            const lfFb = document.getElementById("lifetime-feedback");
-            if (lfFb) { lfFb.className = "action-feedback"; lfFb.textContent = ""; }
-          };
-
-	          const renderCustomerList = (customers) => {
-	            if (!customerListEl) return;
-	            customerListEl.textContent = "";
-	            if (!customers.length) {
-	              const empty = document.createElement("div");
-	              empty.className = "empty-rows";
-	              empty.textContent = "Geen klanten gevonden.";
-	              customerListEl.appendChild(empty);
-	              return;
-	            }
-	            customers.forEach((c) => {
-	              const row = document.createElement("div");
-	              row.className = "customer-row";
-	              const isCancelled = !!c.cancelled_at;
-	              const emailEl = document.createElement("div");
-	              emailEl.className = "customer-email";
-	              emailEl.textContent = c.email || "(geen email)";
-
-	              const dateEl = document.createElement("div");
-	              dateEl.className = "customer-date";
-	              dateEl.textContent = fmtDate(c.created_at);
-
-	              const badgeEl = document.createElement("span");
-	              badgeEl.className = `customer-badge ${isCancelled ? "cancelled" : "active"}`;
-	              badgeEl.textContent = isCancelled ? "Opgezegd" : "Actief";
-
-	              row.appendChild(emailEl);
-	              row.appendChild(dateEl);
-	              row.appendChild(badgeEl);
-	              row.addEventListener("click", () => showCustomerDetail(c));
-	              customerListEl.appendChild(row);
-	            });
-	          };
-
-	          const loadAllCustomers = async () => {
-	            try {
-	              allCustomers = await fetchStaffCustomers(supabase);
-	              renderCustomerList(allCustomers);
-	            } catch (e) {
-	              console.error(e);
-	              if (customerListEl) {
-	                customerListEl.textContent = "";
-	                const empty = document.createElement("div");
-	                empty.className = "empty-rows";
-	                empty.textContent = "Kon klanten niet laden.";
-
-	                const br = document.createElement("br");
-	                const detail = document.createElement("small");
-	                detail.style.color = "rgba(255,255,255,0.6)";
-	                detail.textContent = String(e?.message || e);
-
-	                empty.appendChild(br);
-	                empty.appendChild(detail);
-	                customerListEl.appendChild(empty);
-	              }
-	            }
-	          };
-
-          // Modal Event Listeners
-          document.getElementById("kpi-total-card")?.addEventListener("click", async () => {
-            openModal();
-            await loadAllCustomers();
-          });
-
-          modalClose?.addEventListener("click", closeModal);
-          modal?.addEventListener("click", (e) => {
-            if (e.target === modal) closeModal();
-          });
-
-          detailBack?.addEventListener("click", showCustomerList);
-
-          customerSearch?.addEventListener("input", (e) => {
-            const q = e.target.value.toLowerCase().trim();
-            const filtered = allCustomers.filter((c) =>
-              (c.email || "").toLowerCase().includes(q)
-            );
-            renderCustomerList(filtered);
-          });
-
-          // Add Free Period
-          document.getElementById("add-free-btn")?.addEventListener("click", async () => {
-            if (!selectedCustomer) return;
-            const amount = parseInt(document.getElementById("free-amount").value) || 1;
-            const unit = document.getElementById("free-unit").value;
-            const months = unit === "year" ? amount * 12 : amount;
-
-            try {
-              const { data: sessionData3 } = await supabase.auth.getSession();
-              const accessToken = sessionData3?.session?.access_token;
-              if (!accessToken) throw new Error("Geen access token");
-
-              const resp = await fetch("/api/staff/customers", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({ action: "grant_free_months", id: selectedCustomer.id, months }),
-              });
-              const payload = await resp.json();
-              if (!resp.ok) throw new Error(payload?.error || "API error");
-
-              selectedCustomer.free_months = payload.free_months ?? (selectedCustomer.free_months || 0) + months;
-              setText("detail-free", String(selectedCustomer.free_months));
-              const fb = document.getElementById("free-feedback");
-              if (fb) { fb.className = "action-feedback success"; fb.textContent = `✓ ${months} gratis maand(en) toegevoegd!`; }
-            } catch (e) {
-              const fb = document.getElementById("free-feedback");
-              if (fb) { fb.className = "action-feedback error"; fb.textContent = "Fout bij toevoegen: " + (e.message || "onbekend"); }
-            }
-          });
-
-          // Cancel Subscription
-          document.getElementById("cancel-sub-btn")?.addEventListener("click", async () => {
-            if (!selectedCustomer) return;
-            if (!confirm("Weet je zeker dat je dit abonnement wilt opzeggen?")) return;
-
-            try {
-              const { data: sessionData3 } = await supabase.auth.getSession();
-              const accessToken = sessionData3?.session?.access_token;
-              if (!accessToken) throw new Error("Geen access token");
-
-              const resp = await fetch("/api/staff/customers", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({ action: "cancel_subscription", id: selectedCustomer.id }),
-              });
-              const payload = await resp.json();
-              if (!resp.ok) throw new Error(payload?.error || "API error");
-
-              selectedCustomer.cancelled_at = payload.cancelled_at || new Date().toISOString();
-              const statusEl = document.getElementById("detail-status");
-              if (statusEl) { statusEl.textContent = "Opgezegd"; statusEl.className = "customer-badge cancelled"; }
-              const fb = document.getElementById("danger-feedback");
-              if (fb) { fb.className = "action-feedback success"; fb.textContent = "✓ Abonnement is opgezegd."; }
-            } catch (e) {
-              const fb = document.getElementById("danger-feedback");
-              if (fb) { fb.className = "action-feedback error"; fb.textContent = "Fout bij opzeggen: " + (e.message || "onbekend"); }
-            }
-          });
-
-          // Delete Customer
-          document.getElementById("delete-customer-btn")?.addEventListener("click", async () => {
-            if (!selectedCustomer) return;
-            if (!confirm("WAARSCHUWING: Dit verwijdert de klant permanent. Doorgaan?")) return;
-            if (!confirm("Ben je ECHT zeker? Dit kan niet ongedaan worden gemaakt!")) return;
-
-            try {
-              const { data: sessionData3 } = await supabase.auth.getSession();
-              const accessToken = sessionData3?.session?.access_token;
-              if (!accessToken) throw new Error("Geen access token");
-
-              const resp = await fetch("/api/staff/customers", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({ action: "delete_customer", id: selectedCustomer.id }),
-              });
-              const payload = await resp.json();
-              if (!resp.ok) throw new Error(payload?.error || "API error");
-
-              allCustomers = allCustomers.filter((c) => c.id !== selectedCustomer.id);
-              showCustomerList();
-              renderCustomerList(allCustomers);
-              setText("kpi-total", String(allCustomers.length));
-            } catch (e) {
-              const fb = document.getElementById("danger-feedback");
-              if (fb) { fb.className = "action-feedback error"; fb.textContent = "Fout bij verwijderen: " + (e.message || "onbekend"); }
-            }
-          });
-
-          // Save lifetime free
-          document.getElementById("save-lifetime-btn")?.addEventListener("click", async () => {
-            if (!selectedCustomer) return;
-            const enabled = !!document.getElementById("lifetime-toggle")?.checked;
-            try {
-              const { data: s } = await supabase.auth.getSession();
-              const accessToken = s?.session?.access_token;
-              if (!accessToken) throw new Error("Geen access token");
-
-              const resp = await fetch("/api/staff/customers", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({ action: "set_lifetime_free", id: selectedCustomer.id, enabled }),
-              });
-              const payload = await resp.json();
-              if (!resp.ok) throw new Error(payload?.error || "API error");
-
-              selectedCustomer.lifetime_free = payload.lifetime_free;
-              const fb = document.getElementById("lifetime-feedback");
-              if (fb) {
-                fb.className = "action-feedback success";
-                fb.textContent = "✓ Opgeslagen.";
-              }
-              // refresh detail view numbers
-              showCustomerDetail(selectedCustomer);
-            } catch (e) {
-              const fb = document.getElementById("lifetime-feedback");
-              if (fb) {
-                fb.className = "action-feedback error";
-                fb.textContent = "Fout bij opslaan: " + (e.message || "onbekend");
-              }
-            }
-          });
-
-          // KPIs (profiles table as "customers")
-          const monthISO = startOfMonthISO();
-          const d30ISO = daysAgoISO(30);
-
-          try {
-            // Load customers via server-side API (bypasses RLS)
-            allCustomers = await fetchStaffCustomers(supabase);
-
-            // KPIs based on customers array
-            const monthStart = new Date(monthISO);
-            const now = new Date();
-            setText("kpi-alltime-customers", String(allCustomers.length));
-            const activeCustomers = allCustomers.filter((c) => !c.cancelled_at);
-            const activeCount = activeCustomers.length;
-            setText("kpi-active", String(activeCount));
-
-            const cancelledAll = allCustomers.filter((c) => !!c.cancelled_at).length;
-            const cancelledYear = allCustomers.filter((c) => c.cancelled_at && new Date(c.cancelled_at) >= startOfYear).length;
-            const cancelledMonth = allCustomers.filter((c) => c.cancelled_at && new Date(c.cancelled_at) >= monthStart).length;
-            setText("kpi-cancelled-all", String(cancelledAll));
-            setText("kpi-cancelled-year", String(cancelledYear));
-            setText("kpi-cancelled-month", String(cancelledMonth));
-
-            // New customers periods
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            const startOfYear = new Date(now.getFullYear(), 0, 1);
-
-            const createdAt = (c) => (c.created_at ? new Date(c.created_at) : null);
-            const newMonth = allCustomers.filter((c) => {
-              const d = createdAt(c);
-              return d && d >= startOfMonth;
-            }).length;
-            const newYear = allCustomers.filter((c) => {
-              const d = createdAt(c);
-              return d && d >= startOfYear;
-            }).length;
-
-            setText("kpi-new-month", String(newMonth));
-            setText("kpi-new-year", String(newYear));
-
-            // Revenue assumptions:
-            // - subscription = €20 per month
-            // - "this month" revenue = active customers * 20 (MRR)
-            // - "year" and "all time" = estimated from account age (created_at -> cancelled_at/now), minus free_months
-            const PRICE = 20;
-            const VAT_RATE = 0.21; // NL standaard btw (pas aan indien nodig)
-            const toNet = (gross) => gross / (1 + VAT_RATE);
-            const paidActiveCount = activeCustomers.filter((c) => !c.lifetime_free).length;
-            const revenueThisMonthGross = paidActiveCount * PRICE;
-
-            const yearStart = new Date(now.getFullYear(), 0, 1).toISOString();
-            const nowIso = now.toISOString();
-
-            let revenueYearGross = 0;
-            let revenueAllGross = 0;
-            allCustomers.forEach((c) => {
-              if (c.lifetime_free) return;
-              const start = c.created_at || nowIso;
-              const end = c.cancelled_at || nowIso;
-              const freeMonths = Number(c.free_months || 0);
-
-              const totalMonths = Math.max(0, monthsBetweenApprox(start, end));
-              const paidMonthsAll = Math.max(0, totalMonths - freeMonths);
-              revenueAllGross += paidMonthsAll * PRICE;
-
-              const yMonths = overlapMonthsApprox(start, end, yearStart, nowIso);
-              // Only apply free months to year if the account started this year (simple/expected behaviour)
-              const freeInYear = new Date(start) >= new Date(yearStart) ? Math.min(freeMonths, yMonths) : 0;
-              const paidMonthsYear = Math.max(0, yMonths - freeInYear);
-              revenueYearGross += paidMonthsYear * PRICE;
+          const syncBtn = document.getElementById("sync-btn");
+          if (syncBtn) {
+            syncBtn.addEventListener("click", () => {
+              simulateTick();
             });
-            setText("kpi-revenue-month-net", money(toNet(revenueThisMonthGross)));
-            setText("kpi-revenue-year-net", money(toNet(revenueYearGross)));
-            setText("kpi-revenue-all-net", money(toNet(revenueAllGross)));
-
-            // Recent rows (top 10)
-	            const recent = allCustomers.slice(0, 10);
-	            const rowsEl = document.getElementById("recent-rows");
-	            if (rowsEl) {
-	              rowsEl.textContent = "";
-	              if (recent.length) {
-	                recent.forEach((r) => {
-	                  const row = document.createElement("div");
-	                  row.className = "row";
-	                  const emailEl = document.createElement("div");
-	                  emailEl.className = "row-email";
-	                  emailEl.textContent = r.email || "(geen email)";
-
-	                  const dateEl = document.createElement("div");
-	                  dateEl.className = "row-date";
-	                  dateEl.textContent = fmtDate(r.created_at);
-
-	                  row.appendChild(emailEl);
-	                  row.appendChild(dateEl);
-	                  rowsEl.appendChild(row);
-	                });
-	              } else {
-	                const empty = document.createElement("div");
-	                empty.className = "empty-rows";
-                empty.textContent = "Nog geen klanten gevonden.";
-                rowsEl.appendChild(empty);
-              }
-            }
-
-            setText("last-updated", `Laatst bijgewerkt: ${fmtDate(new Date().toISOString())}`);
-
-          } catch (err) {
-            console.error(err);
-            showError(
-              `Dashboard data kon niet worden geladen. ${String(err?.message || err)}`
-            );
           }
+
+          document.querySelectorAll(".segmented-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              setMode(btn.dataset.mode);
+            });
+          });
+
+          startSimulation();
         };
 
         document.addEventListener("DOMContentLoaded", init);
-        
-        // Fallback logout handler (werkt altijd, ook als init faalt)
-        const setupLogout = () => {
-          const logoutBtn = document.getElementById("staff-logout-btn");
-          if (logoutBtn) {
-            // Verwijder alle bestaande listeners en voeg nieuwe toe
-            const newBtn = logoutBtn.cloneNode(true);
-            logoutBtn.parentNode.replaceChild(newBtn, logoutBtn);
-            
-            newBtn.addEventListener("click", (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              newBtn.disabled = true;
-              newBtn.textContent = "Uitloggen...";
-              // Direct redirect naar homepage
-              window.location.href = "index.html";
-            });
-          }
-        };
-        
-        // Probeer meerdere keren om zeker te zijn dat het werkt
-        document.addEventListener("DOMContentLoaded", setupLogout);
-        window.addEventListener("load", setupLogout);
-        // Direct proberen als DOM al geladen is
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", setupLogout);
-        } else {
-          setupLogout();
-        }
       })();
     </script>
   </body>
