@@ -197,25 +197,41 @@
       }
 
       .btn.primary {
-        background: var(--accent);
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
         color: #1a1600;
-        box-shadow: 0 12px 30px rgba(230, 194, 0, 0.35);
+        box-shadow: 0 8px 24px rgba(230, 194, 0, 0.4),
+                    0 0 0 1px rgba(230, 194, 0, 0.2);
+        border: none;
       }
 
       .btn.primary:hover {
-        background: var(--accent-strong);
+        background: linear-gradient(135deg, var(--accent-strong) 0%, #b89400 100%);
         transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(230, 194, 0, 0.5),
+                    0 0 0 1px rgba(230, 194, 0, 0.3);
+      }
+
+      .btn.primary:active {
+        transform: translateY(0);
       }
 
       .btn.secondary {
-        background: rgba(255, 255, 255, 0.35);
+        background: rgba(255, 255, 255, 0.12);
         color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        border: 1.5px solid rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
       }
 
       .btn.secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
         transform: translateY(-2px);
-        box-shadow: 0 16px 30px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      }
+
+      .btn.secondary:active {
+        transform: translateY(0);
       }
 
       /* Header */
@@ -223,10 +239,24 @@
         position: sticky;
         top: 0;
         z-index: 100;
-        padding: 18px 40px;
-        background: rgba(26, 26, 46, 0.92);
-        backdrop-filter: blur(18px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 20px 40px;
+        background: rgba(26, 26, 46, 0.75);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .site-header::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, 
+          rgba(230, 194, 0, 0.08) 0%, 
+          transparent 50%, 
+          rgba(15, 52, 96, 0.08) 100%);
+        pointer-events: none;
+        opacity: 0.6;
       }
 
       .header-inner {
@@ -236,27 +266,43 @@
         align-items: center;
         justify-content: space-between;
         gap: 28px;
+        position: relative;
+        z-index: 1;
       }
 
       .brand {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
         font-weight: 700;
-        font-size: 1.05rem;
+        font-size: 1.1rem;
         color: #fff;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.05em;
+        transition: transform 0.2s ease;
+      }
+
+      .brand:hover {
+        transform: translateY(-1px);
       }
 
       .brand-logo {
-        width: 40px;
-        height: 40px;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        border: 2px solid rgba(230, 194, 0, 0.4);
+        box-shadow: 0 4px 16px rgba(230, 194, 0, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .brand:hover .brand-logo {
+        border-color: rgba(230, 194, 0, 0.6);
+        box-shadow: 0 6px 20px rgba(230, 194, 0, 0.35);
+        transform: scale(1.05);
       }
 
       .brand-dot {
         color: var(--accent);
+        text-shadow: 0 0 20px rgba(230, 194, 0, 0.5);
       }
 
       .main-nav {
@@ -287,12 +333,15 @@
       .header-actions {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
       }
 
       .header-actions .btn {
-        padding: 10px 18px;
-        font-size: 0.85rem;
+        padding: 12px 24px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border-radius: 12px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       /* Hero */
@@ -1275,6 +1324,27 @@
       @media (max-width: 640px) {
         .site-header {
           padding: 16px 20px;
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+        }
+
+        .brand {
+          font-size: 0.95rem;
+          gap: 10px;
+        }
+
+        .brand-logo {
+          width: 36px;
+          height: 36px;
+        }
+
+        .header-actions {
+          gap: 10px;
+        }
+
+        .header-actions .btn {
+          padding: 10px 18px;
+          font-size: 0.85rem;
         }
 
         .hero {
