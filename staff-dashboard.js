@@ -12,13 +12,19 @@
     }
     return acc;
   }, {});
-  const mapCanvas = document.getElementById("nl-map-canvas");
+  const nlMapCanvas = document.getElementById("nl-map-canvas");
+  const beMapCanvas = document.getElementById("be-map-canvas");
   const recentCustomersEl = document.getElementById("recent-customers");
 
   const customers = Array.isArray(window.customersData)
     ? window.customersData.map((customer) => ({ ...customer }))
     : [];
   const provinceLabels = window.provinceLabels || {};
+  const customerCounts = customers.reduce((acc, customer) => {
+    if (!customer.provinceId) return acc;
+    acc[customer.provinceId] = (acc[customer.provinceId] || 0) + 1;
+    return acc;
+  }, {});
 
   const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
   const dateFmt = new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short" });
@@ -93,37 +99,33 @@
     provinceEl.style.setProperty("--province-color", color);
   };
 
-  const setupProvinceInteractions = () => {
-    if (!mapCanvas) return;
-    const provinces = Array.from(mapCanvas.querySelectorAll(".province"));
+  const setupProvinceInteractions = (canvas) => {
+    if (!canvas) return;
+    const provinces = Array.from(canvas.querySelectorAll(".province"));
     if (!provinces.length) return;
-
-    const counts = customers.reduce((acc, customer) => {
-      if (!customer.provinceId) return acc;
-      acc[customer.provinceId] = (acc[customer.provinceId] || 0) + 1;
-      return acc;
-    }, {});
-
-    const maxCount = Math.max(1, ...Object.values(counts));
+    const maxCount = Math.max(
+      1,
+      ...provinces.map((province) => customerCounts[province.dataset.province || ""] || 0)
+    );
 
     provinces.forEach((province) => {
       const provinceId = province.dataset.province || "";
-      const count = counts[provinceId] || 0;
+      const count = customerCounts[provinceId] || 0;
       ensureProvinceOverlay(province);
       applyProvinceHeat(province, count, maxCount);
     });
   };
 
-  const loadMapSvg = async () => {
-    if (!mapCanvas) return;
+  const loadMapSvg = async (canvas, url) => {
+    if (!canvas) return;
     try {
-      const response = await fetch("assets/nl-map.svg", { cache: "force-cache" });
+      const response = await fetch(url, { cache: "force-cache" });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const svgMarkup = await response.text();
-      mapCanvas.innerHTML = svgMarkup;
-      setupProvinceInteractions();
+      canvas.innerHTML = svgMarkup;
+      setupProvinceInteractions(canvas);
     } catch (err) {
-      mapCanvas.innerHTML = "<div class=\"map-error\">Kaart niet beschikbaar.</div>";
+      canvas.innerHTML = "<div class=\"map-error\">Kaart niet beschikbaar.</div>";
       console.error("Kaart laden mislukt", err);
     }
   };
@@ -224,7 +226,8 @@
     });
   }
 
-  loadMapSvg();
+  loadMapSvg(nlMapCanvas, "assets/nl-map.svg");
+  loadMapSvg(beMapCanvas, "assets/be-map.svg");
   renderRecentCustomers();
   initSparks();
   tick();

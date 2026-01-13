@@ -1,4 +1,4 @@
-<svg role="img" aria-label="Kaart van Nederland met provincies" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 743 881" class="nl-map" fill="url(#satellite)" stroke="#f5f3e6" stroke-opacity="0.6" stroke-width="1" stroke-linejoin="round" stroke-linecap="round">
+<svg role="img" aria-label="Kaart van Nederland met provincies" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 743 881" class="map-svg nl-map" fill="url(#satellite)" stroke="#f5f3e6" stroke-opacity="0.6" stroke-width="1" stroke-linejoin="round" stroke-linecap="round">
               <defs>
                 <linearGradient id="satGradient" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0%" stop-color="#1b3f2f" />

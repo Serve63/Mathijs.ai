@@ -10,7 +10,18 @@ window.provinceLabels = {
   "South Holland": "Zuid-Holland",
   Zealand: "Zeeland",
   "North Brabant": "Noord-Brabant",
-  Limburg: "Limburg"
+  Limburg: "Limburg",
+  BE_WestFlanders: "West-Vlaanderen",
+  BE_EastFlanders: "Oost-Vlaanderen",
+  BE_Antwerp: "Antwerpen",
+  BE_Limburg: "Limburg (BE)",
+  BE_FlemishBrabant: "Vlaams-Brabant",
+  BE_Brussels: "Brussel",
+  BE_WalloonBrabant: "Waals-Brabant",
+  BE_Hainaut: "Henegouwen",
+  BE_Namur: "Namen",
+  BE_Liege: "Luik",
+  BE_Luxembourg: "Luxemburg"
 };
 
 window.customersData = [
@@ -349,5 +360,173 @@ window.customersData = [
     lastPayment: "2024-09-15",
     freeMonths: 1,
     status: "opgezegd"
+  },
+  {
+    id: "CL-1101",
+    name: "Lena Peeters",
+    email: "lena.peeters@mathijs.ai",
+    plan: "Pro",
+    provinceId: "BE_Antwerp",
+    totalPaid: 125,
+    lastActive: "2024-10-12T09:30:00Z",
+    lastPayment: "2024-10-01",
+    freeMonths: 0,
+    status: "actief"
+  },
+  {
+    id: "CL-1102",
+    name: "Noah Jacobs",
+    email: "noah.jacobs@mathijs.ai",
+    plan: "Growth",
+    provinceId: "BE_Antwerp",
+    totalPaid: 75,
+    lastActive: "2024-10-11T15:20:00Z",
+    lastPayment: "2024-09-28",
+    freeMonths: 0,
+    status: "actief"
+  },
+  {
+    id: "CL-1103",
+    name: "Kaat Vandenberg",
+    email: "kaat.vandenberg@mathijs.ai",
+    plan: "Starter",
+    provinceId: "BE_Antwerp",
+    totalPaid: 50,
+    lastActive: "2024-10-09T10:05:00Z",
+    lastPayment: "2024-09-24",
+    freeMonths: 0,
+    status: "actief"
+  },
+  {
+    id: "CL-1104",
+    name: "Emma De Smet",
+    email: "emma.desmet@mathijs.ai",
+    plan: "Teams",
+    provinceId: "BE_EastFlanders",
+    totalPaid: 150,
+    lastActive: "2024-10-10T08:45:00Z",
+    lastPayment: "2024-09-30",
+    freeMonths: 0,
+    status: "actief"
+  },
+  {
+    id: "CL-1105",
+    name: "Jules Verbeeck",
+    email: "jules.verbeeck@mathijs.ai",
+    plan: "Growth",
+    provinceId: "BE_EastFlanders",
+    totalPaid: 100,
+    lastActive: "2024-10-08T11:10:00Z",
+    lastPayment: "2024-09-27",
+    freeMonths: 1,
+    status: "actief"
+  },
+  {
+    id: "CL-1106",
+    name: "Lotte Vandaele",
+    email: "lotte.vandaele@mathijs.ai",
+    plan: "Starter",
+    provinceId: "BE_WestFlanders",
+    totalPaid: 25,
+    lastActive: "2024-10-07T14:05:00Z",
+    lastPayment: "2024-09-21",
+    freeMonths: 0,
+    status: "trial"
+  },
+  {
+    id: "CL-1107",
+    name: "Milan Claes",
+    email: "milan.claes@mathijs.ai",
+    plan: "Pro",
+    provinceId: "BE_FlemishBrabant",
+    totalPaid: 200,
+    lastActive: "2024-10-06T09:50:00Z",
+    lastPayment: "2024-09-25",
+    freeMonths: 0,
+    status: "actief"
+  },
+  {
+    id: "CL-1108",
+    name: "Saar Vandenberghe",
+    email: "saar.vandenberghe@mathijs.ai",
+    plan: "Growth",
+    provinceId: "BE_Brussels",
+    totalPaid: 75,
+    lastActive: "2024-10-05T17:35:00Z",
+    lastPayment: "2024-09-20",
+    freeMonths: 0,
+    status: "actief"
+  },
+  {
+    id: "CL-1109",
+    name: "Arthur Lambert",
+    email: "arthur.lambert@mathijs.ai",
+    plan: "Starter",
+    provinceId: "BE_WalloonBrabant",
+    totalPaid: 50,
+    lastActive: "2024-10-04T13:20:00Z",
+    lastPayment: "2024-09-18",
+    freeMonths: 0,
+    status: "actief"
+  },
+  {
+    id: "CL-1110",
+    name: "Nina Dubois",
+    email: "nina.dubois@mathijs.ai",
+    plan: "Teams",
+    provinceId: "BE_Hainaut",
+    totalPaid: 125,
+    lastActive: "2024-10-03T10:45:00Z",
+    lastPayment: "2024-09-16",
+    freeMonths: 0,
+    status: "actief"
+  },
+  {
+    id: "CL-1111",
+    name: "Elias Dupont",
+    email: "elias.dupont@mathijs.ai",
+    plan: "Starter",
+    provinceId: "BE_Namur",
+    totalPaid: 25,
+    lastActive: "2024-10-02T12:15:00Z",
+    lastPayment: "2024-09-14",
+    freeMonths: 0,
+    status: "actief"
+  },
+  {
+    id: "CL-1112",
+    name: "Manon Lejeune",
+    email: "manon.lejeune@mathijs.ai",
+    plan: "Growth",
+    provinceId: "BE_Liege",
+    totalPaid: 100,
+    lastActive: "2024-10-01T16:00:00Z",
+    lastPayment: "2024-09-12",
+    freeMonths: 0,
+    status: "actief"
+  },
+  {
+    id: "CL-1113",
+    name: "Thibault Martin",
+    email: "thibault.martin@mathijs.ai",
+    plan: "Pro",
+    provinceId: "BE_Luxembourg",
+    totalPaid: 50,
+    lastActive: "2024-09-29T09:25:00Z",
+    lastPayment: "2024-09-10",
+    freeMonths: 0,
+    status: "actief"
+  },
+  {
+    id: "CL-1114",
+    name: "Lore Vermeulen",
+    email: "lore.vermeulen@mathijs.ai",
+    plan: "Starter",
+    provinceId: "BE_Limburg",
+    totalPaid: 25,
+    lastActive: "2024-09-28T08:40:00Z",
+    lastPayment: "2024-09-08",
+    freeMonths: 0,
+    status: "actief"
   }
 ];
