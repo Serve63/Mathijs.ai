@@ -65,7 +65,7 @@
             <div class="customer-avatar">${getInitials(customer.name)}</div>
             <div>
               <p class="customer-name">${customer.name}</p>
-              <p class="customer-sub">${provinceLabel} | Standaard abbo</p>
+              <p class="customer-sub">${provinceLabel} | Standaard abonnement</p>
             </div>
             <div class="customer-amount">${fmtEUR.format(25)}</div>
           </div>
