@@ -235,6 +235,7 @@
         const ratio = maxRevenue ? point.revenue / maxRevenue : 0;
         return `
           <div class="bar" style="--bar: ${ratio}">
+            <div class="bar-value">${fmtEUR.format(point.revenue)}</div>
             <div class="bar-fill" title="${fmtEUR.format(point.revenue)}"></div>
             <div class="bar-label">${point.label}</div>
           </div>

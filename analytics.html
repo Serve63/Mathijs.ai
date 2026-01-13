@@ -425,9 +425,18 @@
 
       .bar {
         display: grid;
-        grid-template-rows: 1fr auto;
+        grid-template-rows: auto 1fr auto;
         gap: 8px;
         height: 200px;
+      }
+
+      .bar-value {
+        text-align: center;
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.86);
+        letter-spacing: 0.01em;
+        text-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
       }
 
       .bar-fill {
