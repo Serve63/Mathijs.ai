@@ -281,10 +281,10 @@
         border-radius: 0 0 14px 14px;
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-top: none;
-        overflow: hidden;
+        overflow: visible;
         background: rgba(12, 18, 44, 0.55);
         position: relative;
-        padding: 0;
+        padding: 0 0 16px 0;
       }
 
       .map-grid {
@@ -302,14 +302,13 @@
       }
 
       .map-frame {
-        height: min(480px, calc(100vh - 360px));
+        height: min(520px, calc(100vh - 320px));
         width: 100%;
         position: relative;
-        overflow: hidden;
+        overflow: visible;
         display: grid;
         place-items: center;
-        /* extra bottom padding so the southern tip never clips */
-        padding: 18px 16px 34px;
+        padding: 24px 16px 48px;
         touch-action: auto;
         cursor: default;
         user-select: none;
@@ -356,12 +355,11 @@
       }
 
       .nl-map {
-        width: 62%;
-        height: 62%;
-        max-width: 62%;
-        max-height: 62%;
-        /* shift UP to give Limburg room at the bottom */
-        transform: translateY(-12px);
+        width: 72%;
+        height: 72%;
+        max-width: 72%;
+        max-height: 72%;
+        transform: none;
       }
 
       .map-title {
@@ -535,8 +533,9 @@
           border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
         .map-frame {
-          height: min(420px, calc(100vh - 320px));
-          padding: 16px 14px 30px;
+          height: min(460px, calc(100vh - 280px));
+          padding: 20px 14px 40px;
+          overflow: visible;
         }
         .map-svg {
           width: 88%;
@@ -545,11 +544,11 @@
           max-height: 88%;
         }
         .nl-map {
-          width: 58%;
-          height: 58%;
-          max-width: 58%;
-          max-height: 58%;
-          transform: translateY(-10px);
+          width: 68%;
+          height: 68%;
+          max-width: 68%;
+          max-height: 68%;
+          transform: none;
         }
         .panel-head {
           flex-direction: column;
