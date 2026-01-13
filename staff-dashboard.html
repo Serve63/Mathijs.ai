@@ -370,10 +370,6 @@
       }
 
       .map-title {
-        position: absolute;
-        right: 16px;
-        top: 16px;
-        z-index: 500;
         padding: 6px 12px;
         border-radius: 999px;
         background: rgba(10, 14, 26, 0.7);
@@ -382,6 +378,23 @@
         font-size: 0.72rem;
         letter-spacing: 0.14em;
         text-transform: uppercase;
+      }
+
+      .map-top {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        top: 16px;
+        z-index: 500;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        pointer-events: none;
+      }
+
+      .map-top > * {
+        pointer-events: auto;
       }
 
       .province {
@@ -422,10 +435,6 @@
       }
 
       .legend {
-        position: absolute;
-        left: 16px;
-        top: 16px;
-        z-index: 500;
         display: inline-flex;
         gap: 10px;
         align-items: center;
@@ -641,23 +650,27 @@
       <section class="map-panel" aria-label="Kaartenoverzicht">
         <div class="map-grid">
           <div class="map-column" aria-label="Kaart van Nederland">
-            <div class="legend" aria-label="Legenda abonnees">
-              <span class="dot low" aria-hidden="true"></span><span>Laag</span>
-              <span class="dot mid" aria-hidden="true"></span><span>Midden</span>
-              <span class="dot high" aria-hidden="true"></span><span>Hoog</span>
-        </div>
-            <div class="map-title">Nederland</div>
+            <div class="map-top" aria-hidden="false">
+              <div class="map-title">Nederland</div>
+              <div class="legend" aria-label="Legenda abonnees">
+                <span class="dot low" aria-hidden="true"></span><span>Laag</span>
+                <span class="dot mid" aria-hidden="true"></span><span>Midden</span>
+                <span class="dot high" aria-hidden="true"></span><span>Hoog</span>
+              </div>
+            </div>
             <div class="map-frame" role="application" aria-label="Kaart van Nederland">
               <div class="map-canvas" id="nl-map-canvas"></div>
         </div>
         </div>
           <div class="map-column" aria-label="Kaart van Belgie">
-            <div class="legend" aria-label="Legenda abonnees">
-              <span class="dot low" aria-hidden="true"></span><span>Laag</span>
-              <span class="dot mid" aria-hidden="true"></span><span>Midden</span>
-              <span class="dot high" aria-hidden="true"></span><span>Hoog</span>
-        </div>
-            <div class="map-title">Belgie</div>
+            <div class="map-top" aria-hidden="false">
+              <div class="map-title">Belgie</div>
+              <div class="legend" aria-label="Legenda abonnees">
+                <span class="dot low" aria-hidden="true"></span><span>Laag</span>
+                <span class="dot mid" aria-hidden="true"></span><span>Midden</span>
+                <span class="dot high" aria-hidden="true"></span><span>Hoog</span>
+              </div>
+            </div>
             <div class="map-frame" role="application" aria-label="Kaart van Belgie">
               <div class="map-canvas" id="be-map-canvas"></div>
         </div>
