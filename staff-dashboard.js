@@ -6,6 +6,12 @@
   const elSalesLabel = document.getElementById("kpi-sales-label");
   const elSalesSub = document.getElementById("kpi-sales-sub");
   const salesToggle = document.getElementById("kpi-sales-toggle");
+  const sparkMap = Array.from(document.querySelectorAll("[data-spark]")).reduce((acc, line) => {
+    if (line.dataset.spark) {
+      acc[line.dataset.spark] = line;
+    }
+    return acc;
+  }, {});
   const mapCanvas = document.getElementById("nl-map-canvas");
   const provinceInfo = document.getElementById("province-info");
   const recentCustomersEl = document.getElementById("recent-customers");
@@ -164,6 +170,27 @@
   let salesToday = 22282.65;
   let showProfit = false;
   const PROFIT_MARGIN = 0.35;
+  const SPARK_COLORS = {
+    up: "rgba(56, 191, 127, 0.95)",
+    down: "rgba(233, 90, 74, 0.95)"
+  };
+  let lastVisitsDelta = null;
+  let lastOrdersDelta = null;
+  let lastSalesDelta = null;
+
+  const setSparkTrend = (key, isUp) => {
+    const spark = sparkMap[key];
+    if (!spark) return;
+    const points = isUp ? spark.dataset.up : spark.dataset.down;
+    if (points) {
+      spark.setAttribute("points", points);
+    }
+    spark.setAttribute("stroke", isUp ? SPARK_COLORS.up : SPARK_COLORS.down);
+  };
+
+  const initSparks = () => {
+    Object.keys(sparkMap).forEach((key) => setSparkTrend(key, true));
+  };
 
   const updateSalesDisplay = () => {
     if (!elSales) return;
@@ -188,6 +215,9 @@
   };
 
   const tick = () => {
+    const prevVisits = visitsToday;
+    const prevOrders = ordersToday;
+    const prevSales = salesToday;
     visitorsNow = clamp(Math.round(visitorsNow + rand(-4, 6)), 8, 120);
     if (elVisitors) elVisitors.textContent = String(visitorsNow);
 
@@ -202,6 +232,24 @@
     if (elVisits) elVisits.textContent = String(visitsToday);
     if (elOrders) elOrders.textContent = String(ordersToday);
     updateSalesDisplay();
+
+    const visitDelta = visitsToday - prevVisits;
+    const orderDelta = ordersToday - prevOrders;
+    const salesDelta = salesToday - prevSales;
+
+    if (lastVisitsDelta !== null) {
+      setSparkTrend("visits", visitDelta >= lastVisitsDelta);
+    }
+    if (lastOrdersDelta !== null) {
+      setSparkTrend("customers", orderDelta >= lastOrdersDelta);
+    }
+    if (lastSalesDelta !== null) {
+      setSparkTrend("sales", salesDelta >= lastSalesDelta);
+    }
+
+    lastVisitsDelta = visitDelta;
+    lastOrdersDelta = orderDelta;
+    lastSalesDelta = salesDelta;
   };
 
   if (salesToggle) {
@@ -213,6 +261,7 @@
 
   loadMapSvg();
   renderRecentCustomers();
+  initSparks();
   tick();
   setInterval(tick, 1800);
 })();
