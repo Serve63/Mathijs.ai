@@ -207,12 +207,34 @@
       }
       .kpi:last-child { border-right: none; }
 
+      .kpi-head {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
       .kpi-label {
         font-size: 0.72rem;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         color: rgba(255, 255, 255, 0.72);
         font-weight: 700;
+      }
+
+      .kpi-toggle {
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      .kpi-toggle:focus-visible {
+        outline: 2px solid rgba(230, 194, 0, 0.8);
+        outline-offset: 2px;
       }
 
       .kpi-value {
@@ -511,9 +533,14 @@
           </svg>
         </div>
         <div class="kpi">
-          <div class="kpi-label">Omzet vandaag</div>
+          <div class="kpi-head">
+            <div class="kpi-label" id="kpi-sales-label">Omzet vandaag</div>
+            <button class="kpi-toggle" id="kpi-sales-toggle" type="button" aria-pressed="false">
+              Toon winst
+            </button>
+          </div>
           <div class="kpi-value" id="kpi-sales">€22.282,65</div>
-          <div class="kpi-sub">Omzet</div>
+          <div class="kpi-sub" id="kpi-sales-sub">Omzet</div>
           <svg class="spark" viewBox="0 0 56 22" aria-hidden="true">
             <polyline points="0,18 10,12 20,14 30,9 40,11 56,7" fill="none" stroke="rgba(84,162,255,0.9)" stroke-width="2" />
           </svg>

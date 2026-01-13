@@ -3,6 +3,9 @@
   const elVisits = document.getElementById("kpi-visits");
   const elOrders = document.getElementById("kpi-orders");
   const elSales = document.getElementById("kpi-sales");
+  const elSalesLabel = document.getElementById("kpi-sales-label");
+  const elSalesSub = document.getElementById("kpi-sales-sub");
+  const salesToggle = document.getElementById("kpi-sales-toggle");
   const mapCanvas = document.getElementById("nl-map-canvas");
   const provinceInfo = document.getElementById("province-info");
   const recentCustomersEl = document.getElementById("recent-customers");
@@ -159,6 +162,30 @@
   let visitsToday = 891;
   let ordersToday = 77;
   let salesToday = 22282.65;
+  let showProfit = false;
+  const PROFIT_MARGIN = 0.35;
+
+  const updateSalesDisplay = () => {
+    if (!elSales) return;
+    if (showProfit) {
+      const profit = salesToday * PROFIT_MARGIN;
+      elSales.textContent = fmtEUR.format(profit);
+      if (elSalesLabel) elSalesLabel.textContent = "Winst vandaag";
+      if (elSalesSub) elSalesSub.textContent = "Winst";
+      if (salesToggle) {
+        salesToggle.textContent = "Toon omzet";
+        salesToggle.setAttribute("aria-pressed", "true");
+      }
+    } else {
+      elSales.textContent = fmtEUR.format(salesToday);
+      if (elSalesLabel) elSalesLabel.textContent = "Omzet vandaag";
+      if (elSalesSub) elSalesSub.textContent = "Omzet";
+      if (salesToggle) {
+        salesToggle.textContent = "Toon winst";
+        salesToggle.setAttribute("aria-pressed", "false");
+      }
+    }
+  };
 
   const tick = () => {
     visitorsNow = clamp(Math.round(visitorsNow + rand(-4, 6)), 8, 120);
@@ -174,8 +201,15 @@
 
     if (elVisits) elVisits.textContent = String(visitsToday);
     if (elOrders) elOrders.textContent = String(ordersToday);
-    if (elSales) elSales.textContent = fmtEUR.format(salesToday);
+    updateSalesDisplay();
   };
+
+  if (salesToggle) {
+    salesToggle.addEventListener("click", () => {
+      showProfit = !showProfit;
+      updateSalesDisplay();
+    });
+  }
 
   loadMapSvg();
   renderRecentCustomers();
