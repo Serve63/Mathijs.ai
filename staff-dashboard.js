@@ -60,13 +60,12 @@
     recentCustomersEl.innerHTML = recent
       .map((customer) => {
         const provinceLabel = formatProvince(customer.provinceId);
-        const lastActive = customer.lastActive ? dateFmt.format(new Date(customer.lastActive)) : "-";
         return `
           <div class="customer-row">
             <div class="customer-avatar">${getInitials(customer.name)}</div>
             <div>
               <p class="customer-name">${customer.name}</p>
-              <p class="customer-sub">${provinceLabel} | ${customer.plan} | laatst actief ${lastActive}</p>
+              <p class="customer-sub">${provinceLabel} | Standaard abbo</p>
             </div>
             <div class="customer-amount">${fmtEUR.format(25)}</div>
           </div>
