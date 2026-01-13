@@ -3,7 +3,6 @@
   const elVisits = document.getElementById("kpi-visits");
   const elOrders = document.getElementById("kpi-orders");
   const elSales = document.getElementById("kpi-sales");
-  const mapViewport = document.getElementById("world-map");
   const mapCanvas = document.getElementById("nl-map-canvas");
   const provinceInfo = document.getElementById("province-info");
   const recentCustomersEl = document.getElementById("recent-customers");
@@ -17,9 +16,6 @@
   const dateFmt = new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short" });
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const rand = (a, b) => a + Math.random() * (b - a);
-
-  let dragMoved = false;
-  let suppressNextClick = false;
 
   const getInitials = (name) => {
     if (!name) return "";
@@ -132,11 +128,6 @@
       province.setAttribute("aria-label", `${label}: ${count} ${plural}`);
 
       province.addEventListener("click", () => {
-        if (suppressNextClick) {
-          suppressNextClick = false;
-          return;
-        }
-        if (dragMoved) return;
         selectProvince(province, provinceId, count);
       });
 
@@ -163,190 +154,6 @@
     }
   };
 
-  const setupMapDrag = () => {
-    if (!mapViewport || !mapCanvas) return;
-    let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-    let originX = 0;
-    let originY = 0;
-    let panX = 0;
-    let panY = 0;
-    let rafId = 0;
-    let ignoreMouseEvents = false;
-    let activeProvince = null;
-    const DRAG_THRESHOLD = 6;
-
-    const commitPan = () => {
-      rafId = 0;
-      mapCanvas.style.setProperty("--pan-x", `${panX}px`);
-      mapCanvas.style.setProperty("--pan-y", `${panY}px`);
-    };
-
-    const schedulePan = () => {
-      if (rafId) return;
-      rafId = requestAnimationFrame(commitPan);
-    };
-
-    const startDrag = (clientX, clientY, target) => {
-      isDragging = true;
-      dragMoved = false;
-      mapViewport.classList.add("dragging");
-      startX = clientX;
-      startY = clientY;
-      originX = panX;
-      originY = panY;
-      activeProvince = target;
-    };
-
-    const moveDrag = (clientX, clientY) => {
-      if (!isDragging) return;
-      const dx = clientX - startX;
-      const dy = clientY - startY;
-      if (Math.hypot(dx, dy) > DRAG_THRESHOLD) {
-        dragMoved = true;
-      }
-      panX = originX + dx;
-      panY = originY + dy;
-      schedulePan();
-    };
-
-    const endDrag = () => {
-      if (!isDragging) return;
-      isDragging = false;
-      mapViewport.classList.remove("dragging");
-      if (activeProvince && !dragMoved) {
-        const provinceId = activeProvince.dataset.province || "";
-        const count = customers.reduce((acc, customer) => {
-          if (customer.provinceId === provinceId) return acc + 1;
-          return acc;
-        }, 0);
-        selectProvince(activeProvince, provinceId, count);
-        suppressNextClick = true;
-        setTimeout(() => {
-          suppressNextClick = false;
-        }, 0);
-      }
-      activeProvince = null;
-      setTimeout(() => {
-        dragMoved = false;
-      }, 0);
-    };
-
-    if (window.PointerEvent) {
-      mapViewport.addEventListener("pointerdown", (event) => {
-        if (event.button !== undefined && event.button !== 0) return;
-        event.preventDefault();
-        ignoreMouseEvents = true;
-        const targetProvince = event.target.closest(".province");
-        startDrag(event.clientX, event.clientY, targetProvince);
-        mapViewport.setPointerCapture(event.pointerId);
-      });
-
-      mapViewport.addEventListener("pointermove", (event) => {
-        if (!isDragging) return;
-        event.preventDefault();
-        moveDrag(event.clientX, event.clientY);
-      });
-
-      const stopPointer = (event) => {
-        endDrag();
-        if (mapViewport.hasPointerCapture(event.pointerId)) {
-          mapViewport.releasePointerCapture(event.pointerId);
-        }
-        setTimeout(() => {
-          ignoreMouseEvents = false;
-        }, 0);
-      };
-
-      mapViewport.addEventListener("pointerup", stopPointer);
-      mapViewport.addEventListener("pointercancel", stopPointer);
-      mapViewport.addEventListener("pointerleave", stopPointer);
-    }
-
-    const handleMouseMove = (event) => {
-      if (!isDragging) return;
-      event.preventDefault();
-      moveDrag(event.clientX, event.clientY);
-    };
-
-    const handleMouseUp = () => {
-      endDrag();
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    mapViewport.addEventListener("mousedown", (event) => {
-      if (ignoreMouseEvents) return;
-      if (event.button !== 0) return;
-      event.preventDefault();
-      const targetProvince = event.target.closest(".province");
-      startDrag(event.clientX, event.clientY, targetProvince);
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
-    });
-
-    mapViewport.addEventListener("dragstart", (event) => {
-      event.preventDefault();
-    });
-
-    mapViewport.addEventListener(
-      "touchstart",
-      (event) => {
-        if (window.PointerEvent) return;
-        if (!event.touches.length) return;
-        event.preventDefault();
-        const touch = event.touches[0];
-        const targetProvince = event.target.closest(".province");
-        startDrag(touch.clientX, touch.clientY, targetProvince);
-      },
-      { passive: false }
-    );
-
-    mapViewport.addEventListener(
-      "touchmove",
-      (event) => {
-        if (window.PointerEvent) return;
-        if (!event.touches.length) return;
-        event.preventDefault();
-        const touch = event.touches[0];
-        moveDrag(touch.clientX, touch.clientY);
-      },
-      { passive: false }
-    );
-
-    mapViewport.addEventListener(
-      "touchend",
-      () => {
-        if (window.PointerEvent) return;
-        endDrag();
-      },
-      { passive: false }
-    );
-
-    mapViewport.addEventListener(
-      "touchcancel",
-      () => {
-        if (window.PointerEvent) return;
-        endDrag();
-      },
-      { passive: false }
-    );
-
-    mapViewport.addEventListener(
-      "wheel",
-      (event) => {
-        event.preventDefault();
-        const factor = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? mapViewport.clientHeight : 1;
-        panX -= event.deltaX * factor;
-        panY -= event.deltaY * factor;
-        schedulePan();
-      },
-      { passive: false }
-    );
-
-    commitPan();
-  };
 
   let visitorsNow = 27;
   let visitsToday = 891;
@@ -370,7 +177,6 @@
     if (elSales) elSales.textContent = fmtEUR.format(salesToday);
   };
 
-  setupMapDrag();
   loadMapSvg();
   renderRecentCustomers();
   tick();

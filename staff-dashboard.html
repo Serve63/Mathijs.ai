@@ -252,23 +252,23 @@
         width: 100%;
         position: relative;
         overflow: hidden;
-        touch-action: none;
-        cursor: grab;
+        display: grid;
+        place-items: center;
+        touch-action: auto;
+        cursor: default;
         user-select: none;
         overscroll-behavior: contain;
       }
 
       #world-map.dragging {
-        cursor: grabbing;
+        cursor: default;
       }
 
       .map-canvas {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate3d(calc(-50% + var(--pan-x, 0px)), calc(-50% + var(--pan-y, 0px)), 0);
-        transition: transform 0.12s ease-out;
-        will-change: transform;
+        position: relative;
+        left: auto;
+        top: auto;
+        transform: none;
       }
 
       .map-error {
@@ -284,20 +284,13 @@
         font-size: 0.95rem;
       }
 
-      #world-map.dragging .map-canvas {
-        transition: none;
-      }
-
       .nl-map {
-        width: clamp(520px, 65vw, 860px);
-        height: auto;
+        width: auto;
+        height: min(480px, 60vh);
+        max-width: min(720px, 90vw);
         display: block;
         pointer-events: auto;
         filter: drop-shadow(0 22px 32px rgba(6, 14, 30, 0.45));
-      }
-
-      #world-map.dragging .nl-map {
-        filter: none;
       }
 
       .province {
@@ -315,9 +308,6 @@
         pointer-events: none;
       }
 
-      #world-map.dragging .province-overlay {
-        mix-blend-mode: normal;
-      }
 
       .province path {
         transition: stroke 0.2s ease, filter 0.2s ease;
@@ -468,6 +458,9 @@
         }
         #world-map {
           height: min(480px, calc(100vh - 320px));
+        }
+        .nl-map {
+          height: min(360px, 55vh);
         }
         .panel-head {
           flex-direction: column;
