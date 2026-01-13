@@ -212,6 +212,7 @@
       }
 
       .range-toggle {
+        position: relative;
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
@@ -232,6 +233,19 @@
         font-weight: 600;
       }
 
+      .range-btn--icon {
+        padding: 6px 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+      }
+
+      .range-btn--icon svg {
+        width: 18px;
+        height: 18px;
+      }
+
       .range-btn:hover {
         background: rgba(255, 255, 255, 0.06);
         border-color: rgba(255, 255, 255, 0.14);
@@ -250,6 +264,82 @@
         box-shadow:
           0 0 0 2px rgba(230, 194, 0, 0.10) inset,
           0 10px 22px rgba(230, 194, 0, 0.12);
+      }
+
+      .range-picker {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        z-index: 50;
+        width: min(380px, 92vw);
+        padding: 12px;
+        border-radius: 14px;
+        background: rgba(10, 14, 26, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+      }
+
+      .range-picker[hidden] {
+        display: none;
+      }
+
+      .range-picker__title {
+        font-family: "Sora", sans-serif;
+        font-size: 0.95rem;
+        color: #fff;
+        margin: 0 0 8px;
+      }
+
+      .range-picker__grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .range-picker label {
+        display: grid;
+        gap: 6px;
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 700;
+      }
+
+      .range-picker input[type="date"] {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: rgba(255, 255, 255, 0.92);
+        font-family: inherit;
+      }
+
+      .range-picker__actions {
+        margin-top: 10px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .range-picker__btn {
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.9);
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 0.85rem;
+      }
+
+      .range-picker__btn.primary {
+        background: rgba(230, 194, 0, 0.22);
+        border-color: rgba(230, 194, 0, 0.55);
+        color: #fff;
       }
 
       .summary-grid {
@@ -458,6 +548,42 @@
           <button class="range-btn" type="button" data-range="quarter" aria-pressed="false">DIT KWARTAAL</button>
           <button class="range-btn" type="button" data-range="year" aria-pressed="false">DIT JAAR</button>
           <button class="range-btn" type="button" data-range="all" aria-pressed="false">ALL TIME</button>
+          <button
+            class="range-btn range-btn--icon"
+            type="button"
+            data-range="custom"
+            aria-pressed="false"
+            title="Kies datums"
+            aria-label="Kies specifieke datums"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M8 3v2M16 3v2M4 8h16M6 5h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+
+          <div class="range-picker" id="range-picker" hidden>
+            <p class="range-picker__title">Kies periode</p>
+            <div class="range-picker__grid">
+              <label>
+                Van
+                <input id="range-from" type="date" />
+              </label>
+              <label>
+                Tot
+                <input id="range-to" type="date" />
+              </label>
+            </div>
+            <div class="range-picker__actions">
+              <button class="range-picker__btn" id="range-cancel" type="button">Annuleren</button>
+              <button class="range-picker__btn primary" id="range-apply" type="button">Toepassen</button>
+            </div>
+          </div>
         </div>
       </section>
 

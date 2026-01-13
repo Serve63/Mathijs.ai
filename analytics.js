@@ -1,5 +1,10 @@
 (() => {
   const rangeButtons = Array.from(document.querySelectorAll(".range-btn"));
+  const rangePickerEl = document.getElementById("range-picker");
+  const rangeFromEl = document.getElementById("range-from");
+  const rangeToEl = document.getElementById("range-to");
+  const rangeApplyEl = document.getElementById("range-apply");
+  const rangeCancelEl = document.getElementById("range-cancel");
   const revenueEl = document.getElementById("stat-revenue");
   const revenueSubEl = document.getElementById("stat-revenue-sub");
   const ordersEl = document.getElementById("stat-orders");
@@ -17,6 +22,8 @@
 
   const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
   const fmtNumber = new Intl.NumberFormat("nl-NL");
+  const fmtDateLong = new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short", year: "numeric" });
+  const fmtDayMonth = new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short" });
 
   const weekPoints = [
     { label: "Ma", revenue: 300, orders: 12, subs: 8, active: 214 },
@@ -84,6 +91,127 @@
       points: yearPoints,
       showTotalRow: true
     }
+  };
+
+  const toISODate = (date) => {
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  };
+
+  const parseISODate = (value) => {
+    if (!value) return null;
+    const [y, m, d] = value.split("-").map((v) => Number(v));
+    if (!y || !m || !d) return null;
+    return new Date(Date.UTC(y, m - 1, d));
+  };
+
+  const daysBetweenInclusive = (a, b) => {
+    const ms = 24 * 60 * 60 * 1000;
+    const start = Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate());
+    const end = Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate());
+    return Math.floor((end - start) / ms) + 1;
+  };
+
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+  const seedFromDate = (iso) => {
+    let h = 2166136261;
+    for (let i = 0; i < iso.length; i += 1) {
+      h ^= iso.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  };
+
+  const rand01 = (seed) => {
+    // xorshift32
+    let x = seed >>> 0;
+    x ^= x << 13;
+    x ^= x >>> 17;
+    x ^= x << 5;
+    return (x >>> 0) / 4294967296;
+  };
+
+  const makeDailyPoint = (date) => {
+    const iso = toISODate(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())));
+    const seed = seedFromDate(iso);
+    const r = rand01(seed);
+    const r2 = rand01(seed ^ 0x9e3779b9);
+    const revenue = Math.round(220 + r * 980); // 220..1200
+    const orders = Math.round(6 + r2 * 26); // 6..32
+    const subs = Math.round(3 + r * 18); // 3..21
+    const active = Math.round(160 + r2 * 120); // 160..280
+    return {
+      label: fmtDayMonth.format(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))),
+      revenue,
+      orders,
+      subs,
+      active
+    };
+  };
+
+  const sumPoints = (points, label) => {
+    const totals = points.reduce(
+      (acc, p) => {
+        acc.revenue += p.revenue;
+        acc.orders += p.orders;
+        acc.subs += p.subs;
+        acc.active = p.active;
+        return acc;
+      },
+      { revenue: 0, orders: 0, subs: 0, active: 0 }
+    );
+    return { label, ...totals };
+  };
+
+  const generateCustomPoints = (fromDate, toDate) => {
+    const totalDays = daysBetweenInclusive(fromDate, toDate);
+    const points = [];
+    const ms = 24 * 60 * 60 * 1000;
+
+    // daily (<= 21d), weekly buckets (<= 120d), else monthly buckets
+    if (totalDays <= 21) {
+      for (let i = 0; i < totalDays; i += 1) {
+        const d = new Date(fromDate.getTime() + i * ms);
+        points.push(makeDailyPoint(d));
+      }
+      return points;
+    }
+
+    if (totalDays <= 120) {
+      let start = new Date(fromDate);
+      while (start <= toDate) {
+        const end = new Date(Math.min(toDate.getTime(), start.getTime() + 6 * ms));
+        const bucket = [];
+        const bucketDays = daysBetweenInclusive(start, end);
+        for (let i = 0; i < bucketDays; i += 1) {
+          bucket.push(makeDailyPoint(new Date(start.getTime() + i * ms)));
+        }
+        const label = `${fmtDayMonth.format(start)}–${fmtDayMonth.format(end)}`;
+        points.push(sumPoints(bucket, label));
+        start = new Date(end.getTime() + ms);
+      }
+      return points;
+    }
+
+    // monthly buckets
+    let cursor = new Date(Date.UTC(fromDate.getUTCFullYear(), fromDate.getUTCMonth(), 1));
+    const endMonth = new Date(Date.UTC(toDate.getUTCFullYear(), toDate.getUTCMonth(), 1));
+    while (cursor <= endMonth) {
+      const monthStart = new Date(cursor);
+      const monthEnd = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 0));
+      const realStart = new Date(Math.max(monthStart.getTime(), fromDate.getTime()));
+      const realEnd = new Date(Math.min(monthEnd.getTime(), toDate.getTime()));
+      const bucketDays = daysBetweenInclusive(realStart, realEnd);
+      const bucket = [];
+      for (let i = 0; i < bucketDays; i += 1) {
+        bucket.push(makeDailyPoint(new Date(realStart.getTime() + i * ms)));
+      }
+      const label = new Intl.DateTimeFormat("nl-NL", { month: "short", year: "numeric" }).format(monthStart);
+      points.push(sumPoints(bucket, label));
+      cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
+    }
+    return points;
   };
 
   const computeTotals = (points) =>
@@ -175,11 +303,71 @@
     renderTable(config.points, Boolean(config.showTotalRow));
   };
 
+  const closePicker = () => {
+    if (!rangePickerEl) return;
+    rangePickerEl.hidden = true;
+  };
+
+  const openPicker = () => {
+    if (!rangePickerEl) return;
+    rangePickerEl.hidden = false;
+    if (rangeFromEl) rangeFromEl.focus();
+  };
+
+  // defaults for date picker: last 7 days
+  const today = new Date();
+  const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+  const fromDefault = new Date(todayUTC.getTime() - 6 * 24 * 60 * 60 * 1000);
+  if (rangeFromEl && !rangeFromEl.value) rangeFromEl.value = toISODate(fromDefault);
+  if (rangeToEl && !rangeToEl.value) rangeToEl.value = toISODate(todayUTC);
+
   rangeButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const rangeId = button.dataset.range || "week";
+      if (rangeId === "custom") {
+        openPicker();
+        return;
+      }
+      closePicker();
       setActiveRange(rangeId);
     });
+  });
+
+  if (rangeCancelEl) {
+    rangeCancelEl.addEventListener("click", closePicker);
+  }
+
+  if (rangeApplyEl) {
+    rangeApplyEl.addEventListener("click", () => {
+      const from = parseISODate(rangeFromEl?.value);
+      const to = parseISODate(rangeToEl?.value);
+      if (!from || !to) return;
+      if (from.getTime() > to.getTime()) return;
+
+      const totalDays = daysBetweenInclusive(from, to);
+      // keep the UI usable
+      if (totalDays > 730) return; // max 2 years in demo
+
+      const points = generateCustomPoints(from, to);
+      const meta = `${fmtDateLong.format(from)} – ${fmtDateLong.format(to)}`.toUpperCase();
+      ranges.custom = {
+        label: "AANGEPAST",
+        meta,
+        points
+      };
+      closePicker();
+      setActiveRange("custom");
+    });
+  }
+
+  document.addEventListener("click", (e) => {
+    if (!rangePickerEl || rangePickerEl.hidden) return;
+    const target = e.target;
+    if (!(target instanceof Element)) return;
+    if (rangePickerEl.contains(target)) return;
+    const btn = target.closest?.(".range-btn[data-range=\"custom\"]");
+    if (btn) return;
+    closePicker();
   });
 
   setActiveRange("week");
