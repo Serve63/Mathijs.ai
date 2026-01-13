@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mathijs.ai | Analytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #fafafa;
+        --ink: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.72);
+        --accent: #e6c200;
+        --accent-strong: #c9a900;
+        --dark: #1a1a2e;
+        --hero-1: #1a1a2e;
+        --hero-2: #16213e;
+        --hero-3: #0f3460;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 30% 20%, rgba(230, 194, 0, 0.16), transparent 45%),
+          linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 48%, var(--hero-3) 100%);
+        color: var(--ink);
+        font-family: "Manrope", "Segoe UI", sans-serif;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        position: relative;
+        overflow-x: hidden;
+        min-height: 100vh;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(circle at 20% 30%, rgba(230, 194, 0, 0.08) 0%, transparent 50%),
+          radial-gradient(circle at 80% 70%, rgba(15, 52, 96, 0.12) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: -2;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='50' cy='50' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: -1;
+        opacity: 1;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        padding: 0;
+        background: var(--dark);
+        backdrop-filter: blur(32px) saturate(200%);
+        -webkit-backdrop-filter: blur(32px) saturate(200%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.05) inset,
+          0 4px 24px rgba(0, 0, 0, 0.3),
+          0 0 0 1px rgba(0, 0, 0, 0.1);
+      }
+
+      .site-header::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 80% 50% at 0% 0%, rgba(230, 194, 0, 0.06) 0%, transparent 60%),
+          radial-gradient(ellipse 80% 50% at 100% 0%, rgba(15, 52, 96, 0.06) 0%, transparent 60%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%);
+        pointer-events: none;
+        opacity: 1;
+      }
+
+      .site-header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(230, 194, 0, 0.3) 50%,
+          transparent 100%
+        );
+        pointer-events: none;
+      }
+
+      .header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        position: relative;
+        z-index: 1;
+        padding: 14px 40px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        color: #fff;
+        letter-spacing: 0.05em;
+        position: relative;
+      }
+
+      .brand-logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        border: 2px solid rgba(230, 194, 0, 0.4);
+        box-shadow:
+          0 0 0 1px rgba(230, 194, 0, 0.15),
+          0 2px 12px rgba(230, 194, 0, 0.2);
+      }
+
+      .brand-text {
+        font-family: "Sora", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .brand-dot {
+        color: var(--accent);
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 10px 22px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .btn.secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      .analytics-shell {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 18px 20px 32px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .analytics-hero {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .analytics-hero h1 {
+        margin: 0;
+        font-family: "Sora", sans-serif;
+        font-size: 1.5rem;
+        color: #fff;
+      }
+
+      .analytics-hero p {
+        margin: 6px 0 0;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.95rem;
+      }
+
+      .range-toggle {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 6px;
+        background: rgba(10, 14, 26, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+      }
+
+      .range-btn {
+        border: 1px solid transparent;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        padding: 6px 14px;
+        font-size: 0.8rem;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .range-btn.is-active {
+        background: rgba(230, 194, 0, 0.15);
+        border-color: rgba(230, 194, 0, 0.4);
+        color: #fff;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .summary-card {
+        padding: 16px 18px;
+        border-radius: 14px;
+        background: rgba(12, 18, 44, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 24px 70px -55px rgba(0, 0, 0, 0.75);
+      }
+
+      .summary-label {
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 700;
+      }
+
+      .summary-value {
+        font-family: "Sora", sans-serif;
+        font-size: 1.8rem;
+        margin-top: 6px;
+        color: #fff;
+      }
+
+      .summary-sub {
+        margin-top: 2px;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.65);
+      }
+
+      .panel {
+        background: rgba(12, 18, 44, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        padding: 16px 18px 18px;
+        box-shadow: 0 24px 70px -55px rgba(0, 0, 0, 0.7);
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .panel-head h2 {
+        margin: 0;
+        font-family: "Sora", sans-serif;
+        font-size: 1.15rem;
+        color: #fff;
+      }
+
+      .panel-head p {
+        margin: 4px 0 0;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.88rem;
+      }
+
+      .panel-pill {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(10, 14, 26, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      .bar-chart {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+        gap: 12px;
+        align-items: end;
+        min-height: 200px;
+      }
+
+      .bar {
+        display: grid;
+        grid-template-rows: 1fr auto;
+        gap: 8px;
+        height: 200px;
+      }
+
+      .bar-fill {
+        align-self: end;
+        height: calc(var(--bar, 0) * 100%);
+        border-radius: 12px;
+        background: linear-gradient(180deg, rgba(84, 162, 255, 0.9), rgba(18, 36, 72, 0.9));
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+      }
+
+      .bar-label {
+        text-align: center;
+        font-size: 0.72rem;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .table-head,
+      .table-row {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .table-head {
+        margin-top: 16px;
+        padding-bottom: 10px;
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.55);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .table-row {
+        padding: 12px 6px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .table-row:last-child {
+        border-bottom: none;
+      }
+
+      .cell {
+        font-size: 0.92rem;
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      .cell strong {
+        color: #fff;
+      }
+
+      @media (max-width: 1100px) {
+        .summary-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 900px) {
+        .header-inner {
+          padding: 14px 18px;
+        }
+
+        .analytics-hero {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .panel-head {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .table-head {
+          display: none;
+        }
+
+        .table-row {
+          grid-template-columns: 1fr;
+          gap: 10px;
+          padding: 14px 0;
+        }
+
+        .cell::before {
+          content: attr(data-label);
+          display: block;
+          font-size: 0.72rem;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.55);
+          margin-bottom: 4px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a href="index.html" class="brand" aria-label="Mathijs.ai startpagina">
+          <img src="assets/mathijs-avatar.png" alt="Mathijs.ai-logo" class="brand-logo" width="40" height="40" />
+          <span class="brand-text">MATHIJS<span class="brand-dot">.AI</span></span>
+        </a>
+        <div class="header-actions">
+          <a class="btn secondary" href="staff-dashboard.html">Terug naar dashboard</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="analytics-shell" aria-label="Analytics overzicht">
+      <section class="analytics-hero">
+        <div>
+          <h1>Analytics overzicht</h1>
+          <p>Bekijk prestaties per week, maand, kwartaal, jaar en all time.</p>
+        </div>
+        <div class="range-toggle" role="tablist" aria-label="Tijdspanne">
+          <button class="range-btn is-active" type="button" data-range="week" aria-pressed="true">Week</button>
+          <button class="range-btn" type="button" data-range="month" aria-pressed="false">Maand</button>
+          <button class="range-btn" type="button" data-range="quarter" aria-pressed="false">Kwartaal</button>
+          <button class="range-btn" type="button" data-range="year" aria-pressed="false">Jaar</button>
+          <button class="range-btn" type="button" data-range="all" aria-pressed="false">All time</button>
+        </div>
+      </section>
+
+      <section class="summary-grid" aria-label="Kernstatistieken">
+        <div class="summary-card">
+          <div class="summary-label">Omzet</div>
+          <div class="summary-value" id="stat-revenue">€0</div>
+          <div class="summary-sub" id="stat-revenue-sub">Totaal periode</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Orders</div>
+          <div class="summary-value" id="stat-orders">0</div>
+          <div class="summary-sub" id="stat-orders-sub">Totaal periode</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Nieuwe abonnees</div>
+          <div class="summary-value" id="stat-subs">0</div>
+          <div class="summary-sub" id="stat-subs-sub">Totaal periode</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Actieve klanten</div>
+          <div class="summary-value" id="stat-active">0</div>
+          <div class="summary-sub" id="stat-active-sub">Laatste meetpunt</div>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Omzet trend">
+        <div class="panel-head">
+          <div>
+            <h2 id="chart-title">Omzet trend</h2>
+            <p id="chart-meta">Laatste 7 dagen</p>
+          </div>
+          <div class="panel-pill" id="chart-total">€0 totaal</div>
+        </div>
+        <div class="bar-chart" id="bar-chart"></div>
+      </section>
+
+      <section class="panel" aria-label="Detail overzicht">
+        <div class="panel-head">
+          <div>
+            <h2>Detail per periode</h2>
+            <p id="table-meta">Laatste 7 dagen</p>
+          </div>
+        </div>
+        <div class="table-head" aria-hidden="true">
+          <div>Periode</div>
+          <div>Omzet</div>
+          <div>Orders</div>
+          <div>Nieuwe abonnees</div>
+          <div>Actieve klanten</div>
+        </div>
+        <div id="analytics-table"></div>
+      </section>
+    </main>
+
+    <script src="analytics.js" defer></script>
+  </body>
+</html>
