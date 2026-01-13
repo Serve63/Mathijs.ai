@@ -59,23 +59,23 @@
 
   const ranges = {
     week: {
-      label: "Week",
-      meta: "Laatste 7 dagen",
+      label: "Deze week",
+      meta: "Deze week",
       points: weekPoints
     },
     month: {
-      label: "Maand",
-      meta: "Laatste 12 maanden",
+      label: "Deze maand",
+      meta: "Deze maand",
       points: monthPoints
     },
     quarter: {
-      label: "Kwartaal",
-      meta: "Laatste 4 kwartalen",
+      label: "Dit kwartaal",
+      meta: "Dit kwartaal",
       points: quarterPoints
     },
     year: {
-      label: "Jaar",
-      meta: "Laatste 4 jaar",
+      label: "Dit jaar",
+      meta: "Dit jaar",
       points: yearPoints
     },
     all: {

@@ -232,10 +232,24 @@
         font-weight: 600;
       }
 
+      .range-btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.14);
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .range-btn:focus-visible {
+        outline: 2px solid rgba(230, 194, 0, 0.85);
+        outline-offset: 2px;
+      }
+
       .range-btn.is-active {
-        background: rgba(230, 194, 0, 0.15);
-        border-color: rgba(230, 194, 0, 0.4);
+        background: rgba(230, 194, 0, 0.22);
+        border-color: rgba(230, 194, 0, 0.7);
         color: #fff;
+        box-shadow:
+          0 0 0 2px rgba(230, 194, 0, 0.10) inset,
+          0 10px 22px rgba(230, 194, 0, 0.12);
       }
 
       .summary-grid {
@@ -439,10 +453,10 @@
           <p>Bekijk prestaties per week, maand, kwartaal, jaar en all time.</p>
         </div>
         <div class="range-toggle" role="tablist" aria-label="Tijdspanne">
-          <button class="range-btn is-active" type="button" data-range="week" aria-pressed="true">Week</button>
-          <button class="range-btn" type="button" data-range="month" aria-pressed="false">Maand</button>
-          <button class="range-btn" type="button" data-range="quarter" aria-pressed="false">Kwartaal</button>
-          <button class="range-btn" type="button" data-range="year" aria-pressed="false">Jaar</button>
+          <button class="range-btn is-active" type="button" data-range="week" aria-pressed="true">Deze week</button>
+          <button class="range-btn" type="button" data-range="month" aria-pressed="false">Deze maand</button>
+          <button class="range-btn" type="button" data-range="quarter" aria-pressed="false">Dit kwartaal</button>
+          <button class="range-btn" type="button" data-range="year" aria-pressed="false">Dit jaar</button>
           <button class="range-btn" type="button" data-range="all" aria-pressed="false">All time</button>
         </div>
       </section>
@@ -485,7 +499,7 @@
         <div class="panel-head">
           <div>
             <h2>Detail per periode</h2>
-            <p id="table-meta">Laatste 7 dagen</p>
+            <p id="table-meta">Deze week</p>
           </div>
         </div>
         <div class="table-head" aria-hidden="true">
