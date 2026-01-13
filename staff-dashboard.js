@@ -63,7 +63,7 @@
               <p class="customer-name">${customer.name}</p>
               <p class="customer-sub">${provinceLabel} | ${customer.plan} | laatst actief ${lastActive}</p>
             </div>
-            <div class="customer-amount">${fmtEUR.format(customer.totalPaid || 0)}</div>
+            <div class="customer-amount">${fmtEUR.format(25)}</div>
           </div>
         `;
       })
