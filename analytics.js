@@ -19,42 +19,42 @@
   const fmtNumber = new Intl.NumberFormat("nl-NL");
 
   const weekPoints = [
-    { label: "Ma", revenue: 3180, orders: 48, subs: 6, active: 214 },
-    { label: "Di", revenue: 2860, orders: 41, subs: 5, active: 216 },
-    { label: "Wo", revenue: 3425, orders: 54, subs: 8, active: 219 },
-    { label: "Do", revenue: 4010, orders: 62, subs: 7, active: 221 },
-    { label: "Vr", revenue: 4520, orders: 71, subs: 10, active: 224 },
-    { label: "Za", revenue: 2980, orders: 39, subs: 4, active: 223 },
-    { label: "Zo", revenue: 2640, orders: 35, subs: 3, active: 222 }
+    { label: "Ma", revenue: 300, orders: 12, subs: 8, active: 214 },
+    { label: "Di", revenue: 250, orders: 10, subs: 7, active: 216 },
+    { label: "Wo", revenue: 350, orders: 14, subs: 9, active: 219 },
+    { label: "Do", revenue: 450, orders: 18, subs: 12, active: 221 },
+    { label: "Vr", revenue: 500, orders: 20, subs: 14, active: 224 },
+    { label: "Za", revenue: 200, orders: 8, subs: 5, active: 223 },
+    { label: "Zo", revenue: 150, orders: 6, subs: 4, active: 222 }
   ];
 
   const monthPoints = [
-    { label: "nov '23", revenue: 61200, orders: 940, subs: 82, active: 192 },
-    { label: "dec '23", revenue: 68450, orders: 1020, subs: 95, active: 198 },
-    { label: "jan", revenue: 70210, orders: 1080, subs: 102, active: 206 },
-    { label: "feb", revenue: 65820, orders: 980, subs: 88, active: 210 },
-    { label: "mrt", revenue: 74100, orders: 1140, subs: 110, active: 215 },
-    { label: "apr", revenue: 76850, orders: 1185, subs: 116, active: 219 },
-    { label: "mei", revenue: 81240, orders: 1240, subs: 128, active: 223 },
-    { label: "jun", revenue: 79310, orders: 1205, subs: 121, active: 226 },
-    { label: "jul", revenue: 72400, orders: 1112, subs: 105, active: 228 },
-    { label: "aug", revenue: 76890, orders: 1178, subs: 112, active: 231 },
-    { label: "sep", revenue: 83540, orders: 1260, subs: 134, active: 235 },
-    { label: "okt", revenue: 88230, orders: 1320, subs: 142, active: 238 }
+    { label: "nov '23", revenue: 4800, orders: 192, subs: 18, active: 192 },
+    { label: "dec '23", revenue: 4950, orders: 198, subs: 20, active: 198 },
+    { label: "jan", revenue: 5150, orders: 206, subs: 22, active: 206 },
+    { label: "feb", revenue: 5250, orders: 210, subs: 19, active: 210 },
+    { label: "mrt", revenue: 5375, orders: 215, subs: 23, active: 215 },
+    { label: "apr", revenue: 5475, orders: 219, subs: 24, active: 219 },
+    { label: "mei", revenue: 5575, orders: 223, subs: 26, active: 223 },
+    { label: "jun", revenue: 5650, orders: 226, subs: 25, active: 226 },
+    { label: "jul", revenue: 5700, orders: 228, subs: 21, active: 228 },
+    { label: "aug", revenue: 5775, orders: 231, subs: 22, active: 231 },
+    { label: "sep", revenue: 5875, orders: 235, subs: 27, active: 235 },
+    { label: "okt", revenue: 5950, orders: 238, subs: 29, active: 238 }
   ];
 
   const quarterPoints = [
-    { label: "Q1 2024", revenue: 210130, orders: 3200, subs: 300, active: 215 },
-    { label: "Q2 2024", revenue: 237400, orders: 3625, subs: 365, active: 226 },
-    { label: "Q3 2024", revenue: 232350, orders: 3500, subs: 338, active: 232 },
-    { label: "Q4 2024", revenue: 258900, orders: 3850, subs: 402, active: 238 }
+    { label: "Q1 2024", revenue: 16125, orders: 645, subs: 72, active: 215 },
+    { label: "Q2 2024", revenue: 16950, orders: 678, subs: 76, active: 226 },
+    { label: "Q3 2024", revenue: 17400, orders: 696, subs: 80, active: 232 },
+    { label: "Q4 2024", revenue: 17850, orders: 714, subs: 84, active: 238 }
   ];
 
   const yearPoints = [
-    { label: "2021", revenue: 520400, orders: 7820, subs: 860, active: 168 },
-    { label: "2022", revenue: 692500, orders: 9860, subs: 1120, active: 198 },
-    { label: "2023", revenue: 818900, orders: 11240, subs: 1290, active: 218 },
-    { label: "2024", revenue: 938700, orders: 13540, subs: 1480, active: 238 }
+    { label: "2021", revenue: 50400, orders: 2016, subs: 240, active: 168 },
+    { label: "2022", revenue: 59400, orders: 2376, subs: 280, active: 198 },
+    { label: "2023", revenue: 65400, orders: 2616, subs: 320, active: 218 },
+    { label: "2024", revenue: 71400, orders: 2856, subs: 360, active: 238 }
   ];
 
   const ranges = {
