@@ -172,13 +172,20 @@
     let originY = 0;
     let panX = 0;
     let panY = 0;
+    let rafId = 0;
     let ignoreMouseEvents = false;
     let activeProvince = null;
     const DRAG_THRESHOLD = 6;
 
-    const applyPan = () => {
+    const commitPan = () => {
+      rafId = 0;
       mapCanvas.style.setProperty("--pan-x", `${panX}px`);
       mapCanvas.style.setProperty("--pan-y", `${panY}px`);
+    };
+
+    const schedulePan = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(commitPan);
     };
 
     const startDrag = (clientX, clientY, target) => {
@@ -201,7 +208,7 @@
       }
       panX = originX + dx;
       panY = originY + dy;
-      applyPan();
+      schedulePan();
     };
 
     const endDrag = () => {
@@ -333,12 +340,12 @@
         const factor = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? mapViewport.clientHeight : 1;
         panX -= event.deltaX * factor;
         panY -= event.deltaY * factor;
-        applyPan();
+        schedulePan();
       },
       { passive: false }
     );
 
-    applyPan();
+    commitPan();
   };
 
   let visitorsNow = 27;
