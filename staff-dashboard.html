@@ -380,21 +380,6 @@
       .dot.mid { background: rgba(242, 173, 63, 0.95); box-shadow: 0 0 0 6px rgba(242, 173, 63, 0.16); }
       .dot.high { background: rgba(56, 191, 127, 0.95); box-shadow: 0 0 0 6px rgba(56, 191, 127, 0.16); }
 
-      .province-info {
-        position: absolute;
-        right: 16px;
-        bottom: 16px;
-        z-index: 500;
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: rgba(10, 14, 26, 0.72);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 0.85rem;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-      }
-
       .customers-panel {
         margin-top: 18px;
         background: rgba(12, 18, 44, 0.78);
@@ -577,7 +562,6 @@
           <span class="dot mid" aria-hidden="true"></span><span>Midden</span>
           <span class="dot high" aria-hidden="true"></span><span>Hoog</span>
         </div>
-        <div class="province-info" id="province-info" aria-live="polite">Klik op een provincie voor klantdata</div>
         <div id="world-map" role="application" aria-label="Kaart van Nederland, sleep of swipe om te verplaatsen">
           <div class="map-canvas" id="nl-map-canvas"></div>
         </div>

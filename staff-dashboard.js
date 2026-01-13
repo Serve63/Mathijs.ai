@@ -13,7 +13,6 @@
     return acc;
   }, {});
   const mapCanvas = document.getElementById("nl-map-canvas");
-  const provinceInfo = document.getElementById("province-info");
   const recentCustomersEl = document.getElementById("recent-customers");
 
   const customers = Array.isArray(window.customersData)
@@ -39,12 +38,6 @@
 
   const formatProvince = (provinceId) => provinceLabels[provinceId] || provinceId || "Onbekend";
 
-  const updateProvinceInfo = (provinceId, count) => {
-    if (!provinceInfo) return;
-    const label = formatProvince(provinceId);
-    const plural = count === 1 ? "klant" : "klanten";
-    provinceInfo.textContent = `${label}: ${count} ${plural}`;
-  };
 
   const renderRecentCustomers = () => {
     if (!recentCustomersEl) return;
@@ -100,16 +93,6 @@
     provinceEl.style.setProperty("--province-color", color);
   };
 
-  const selectProvince = (provinceEl, provinceId, count) => {
-    if (mapCanvas) {
-      mapCanvas.querySelectorAll(".province.is-selected").forEach((el) => el.classList.remove("is-selected"));
-    }
-    if (provinceEl) {
-      provinceEl.classList.add("is-selected");
-    }
-    updateProvinceInfo(provinceId, count);
-  };
-
   const setupProvinceInteractions = () => {
     if (!mapCanvas) return;
     const provinces = Array.from(mapCanvas.querySelectorAll(".province"));
@@ -126,26 +109,8 @@
     provinces.forEach((province) => {
       const provinceId = province.dataset.province || "";
       const count = counts[provinceId] || 0;
-      const label = formatProvince(provinceId);
-      const plural = count === 1 ? "klant" : "klanten";
-
       ensureProvinceOverlay(province);
       applyProvinceHeat(province, count, maxCount);
-
-      province.setAttribute("tabindex", "0");
-      province.setAttribute("role", "button");
-      province.setAttribute("aria-label", `${label}: ${count} ${plural}`);
-
-      province.addEventListener("click", () => {
-        selectProvince(province, provinceId, count);
-      });
-
-      province.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          selectProvince(province, provinceId, count);
-        }
-      });
     });
   };
 
