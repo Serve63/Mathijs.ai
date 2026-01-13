@@ -24,6 +24,11 @@
   const fmtNumber = new Intl.NumberFormat("nl-NL");
   const fmtDateLong = new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short", year: "numeric" });
   const fmtDayMonth = new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short" });
+  const fmtMonthShort = new Intl.DateTimeFormat("nl-NL", { month: "short" });
+  const fmtMonthShortYear = new Intl.DateTimeFormat("nl-NL", { month: "short", year: "numeric" });
+
+  const today = new Date();
+  const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
 
   const weekPoints = [
     { label: "Ma", revenue: 300, orders: 12, subs: 8, active: 214 },
@@ -35,35 +40,6 @@
     { label: "Zo", revenue: 150, orders: 6, subs: 4, active: 222 }
   ];
 
-  const monthPoints = [
-    { label: "nov '23", revenue: 4800, orders: 192, subs: 18, active: 192 },
-    { label: "dec '23", revenue: 4950, orders: 198, subs: 20, active: 198 },
-    { label: "jan", revenue: 5150, orders: 206, subs: 22, active: 206 },
-    { label: "feb", revenue: 5250, orders: 210, subs: 19, active: 210 },
-    { label: "mrt", revenue: 5375, orders: 215, subs: 23, active: 215 },
-    { label: "apr", revenue: 5475, orders: 219, subs: 24, active: 219 },
-    { label: "mei", revenue: 5575, orders: 223, subs: 26, active: 223 },
-    { label: "jun", revenue: 5650, orders: 226, subs: 25, active: 226 },
-    { label: "jul", revenue: 5700, orders: 228, subs: 21, active: 228 },
-    { label: "aug", revenue: 5775, orders: 231, subs: 22, active: 231 },
-    { label: "sep", revenue: 5875, orders: 235, subs: 27, active: 235 },
-    { label: "okt", revenue: 5950, orders: 238, subs: 29, active: 238 }
-  ];
-
-  const quarterPoints = [
-    { label: "Q1 2024", revenue: 16125, orders: 645, subs: 72, active: 215 },
-    { label: "Q2 2024", revenue: 16950, orders: 678, subs: 76, active: 226 },
-    { label: "Q3 2024", revenue: 17400, orders: 696, subs: 80, active: 232 },
-    { label: "Q4 2024", revenue: 17850, orders: 714, subs: 84, active: 238 }
-  ];
-
-  const yearPoints = [
-    { label: "2021", revenue: 50400, orders: 2016, subs: 240, active: 168 },
-    { label: "2022", revenue: 59400, orders: 2376, subs: 280, active: 198 },
-    { label: "2023", revenue: 65400, orders: 2616, subs: 320, active: 218 },
-    { label: "2024", revenue: 71400, orders: 2856, subs: 360, active: 238 }
-  ];
-
   const ranges = {
     week: {
       label: "DEZE WEEK",
@@ -73,22 +49,27 @@
     month: {
       label: "DEZE MAAND",
       meta: "DEZE MAAND",
-      points: monthPoints
+      points: []
     },
     quarter: {
       label: "DIT KWARTAAL",
       meta: "DIT KWARTAAL",
-      points: quarterPoints
+      points: []
     },
     year: {
       label: "DIT JAAR",
       meta: "DIT JAAR",
-      points: yearPoints
+      points: []
     },
     all: {
       label: "ALL TIME",
       meta: "Sinds 2021",
-      points: yearPoints,
+      points: [
+        { label: "2021", revenue: 50400, orders: 2016, subs: 240, active: 168 },
+        { label: "2022", revenue: 59400, orders: 2376, subs: 280, active: 198 },
+        { label: "2023", revenue: 65400, orders: 2616, subs: 320, active: 218 },
+        { label: "2024", revenue: 71400, orders: 2856, subs: 360, active: 238 }
+      ],
       showTotalRow: true
     }
   };
@@ -150,6 +131,19 @@
     };
   };
 
+  const dailySeries = (fromDate, toDate, labelFn) => {
+    const ms = 24 * 60 * 60 * 1000;
+    const days = daysBetweenInclusive(fromDate, toDate);
+    const points = [];
+    for (let i = 0; i < days; i += 1) {
+      const d = new Date(fromDate.getTime() + i * ms);
+      const p = makeDailyPoint(d);
+      if (labelFn) p.label = labelFn(d);
+      points.push(p);
+    }
+    return points;
+  };
+
   const sumPoints = (points, label) => {
     const totals = points.reduce(
       (acc, p) => {
@@ -164,6 +158,41 @@
     return { label, ...totals };
   };
 
+  const monthAggregate = (year, monthIndex, maxDate) => {
+    const monthStart = new Date(Date.UTC(year, monthIndex, 1));
+    const monthEnd = new Date(Date.UTC(year, monthIndex + 1, 0));
+    const realEnd = maxDate && monthEnd > maxDate ? maxDate : monthEnd;
+    if (realEnd < monthStart) return null;
+    const points = dailySeries(monthStart, realEnd);
+    const label = fmtMonthShort.format(monthStart).toLowerCase();
+    return sumPoints(points, label);
+  };
+
+  const initFixedRanges = () => {
+    // DEZE MAAND = dagen in huidige maand (tot vandaag)
+    const y = todayUTC.getUTCFullYear();
+    const m = todayUTC.getUTCMonth();
+    const monthStart = new Date(Date.UTC(y, m, 1));
+    ranges.month.points = dailySeries(monthStart, todayUTC, (d) => String(d.getUTCDate()));
+
+    // DIT KWARTAAL = maanden in huidig kwartaal (tot huidige maand)
+    const qStart = Math.floor(m / 3) * 3;
+    const quarterPoints = [];
+    for (let mi = qStart; mi <= m; mi += 1) {
+      const agg = monthAggregate(y, mi, todayUTC);
+      if (agg) quarterPoints.push(agg);
+    }
+    ranges.quarter.points = quarterPoints;
+
+    // DIT JAAR = maanden in huidig jaar (tot huidige maand)
+    const yearPoints = [];
+    for (let mi = 0; mi <= m; mi += 1) {
+      const agg = monthAggregate(y, mi, todayUTC);
+      if (agg) yearPoints.push(agg);
+    }
+    ranges.year.points = yearPoints;
+  };
+
   const generateCustomPoints = (fromDate, toDate) => {
     const totalDays = daysBetweenInclusive(fromDate, toDate);
     const points = [];
@@ -171,22 +200,14 @@
 
     // daily (<= 21d), weekly buckets (<= 120d), else monthly buckets
     if (totalDays <= 21) {
-      for (let i = 0; i < totalDays; i += 1) {
-        const d = new Date(fromDate.getTime() + i * ms);
-        points.push(makeDailyPoint(d));
-      }
-      return points;
+      return dailySeries(fromDate, toDate, (d) => fmtDayMonth.format(d).toUpperCase());
     }
 
     if (totalDays <= 120) {
       let start = new Date(fromDate);
       while (start <= toDate) {
         const end = new Date(Math.min(toDate.getTime(), start.getTime() + 6 * ms));
-        const bucket = [];
-        const bucketDays = daysBetweenInclusive(start, end);
-        for (let i = 0; i < bucketDays; i += 1) {
-          bucket.push(makeDailyPoint(new Date(start.getTime() + i * ms)));
-        }
+        const bucket = dailySeries(start, end);
         const label = `${fmtDayMonth.format(start)}–${fmtDayMonth.format(end)}`;
         points.push(sumPoints(bucket, label));
         start = new Date(end.getTime() + ms);
@@ -202,12 +223,8 @@
       const monthEnd = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 0));
       const realStart = new Date(Math.max(monthStart.getTime(), fromDate.getTime()));
       const realEnd = new Date(Math.min(monthEnd.getTime(), toDate.getTime()));
-      const bucketDays = daysBetweenInclusive(realStart, realEnd);
-      const bucket = [];
-      for (let i = 0; i < bucketDays; i += 1) {
-        bucket.push(makeDailyPoint(new Date(realStart.getTime() + i * ms)));
-      }
-      const label = new Intl.DateTimeFormat("nl-NL", { month: "short", year: "numeric" }).format(monthStart);
+      const bucket = dailySeries(realStart, realEnd);
+      const label = fmtMonthShortYear.format(monthStart);
       points.push(sumPoints(bucket, label));
       cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
     }
@@ -315,9 +332,9 @@
     if (rangeFromEl) rangeFromEl.focus();
   };
 
+  initFixedRanges();
+
   // defaults for date picker: last 7 days
-  const today = new Date();
-  const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
   const fromDefault = new Date(todayUTC.getTime() - 6 * 24 * 60 * 60 * 1000);
   if (rangeFromEl && !rangeFromEl.value) rangeFromEl.value = toISODate(fromDefault);
   if (rangeToEl && !rangeToEl.value) rangeToEl.value = toISODate(todayUTC);
