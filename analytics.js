@@ -59,27 +59,27 @@
 
   const ranges = {
     week: {
-      label: "Deze week",
-      meta: "Deze week",
+      label: "DEZE WEEK",
+      meta: "DEZE WEEK",
       points: weekPoints
     },
     month: {
-      label: "Deze maand",
-      meta: "Deze maand",
+      label: "DEZE MAAND",
+      meta: "DEZE MAAND",
       points: monthPoints
     },
     quarter: {
-      label: "Dit kwartaal",
-      meta: "Dit kwartaal",
+      label: "DIT KWARTAAL",
+      meta: "DIT KWARTAAL",
       points: quarterPoints
     },
     year: {
-      label: "Dit jaar",
-      meta: "Dit jaar",
+      label: "DIT JAAR",
+      meta: "DIT JAAR",
       points: yearPoints
     },
     all: {
-      label: "All time",
+      label: "ALL TIME",
       meta: "Sinds 2021",
       points: yearPoints,
       showTotalRow: true
