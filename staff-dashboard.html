@@ -40,6 +40,14 @@
         position: relative;
         overflow-x: hidden;
         min-height: 100vh;
+        /* Hide scrollbar (keep scroll) */
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge legacy */
+      }
+
+      body::-webkit-scrollbar {
+        width: 0;
+        height: 0;
       }
 
       body::before {
