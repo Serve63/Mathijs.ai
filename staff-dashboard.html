@@ -248,13 +248,14 @@
       }
 
       #world-map {
-        height: min(560px, calc(100vh - 220px));
+        height: min(520px, calc(100vh - 340px));
         width: 100%;
         position: relative;
         overflow: hidden;
         touch-action: none;
         cursor: grab;
         user-select: none;
+        overscroll-behavior: contain;
       }
 
       #world-map.dragging {
@@ -270,6 +271,19 @@
         will-change: transform;
       }
 
+      .map-error {
+        min-width: 320px;
+        min-height: 240px;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        color: rgba(255, 255, 255, 0.7);
+        background: rgba(7, 12, 28, 0.45);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        font-size: 0.95rem;
+      }
+
       #world-map.dragging .map-canvas {
         transition: none;
       }
@@ -278,8 +292,44 @@
         width: clamp(520px, 65vw, 860px);
         height: auto;
         display: block;
-        pointer-events: none;
+        pointer-events: auto;
         filter: drop-shadow(0 22px 32px rgba(6, 14, 30, 0.45));
+      }
+
+      .province {
+        cursor: pointer;
+      }
+
+      .province-base {
+        fill: url(#satellite);
+      }
+
+      .province-overlay {
+        fill: var(--province-color, rgba(230, 194, 0, 0.35));
+        fill-opacity: 0.65;
+        mix-blend-mode: screen;
+        pointer-events: none;
+      }
+
+      .province path {
+        transition: stroke 0.2s ease, filter 0.2s ease;
+      }
+
+      .province:hover path {
+        stroke: rgba(230, 194, 0, 0.95);
+        stroke-width: 1.6;
+        filter: drop-shadow(0 8px 14px rgba(230, 194, 0, 0.28));
+      }
+
+      .province.is-selected path {
+        stroke: rgba(230, 194, 0, 1);
+        stroke-width: 2;
+        filter: drop-shadow(0 10px 18px rgba(230, 194, 0, 0.32));
+      }
+
+      .province:focus-visible path {
+        stroke: rgba(230, 194, 0, 0.9);
+        stroke-width: 2;
       }
 
       .legend {
@@ -306,8 +356,100 @@
         border-radius: 50%;
         display: inline-block;
       }
-      .dot.visitor { background: rgba(84, 162, 255, 0.95); box-shadow: 0 0 0 6px rgba(84, 162, 255, 0.18); }
-      .dot.sale { background: rgba(230, 194, 0, 0.95); box-shadow: 0 0 0 6px rgba(230, 194, 0, 0.16); }
+      .dot.low { background: rgba(233, 90, 74, 0.95); box-shadow: 0 0 0 6px rgba(233, 90, 74, 0.18); }
+      .dot.mid { background: rgba(242, 173, 63, 0.95); box-shadow: 0 0 0 6px rgba(242, 173, 63, 0.16); }
+      .dot.high { background: rgba(56, 191, 127, 0.95); box-shadow: 0 0 0 6px rgba(56, 191, 127, 0.16); }
+
+      .province-info {
+        position: absolute;
+        right: 16px;
+        bottom: 16px;
+        z-index: 500;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(10, 14, 26, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.85rem;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+
+      .customers-panel {
+        margin-top: 18px;
+        background: rgba(12, 18, 44, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        padding: 16px 18px;
+        box-shadow: 0 24px 70px -55px rgba(0, 0, 0, 0.7);
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .panel-head h2 {
+        margin: 0;
+        font-family: "Sora", sans-serif;
+        font-size: 1.2rem;
+        color: #fff;
+      }
+
+      .panel-head p {
+        margin: 6px 0 0;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+      }
+
+      .customers-list {
+        margin-top: 16px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .customer-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 14px;
+        align-items: center;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(7, 12, 28, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .customer-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: rgba(84, 162, 255, 0.22);
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        color: #fff;
+        font-size: 0.85rem;
+      }
+
+      .customer-name {
+        margin: 0;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .customer-sub {
+        margin: 4px 0 0;
+        font-size: 0.82rem;
+        color: rgba(255, 255, 255, 0.68);
+      }
+
+      .customer-amount {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #fff;
+      }
 
       @media (max-width: 980px) {
         .header-inner {
@@ -317,7 +459,17 @@
           grid-template-columns: 1fr 1fr;
         }
         #world-map {
-          height: min(540px, calc(100vh - 260px));
+          height: min(480px, calc(100vh - 320px));
+        }
+        .panel-head {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .customer-row {
+          grid-template-columns: auto 1fr;
+        }
+        .customer-amount {
+          grid-column: 2;
         }
       }
     </style>
@@ -367,202 +519,30 @@
       </section>
 
       <section class="map-panel" aria-label="Kaart van Nederland">
-        <div class="legend" aria-label="Legenda">
-          <span class="dot visitor" aria-hidden="true"></span><span>Bezoeker</span>
-          <span class="dot sale" aria-hidden="true"></span><span>Verkoop</span>
+        <div class="legend" aria-label="Legenda abonnees">
+          <span class="dot low" aria-hidden="true"></span><span>Laag</span>
+          <span class="dot mid" aria-hidden="true"></span><span>Midden</span>
+          <span class="dot high" aria-hidden="true"></span><span>Hoog</span>
         </div>
-        <div id="world-map" role="application" aria-label="Kaart van Nederland">
-          <div class="map-canvas" id="nl-map-canvas">
-            <img
-              src="assets/nl-map.svg"
-              alt="Kaart van Nederland met provincies"
-              class="nl-map"
-              draggable="false"
-            />
+        <div class="province-info" id="province-info" aria-live="polite">Klik op een provincie voor klantdata</div>
+        <div id="world-map" role="application" aria-label="Kaart van Nederland, sleep of swipe om te verplaatsen">
+          <div class="map-canvas" id="nl-map-canvas"></div>
+        </div>
+      </section>
+
+      <section class="customers-panel" aria-label="Recente klanten">
+        <div class="panel-head">
+          <div>
+            <h2>Recente klanten</h2>
+            <p>Nieuwste aanmeldingen en hun laatste activiteit.</p>
           </div>
+          <a class="btn secondary" href="customers.html">Open klantenbestand</a>
         </div>
+        <div class="customers-list" id="recent-customers"></div>
       </section>
     </main>
 
-    <script>
-      (() => {
-        const elVisitors = document.getElementById("kpi-visitors");
-        const elVisits = document.getElementById("kpi-visits");
-        const elOrders = document.getElementById("kpi-orders");
-        const elSales = document.getElementById("kpi-sales");
-        const mapViewport = document.getElementById("world-map");
-        const mapCanvas = document.getElementById("nl-map-canvas");
-
-        const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
-        const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
-        const rand = (a, b) => a + Math.random() * (b - a);
-        const setupMapDrag = () => {
-          if (!mapViewport || !mapCanvas) return;
-          let isDragging = false;
-          let startX = 0;
-          let startY = 0;
-          let originX = 0;
-          let originY = 0;
-          let panX = 0;
-          let panY = 0;
-          let ignoreMouseEvents = false;
-
-          const applyPan = () => {
-            mapCanvas.style.setProperty("--pan-x", `${panX}px`);
-            mapCanvas.style.setProperty("--pan-y", `${panY}px`);
-          };
-
-          const startDrag = (clientX, clientY) => {
-            isDragging = true;
-            mapViewport.classList.add("dragging");
-            startX = clientX;
-            startY = clientY;
-            originX = panX;
-            originY = panY;
-          };
-
-          const moveDrag = (clientX, clientY) => {
-            if (!isDragging) return;
-            const dx = clientX - startX;
-            const dy = clientY - startY;
-            panX = originX + dx;
-            panY = originY + dy;
-            applyPan();
-          };
-
-          const endDrag = () => {
-            if (!isDragging) return;
-            isDragging = false;
-            mapViewport.classList.remove("dragging");
-          };
-
-          if (window.PointerEvent) {
-            mapViewport.addEventListener("pointerdown", (event) => {
-              if (event.button !== undefined && event.button !== 0) return;
-              event.preventDefault();
-              ignoreMouseEvents = true;
-              startDrag(event.clientX, event.clientY);
-              mapViewport.setPointerCapture(event.pointerId);
-            });
-
-            mapViewport.addEventListener("pointermove", (event) => {
-              if (!isDragging) return;
-              event.preventDefault();
-              moveDrag(event.clientX, event.clientY);
-            });
-
-            const stopPointer = (event) => {
-              endDrag();
-              if (mapViewport.hasPointerCapture(event.pointerId)) {
-                mapViewport.releasePointerCapture(event.pointerId);
-              }
-              setTimeout(() => {
-                ignoreMouseEvents = false;
-              }, 0);
-            };
-
-            mapViewport.addEventListener("pointerup", stopPointer);
-            mapViewport.addEventListener("pointercancel", stopPointer);
-            mapViewport.addEventListener("pointerleave", stopPointer);
-          }
-
-          const handleMouseMove = (event) => {
-            if (!isDragging) return;
-            event.preventDefault();
-            moveDrag(event.clientX, event.clientY);
-          };
-
-          const handleMouseUp = () => {
-            endDrag();
-            window.removeEventListener("mousemove", handleMouseMove);
-            window.removeEventListener("mouseup", handleMouseUp);
-          };
-
-          mapViewport.addEventListener("mousedown", (event) => {
-            if (ignoreMouseEvents) return;
-            if (event.button !== 0) return;
-            event.preventDefault();
-            startDrag(event.clientX, event.clientY);
-            window.addEventListener("mousemove", handleMouseMove);
-            window.addEventListener("mouseup", handleMouseUp);
-          });
-
-          mapViewport.addEventListener("dragstart", (event) => {
-            event.preventDefault();
-          });
-
-          mapViewport.addEventListener(
-            "touchstart",
-            (event) => {
-              if (window.PointerEvent) return;
-              if (!event.touches.length) return;
-              event.preventDefault();
-              const touch = event.touches[0];
-              startDrag(touch.clientX, touch.clientY);
-            },
-            { passive: false }
-          );
-
-          mapViewport.addEventListener(
-            "touchmove",
-            (event) => {
-              if (window.PointerEvent) return;
-              if (!event.touches.length) return;
-              event.preventDefault();
-              const touch = event.touches[0];
-              moveDrag(touch.clientX, touch.clientY);
-            },
-            { passive: false }
-          );
-
-          mapViewport.addEventListener(
-            "touchend",
-            () => {
-              if (window.PointerEvent) return;
-              endDrag();
-            },
-            { passive: false }
-          );
-
-          mapViewport.addEventListener(
-            "touchcancel",
-            () => {
-              if (window.PointerEvent) return;
-              endDrag();
-            },
-            { passive: false }
-          );
-
-          applyPan();
-        };
-
-        let visitorsNow = 27;
-        let visitsToday = 891;
-        let ordersToday = 77;
-        let salesToday = 22282.65;
-
-        const tick = () => {
-          // visitors fluctuate
-          visitorsNow = clamp(Math.round(visitorsNow + rand(-4, 6)), 8, 120);
-          elVisitors.textContent = String(visitorsNow);
-
-          const saleChance = Math.random();
-          if (saleChance > 0.55) {
-            ordersToday += 1;
-            salesToday += rand(29, 240);
-          }
-
-          visitsToday += clamp(Math.round(rand(1, 5)), 1, 8);
-
-          elVisits.textContent = String(visitsToday);
-          elOrders.textContent = String(ordersToday);
-          elSales.textContent = fmtEUR.format(salesToday);
-        };
-
-        setupMapDrag();
-        tick();
-        setInterval(tick, 1800);
-      })();
-    </script>
+    <script src="assets/customers-data.js" defer></script>
+    <script src="staff-dashboard.js" defer></script>
   </body>
 </html>
