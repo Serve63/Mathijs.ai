@@ -1509,9 +1509,9 @@
       .chat-header .status {
         width: 100%;
         display: flex;
-        align-items: flex-start;
-        justify-content: flex-start;
-        gap: 0;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
       }
 
 	      .chat-content-wrapper {
@@ -1562,10 +1562,8 @@
       }
 
       .chat-model-selector {
-        position: absolute;
-        top: 32px;
-        left: 16px;
-        z-index: 5;
+        position: relative;
+        z-index: 2;
         padding: 0;
         margin: 0;
         width: auto;
@@ -1976,7 +1974,7 @@
 
 	      .chat-log {
 	        flex: 1;
-        padding: 86px 28px 140px 28px;
+        padding: 48px 28px 140px 28px;
 	        min-height: 0;
 	        display: flex;
 	        flex-direction: column;
@@ -2781,7 +2779,7 @@
         }
 
 	        .chat-log {
-	          padding: 90px 16px 140px 16px;
+	          padding: 56px 16px 140px 16px;
 	        }
         
         .chat-log > .message:first-child {
@@ -3072,6 +3070,47 @@
 	              <h2>De Complete AI-Leeromgeving</h2>
 	              <p>Test en vergelijk AI-modellen zonder keuzestress en ontdek welke het beste past bij jouw business en workflow.</p>
 	            </div>
+              <div class="chat-model-selector">
+                <div class="model-selects">
+                  <div class="model-select" data-category="chat" data-label="Model">
+                    <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
+                      <span class="selected-label">ChatGPT 5.2</span>
+                      <svg viewBox="0 0 24 24">
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </button>
+                    <div class="model-dropdown" role="listbox" aria-label="Kies een model">
+                      <div class="model-option" data-model="ChatGPT 5.2" role="option" aria-selected="true">
+                        <span class="model-option__label">ChatGPT 5.2</span>
+                      </div>
+                      <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">
+                        <span class="model-option__label">Gemini 3</span>
+                      </div>
+                      <div class="model-option" data-model="Grok 4" role="option" aria-selected="false">
+                        <span class="model-option__label">Grok 4</span>
+                      </div>
+                      <div class="model-option" data-model="Opus 4.5" role="option" aria-selected="false">
+                        <span class="model-option__label">Opus 4.5</span>
+                      </div>
+                      <div class="model-option" data-model="Sonnet 4.5" role="option" aria-selected="false">
+                        <span class="model-option__label">Sonnet 4.5</span>
+                      </div>
+                      <div class="model-option" data-model="Haiku 4.5" role="option" aria-selected="false">
+                        <span class="model-option__label">Haiku 4.5</span>
+                      </div>
+                      <div class="model-option" data-model="Llama 4" role="option" aria-selected="false">
+                        <span class="model-option__label">Llama 4</span>
+                      </div>
+                      <div class="model-option" data-model="Qwen3-MAX" role="option" aria-selected="false">
+                        <span class="model-option__label">Qwen3-MAX</span>
+                      </div>
+                      <div class="model-option" data-model="DeepSeek V2" role="option" aria-selected="false">
+                        <span class="model-option__label">DeepSeek V2</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 	          </div>
 	        </header>
         <div class="chat-content-wrapper">
@@ -3079,47 +3118,6 @@
             <button class="layout-toggle" id="layout-toggle" type="button" aria-label="Vergroot chat" title="Vergroot chat">
               <div class="layout-toggle__icon" aria-hidden="true"></div>
             </button>
-            <div class="chat-model-selector">
-              <div class="model-selects">
-                <div class="model-select" data-category="chat" data-label="Model">
-                  <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="selected-label">ChatGPT 5.2</span>
-                    <svg viewBox="0 0 24 24">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </button>
-                  <div class="model-dropdown" role="listbox" aria-label="Kies een model">
-                    <div class="model-option" data-model="ChatGPT 5.2" role="option" aria-selected="true">
-                      <span class="model-option__label">ChatGPT 5.2</span>
-                    </div>
-                    <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">
-                      <span class="model-option__label">Gemini 3</span>
-                    </div>
-                    <div class="model-option" data-model="Grok 4" role="option" aria-selected="false">
-                      <span class="model-option__label">Grok 4</span>
-                    </div>
-                    <div class="model-option" data-model="Opus 4.5" role="option" aria-selected="false">
-                      <span class="model-option__label">Opus 4.5</span>
-                    </div>
-                    <div class="model-option" data-model="Sonnet 4.5" role="option" aria-selected="false">
-                      <span class="model-option__label">Sonnet 4.5</span>
-                    </div>
-                    <div class="model-option" data-model="Haiku 4.5" role="option" aria-selected="false">
-                      <span class="model-option__label">Haiku 4.5</span>
-                    </div>
-                    <div class="model-option" data-model="Llama 4" role="option" aria-selected="false">
-                      <span class="model-option__label">Llama 4</span>
-                    </div>
-                    <div class="model-option" data-model="Qwen3-MAX" role="option" aria-selected="false">
-                      <span class="model-option__label">Qwen3-MAX</span>
-                    </div>
-                    <div class="model-option" data-model="DeepSeek V2" role="option" aria-selected="false">
-                      <span class="model-option__label">DeepSeek V2</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
           <section class="chat-log"></section>
         </div>
