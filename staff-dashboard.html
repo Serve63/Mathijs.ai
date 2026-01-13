@@ -28,6 +28,16 @@
         box-sizing: border-box;
       }
 
+      /* Hide page scrollbar (keep scroll) */
+      html {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge legacy */
+      }
+      html::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+      }
+
       body {
         margin: 0;
         background:
@@ -40,7 +50,6 @@
         position: relative;
         overflow-x: hidden;
         min-height: 100vh;
-        /* Hide scrollbar (keep scroll) */
         scrollbar-width: none; /* Firefox */
         -ms-overflow-style: none; /* IE/Edge legacy */
       }
