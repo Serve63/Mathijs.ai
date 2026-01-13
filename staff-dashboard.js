@@ -119,7 +119,7 @@
   const loadMapSvg = async (canvas, url) => {
     if (!canvas) return;
     try {
-      const response = await fetch(url, { cache: "force-cache" });
+      const response = await fetch(url, { cache: "no-cache" });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const svgMarkup = await response.text();
       canvas.innerHTML = svgMarkup;
