@@ -1,4 +1,4 @@
-<svg role="img" aria-label="Kaart van Belgie met provincies" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1089.6636 891.85681" class="map-svg be-map" fill="url(#satelliteBe)" stroke="#f5f3e6" stroke-opacity="0.6" stroke-width="1" stroke-linejoin="round" stroke-linecap="round">
+<svg role="img" aria-label="Kaart van Belgie met provincies" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="-0.156907 -8.28782 1089.702262 899.69716" class="map-svg be-map" fill="url(#satelliteBe)" stroke="#f5f3e6" stroke-opacity="0.6" stroke-width="1" stroke-linejoin="round" stroke-linecap="round">
   <defs>
     <linearGradient id="satGradientBe" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#1b3f2f" />
