@@ -1,13 +1,13 @@
-<svg role="img" aria-label="Kaart van Belgie met provincies" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1089.6636 891.85681" class="map-svg be-map" fill="url(#satellite)" stroke="#f5f3e6" stroke-opacity="0.6" stroke-width="1" stroke-linejoin="round" stroke-linecap="round">
+<svg role="img" aria-label="Kaart van Belgie met provincies" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1089.6636 891.85681" class="map-svg be-map" fill="url(#satelliteBe)" stroke="#f5f3e6" stroke-opacity="0.6" stroke-width="1" stroke-linejoin="round" stroke-linecap="round">
   <defs>
-    <linearGradient id="satGradient" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="satGradientBe" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#1b3f2f" />
       <stop offset="32%" stop-color="#2e6b42" />
       <stop offset="58%" stop-color="#4f6d3b" />
       <stop offset="76%" stop-color="#6a5a36" />
       <stop offset="100%" stop-color="#1a334d" />
     </linearGradient>
-    <filter id="satNoise" x="0" y="0" width="1" height="1">
+    <filter id="satNoiseBe" x="0" y="0" width="1" height="1">
       <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="8" result="noise" />
       <feColorMatrix
         in="noise"
@@ -25,8 +25,8 @@
         <feFuncB type="gamma" amplitude="1" exponent="0.9" offset="0" />
       </feComponentTransfer>
     </filter>
-    <pattern id="satellite" patternUnits="userSpaceOnUse" width="1089.6636" height="891.85681">
-      <rect width="1089.6636" height="891.85681" fill="url(#satGradient)" filter="url(#satNoise)" />
+    <pattern id="satelliteBe" patternUnits="userSpaceOnUse" width="1089.6636" height="891.85681">
+      <rect width="1089.6636" height="891.85681" fill="url(#satGradientBe)" filter="url(#satNoiseBe)" />
     </pattern>
   </defs>
   <g transform="translate(-60.246145,-167.86326)">
