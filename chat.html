@@ -254,38 +254,98 @@
         height: 80px;
       }
 
-      .new-chat {
-        border: none;
+      .new-chat-split {
+        display: flex;
+        width: 100%;
         border-radius: 16px;
-        padding: 16px 18px;
+        overflow: hidden;
         background: var(--chat-accent);
-        color: #0b1020;
-        font-weight: 700;
-        font-size: 0.9rem;
-        letter-spacing: 0.01em;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(0, 0, 0, 0.10);
         box-shadow: 0 10px 26px -20px rgba(15, 23, 42, 0.28);
         position: relative;
-        overflow: hidden;
-        z-index: 1;
       }
 
-      .new-chat::before {
+      .new-chat-split::before {
         content: '';
         position: absolute;
         inset: 0;
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 70%);
         opacity: 0;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.25s ease;
+        pointer-events: none;
       }
 
-      .new-chat:hover::before {
+      .new-chat-split:hover::before {
         opacity: 1;
+      }
+
+      .new-chat-split:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 34px -24px rgba(15, 23, 42, 0.32);
+      }
+
+      .new-chat-split__btn {
+        appearance: none;
+        border: none;
+        background: transparent;
+        color: #0b1020;
+        font-weight: 700;
+        font-size: 0.9rem;
+        letter-spacing: 0.01em;
+        padding: 14px 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        cursor: pointer;
+        text-decoration: none;
+        user-select: none;
+        transition: background 0.2s ease, opacity 0.2s ease;
+        position: relative;
+        z-index: 1;
+        white-space: nowrap;
+      }
+
+      .new-chat-split__btn:hover {
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      .new-chat-split__btn--course {
+        flex: 1 1 auto;
+        justify-content: flex-start;
+      }
+
+      .new-chat-split__btn--course::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 10px;
+        bottom: 10px;
+        width: 1px;
+        background: rgba(0, 0, 0, 0.12);
+        opacity: 0.8;
+      }
+
+      .new-chat-split__btn--new {
+        flex: 0 0 auto;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .new-chat-split__icon {
+        font-size: 1.05em;
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      /* keep JS hook */
+      .new-chat {
+        /* inherits from split button */
+      }
+
+      .new-chat:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
       }
 
       .sidebar-mascot {
@@ -321,10 +381,7 @@
         font-weight: 800;
       }
 
-      .new-chat:hover {
-        transform: translateY(-3px) scale(1.01);
-        box-shadow: 0 14px 34px -24px rgba(15, 23, 42, 0.32);
-      }
+      /* hover handled on .new-chat-split */
 
       .sidebar h2 {
         margin: 0;
@@ -2832,12 +2889,18 @@
 	    <div class="chat-layout">
 		      <aside class="sidebar">
 		        <div class="sidebar-top">
-		          <button class="new-chat" type="button" aria-label="Start nieuw gesprek">
-		            <span class="new-chat__label">
-		              <span class="new-chat__plus">+</span>
-		              <span class="new-chat__text">Nieuw gesprek</span>
-		            </span>
-		          </button>
+              <div class="new-chat-split" role="group" aria-label="Cursus en nieuw gesprek">
+                <a class="new-chat-split__btn new-chat-split__btn--course" href="course.html" aria-label="Terug naar cursus">
+                  <span class="new-chat-split__icon">←</span>
+                  <span>Terug naar cursus</span>
+                </a>
+                <button class="new-chat-split__btn new-chat-split__btn--new new-chat" type="button" aria-label="Start nieuw gesprek">
+                  <span class="new-chat__label">
+                    <span class="new-chat__plus">+</span>
+                    <span class="new-chat__text">Nieuw gesprek</span>
+                  </span>
+                </button>
+              </div>
 		          <div class="sessions-heading">
 		            <h2>sessies</h2>
 		            <span class="tokens-inline" id="credits-balance" title="Je tokensaldo.">| Tokens:
