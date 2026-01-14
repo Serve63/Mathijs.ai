@@ -1378,9 +1378,12 @@
         pointer-events: none;
         /* subtle blue/yellow brand glow INSIDE the chat pane */
         background:
-          radial-gradient(980px 620px at 18% 18%, rgba(230, 194, 0, 0.14) 0%, transparent 62%),
-          radial-gradient(900px 620px at 82% 72%, rgba(15, 52, 96, 0.12) 0%, transparent 66%),
-          radial-gradient(760px 520px at 85% 14%, rgba(59, 130, 246, 0.08) 0%, transparent 62%);
+          /* yellow */
+          radial-gradient(980px 620px at 18% 18%, rgba(230, 194, 0, 0.12) 0%, transparent 62%),
+          /* deep brand blue (more visible) */
+          radial-gradient(980px 680px at 86% 18%, rgba(15, 52, 96, 0.18) 0%, transparent 64%),
+          /* lighter blue lift */
+          radial-gradient(900px 680px at 24% 78%, rgba(59, 130, 246, 0.12) 0%, transparent 66%);
         z-index: 0;
       }
 
