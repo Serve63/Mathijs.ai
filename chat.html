@@ -2017,12 +2017,13 @@
         box-shadow: 0 14px 34px -26px rgba(15, 23, 42, 0.26);
       }
 
+      /* ChatGPT-style assistant: no "bubble card" around the content */
       .message.system .bubble {
-        padding: 14px 16px;
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid var(--hairline);
-        box-shadow: 0 12px 34px -26px rgba(15, 23, 42, 0.25);
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
         max-width: min(720px, 90%);
       }
 
@@ -2045,10 +2046,7 @@
         content: none;
       }
 
-      .message.system .bubble {
-        position: relative;
-        padding-left: 16px;
-      }
+      /* remove extra padding/card-like styling for assistant messages */
 
       .message.thinking .bubble {
         color: var(--chat-muted);
