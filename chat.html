@@ -239,7 +239,7 @@
         border: none;
         border-radius: 16px;
         padding: 16px 18px;
-        background: linear-gradient(135deg, rgba(230, 194, 0, 1) 0%, rgba(255, 229, 90, 1) 55%, rgba(212, 176, 0, 1) 100%);
+        background: var(--chat-accent);
         color: #0b1020;
         font-weight: 700;
         font-size: 0.9rem;
@@ -250,8 +250,7 @@
         gap: 10px;
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 14px 40px -16px rgba(230, 194, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.25) inset,
-          0 0 70px -30px rgba(230, 194, 0, 0.45);
+        box-shadow: 0 10px 26px -20px rgba(15, 23, 42, 0.28);
         position: relative;
         overflow: hidden;
         z-index: 1;
@@ -261,7 +260,7 @@
         content: '';
         position: absolute;
         inset: 0;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 70%);
         opacity: 0;
         transition: opacity 0.3s ease;
       }
@@ -305,8 +304,7 @@
 
       .new-chat:hover {
         transform: translateY(-3px) scale(1.01);
-        box-shadow: 0 18px 50px -18px rgba(230, 194, 0, 0.70), 0 0 0 1px rgba(255, 255, 255, 0.32) inset,
-          0 0 90px -35px rgba(230, 194, 0, 0.55);
+        box-shadow: 0 14px 34px -24px rgba(15, 23, 42, 0.32);
       }
 
       .sidebar h2 {
@@ -1958,28 +1956,11 @@
 	        align-self: stretch;
 	      }
 
-      .message.system::before {
-        content: "";
-        flex: 0 0 34px;
-        width: 34px;
-        height: 34px;
-        border-radius: 14px;
-        margin-top: 2px;
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid var(--hairline);
-        box-shadow: 0 10px 26px -22px rgba(15, 23, 42, 0.25);
-      }
-
+      /* remove the small "boxes" next to messages */
+      .message.system::before,
       .message.user::after {
-        content: "";
-        flex: 0 0 34px;
-        width: 34px;
-        height: 34px;
-        border-radius: 14px;
-        margin-top: 2px;
-        background: rgba(230, 194, 0, 0.18);
-        border: 1px solid rgba(230, 194, 0, 0.28);
-        box-shadow: 0 10px 26px -22px rgba(15, 23, 42, 0.18);
+        content: none;
+        display: none;
 	      }
 
       /* Give assistant text a comfortable left edge (not hugging the sidebar) */
