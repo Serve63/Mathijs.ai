@@ -2140,15 +2140,10 @@
       .chat-footer {
         margin-top: auto;
         padding: 20px 24px 24px;
-        /* keep the theme visible behind the input area */
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0) 0%,
-          rgba(255, 255, 255, 0.38) 22%,
-          rgba(255, 255, 255, 0.62) 100%
-        );
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
+        /* keep the theme visible around the input area (no white band) */
+        background: transparent;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -2160,6 +2155,25 @@
         position: sticky;
         bottom: 0;
         z-index: 5;
+        position: sticky;
+        overflow: hidden;
+      }
+
+      .chat-footer::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(900px 420px at 14% 100%, rgba(230, 194, 0, 0.14) 0%, transparent 62%),
+          radial-gradient(900px 420px at 86% 100%, rgba(15, 52, 96, 0.16) 0%, transparent 66%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.0) 0%, rgba(255, 255, 255, 0.40) 100%);
+        z-index: 0;
+      }
+
+      .chat-footer > * {
+        position: relative;
+        z-index: 1;
       }
 
       .chat-input {
