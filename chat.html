@@ -304,6 +304,7 @@
         position: relative;
         z-index: 1;
         white-space: nowrap;
+        min-width: 0; /* allow flex items to shrink inside the sidebar */
       }
 
       .new-chat-split__btn:hover {
@@ -313,6 +314,13 @@
       .new-chat-split__btn--course {
         flex: 1 1 auto;
         justify-content: flex-start;
+        min-width: 0;
+      }
+
+      .new-chat-split__text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
       }
 
       .new-chat-split__btn--course::after {
@@ -327,9 +335,10 @@
       }
 
       .new-chat-split__btn--new {
-        flex: 0 0 auto;
-        padding-left: 16px;
-        padding-right: 16px;
+        /* icon-only action: always visible, never clipped */
+        flex: 0 0 54px;
+        padding-left: 0;
+        padding-right: 0;
       }
 
       .new-chat-split__icon {
@@ -374,11 +383,17 @@
         display: inline-flex;
         align-items: center;
         gap: 10px;
+        justify-content: center;
+        width: 100%;
       }
 
       .new-chat__plus {
         font-size: 1.1em;
         font-weight: 800;
+      }
+
+      .new-chat__text {
+        display: none;
       }
 
       /* hover handled on .new-chat-split */
@@ -2892,7 +2907,7 @@
               <div class="new-chat-split" role="group" aria-label="Cursus en nieuw gesprek">
                 <a class="new-chat-split__btn new-chat-split__btn--course" href="course.html" aria-label="Terug naar cursus">
                   <span class="new-chat-split__icon">←</span>
-                  <span>Terug naar cursus</span>
+                  <span class="new-chat-split__text">Terug naar cursus</span>
                 </a>
                 <button class="new-chat-split__btn new-chat-split__btn--new new-chat" type="button" aria-label="Start nieuw gesprek">
                   <span class="new-chat__label">
