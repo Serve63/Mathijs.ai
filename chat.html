@@ -46,6 +46,7 @@
         background: #ffffff;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        position: relative;
       }
 
       body::before {
@@ -55,10 +56,10 @@
         pointer-events: none;
         /* subtle blue/yellow brand glow, keeps UI white */
         background:
-          radial-gradient(900px 520px at 18% 22%, rgba(230, 194, 0, 0.08) 0%, transparent 62%),
-          radial-gradient(820px 520px at 78% 70%, rgba(15, 52, 96, 0.08) 0%, transparent 65%),
-          radial-gradient(700px 420px at 85% 18%, rgba(59, 130, 246, 0.05) 0%, transparent 60%);
-        z-index: -2;
+          radial-gradient(920px 560px at 18% 22%, rgba(230, 194, 0, 0.14) 0%, transparent 64%),
+          radial-gradient(860px 560px at 78% 70%, rgba(15, 52, 96, 0.12) 0%, transparent 66%),
+          radial-gradient(740px 460px at 85% 18%, rgba(59, 130, 246, 0.08) 0%, transparent 62%);
+        z-index: 0;
       }
 
       body::after {
@@ -68,8 +69,8 @@
         pointer-events: none;
         /* ultra-subtle dot texture like homepage */
         background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230f172a' fill-opacity='0.06'%3E%3Ccircle cx='60' cy='60' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        opacity: 0.35;
-        z-index: -1;
+        opacity: 0.22;
+        z-index: 0;
       }
 
       .chat-layout {
