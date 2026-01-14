@@ -194,61 +194,7 @@
         padding-top: 24px;
       }
 
-	      .layout-toggle {
-	        position: absolute;
-	        top: 16px;
-	        right: 16px;
-	        z-index: 5;
-	        border: 1px solid var(--chat-border);
-	        background: rgba(255, 255, 255, 0.95);
-	        backdrop-filter: blur(12px);
-	        -webkit-backdrop-filter: blur(12px);
-	        border-radius: 14px;
-	        width: 44px;
-	        height: 44px;
-	        padding: 0;
-	        display: inline-flex;
-	        align-items: center;
-	        justify-content: center;
-	        cursor: pointer;
-	        box-shadow: 0 4px 16px -4px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-	        color: var(--chat-text);
-	        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-	      }
-
-	      .layout-toggle:hover {
-	        background: rgba(255, 255, 255, 1);
-	        transform: translateY(-2px);
-	        box-shadow: 0 8px 24px -8px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
-	      }
-
-	      .layout-toggle__icon {
-	        width: 16px;
-	        height: 16px;
-	        border-radius: 4px;
-	        border: 1.5px solid var(--chat-text);
-	        opacity: 0.6;
-	        position: relative;
-	        transition: opacity 0.2s ease;
-	      }
-
-	      .layout-toggle:hover .layout-toggle__icon {
-	        opacity: 1;
-	      }
-
-      .layout-toggle__icon::before,
-      .layout-toggle__icon::after {
-        content: '';
-        position: absolute;
-        inset: 2px;
-        border-radius: 2px;
-        border: 1px solid var(--chat-text);
-        opacity: 0.4;
-      }
-
-      .chat-fullscreen .layout-toggle__icon::after {
-        background: rgba(15, 23, 42, 0.15);
-      }
+      /* layout toggle button removed */
 
       .sidebar-top {
         display: flex;
@@ -377,27 +323,20 @@
         flex-direction: column;
         gap: 6px;
         overflow-y: auto;
-        padding-right: 4px;
+        padding-right: 0;
         flex: 1;
         min-height: 0;
         padding-bottom: 12px;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge legacy */
       }
 
 	      .session-list::-webkit-scrollbar {
-	        width: 4px;
-	      }
-
-	      .session-list::-webkit-scrollbar-track {
-	        background: transparent;
-	      }
-
-	      .session-list::-webkit-scrollbar-thumb {
-	        background: rgba(15, 23, 42, 0.16);
-	        border-radius: 4px;
+	        width: 0;
+	        height: 0;
+        display: none;
 	      }
 
 	      .sessions-heading {
@@ -744,18 +683,25 @@
       .profile-menu {
         border: none;
         background: transparent;
-        color: rgba(15, 23, 42, 0.45);
+        color: rgba(15, 23, 42, 0.42);
         cursor: pointer;
-        padding: 6px;
-        border-radius: 10px;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border-radius: 9px;
+        font-size: 18px;
+        line-height: 1;
         transition: all 0.2s ease;
         position: relative;
         z-index: 10;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .profile-menu:hover {
-        color: var(--chat-accent);
-        background: rgba(230, 194, 0, 0.1);
+        color: rgba(15, 23, 42, 0.68);
+        background: rgba(15, 23, 42, 0.06);
       }
 
       .profile-modal {
@@ -1531,20 +1477,6 @@
 	        width: 100%;
 	        box-sizing: border-box;
 	        position: relative;
-	      }
-
-      /* Keep top controls visible while scrolling inside chat */
-      .chat-topbar {
-        position: sticky;
-        top: 0;
-        height: 0;
-        z-index: 30;
-        pointer-events: none;
-      }
-
-      .chat-topbar .layout-toggle,
-      .chat-topbar .chat-model-selector {
-        pointer-events: auto;
       }
 
 	      .chat-log-container {
@@ -1691,7 +1623,7 @@
         color: #1a1a1f;
       }
 
-      .model-select__trigger {
+		      .model-select__trigger {
         height: 34px;
         padding: 0 12px;
         border-radius: 999px;
@@ -1700,22 +1632,22 @@
         font-size: 0.78rem;
         font-weight: 700;
         letter-spacing: -0.01em;
-        text-transform: none;
+		        text-transform: none;
         border: 1px solid rgba(15, 23, 42, 0.12);
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
+		        cursor: pointer;
+	        display: inline-flex;
+	        align-items: center;
         gap: 8px;
         min-width: auto;
         max-width: none;
         width: auto;
-        justify-content: space-between;
-        white-space: nowrap;
+	        justify-content: space-between;
+	        white-space: nowrap;
         transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
         box-shadow: 0 10px 24px -22px rgba(15, 23, 42, 0.22);
-        position: relative;
-        overflow: hidden;
-      }
+		        position: relative;
+		        overflow: hidden;
+		      }
 
       .model-select__trigger:hover {
         background: rgba(15, 23, 42, 0.09);
@@ -1731,17 +1663,17 @@
         box-shadow: 0 10px 26px -18px rgba(15, 23, 42, 0.24), 0 0 0 3px rgba(230, 194, 0, 0.16);
       }
 
-      .model-select__trigger .selected-label {
-        display: inline-flex;
-        align-items: center;
-        white-space: nowrap;
+	      .model-select__trigger .selected-label {
+	        display: inline-flex;
+	        align-items: center;
+	        white-space: nowrap;
         font-weight: 700;
         color: rgba(15, 23, 42, 0.92);
-        flex: 1 1 auto;
+	        flex: 1 1 auto;
         overflow: hidden;
         text-overflow: ellipsis;
         font-size: 0.78rem;
-      }
+	      }
 
       .model-select__trigger svg {
         width: 14px;
@@ -1768,7 +1700,7 @@
 	        right: auto;
 	        transform: translateX(-50%);
         background: rgba(255, 255, 255, 0.98);
-        border-radius: 16px;
+	        border-radius: 16px;
         border: 1px solid rgba(15, 23, 42, 0.12);
         box-shadow: 0 26px 70px -46px rgba(15, 23, 42, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
         backdrop-filter: blur(18px);
@@ -1780,7 +1712,7 @@
 	        flex-direction: column;
 	        overflow: visible;
 	        z-index: 20;
-        padding: 6px;
+	        padding: 6px;
 	        box-sizing: border-box;
 	      }
 
@@ -2881,11 +2813,6 @@
           padding: 12px 14px 12px 18px;
         }
 
-        .layout-toggle {
-          width: 40px;
-          height: 40px;
-          border-radius: 12px;
-        }
       }
 
       /* Smooth scrolling */
@@ -3090,14 +3017,9 @@
                 </div>
               </div>
             </div>
-	          </div>
+          </div>
 	        </header>
         <div class="chat-content-wrapper">
-          <div class="chat-topbar" aria-hidden="true">
-            <button class="layout-toggle" id="layout-toggle" type="button" aria-label="Vergroot chat" title="Vergroot chat">
-              <div class="layout-toggle__icon" aria-hidden="true"></div>
-            </button>
-          </div>
           <section class="chat-log"></section>
         </div>
         <footer class="chat-footer">
