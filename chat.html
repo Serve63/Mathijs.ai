@@ -2754,14 +2754,32 @@
       }
       
       .chat-disclaimer {
-        margin: 0;
+        margin: 0 auto;
         font-size: 0.72rem;
-        line-height: 1.4;
+        line-height: 1.25;
         color: var(--chat-text-secondary);
         opacity: 0.6;
         text-align: center;
-        letter-spacing: 0.01em;
-        max-width: 600px;
+        letter-spacing: 0;
+        max-width: min(980px, 100%);
+      }
+
+      .chat-disclaimer__line {
+        display: block;
+      }
+
+      /* Keep exactly 2 lines on desktop; allow wrapping on small screens */
+      @media (min-width: 961px) {
+        .chat-disclaimer__line--nowrap {
+          white-space: nowrap;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .chat-disclaimer {
+          font-size: 0.68rem;
+          line-height: 1.25;
+        }
       }
 
 	      @media (max-width: 960px) {
@@ -3192,7 +3210,10 @@
               </button>
             </div>
           </div>
-          <p class="chat-disclaimer">Geen derdenverkoop. Merknamen zijn alleen ter duiding en betekenen geen samenwerking, sponsoring of goedkeuring.<br />Mathijs.ai is onafhankelijk en niet gelieerd aan Google, Microsoft, OpenAI of andere merken.</p>
+          <p class="chat-disclaimer">
+            <span class="chat-disclaimer__line chat-disclaimer__line--nowrap">Geen derdenverkoop. Merknamen zijn alleen ter duiding en betekenen geen samenwerking, sponsoring of goedkeuring.</span>
+            <span class="chat-disclaimer__line">Mathijs.ai is onafhankelijk en niet gelieerd aan Google, Microsoft, OpenAI of andere merken.</span>
+          </p>
         </footer>
       </main>
     </div>
