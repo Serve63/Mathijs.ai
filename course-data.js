@@ -1,5 +1,5 @@
 (() => {
-  const STORAGE_KEY = "mathijs.course.data.v1";
+  const API_ENDPOINT = "/api/course-content";
 
   const createDefaultLessons = () => {
     const items = [];
@@ -49,34 +49,42 @@
 
   const clone = (value) => JSON.parse(JSON.stringify(value));
 
-  const getCourseData = () => {
+  const mergeWithDefaults = (incoming) => ({
+    ...clone(DEFAULT_COURSE),
+    ...(incoming || {}),
+  });
+
+  const loadCourseData = async () => {
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        const fresh = clone(DEFAULT_COURSE);
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
-        return fresh;
-      }
-      const parsed = JSON.parse(raw);
-      return { ...clone(DEFAULT_COURSE), ...parsed };
-    } catch (_) {
-      return clone(DEFAULT_COURSE);
+      const resp = await fetch(API_ENDPOINT, { method: "GET", credentials: "include" });
+      if (!resp.ok) throw new Error(`load_failed:${resp.status}`);
+      const payload = await resp.json();
+      return mergeWithDefaults(payload?.payload || payload);
+    } catch (err) {
+      console.warn("[course-data] load failed, using defaults", err);
+      return mergeWithDefaults(null);
     }
   };
 
-  const setCourseData = (data) => {
+  const saveCourseData = async (data) => {
     try {
-      const payload = { ...data, updatedAt: new Date().toISOString() };
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      return payload;
-    } catch (_) {
-      return data;
+      const resp = await fetch(API_ENDPOINT, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payload: data }),
+      });
+      if (!resp.ok) throw new Error(`save_failed:${resp.status}`);
+      const payload = await resp.json();
+      return mergeWithDefaults(payload?.payload || data);
+    } catch (err) {
+      console.error("[course-data] save failed", err);
+      throw err;
     }
   };
 
   window.CourseData = {
-    get: getCourseData,
-    set: setCourseData,
+    load: loadCourseData,
+    save: saveCourseData,
     defaults: clone(DEFAULT_COURSE),
   };
 })();

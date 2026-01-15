@@ -1,6 +1,5 @@
 (() => {
-  const data = window.CourseData?.get?.() || null;
-  if (!data) return;
+  let data = null;
 
   const lessonList = document.getElementById("lesson-list");
   const categoryList = document.getElementById("category-list");
@@ -155,7 +154,7 @@
     fields.description.value = data.description || "";
   };
 
-  const save = () => {
+  const save = async () => {
     const categories = readCategories();
     const lessons = readLessons();
     const payload = {
@@ -168,10 +167,26 @@
       categories,
       lessons,
     };
-    window.CourseData.set(payload);
-    data.categories = categories;
-    data.lessons = lessons;
-    syncLessonCategoryOptions();
+    if (!saveBtn) return;
+    const original = saveBtn.textContent;
+    saveBtn.textContent = "Opslaan...";
+    saveBtn.disabled = true;
+    try {
+      const saved = await window.CourseData.save(payload);
+      data = saved;
+      syncLessonCategoryOptions();
+      saveBtn.textContent = "Opgeslagen";
+      setTimeout(() => {
+        saveBtn.textContent = original;
+        saveBtn.disabled = false;
+      }, 900);
+    } catch (_) {
+      saveBtn.textContent = "Opslaan mislukt";
+      setTimeout(() => {
+        saveBtn.textContent = original;
+        saveBtn.disabled = false;
+      }, 1200);
+    }
   };
 
   const addLesson = () => {
@@ -187,21 +202,26 @@
     lessonList?.append(createLessonItem(lesson));
   };
 
-  populateHeaderFields();
-  renderCategories();
-  renderLessons();
+  const init = async () => {
+    data = await window.CourseData.load();
+    populateHeaderFields();
+    renderCategories();
+    renderLessons();
 
-  addCategoryBtn?.addEventListener("click", () => {
-    categoryList?.append(createCategoryRow("Nieuwe categorie"));
-    syncLessonCategoryOptions();
-  });
+    addCategoryBtn?.addEventListener("click", () => {
+      categoryList?.append(createCategoryRow("Nieuwe categorie"));
+      syncLessonCategoryOptions();
+    });
 
-  addLessonBtn?.addEventListener("click", addLesson);
-  saveBtn?.addEventListener("click", save);
+    addLessonBtn?.addEventListener("click", addLesson);
+    saveBtn?.addEventListener("click", save);
 
-  categoryList?.addEventListener("input", () => {
-    syncLessonCategoryOptions();
-  });
+    categoryList?.addEventListener("input", () => {
+      syncLessonCategoryOptions();
+    });
+  };
+
+  init();
 })();
 
 
