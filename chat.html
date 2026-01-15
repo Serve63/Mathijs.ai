@@ -255,6 +255,14 @@
         height: 80px;
       }
 
+      .sidebar-hero-image {
+        width: min(220px, 100%);
+        height: auto;
+        display: block;
+        margin: 0 auto 4px;
+        filter: drop-shadow(0 10px 24px rgba(15, 23, 42, 0.18));
+      }
+
       .new-chat-split {
         display: flex;
         width: 100%;
@@ -2923,6 +2931,11 @@
 	    <div class="chat-layout">
 		      <aside class="sidebar">
 		        <div class="sidebar-top">
+              <img
+                class="sidebar-hero-image"
+                src="assets/Gemini_Generated_Image_18mds218mds218md.png"
+                alt="Mathijs.ai illustratie"
+              />
               <div class="new-chat-split" role="group" aria-label="Cursus en nieuw gesprek">
                 <a class="new-chat-split__btn new-chat-split__btn--course" href="course.html" aria-label="Terug naar cursus">
                   <span class="new-chat-split__icon">←</span>
