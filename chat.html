@@ -224,7 +224,7 @@
         overflow: hidden;
         min-height: 0;
         margin-top: var(--sidebar-top-offset, 0px);
-        padding-top: 24px;
+        padding-top: 6px;
         position: relative;
         opacity: 1;
         transition: opacity 0.2s ease;
@@ -259,7 +259,7 @@
         width: min(220px, 100%);
         height: auto;
         display: block;
-        margin: 0 auto 6px;
+        margin: 8px auto 6px;
         filter: drop-shadow(0 10px 24px rgba(15, 23, 42, 0.18));
       }
 
@@ -2930,12 +2930,12 @@
   <body>
 	    <div class="chat-layout">
 		      <aside class="sidebar">
+            <img
+              class="sidebar-hero-image"
+              src="assets/chat-hero.png"
+              alt="Mathijs.ai illustratie"
+            />
 		        <div class="sidebar-top">
-              <img
-                class="sidebar-hero-image"
-                src="assets/chat-hero.png"
-                alt="Mathijs.ai illustratie"
-              />
               <div class="new-chat-split" role="group" aria-label="Cursus en nieuw gesprek">
                 <a class="new-chat-split__btn new-chat-split__btn--course" href="course.html" aria-label="Terug naar cursus">
                   <span class="new-chat-split__icon">←</span>
