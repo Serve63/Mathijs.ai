@@ -101,11 +101,19 @@ module.exports = async (req, res) => {
       metadata: { supabase_user_id: userId, full_name: fullName, email },
     });
 
-    return json(res, 200, { checkoutUrl: payment?.checkoutUrl, paymentId: payment?.id });
+    const checkoutUrl = payment?.checkoutUrl || payment?._links?.checkout?.href || "";
+    if (!checkoutUrl) {
+      throw new Error("missing_checkout_url");
+    }
+    return json(res, 200, { checkoutUrl, paymentId: payment?.id });
   } catch (e) {
     const raw = typeof e?.message === "string" ? e.message : "";
     const mollieMatch = raw.match(/^mollie_failed:\\d+:(.+)$/);
-    const publicMsg = mollieMatch ? `Mollie: ${mollieMatch[1].trim()}` : "Betaling kon niet worden gestart. Probeer later opnieuw.";
+    const publicMsg = mollieMatch
+      ? `Mollie: ${mollieMatch[1].trim()}`
+      : raw === "missing_checkout_url"
+      ? "Mollie checkout link ontbreekt. Probeer later opnieuw."
+      : "Betaling kon niet worden gestart. Probeer later opnieuw.";
     return publicError(res, 500, publicMsg, e);
   }
 };
