@@ -620,15 +620,15 @@
         </p>
         <div class="hero-stats">
           <div class="hero-stat">
-            <span class="hero-stat__value">50</span>
+            <span class="hero-stat__value" id="course-stat-lessons">50</span>
             <span class="hero-stat__label">Lessen</span>
           </div>
           <div class="hero-stat">
-            <span class="hero-stat__value">10+</span>
+            <span class="hero-stat__value" id="course-stat-hours">10+</span>
             <span class="hero-stat__label">Uur content</span>
           </div>
           <div class="hero-stat">
-            <span class="hero-stat__value">Pro</span>
+            <span class="hero-stat__value" id="course-stat-level">Pro</span>
             <span class="hero-stat__label">Niveau</span>
           </div>
         </div>
@@ -909,21 +909,6 @@
       </div>
     </main>
 
-    <script>
-      // Ensure browser "Back" from the course page always goes to the public homepage,
-      // instead of back to login/chat/history entries.
-      (() => {
-        try {
-          const HOME_URL = "index.html";
-          history.pushState({ courseBackGuard: true }, "", location.href);
-          window.addEventListener("popstate", () => {
-            window.location.replace(HOME_URL);
-          });
-        } catch (_) {
-          // no-op
-        }
-      })();
-    </script>
     <footer>© Mathijs.ai 2024 · Mathijs.ai Academy</footer>
     <div class="lesson-modal is-hidden" id="lesson-modal" role="dialog" aria-modal="true" aria-label="Les video">
       <div class="lesson-modal__panel" role="document">
@@ -939,57 +924,7 @@
         </div>
       </div>
     </div>
-    <script>
-      (function initLessonVideoModal() {
-        const DEFAULT_VIDEO_SRC = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-        const grid = document.getElementById("lesson-grid");
-        const modal = document.getElementById("lesson-modal");
-        const titleEl = document.getElementById("lesson-modal-title");
-        const video = document.getElementById("lesson-video");
-        const closeBtn = document.getElementById("lesson-modal-close");
-
-        if (!grid || !modal || !titleEl || !video || !closeBtn) return;
-
-        const open = (title, src) => {
-          titleEl.textContent = title || "Les";
-          // Set src on open to avoid downloading the file upfront.
-          video.src = src || DEFAULT_VIDEO_SRC;
-          modal.classList.remove("is-hidden");
-          document.body.style.overflow = "hidden";
-          // Autoplay is often blocked; we keep it user-controlled.
-        };
-
-        const close = () => {
-          modal.classList.add("is-hidden");
-          document.body.style.overflow = "";
-          try {
-            video.pause();
-          } catch (_) {}
-          video.removeAttribute("src");
-          video.load();
-        };
-
-        grid.addEventListener("click", (e) => {
-          const tile = e.target.closest(".lesson-tile");
-          if (!tile) return;
-          const title = tile.querySelector(".lesson-title")?.textContent?.trim() || "Les";
-          const src = tile.getAttribute("data-video-src") || DEFAULT_VIDEO_SRC;
-          open(title, src);
-        });
-
-        closeBtn.addEventListener("click", close);
-
-        modal.addEventListener("click", (e) => {
-          // click on backdrop closes
-          if (e.target === modal) close();
-        });
-
-        document.addEventListener("keydown", (e) => {
-          if (e.key === "Escape" && !modal.classList.contains("is-hidden")) {
-            close();
-          }
-        });
-      })();
-    </script>
+    <script defer src="course-data.js"></script>
+    <script defer src="course-page.js"></script>
   </body>
 </html>

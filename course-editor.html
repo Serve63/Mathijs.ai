@@ -208,6 +208,25 @@
         gap: 12px;
       }
 
+      .category-list {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+
+      .category-item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .category-remove {
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+      }
+
       .lesson-item {
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 14px;
@@ -281,11 +300,9 @@
 
       <section class="panel" aria-label="Categorieën">
         <h2>Categorieën</h2>
+        <div class="category-list" id="category-list"></div>
         <div class="actions">
-          <span class="chip">Strategie</span>
-          <span class="chip">Governance</span>
-          <span class="chip">Automatisering</span>
-          <button class="btn secondary" type="button">+ Categorie toevoegen</button>
+          <button class="btn secondary" type="button" id="add-category">+ Categorie toevoegen</button>
         </div>
       </section>
 
@@ -294,11 +311,12 @@
         <div class="lesson-list" id="lesson-list"></div>
 
         <div class="actions">
-          <button class="btn secondary" type="button">+ Les toevoegen</button>
-          <button class="btn primary" type="button">Wijzigingen opslaan</button>
+          <button class="btn secondary" type="button" id="add-lesson">+ Les toevoegen</button>
+          <button class="btn primary" type="button" id="save-course">Wijzigingen opslaan</button>
         </div>
       </section>
     </main>
+    <script defer src="course-data.js"></script>
     <script defer src="course-editor.js"></script>
   </body>
 </html>
