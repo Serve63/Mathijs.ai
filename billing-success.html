@@ -94,9 +94,11 @@
         };
 
         document.addEventListener("DOMContentLoaded", async () => {
-          const sessionId = new URLSearchParams(window.location.search).get("session_id");
-          if (!sessionId) {
-            setStatus("Geen sessie-id gevonden. Open de chat en probeer opnieuw.");
+          const params = new URLSearchParams(window.location.search);
+          const sessionId = params.get("session_id");
+          const subscriptionId = params.get("subscription_id");
+          if (!sessionId && !subscriptionId) {
+            setStatus("Geen betaalreferentie gevonden. Open de chat en probeer opnieuw.");
             return;
           }
           if (!window.supabase?.createClient) return;
@@ -117,7 +119,7 @@
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${accessToken}`,
               },
-              body: JSON.stringify({ session_id: sessionId }),
+              body: JSON.stringify(sessionId ? { session_id: sessionId } : { subscription_id: subscriptionId }),
             });
             const payload = await resp.json().catch(() => ({}));
             if (payload?.ok) {

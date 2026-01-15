@@ -80,18 +80,30 @@ module.exports = async (req, res) => {
 
     const body = await readJson(req);
     const sessionId = typeof body?.session_id === "string" ? body.session_id.trim() : "";
-    if (!sessionId) return json(res, 400, { error: "Missing session_id" });
+    const subscriptionId = typeof body?.subscription_id === "string" ? body.subscription_id.trim() : "";
+    if (!sessionId && !subscriptionId) return json(res, 400, { error: "Missing session_id or subscription_id" });
 
-    const session = await stripeGet(`checkout/sessions/${encodeURIComponent(sessionId)}?expand[]=subscription`, stripeSecretKey);
-    if (session?.client_reference_id !== userId) {
-      return json(res, 403, { error: "Session does not belong to current user" });
+    let subscription = null;
+    let customerId = null;
+    if (subscriptionId) {
+      subscription = await stripeGet(`subscriptions/${encodeURIComponent(subscriptionId)}`, stripeSecretKey);
+      customerId = subscription?.customer || null;
+      if (subscription?.metadata?.supabase_user_id && subscription.metadata.supabase_user_id !== userId) {
+        return json(res, 403, { error: "Subscription does not belong to current user" });
+      }
+    } else {
+      const session = await stripeGet(`checkout/sessions/${encodeURIComponent(sessionId)}?expand[]=subscription`, stripeSecretKey);
+      if (session?.client_reference_id !== userId) {
+        return json(res, 403, { error: "Session does not belong to current user" });
+      }
+      subscription = session?.subscription || null;
+      customerId = session?.customer || null;
     }
 
-    const subscription = session?.subscription;
     const subStatus = subscription?.status || null;
     const isActive = subStatus === "active" || subStatus === "trialing";
     if (!isActive) {
-      return json(res, 200, { ok: false, status: subStatus || session?.payment_status || null });
+      return json(res, 200, { ok: false, status: subStatus || null });
     }
 
     const nowIso = new Date().toISOString();
@@ -99,7 +111,7 @@ module.exports = async (req, res) => {
       ...(user?.app_metadata || {}),
       plan: "standard",
       cancelled_at: null,
-      stripe_customer_id: session?.customer || null,
+      stripe_customer_id: customerId || null,
       stripe_subscription_id: subscription?.id || null,
       subscribed_at: nowIso,
     };
