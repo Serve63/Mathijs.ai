@@ -2502,17 +2502,10 @@
         box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.08);
       }
 
-      /* Center the visible '+' perfectly (font metrics can look off otherwise) */
+      /* Nudge the visible '+' slightly upward without changing its weight/size */
       .chat-plus > span:first-child {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 100%;
-        font-size: 24px;
-        line-height: 1;
-        font-weight: 700;
-        transform: translateY(-0.5px);
+        position: relative;
+        top: -1px;
         user-select: none;
         pointer-events: none;
       }
