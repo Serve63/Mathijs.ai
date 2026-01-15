@@ -103,7 +103,9 @@ module.exports = async (req, res) => {
 
     return json(res, 200, { checkoutUrl: payment?.checkoutUrl, paymentId: payment?.id });
   } catch (e) {
-    return publicError(res, 500, "Betaling kon niet worden gestart. Probeer later opnieuw.", e);
+    const raw = typeof e?.message === "string" ? e.message : "";
+    const mollieMatch = raw.match(/^mollie_failed:\\d+:(.+)$/);
+    const publicMsg = mollieMatch ? `Mollie: ${mollieMatch[1].trim()}` : "Betaling kon niet worden gestart. Probeer later opnieuw.";
+    return publicError(res, 500, publicMsg, e);
   }
 };
-
