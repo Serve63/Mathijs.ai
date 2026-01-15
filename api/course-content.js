@@ -87,7 +87,18 @@ module.exports = async (req, res) => {
 
     return json(res, 405, { error: "method_not_allowed" });
   } catch (err) {
-    return publicError(res, err.statusCode || 500, err.publicMessage || "Er ging iets mis.", err);
+    const status = err.statusCode || 500;
+    const detail =
+      typeof err.detail === "string"
+        ? err.detail
+        : err.detail
+        ? JSON.stringify(err.detail)
+        : "";
+    const message =
+      err.publicMessage ||
+      err.message ||
+      (detail ? `Supabase error: ${detail}` : "Er ging iets mis.");
+    return json(res, status, { error: message });
   }
 };
 
