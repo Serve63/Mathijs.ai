@@ -28,7 +28,13 @@ function getGeminiApiKey() {
 }
 
 function getSupabaseServiceRoleKey() {
-  return pickEnv(["SUPABASE_SERVICE_ROLE_KEY", "supabase_service_role_key"]);
+  return pickEnv([
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_SERVICE_KEY",
+    "SUPABASE_SERVICE_ROLE",
+    "SUPABASE_SECRET_KEY",
+    "supabase_service_role_key",
+  ]);
 }
 
 function getSupabaseUrl() {
