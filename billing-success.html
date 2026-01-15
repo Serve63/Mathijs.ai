@@ -95,9 +95,8 @@
 
         document.addEventListener("DOMContentLoaded", async () => {
           const params = new URLSearchParams(window.location.search);
-          const sessionId = params.get("session_id");
-          const subscriptionId = params.get("subscription_id");
-          if (!sessionId && !subscriptionId) {
+          const paymentId = params.get("payment_id") || localStorage.getItem("mollie_payment_id");
+          if (!paymentId) {
             setStatus("Geen betaalreferentie gevonden. Open de chat en probeer opnieuw.");
             return;
           }
@@ -113,13 +112,13 @@
           }
 
           try {
-            const resp = await fetch("/api/billing/confirm", {
+            const resp = await fetch("/api/billing/confirm-mollie", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${accessToken}`,
               },
-              body: JSON.stringify(sessionId ? { session_id: sessionId } : { subscription_id: subscriptionId }),
+              body: JSON.stringify({ payment_id: paymentId }),
             });
             const payload = await resp.json().catch(() => ({}));
             if (payload?.ok) {

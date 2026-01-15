@@ -114,6 +114,35 @@
         gap: 8px;
       }
 
+      .payment-methods {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+      }
+
+      .payment-option {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #fafafa;
+        cursor: pointer;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+
+      .payment-option input {
+        width: auto;
+        margin: 0;
+      }
+
+      .payment-option:has(input:checked) {
+        border-color: var(--accent);
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(230, 194, 0, 0.15);
+      }
+
       label {
         font-size: 0.85rem;
         font-weight: 600;
@@ -237,7 +266,23 @@
             <label for="full-name">Naam</label>
             <input id="full-name" name="full_name" type="text" placeholder="Voornaam Achternaam" autocomplete="name" required />
           </div>
-          <div id="payment-element"></div>
+          <div class="group">
+            <label>Betaalmethode</label>
+            <div class="payment-methods" role="radiogroup" aria-label="Betaalmethode">
+              <label class="payment-option">
+                <input type="radio" name="payment_method" value="ideal" checked />
+                iDEAL
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="payment_method" value="bancontact" />
+                Bancontact
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="payment_method" value="card" />
+                Kaart
+              </label>
+            </div>
+          </div>
           <button type="submit" class="btn" id="subscribe-submit">Afrekenen</button>
         </form>
         <p class="feedback" id="subscribe-feedback" aria-live="polite"></p>
@@ -245,7 +290,6 @@
     </div>
 
     <script defer src="assets/vendor/supabase.min.js"></script>
-    <script defer src="https://js.stripe.com/v3/"></script>
     <script defer>
       (() => {
         const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
@@ -273,9 +317,9 @@
 
         document.addEventListener("DOMContentLoaded", async () => {
           if (!window.supabase?.createClient) return;
-	          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-	            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
-	          });
+          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+          });
 
           const { data } = await supabase.auth.getSession();
           const accessToken = data?.session?.access_token;
@@ -289,63 +333,8 @@
             feedback("Betaling geannuleerd. Probeer het opnieuw als je wilt abonneren.");
           }
 
-        const form = document.querySelector("#subscribe-form");
-        const submitBtn = document.querySelector("#subscribe-submit");
-        const nameInput = document.querySelector("#full-name");
-
-        if (!window.Stripe) {
-          feedback("Betaling laden mislukt. Ververs de pagina.");
-          return;
-        }
-
-        let stripe = null;
-        let elements = null;
-        let returnUrl = "";
-
-        const loadStripeKey = async () => {
-          const resp = await fetch("/api/billing/public-config");
-          const payload = await resp.json().catch(() => ({}));
-          if (!resp.ok || !payload?.publishableKey) {
-            throw new Error(payload?.error || "Stripe configuratie ontbreekt.");
-          }
-          return payload.publishableKey;
-        };
-
-        const initPaymentElement = async () => {
-          setLoading(submitBtn, true, "Betaling laden...");
-          try {
-            const stripeKey = await loadStripeKey();
-            stripe = window.Stripe(stripeKey);
-            const resp = await fetch("/api/billing/create-subscription-intent", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${accessToken}`,
-              },
-              body: JSON.stringify({ full_name: nameInput?.value?.trim() || "" }),
-            });
-            const payload = await resp.json().catch(() => ({}));
-            if (!resp.ok || !payload?.clientSecret) {
-              throw new Error(payload?.error || "Betaling kon niet worden gestart.");
-            }
-            returnUrl = payload?.returnUrl || `${window.location.origin}/billing-success.html`;
-            elements = stripe.elements({
-              clientSecret: payload.clientSecret,
-              appearance: {
-                theme: "stripe",
-                variables: { colorPrimary: "#e6c200" },
-              },
-            });
-            const paymentElement = elements.create("payment");
-            paymentElement.mount("#payment-element");
-          } catch (err) {
-            feedback(err?.message || "Betaling laden mislukt.");
-          } finally {
-            setLoading(submitBtn, false);
-          }
-        };
-
-        await initPaymentElement();
+          const form = document.querySelector("#subscribe-form");
+          const submitBtn = document.querySelector("#subscribe-submit");
           form?.addEventListener("submit", async (event) => {
             event.preventDefault();
             feedback("");
@@ -355,21 +344,28 @@
               feedback("Vul je naam in.");
               return;
             }
-          setLoading(submitBtn, true, "Afrekenen...");
+
+            const method =
+              form?.querySelector('input[name="payment_method"]:checked')?.value || "ideal";
+
+            setLoading(submitBtn, true, "Afrekenen...");
             try {
-            if (!stripe || !elements) {
-              throw new Error("Betaling is nog niet geladen. Probeer opnieuw.");
-            }
-            const { error } = await stripe.confirmPayment({
-              elements,
-              confirmParams: {
-                return_url: returnUrl,
-                payment_method_data: { billing_details: { name: fullName } },
-              },
-            });
-            if (error) {
-              throw error;
-            }
+              const resp = await fetch("/api/billing/create-mollie-payment", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ full_name: fullName, method }),
+              });
+              const payload = await resp.json().catch(() => ({}));
+              if (!resp.ok || !payload?.checkoutUrl) {
+                throw new Error(payload?.error || "Betaling kon niet worden gestart.");
+              }
+              if (payload?.paymentId) {
+                localStorage.setItem("mollie_payment_id", payload.paymentId);
+              }
+              window.location.href = payload.checkoutUrl;
             } catch (err) {
               feedback(err?.message || "Er ging iets mis, probeer het opnieuw.");
               setLoading(submitBtn, false);
