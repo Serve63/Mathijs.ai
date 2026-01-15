@@ -92,7 +92,6 @@
         color: #1a1600;
         font-size: 0.88rem;
         font-weight: 600;
-        text-transform: uppercase;
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -103,6 +102,13 @@
         border: 1px solid rgba(230, 194, 0, 0.45);
         box-shadow: 0 10px 24px -14px rgba(230, 194, 0, 0.55);
         white-space: nowrap;
+      }
+
+      .chat-link svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+        opacity: 0.9;
       }
 
       .chat-link:hover {
@@ -593,7 +599,12 @@
   <body>
     <section class="hero">
     <header>
-        <a class="chat-link" href="chat.html">Chatomgeving</a>
+        <a class="chat-link" href="chat.html" aria-label="Chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+          </svg>
+          Chat
+        </a>
       </header>
       <div class="hero-content">
         <div class="hero-badge">
