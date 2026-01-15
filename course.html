@@ -908,6 +908,22 @@
         </div>
       </div>
     </main>
+
+    <script>
+      // Ensure browser "Back" from the course page always goes to the homepage,
+      // even if the user visited chat before opening this page.
+      (() => {
+        try {
+          const HOME_URL = "index.html";
+          history.pushState({ courseBackGuard: true }, "", location.href);
+          window.addEventListener("popstate", () => {
+            window.location.replace(HOME_URL);
+          });
+        } catch (_) {
+          // no-op
+        }
+      })();
+    </script>
     <footer>© Mathijs.ai 2024 · Mathijs.ai Academy</footer>
     <div class="lesson-modal is-hidden" id="lesson-modal" role="dialog" aria-modal="true" aria-label="Les video">
       <div class="lesson-modal__panel" role="document">
