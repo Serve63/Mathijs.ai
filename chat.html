@@ -223,7 +223,7 @@
         flex: 1;
         overflow: hidden;
         min-height: 0;
-        margin-top: var(--sidebar-top-offset, 0px);
+        margin-top: calc(var(--sidebar-top-offset, 0px) + var(--sidebar-hero-height, 220px));
         padding-top: 6px;
         position: relative;
         opacity: 1;
@@ -255,11 +255,20 @@
         height: 80px;
       }
 
+      .sidebar-hero {
+        height: var(--sidebar-hero-height, 220px);
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding-bottom: 10px;
+      }
+
       .sidebar-hero-image {
         width: min(220px, 100%);
+        max-height: 200px;
         height: auto;
         display: block;
-        margin: 8px auto 6px;
+        object-fit: contain;
         filter: drop-shadow(0 10px 24px rgba(15, 23, 42, 0.18));
       }
 
@@ -359,9 +368,6 @@
       }
 
       /* keep JS hook */
-      .new-chat {
-        /* inherits from split button */
-      }
 
       .new-chat:disabled {
         opacity: 0.55;
@@ -2930,11 +2936,13 @@
   <body>
 	    <div class="chat-layout">
 		      <aside class="sidebar">
-            <img
-              class="sidebar-hero-image"
-              src="assets/chat-hero.png"
-              alt="Mathijs.ai illustratie"
-            />
+            <div class="sidebar-hero">
+              <img
+                class="sidebar-hero-image"
+                src="assets/chat-hero.png"
+                alt="Mathijs.ai illustratie"
+              />
+            </div>
 		        <div class="sidebar-top">
               <div class="new-chat-split" role="group" aria-label="Cursus en nieuw gesprek">
                 <a class="new-chat-split__btn new-chat-split__btn--course" href="course.html" aria-label="Terug naar cursus">
