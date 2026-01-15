@@ -57,7 +57,15 @@
   const loadCourseData = async () => {
     try {
       const resp = await fetch(API_ENDPOINT, { method: "GET", credentials: "include" });
-      if (!resp.ok) throw new Error(`load_failed:${resp.status}`);
+      if (!resp.ok) {
+        let errPayload = null;
+        try {
+          errPayload = await resp.json();
+        } catch (_) {}
+        const err = new Error(`load_failed:${resp.status}`);
+        err.publicMessage = errPayload?.error;
+        throw err;
+      }
       const payload = await resp.json();
       return mergeWithDefaults(payload?.payload || payload);
     } catch (err) {
@@ -73,7 +81,15 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ payload: data }),
       });
-      if (!resp.ok) throw new Error(`save_failed:${resp.status}`);
+      if (!resp.ok) {
+        let errPayload = null;
+        try {
+          errPayload = await resp.json();
+        } catch (_) {}
+        const err = new Error(`save_failed:${resp.status}`);
+        err.publicMessage = errPayload?.error;
+        throw err;
+      }
       const payload = await resp.json();
       return mergeWithDefaults(payload?.payload || data);
     } catch (err) {

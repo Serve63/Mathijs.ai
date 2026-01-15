@@ -203,6 +203,13 @@
         margin-top: 12px;
       }
 
+      .save-status {
+        margin: 8px 0 0;
+        font-size: 0.85rem;
+        color: var(--muted);
+        min-height: 18px;
+      }
+
       .lesson-list {
         display: grid;
         gap: 12px;
@@ -314,6 +321,7 @@
           <button class="btn secondary" type="button" id="add-lesson">+ Les toevoegen</button>
           <button class="btn primary" type="button" id="save-course">Wijzigingen opslaan</button>
         </div>
+        <p class="save-status" id="save-status" aria-live="polite"></p>
       </section>
     </main>
     <script defer src="course-data.js"></script>

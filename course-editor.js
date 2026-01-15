@@ -6,6 +6,7 @@
   const addCategoryBtn = document.getElementById("add-category");
   const addLessonBtn = document.getElementById("add-lesson");
   const saveBtn = document.getElementById("save-course");
+  const statusEl = document.getElementById("save-status");
 
   const fields = {
     title: document.getElementById("course-title"),
@@ -154,6 +155,12 @@
     fields.description.value = data.description || "";
   };
 
+  const setStatus = (message = "", isError = false) => {
+    if (!statusEl) return;
+    statusEl.textContent = message;
+    statusEl.style.color = isError ? "#fca5a5" : "";
+  };
+
   const save = async () => {
     const categories = readCategories();
     const lessons = readLessons();
@@ -175,12 +182,15 @@
       const saved = await window.CourseData.save(payload);
       data = saved;
       syncLessonCategoryOptions();
+      setStatus("Opgeslagen.");
       saveBtn.textContent = "Opgeslagen";
       setTimeout(() => {
         saveBtn.textContent = original;
         saveBtn.disabled = false;
       }, 900);
-    } catch (_) {
+    } catch (err) {
+      const detail = err?.publicMessage || err?.message || "Opslaan mislukt.";
+      setStatus(detail, true);
       saveBtn.textContent = "Opslaan mislukt";
       setTimeout(() => {
         saveBtn.textContent = original;
