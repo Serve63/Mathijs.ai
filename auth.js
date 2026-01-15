@@ -45,6 +45,34 @@
     }
   };
 
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const formatLoginError = (error) => {
+    const message = String(error?.message || "").trim();
+    if (!message) return "Probeer opnieuw via de login pagina.";
+    if (/email not confirmed/i.test(message)) {
+      return "Bevestig je e-mail om in te loggen.";
+    }
+    if (/invalid login credentials/i.test(message)) {
+      return "Controleer je e-mailadres en wachtwoord via de login pagina.";
+    }
+    if (/rate limit|too many requests/i.test(message)) {
+      return "Te veel pogingen. Wacht even en probeer opnieuw.";
+    }
+    return `Melding: ${message}`;
+  };
+
+  const signInWithRetry = async (email, password, attempts = 2) => {
+    let lastError = null;
+    for (let i = 0; i < attempts; i += 1) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!error) return null;
+      lastError = error;
+      await sleep(400 * (i + 1));
+    }
+    return lastError;
+  };
+
   const initLogin = () => {
     const loginForm = document.querySelector("#login-form");
     if (!loginForm || !supabase) return;
@@ -170,12 +198,13 @@
         }
 
         // Direct inloggen zodat de gebruiker meteen kan starten.
-        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        const loginError = await signInWithRetry(email, password);
         if (loginError) {
           console.error("Auto-login na signup mislukt", loginError);
+          const detail = formatLoginError(loginError);
           setFeedback(
             feedbackEl,
-            "Account aangemaakt, maar inloggen lukt nu niet. Probeer opnieuw via de login pagina.",
+            `Account aangemaakt, maar inloggen lukt nu niet. ${detail}`,
             "success"
           );
           signupForm.reset();
