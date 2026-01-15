@@ -1,15 +1,16 @@
 const { SUPABASE_URL } = require("./supabase");
-const { getSupabaseServiceRoleKey } = require("./env");
+const { getSupabaseServiceRoleKey, getSupabaseAnonKey } = require("./env");
 
 function getServiceRoleKey() {
   const key = getSupabaseServiceRoleKey();
-  if (!key) {
-    const err = new Error("missing_service_role_key");
-    err.statusCode = 500;
-    err.publicMessage = "Supabase service role key missing (set SUPABASE_SERVICE_ROLE_KEY or supabase_service_role_key).";
-    throw err;
-  }
-  return key;
+  if (key) return key;
+  const anon = getSupabaseAnonKey();
+  if (anon) return anon;
+  const err = new Error("missing_service_role_key");
+  err.statusCode = 500;
+  err.publicMessage =
+    "Supabase key missing (set SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY / supabase_service_role_key).";
+  throw err;
 }
 
 async function adminRestFetch(pathWithQuery, { method = "GET", body } = {}) {
