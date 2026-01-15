@@ -335,11 +335,28 @@
 
           const form = document.querySelector("#subscribe-form");
           const submitBtn = document.querySelector("#subscribe-submit");
+          const nameInput = document.querySelector("#full-name");
+
+          const params = new URLSearchParams(window.location.search);
+          const prefillName = params.get("full_name");
+          if (prefillName && nameInput && !nameInput.value.trim()) {
+            nameInput.value = prefillName.trim();
+          }
+          const prefillMethod = params.get("payment_method");
+          if (prefillMethod && form) {
+            const normalized = prefillMethod.trim().toLowerCase();
+            const allowed = new Set(["ideal", "bancontact", "card", "creditcard"]);
+            if (allowed.has(normalized)) {
+              const value = normalized === "creditcard" ? "card" : normalized;
+              const option = form.querySelector(`input[name="payment_method"][value="${value}"]`);
+              if (option) option.checked = true;
+            }
+          }
           form?.addEventListener("submit", async (event) => {
             event.preventDefault();
             feedback("");
 
-            const fullName = document.querySelector("#full-name")?.value?.trim();
+            const fullName = nameInput?.value?.trim();
             if (!fullName) {
               feedback("Vul je naam in.");
               return;
