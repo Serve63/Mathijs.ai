@@ -79,22 +79,21 @@
         position: absolute;
         top: 18px;
         left: 18px;
-        width: 40px;
-        height: 40px;
+        width: 34px;
+        height: 34px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 12px;
-        color: rgba(255, 255, 255, 0.96);
-        background: rgba(15, 52, 96, 0.92); /* dark blue box */
-        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 10px;
+        color: #0b6bff; /* blue arrow */
+        background: transparent; /* no box */
+        border: 1px solid transparent; /* keep layout stable, no visible box */
         text-decoration: none;
         transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
       }
 
       .back-arrow:hover {
-        background: rgba(15, 52, 96, 0.98);
-        border-color: rgba(255, 255, 255, 0.14);
+        color: #0757d6;
         transform: translateY(-0.5px);
       }
 
@@ -108,8 +107,8 @@
       }
 
       .back-arrow svg {
-        width: 20px;
-        height: 20px;
+        width: 24px;
+        height: 24px;
       }
 
       .auth-headline {
@@ -237,7 +236,7 @@
         <a href="index.html" class="back-arrow" aria-label="Terug naar home" title="Terug naar home">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <!-- solid left arrow (closer to the provided example) -->
-            <path d="M14 6l-6 6 6 6v-4h8v-4h-8V6z" />
+            <path d="M11 5l-7 7 7 7v-4h11v-6H11V5z" />
           </svg>
         </a>
         <div class="auth-headline">
