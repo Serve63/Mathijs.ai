@@ -2538,6 +2538,33 @@
         return { article, bubble };
       };
 
+      const streamAssistantMessage = async (content) => {
+        if (!content) return;
+        const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+        if (prefersReduced) {
+          appendMessage(content, "assistant");
+          return;
+        }
+
+        const stream = createAssistantStreamMessage();
+        if (!stream) return;
+
+        const { bubble } = stream;
+        const tokens = content.split(/\s+/);
+        let current = "";
+        for (let i = 0; i < tokens.length; i += 1) {
+          const chunk = tokens[i];
+          current = current ? `${current} ${chunk}` : chunk;
+          bubble.innerHTML = formatMessageContent(current);
+          scrollToBottomIfPinned();
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        }
+
+        messages.push({ role: "assistant", content });
+        updateSessionMetaAfterMessage("assistant", content);
+        updateNewChatButtonState();
+      };
+
 		      const workspaceReady = (async () => {
 		        try {
 		          // Ensure Supabase client is loaded
@@ -2711,7 +2738,7 @@
           const finalContent = (payload?.text || "").trim() || "Ik heb even geen antwoord. Probeer het later nog eens.";
           // Hide indicator as soon as we have the answer, before any extra work.
           hideThinkingIndicator();
-          appendMessage(finalContent, "assistant");
+          await streamAssistantMessage(finalContent);
 
           const assistantSave = await saveMessageToApi(sessionId, "assistant", finalContent, provider);
           if (!assistantSave.ok) {
@@ -2725,7 +2752,7 @@
           console.error("Error details:", error.message, error.stack);
           hideThinkingIndicator();
           const fallbackMessage = `De AI-request mislukte: ${error.message || "Onbekende fout"}. Controleer je verbinding en probeer opnieuw.`;
-	          appendMessage(fallbackMessage, "assistant", { persist: false });
+          appendMessage(fallbackMessage, "assistant", { persist: false });
 	        } finally {
 	          await refreshCreditsBalance();
 	        }
