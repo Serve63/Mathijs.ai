@@ -108,6 +108,8 @@ module.exports = async (req, res) => {
     sessionParams.set("allow_promotion_codes", "true");
     sessionParams.set("billing_address_collection", "required");
     sessionParams.set("tax_id_collection[enabled]", "true");
+    sessionParams.set("payment_method_types[0]", "ideal");
+    sessionParams.set("payment_method_types[1]", "card");
     sessionParams.set("line_items[0][price]", stripePriceId);
     sessionParams.set("line_items[0][quantity]", "1");
     sessionParams.set("metadata[supabase_user_id]", userId);
