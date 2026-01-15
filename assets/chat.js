@@ -2709,6 +2709,8 @@
           }
 
           const finalContent = (payload?.text || "").trim() || "Ik heb even geen antwoord. Probeer het later nog eens.";
+          // Hide indicator as soon as we have the answer, before any extra work.
+          hideThinkingIndicator();
           appendMessage(finalContent, "assistant");
 
           const assistantSave = await saveMessageToApi(sessionId, "assistant", finalContent, provider);
@@ -2721,10 +2723,10 @@
           console.error("Selected model:", selectedModelLabel);
           console.error("OpenAI model:", openaiModel);
           console.error("Error details:", error.message, error.stack);
+          hideThinkingIndicator();
           const fallbackMessage = `De AI-request mislukte: ${error.message || "Onbekende fout"}. Controleer je verbinding en probeer opnieuw.`;
 	          appendMessage(fallbackMessage, "assistant", { persist: false });
 	        } finally {
-	          hideThinkingIndicator();
 	          await refreshCreditsBalance();
 	        }
 	      };
