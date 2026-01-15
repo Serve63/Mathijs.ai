@@ -146,7 +146,27 @@
         const adminSignupPayload = await adminSignupResp.json().catch(() => ({}));
         if (!adminSignupResp.ok) {
           const msg = adminSignupPayload?.error || `Registratie mislukt (${adminSignupResp.status}).`;
-          throw new Error(msg);
+          const canFallback =
+            adminSignupResp.status === 401 ||
+            /service role key|invalid api key/i.test(msg || "");
+          if (!canFallback) {
+            throw new Error(msg);
+          }
+
+          // Fallback: client-side signup (works if email confirmations are disabled).
+          const { data: signupData, error: signupError } = await supabase.auth.signUp({ email, password });
+          if (signupError) {
+            throw new Error(signupError.message || "Registratie mislukt.");
+          }
+          if (!signupData?.session) {
+            setFeedback(
+              feedbackEl,
+              "Account aangemaakt. Bevestig je e-mail om in te loggen.",
+              "success"
+            );
+            signupForm.reset();
+            return;
+          }
         }
 
         // Direct inloggen zodat de gebruiker meteen kan starten.
