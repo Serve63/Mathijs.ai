@@ -910,11 +910,11 @@
     </main>
 
     <script>
-      // Ensure browser "Back" from the course page always goes to the app homepage,
+      // Ensure browser "Back" from the course page always goes to the public homepage,
       // instead of back to login/chat/history entries.
       (() => {
         try {
-          const HOME_URL = "dashboard.html";
+          const HOME_URL = "index.html";
           history.pushState({ courseBackGuard: true }, "", location.href);
           window.addEventListener("popstate", () => {
             window.location.replace(HOME_URL);
