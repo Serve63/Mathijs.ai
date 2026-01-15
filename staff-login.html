@@ -72,50 +72,44 @@
         border-radius: 24px;
         padding: 44px 40px;
         box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.4);
+        position: relative;
       }
 
-      .back-link {
+      .back-arrow {
         position: absolute;
-        top: -48px;
-        left: 0;
+        top: 18px;
+        left: 18px;
+        width: 40px;
+        height: 40px;
         display: inline-flex;
         align-items: center;
-        gap: 10px;
-        font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 600;
+        justify-content: center;
+        border-radius: 12px;
+        color: #0b6bff;
+        background: rgba(11, 107, 255, 0.06);
+        border: 1px solid rgba(11, 107, 255, 0.10);
         text-decoration: none;
-        /* keep text size the same; just tighten the pill around the content */
-        padding: 6px 12px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
-        box-shadow: none;
-        transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
       }
 
-      .back-link:hover {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(255, 255, 255, 0.12);
+      .back-arrow:hover {
+        background: rgba(11, 107, 255, 0.09);
+        border-color: rgba(11, 107, 255, 0.14);
         transform: translateY(-0.5px);
       }
 
-      .back-link svg {
-        width: 18px;
-        height: 18px;
-        opacity: 0.95;
-      }
-
-      .back-link:active {
+      .back-arrow:active {
         transform: translateY(0);
       }
 
-      .back-link:focus-visible {
+      .back-arrow:focus-visible {
         outline: none;
-        box-shadow: 0 0 0 3px rgba(230, 194, 0, 0.22);
+        box-shadow: 0 0 0 4px rgba(11, 107, 255, 0.20);
+      }
+
+      .back-arrow svg {
+        width: 20px;
+        height: 20px;
       }
 
       .auth-headline {
@@ -239,13 +233,12 @@
   </head>
   <body>
     <div class="auth-container">
-      <a href="index.html" class="back-link" aria-label="Terug naar home">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5M12 19l-7-7 7-7" />
-        </svg>
-        Terug naar home
-      </a>
       <div class="auth-card">
+        <a href="index.html" class="back-arrow" aria-label="Terug naar home" title="Terug naar home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </a>
         <div class="auth-headline">
           <p class="auth-eyebrow">Personeel</p>
           <h1>Inloggen personeel</h1>
