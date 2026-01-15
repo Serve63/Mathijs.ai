@@ -68,8 +68,8 @@ module.exports = async (req, res) => {
   try {
     if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
 
-    const mollieKey = process.env.MOLLIE_API_KEY;
-    const amount = process.env.MOLLIE_AMOUNT_EUR;
+    const mollieKey = String(process.env.MOLLIE_API_KEY || "").trim();
+    const amount = String(process.env.MOLLIE_AMOUNT_EUR || "").trim();
     if (!mollieKey) return json(res, 500, { error: "Missing MOLLIE_API_KEY" });
     if (!amount) return json(res, 500, { error: "Missing MOLLIE_AMOUNT_EUR" });
 
@@ -94,9 +94,9 @@ module.exports = async (req, res) => {
 
     const payment = await mollieRequest("payments", mollieKey, {
       amount: { currency: "EUR", value: amount },
-      description: process.env.MOLLIE_DESCRIPTION || "Mathijs.ai abonnement",
+      description: String(process.env.MOLLIE_DESCRIPTION || "Mathijs.ai abonnement").trim() || "Mathijs.ai abonnement",
       redirectUrl: `${baseUrl}/billing-success.html`,
-      webhookUrl: process.env.MOLLIE_WEBHOOK_URL || undefined,
+      webhookUrl: String(process.env.MOLLIE_WEBHOOK_URL || "").trim() || undefined,
       method: method || undefined,
       metadata: { supabase_user_id: userId, full_name: fullName, email },
     });

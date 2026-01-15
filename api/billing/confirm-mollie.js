@@ -57,7 +57,7 @@ module.exports = async (req, res) => {
   try {
     if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
 
-    const mollieKey = process.env.MOLLIE_API_KEY;
+    const mollieKey = String(process.env.MOLLIE_API_KEY || "").trim();
     if (!mollieKey) return json(res, 500, { error: "Missing MOLLIE_API_KEY" });
 
     const { getSupabaseServiceRoleKey } = require("../_lib/env");
@@ -113,4 +113,3 @@ module.exports = async (req, res) => {
     return publicError(res, 500, "Bevestigen mislukt. Probeer later opnieuw.", e);
   }
 };
-
