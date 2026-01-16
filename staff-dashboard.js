@@ -180,24 +180,17 @@
     provinceEl.style.setProperty("--province-color", color);
   };
 
-  const buildLegendLabels = (rawMax) => {
-    if (!rawMax) {
-      return { low: "0", mid: "-", high: "-" };
-    }
-    const midLower = Math.ceil(rawMax * 0.33);
-    const highLower = Math.ceil(rawMax * 0.66);
-    const midUpper = highLower - 1;
-    const lowLabel = `< ${midLower}`;
-    const midLabel = midLower <= midUpper ? `${midLower}-${midUpper}` : "-";
-    const highLabel = `>= ${highLower}`;
-    return { low: lowLabel, mid: midLabel, high: highLabel };
-  };
+  const buildLegendLabels = () => ({
+    low: "< 10 klanten",
+    mid: "< 50 klanten",
+    high: "> 99 klanten",
+  });
 
-  const updateLegendLabels = (canvas, rawMax) => {
+  const updateLegendLabels = (canvas) => {
     if (!canvas) return;
     const legend = canvas.closest(".map-column")?.querySelector(".legend");
     if (!legend) return;
-    const labels = buildLegendLabels(rawMax);
+    const labels = buildLegendLabels();
     const setLabel = (key) => {
       const dot = legend.querySelector(`.dot.${key}`);
       if (!dot) return;
@@ -217,7 +210,7 @@
     const counts = provinces.map((province) => customerCounts[province.dataset.province || ""] || 0);
     const rawMax = Math.max(0, ...counts);
     const maxCount = Math.max(1, rawMax);
-    updateLegendLabels(canvas, rawMax);
+    updateLegendLabels(canvas);
 
     provinces.forEach((province) => {
       const provinceId = province.dataset.province || "";
