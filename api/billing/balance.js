@@ -6,7 +6,7 @@
 // Credits model:
 // - Stored as integer `app_metadata.tokens`
 // - Euros are derived via `TOPUP_TOKENS_PER_EUR` (default 100)
-// - Every new user gets €10 starter credits (tokens initialized once)
+// - Every new user gets €15 starter credits (tokens initialized once)
 
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders } = require("../_lib/security");
 const { getUserFromAccessToken } = require("../_lib/supabase");
@@ -16,7 +16,7 @@ const { getSupabaseServiceRoleKey } = require("../_lib/env");
 const WINDOW_MS = 60_000;
 const LIMIT = 120;
 
-const STARTER_CREDITS_EUR = 10;
+const STARTER_CREDITS_EUR = 15;
 
 async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {}) {
   const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/${path}`, {
@@ -76,6 +76,8 @@ module.exports = async (req, res) => {
 
     const appMeta = user?.app_metadata || {};
     let tokenBalance = Number(appMeta?.tokens);
+    const starterCreditsRecorded = Number(appMeta?.starter_credits_eur || 0);
+    const creditsInitialized = Boolean(appMeta?.credits_initialized);
     const serviceRoleKey = getSupabaseServiceRoleKey();
 
     // Initialize once for existing users that don't have a balance yet.
@@ -95,6 +97,30 @@ module.exports = async (req, res) => {
         console.error("Token initialization failed:", e?.message || e);
         return json(res, 503, { error: "Tokens konden niet worden geïnitialiseerd. Probeer later opnieuw." });
       }
+    } else if (
+      Number.isFinite(tokenBalance) &&
+      (creditsInitialized || starterCreditsRecorded > 0) &&
+      starterCreditsRecorded < STARTER_CREDITS_EUR
+    ) {
+      if (serviceRoleKey) {
+        const nextTokens = Math.max(Math.floor(tokenBalance), starterTokens);
+        const nextMeta = {
+          ...(appMeta || {}),
+          tokens: nextTokens,
+          credits_initialized: true,
+          starter_credits_eur: STARTER_CREDITS_EUR,
+        };
+        try {
+          await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
+            method: "PUT",
+            accessKey: serviceRoleKey,
+            body: { app_metadata: nextMeta },
+          });
+          tokenBalance = nextTokens;
+        } catch (e) {
+          console.error("Token upgrade failed:", e?.message || e);
+        }
+      }
     }
 
     tokenBalance = Math.max(0, Math.floor(Number.isFinite(tokenBalance) ? tokenBalance : 0));
@@ -111,4 +137,3 @@ module.exports = async (req, res) => {
     return publicError(res, 500, "Kon credits niet laden.", e);
   }
 };
-

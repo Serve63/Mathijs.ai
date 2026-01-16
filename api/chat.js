@@ -30,7 +30,7 @@ const CHAT_WINDOW_MS = 60_000;
 const CHAT_LIMIT_FREE = 20;
 const CHAT_LIMIT_PAID = 60;
 const TOKENS_PER_CHAT = 1;
-const STARTER_CREDITS_EUR = 10;
+const STARTER_CREDITS_EUR = 15;
 
 function getTokensPerEur() {
   const tokensPerEur = Number(process.env.TOPUP_TOKENS_PER_EUR || 100);
@@ -393,6 +393,8 @@ module.exports = async function handler(req, res) {
     const tokensPerEur = getTokensPerEur();
     const starterTokens = Math.max(0, Math.round(STARTER_CREDITS_EUR * tokensPerEur));
     const tokenMetaValue = Number(appMeta?.tokens);
+    const starterCreditsRecorded = Number(appMeta?.starter_credits_eur || 0);
+    const creditsInitialized = Boolean(appMeta?.credits_initialized);
 
     // Initialize starter credits once for users missing a token balance (best-effort).
     if (tokenOpsEnabled && !Number.isFinite(tokenMetaValue)) {
@@ -410,6 +412,28 @@ module.exports = async function handler(req, res) {
         });
       } catch (e) {
         console.error("Token init failed; continuing without token gating.", e?.message || e);
+      }
+    } else if (
+      tokenOpsEnabled &&
+      Number.isFinite(tokenMetaValue) &&
+      (creditsInitialized || starterCreditsRecorded > 0) &&
+      starterCreditsRecorded < STARTER_CREDITS_EUR
+    ) {
+      try {
+        const nextTokens = Math.max(Math.floor(tokenMetaValue), starterTokens);
+        appMeta = {
+          ...(appMeta || {}),
+          tokens: nextTokens,
+          credits_initialized: true,
+          starter_credits_eur: STARTER_CREDITS_EUR,
+        };
+        await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
+          method: "PUT",
+          accessKey: serviceRoleKey,
+          body: { app_metadata: appMeta },
+        });
+      } catch (e) {
+        console.error("Token upgrade failed; continuing without token gating.", e?.message || e);
       }
     }
 

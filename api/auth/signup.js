@@ -12,7 +12,7 @@ const { SUPABASE_URL } = require("../_lib/supabase");
 
 const SIGNUP_WINDOW_MS = 15 * 60_000;
 const SIGNUP_LIMIT = 5;
-const STARTER_CREDITS_EUR = 10;
+const STARTER_CREDITS_EUR = 15;
 
 function getTokensPerEur() {
   const tokensPerEur = Number(process.env.TOPUP_TOKENS_PER_EUR || 100);
