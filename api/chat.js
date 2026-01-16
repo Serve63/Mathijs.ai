@@ -29,8 +29,43 @@ const MAX_TOTAL_CHARS = 24000;
 const CHAT_WINDOW_MS = 60_000;
 const CHAT_LIMIT_FREE = 20;
 const CHAT_LIMIT_PAID = 60;
-const TOKENS_PER_CHAT = 1;
+const TOKENS_PER_CHAT_DEFAULT = 1;
 const STARTER_CREDITS_EUR = 15;
+const MODEL_TOKEN_COSTS = {
+  chatgpt52: 2,
+  gemini3: 1,
+  opus45: 5,
+  sonnet45: 3,
+  haiku45: 1,
+  grok4: 3,
+  llama4: 1,
+  qwen: 1,
+  deepseekv2: 1,
+};
+const MODEL_LABEL_TOKEN_COSTS = [
+  ["chatgpt 5.2", 2],
+  ["gpt-5 mini", 1],
+  ["gemini 3", 1],
+  ["opus 4.5", 5],
+  ["sonnet 4.5", 3],
+  ["haiku 4.5", 1],
+  ["grok 4", 3],
+  ["llama 4", 1],
+  ["qwen3-max", 1],
+  ["deepseek v2", 1],
+];
+const OPENAI_MODEL_TOKEN_COSTS = {
+  "gpt-4o": 2,
+  "gpt-4o-mini": 1,
+};
+const GEMINI_MODEL_TOKEN_COSTS = {
+  "gemini-1.5-flash": 1,
+  "gemini-1.5-flash-001": 1,
+  "gemini-1.5-pro": 2,
+  "gemini-1.5-pro-001": 2,
+  "gemini-pro": 2,
+  "gemini-1.0-pro": 2,
+};
 
 function getTokensPerEur() {
   const tokensPerEur = Number(process.env.TOPUP_TOKENS_PER_EUR || 100);
@@ -82,6 +117,44 @@ function resolveGeminiModel(requested) {
     return GEMINI_DEFAULT_MODEL;
   }
   return normalized;
+}
+
+function normalizeModelKey(value) {
+  if (typeof value !== "string") return "";
+  return value.trim().toLowerCase();
+}
+
+function normalizeModelLabel(value) {
+  if (typeof value !== "string") return "";
+  return value.trim().toLowerCase();
+}
+
+function resolveTokensRequired({ modelKey, modelLabel, provider, requestedModel, resolvedModel }) {
+  const normalizedKey = normalizeModelKey(modelKey);
+  if (normalizedKey && MODEL_TOKEN_COSTS[normalizedKey]) {
+    return MODEL_TOKEN_COSTS[normalizedKey];
+  }
+
+  const normalizedLabel = normalizeModelLabel(modelLabel);
+  if (normalizedLabel) {
+    for (const [prefix, tokens] of MODEL_LABEL_TOKEN_COSTS) {
+      if (normalizedLabel.startsWith(prefix)) {
+        return tokens;
+      }
+    }
+  }
+
+  if (provider === "openai") {
+    const openaiModel = resolvedModel || resolveOpenAIModel(requestedModel);
+    if (OPENAI_MODEL_TOKEN_COSTS[openaiModel]) return OPENAI_MODEL_TOKEN_COSTS[openaiModel];
+  }
+
+  if (provider === "gemini") {
+    const geminiModel = resolvedModel || resolveGeminiModel(requestedModel);
+    if (GEMINI_MODEL_TOKEN_COSTS[geminiModel]) return GEMINI_MODEL_TOKEN_COSTS[geminiModel];
+  }
+
+  return TOKENS_PER_CHAT_DEFAULT;
 }
 
 async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {}) {
@@ -379,6 +452,18 @@ module.exports = async function handler(req, res) {
     }
 
     const { messages, model, provider } = body || {};
+    const modelKey =
+      typeof body?.model_key === "string"
+        ? body.model_key
+        : typeof body?.modelKey === "string"
+          ? body.modelKey
+          : "";
+    const modelLabel =
+      typeof body?.model_label === "string"
+        ? body.model_label
+        : typeof body?.modelLabel === "string"
+          ? body.modelLabel
+          : "";
     const normalizedMessages = validateAndNormalizeMessages(messages);
 
     const requestedProvider = typeof provider === "string" ? provider.trim().toLowerCase() : "";
@@ -387,6 +472,19 @@ module.exports = async function handler(req, res) {
       (typeof model === "string" && model.trim().startsWith("gemini-") ? "gemini" : "openai");
 
     const requestedModel = typeof model === "string" ? model : "";
+    const resolvedOpenAIModel = inferredProvider === "openai" ? resolveOpenAIModel(requestedModel) : null;
+    const resolvedGeminiModel = inferredProvider === "gemini" ? resolveGeminiModel(requestedModel) : null;
+    const tokensRequiredRaw = resolveTokensRequired({
+      modelKey,
+      modelLabel,
+      provider: inferredProvider,
+      requestedModel,
+      resolvedModel: resolvedOpenAIModel || resolvedGeminiModel,
+    });
+    const tokensRequired = Math.max(
+      1,
+      Math.floor(Number.isFinite(tokensRequiredRaw) ? tokensRequiredRaw : TOKENS_PER_CHAT_DEFAULT)
+    );
 
     // Initialize / read token balance AFTER we know request is valid.
     let appMeta = user?.app_metadata || {};
@@ -456,16 +554,16 @@ module.exports = async function handler(req, res) {
     // Token gating + deduct (stored server-side in app_metadata.tokens) - best-effort.
     const tokenBalance = Number(appMeta?.tokens || 0);
     if (tokenOpsEnabled) {
-      if (!Number.isFinite(tokenBalance) || tokenBalance < TOKENS_PER_CHAT) {
+      if (!Number.isFinite(tokenBalance) || tokenBalance < tokensRequired) {
         return json(res, 402, {
           error: "Je tokens zijn op. Waardeer je account op om door te chatten.",
           topup_required: true,
-          tokens_required: TOKENS_PER_CHAT,
+          tokens_required: tokensRequired,
           tokens_available: Math.max(0, Number.isFinite(tokenBalance) ? tokenBalance : 0),
         });
       }
 
-      const nextTokens = Math.max(0, Math.floor(tokenBalance - TOKENS_PER_CHAT));
+      const nextTokens = Math.max(0, Math.floor(tokenBalance - tokensRequired));
       try {
         await supabaseAuthAdmin(`users/${encodeURIComponent(user.id)}`, {
           method: "PUT",
@@ -492,7 +590,7 @@ module.exports = async function handler(req, res) {
 
     try {
       if (inferredProvider === "gemini") {
-        const geminiModel = resolveGeminiModel(requestedModel);
+        const geminiModel = resolvedGeminiModel || resolveGeminiModel(requestedModel);
         const apiKey = getGeminiApiKey();
         console.log(`[gemini] key ${apiKey ? "present" : "missing"}`);
         if (!apiKey) {
@@ -510,7 +608,7 @@ module.exports = async function handler(req, res) {
         return json(res, 200, { text: text || "" });
       }
 
-      const openaiModel = resolveOpenAIModel(requestedModel);
+      const openaiModel = resolvedOpenAIModel || resolveOpenAIModel(requestedModel);
       const apiKey = getOpenAIApiKey();
       console.log(`[openai] key ${apiKey ? "present" : "missing"}`);
       if (!apiKey) {

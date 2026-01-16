@@ -2712,6 +2712,8 @@
             body: JSON.stringify({
               provider,
               model: selectedApiModel,
+              model_key: selectedModel,
+              model_label: selectedModelLabel,
               messages: requestMessages,
             }),
           });
