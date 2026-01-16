@@ -7,14 +7,11 @@
   let accessToken = null;
 
   const totalCustomersEl = document.getElementById("stat-total-customers");
-  const totalPaidEl = document.getElementById("stat-total-paid");
   const activeCustomersEl = document.getElementById("stat-active-customers");
-  const freeMonthsEl = document.getElementById("stat-free-months");
   const searchInput = document.getElementById("customer-search");
   const tableEl = document.getElementById("customers-table");
   const emptyEl = document.getElementById("customers-empty");
 
-  const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
   const dateFmt = new Intl.DateTimeFormat("nl-NL", {
     day: "2-digit",
     month: "short",
@@ -92,14 +89,10 @@
   };
 
   const updateStats = () => {
-    const totalPaid = customers.reduce((sum, customer) => sum + (customer.total_paid_eur || 0), 0);
     const activeCount = customers.filter(isActiveSubscriber).length;
-    const freeMonths = customers.reduce((sum, customer) => sum + (customer.free_months || 0), 0);
 
     if (totalCustomersEl) totalCustomersEl.textContent = String(customers.length);
-    if (totalPaidEl) totalPaidEl.textContent = fmtEUR.format(totalPaid);
     if (activeCustomersEl) activeCustomersEl.textContent = String(activeCount);
-    if (freeMonthsEl) freeMonthsEl.textContent = String(freeMonths);
   };
 
   const getFilteredCustomers = () => {
@@ -133,9 +126,6 @@
         const status = getStatusConfig(customer);
         const lastActive = formatDate(customer.last_sign_in_at || customer.created_at);
         const lastPayment = formatDate(customer.last_payment_at || customer.subscribed_at);
-        const freeMonths = customer.free_months || 0;
-        const freeLabel = freeMonths === 1 ? "1 maand" : `${freeMonths} maanden`;
-
         return `
           <div class="table-row" data-id="${customer.id}">
             <div class="cell customer-cell" data-label="Klant">
@@ -147,8 +137,6 @@
             </div>
             <div class="cell" data-label="Provincie">${provinceLabel}</div>
             <div class="cell" data-label="Plan">${formatPlan(customer)}</div>
-            <div class="cell" data-label="Omzet totaal">${fmtEUR.format(customer.total_paid_eur || 0)}</div>
-            <div class="cell" data-label="Gratis maanden"><span class="chip">${freeLabel}</span></div>
             <div class="cell" data-label="Status"><span class="status ${status.className}">${status.label}</span></div>
             <div class="cell actions" data-label="Acties">
               <button class="btn tiny secondary" data-action="grant" data-months="1">+1 maand</button>
