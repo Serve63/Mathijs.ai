@@ -67,14 +67,36 @@ async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {})
 
 function normalizeCustomerFromUser(u) {
   const appMeta = u?.app_metadata || {};
+  const userMeta = u?.user_metadata || {};
+  const email = u?.email || "";
+  const name =
+    (typeof userMeta.full_name === "string" && userMeta.full_name.trim()) ||
+    (typeof userMeta.name === "string" && userMeta.name.trim()) ||
+    (typeof userMeta.username === "string" && userMeta.username.trim()) ||
+    (email ? email.split("@")[0] : "Onbekend");
+  const provinceId =
+    (typeof userMeta.province_id === "string" && userMeta.province_id.trim()) ||
+    (typeof userMeta.province === "string" && userMeta.province.trim()) ||
+    null;
+  const totalPaidRaw = Number(appMeta.total_paid_eur || 0);
+  const totalPaidEur = Number.isFinite(totalPaidRaw) ? totalPaidRaw : 0;
+  const lastPaidRaw = Number(appMeta.last_payment_amount_eur || 0);
+  const lastPaidEur = Number.isFinite(lastPaidRaw) ? lastPaidRaw : 0;
   return {
     id: u?.id,
-    email: u?.email,
+    email,
+    name,
     created_at: u?.created_at,
+    last_sign_in_at: u?.last_sign_in_at,
     cancelled_at: appMeta.cancelled_at || null,
     free_months: Number(appMeta.free_months || 0),
     lifetime_free: Boolean(appMeta.lifetime_free) || appMeta.plan === "lifetime",
     plan: appMeta.plan || "free",
+    subscribed_at: appMeta.subscribed_at || null,
+    last_payment_at: appMeta.last_payment_at || null,
+    last_payment_amount_eur: lastPaidEur,
+    total_paid_eur: totalPaidEur,
+    province_id: provinceId,
   };
 }
 

@@ -609,13 +609,13 @@
     <main class="live-shell" aria-label="Live overzicht">
       <section class="kpi-strip" aria-label="Kernstatistieken">
         <div class="kpi">
-          <div class="kpi-label">Bezoekers nu</div>
-          <div class="kpi-value" id="kpi-visitors">27</div>
+          <div class="kpi-label">Actieve abonnees</div>
+          <div class="kpi-value" id="kpi-visitors">0</div>
           </div>
         <div class="kpi">
-          <div class="kpi-label">Totaal vandaag</div>
-          <div class="kpi-value" id="kpi-visits">891</div>
-          <div class="kpi-sub">Bezoeken</div>
+          <div class="kpi-label">Chats vandaag</div>
+          <div class="kpi-value" id="kpi-visits">0</div>
+          <div class="kpi-sub">Chatverzoeken</div>
           <svg class="spark" viewBox="0 0 56 22" aria-hidden="true">
             <polyline
               data-spark="visits"
@@ -630,7 +630,7 @@
         </div>
         <div class="kpi">
           <div class="kpi-label">Nieuwe klanten vandaag</div>
-          <div class="kpi-value" id="kpi-orders">77</div>
+          <div class="kpi-value" id="kpi-orders">0</div>
           <div class="kpi-sub">Nieuwe klanten</div>
           <svg class="spark" viewBox="0 0 56 22" aria-hidden="true">
             <polyline
@@ -651,7 +651,7 @@
               Toon winst
             </button>
       </div>
-          <div class="kpi-value" id="kpi-sales">€22.282,65</div>
+          <div class="kpi-value" id="kpi-sales">€0</div>
           <div class="kpi-sub" id="kpi-sales-sub">Omzet</div>
           <svg class="spark" viewBox="0 0 56 22" aria-hidden="true">
             <polyline
@@ -711,6 +711,7 @@
     </main>
 
     <script src="assets/customers-data.js" defer></script>
+    <script src="assets/vendor/supabase.min.js" defer></script>
     <script src="staff-dashboard.js" defer></script>
   </body>
 </html>

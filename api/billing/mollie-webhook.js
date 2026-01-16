@@ -128,11 +128,24 @@ module.exports = async (req, res) => {
     });
 
     const nowIso = new Date().toISOString();
+    const paidAt = payment?.paidAt || payment?.createdAt || nowIso;
+    const currency = payment?.amount?.currency || "EUR";
+    const amountValue = Number(payment?.amount?.value || 0);
+    const amountEur = currency === "EUR" && Number.isFinite(amountValue) ? amountValue : 0;
+    const previousTotalRaw = Number(user?.app_metadata?.total_paid_eur || 0);
+    const previousTotal = Number.isFinite(previousTotalRaw) ? previousTotalRaw : 0;
+    const lastPaymentId = user?.app_metadata?.last_payment_id || user?.app_metadata?.mollie_payment_id;
+    const alreadyCounted = lastPaymentId === paymentId;
+    const nextTotal = alreadyCounted ? previousTotal : previousTotal + amountEur;
     const nextAppMeta = {
       ...(user?.app_metadata || {}),
       plan: "standard",
       cancelled_at: null,
       mollie_payment_id: paymentId,
+      last_payment_id: paymentId,
+      last_payment_at: paidAt,
+      last_payment_amount_eur: amountEur,
+      total_paid_eur: nextTotal,
       subscribed_at: nowIso,
     };
 
