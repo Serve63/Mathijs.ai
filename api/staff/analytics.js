@@ -13,6 +13,7 @@ const { getSupabaseServiceRoleKey } = require("../_lib/env");
 
 const STAFF_WINDOW_MS = 60_000;
 const STAFF_LIMIT = 120;
+const BASELINE_DATE_UTC = new Date(Date.UTC(2026, 0, 1));
 
 function parseDate(value) {
   if (!value) return null;
@@ -150,7 +151,10 @@ module.exports = async (req, res) => {
     if (!isStaffUser(user)) return json(res, 403, { error: "Forbidden (not staff)" });
 
     const users = await fetchAllUsers(serviceRoleKey);
-    const totalChats = await adminRestCount("messages?select=id&role=eq.user");
+    const baselineIso = BASELINE_DATE_UTC.toISOString();
+    const totalChats = await adminRestCount(
+      `messages?select=id&role=eq.user&created_at=gte.${encodeURIComponent(baselineIso)}`
+    );
     const payingUsers = users.filter(isPayingCustomer);
 
     let events = [];
@@ -197,6 +201,7 @@ module.exports = async (req, res) => {
     events.forEach((event) => {
       const paidAt = parseDate(event?.paid_at);
       if (!paidAt) return;
+      if (paidAt < BASELINE_DATE_UTC) return;
       const dateKey = toDateKey(startOfDayUtc(paidAt));
       const amount = Number(event?.amount_eur || 0);
       const entry = paymentByDate.get(dateKey) || { revenue: 0, orders: 0 };
@@ -207,22 +212,39 @@ module.exports = async (req, res) => {
 
     const subsByDate = new Map();
     const activeDiff = new Map();
+    let baselineActiveCount = 0;
     let earliestDate = null;
 
     payingUsers.forEach((u) => {
       const start = getCustomerStartDate(u);
       if (!start) return;
       const startDay = startOfDayUtc(start);
+      const cancelDate = getCustomerCancelDate(u);
+      const cancelDay = cancelDate ? startOfDayUtc(cancelDate) : null;
+      if (cancelDay && cancelDay < BASELINE_DATE_UTC) {
+        return;
+      }
+      if (startDay < BASELINE_DATE_UTC) {
+        baselineActiveCount += 1;
+        if (cancelDay) {
+          const nextDay = addDays(cancelDay, 1);
+          if (nextDay >= BASELINE_DATE_UTC) {
+            const nextKey = toDateKey(nextDay);
+            activeDiff.set(nextKey, (activeDiff.get(nextKey) || 0) - 1);
+          }
+        }
+        return;
+      }
       const startKey = toDateKey(startDay);
       subsByDate.set(startKey, (subsByDate.get(startKey) || 0) + 1);
       activeDiff.set(startKey, (activeDiff.get(startKey) || 0) + 1);
 
-      const cancelDate = getCustomerCancelDate(u);
-      if (cancelDate) {
-        const cancelDay = startOfDayUtc(cancelDate);
+      if (cancelDay) {
         const nextDay = addDays(cancelDay, 1);
-        const nextKey = toDateKey(nextDay);
-        activeDiff.set(nextKey, (activeDiff.get(nextKey) || 0) - 1);
+        if (nextDay >= BASELINE_DATE_UTC) {
+          const nextKey = toDateKey(nextDay);
+          activeDiff.set(nextKey, (activeDiff.get(nextKey) || 0) - 1);
+        }
       }
 
       if (!earliestDate || startDay < earliestDate) {
@@ -233,6 +255,7 @@ module.exports = async (req, res) => {
     events.forEach((event) => {
       const paidAt = parseDate(event?.paid_at);
       if (!paidAt) return;
+      if (paidAt < BASELINE_DATE_UTC) return;
       const paidDay = startOfDayUtc(paidAt);
       if (!earliestDate || paidDay < earliestDate) {
         earliestDate = paidDay;
@@ -240,11 +263,13 @@ module.exports = async (req, res) => {
     });
 
     const today = startOfDayUtc(new Date());
-    const startDate = earliestDate || today;
+    let startDate = earliestDate || BASELINE_DATE_UTC;
+    if (startDate < BASELINE_DATE_UTC) startDate = BASELINE_DATE_UTC;
+    if (startDate > today) startDate = today;
 
     const points = [];
     let cursor = new Date(startDate);
-    let activeCount = 0;
+    let activeCount = baselineActiveCount;
 
     while (cursor <= today) {
       const dateKey = toDateKey(cursor);

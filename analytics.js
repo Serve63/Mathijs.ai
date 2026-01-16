@@ -30,6 +30,7 @@
   const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
   const fmtNumber = new Intl.NumberFormat("nl-NL");
   const fmtDateLong = new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short", year: "numeric" });
+  const fmtDateLongFull = new Intl.DateTimeFormat("nl-NL", { day: "numeric", month: "long", year: "numeric" });
   const fmtDayMonth = new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short" });
   const fmtMonthShort = new Intl.DateTimeFormat("nl-NL", { month: "short" });
   const fmtMonthShortYear = new Intl.DateTimeFormat("nl-NL", { month: "short", year: "numeric" });
@@ -390,7 +391,7 @@
       if (agg) allPoints.push(agg);
     }
 
-    const allMeta = `Sinds ${rangeStart.getUTCFullYear()}`;
+    const allMeta = `Sinds ${fmtDateLongFull.format(rangeStart)}`;
 
     ranges = {
       week: { label: "DEZE WEEK", meta: "DEZE WEEK", points: weekPoints },
