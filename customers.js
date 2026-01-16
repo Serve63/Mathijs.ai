@@ -138,9 +138,9 @@
             <div class="cell" data-label="Plan">${formatPlan(customer)}</div>
             <div class="cell" data-label="Status"><span class="status ${status.className}">${status.label}</span></div>
             <div class="cell actions" data-label="Acties">
-              <button class="btn tiny secondary" data-action="grant" data-months="1">+1 maand</button>
-              <button class="btn tiny secondary" data-action="grant" data-months="3">+3 maanden</button>
-              <button class="btn tiny ghost" data-action="delete">Verwijder</button>
+              <button class="btn tiny secondary" data-action="grant" data-months="1">1 maand gratis</button>
+              <button class="btn tiny secondary" data-action="lifetime">Lifetime geven</button>
+              <button class="btn tiny ghost" data-action="delete">Klant verwijderen</button>
             </div>
           </div>
         `;
@@ -202,6 +202,23 @@
         const payload = await resp.json().catch(() => ({}));
         if (!resp.ok) throw new Error(payload?.error || "Bijwerken mislukt.");
         customers[index].free_months = payload?.free_months || customers[index].free_months;
+        updateStats();
+        renderTable();
+        return;
+      }
+
+      if (action === "lifetime") {
+        const resp = await fetch("/api/staff/customers", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ action: "set_lifetime_free", id, enabled: true }),
+        });
+        const payload = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(payload?.error || "Bijwerken mislukt.");
+        customers[index].lifetime_free = Boolean(payload?.lifetime_free);
         updateStats();
         renderTable();
       }
