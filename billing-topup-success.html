@@ -58,7 +58,7 @@
     <div class="card">
       <h1>Tokens opgewaardeerd</h1>
       <p>We verwerken je opwaardering en sturen je zo terug naar de chat.</p>
-      <a class="btn" href="chat.html">Ga naar de chat</a>
+      <a class="btn" href="/chat">Ga naar de chat</a>
       <div class="status" id="status"></div>
     </div>
 
@@ -86,7 +86,7 @@
           const { data } = await supabase.auth.getSession();
           const accessToken = data?.session?.access_token;
           if (!accessToken) {
-            window.location.href = "login.html";
+            window.location.href = "/login";
             return;
           }
 
@@ -99,7 +99,7 @@
             const payload = await resp.json().catch(() => ({}));
             if (payload?.ok) {
               setStatus(`✓ Tokens bijgewerkt. Nieuw saldo: ${payload.tokens ?? "?"}`);
-              setTimeout(() => (window.location.href = "chat.html"), 900);
+              setTimeout(() => (window.location.href = "/chat"), 900);
               return;
             }
             setStatus(payload?.error || "Opwaardering nog niet verwerkt. Ververs over 10 seconden.");

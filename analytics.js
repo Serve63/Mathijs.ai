@@ -430,13 +430,13 @@
 
     const token = await getAccessToken(supabase);
     if (!token) {
-      window.location.href = "staff-login.html";
+      window.location.href = "/staff-login";
       return;
     }
 
     const isStaff = await ensureStaff(supabase, token);
     if (!isStaff) {
-      window.location.href = "staff-login.html";
+      window.location.href = "/staff-login";
       return;
     }
 

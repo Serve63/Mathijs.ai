@@ -280,7 +280,7 @@
 
     const ok = await ensureStaff(supabase);
     if (!ok) {
-      window.location.href = "staff-login.html";
+      window.location.href = "/staff-login";
       return;
     }
 

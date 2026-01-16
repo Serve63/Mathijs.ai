@@ -121,7 +121,7 @@
         }
         setFeedback(feedbackEl, "Inloggen gelukt, je wordt doorgestuurd...", "success");
         await updateUserLocation();
-        window.location.href = "course.html";
+        window.location.href = "/course";
       } catch (err) {
         console.error("Onverwachte fout tijdens login", err);
         setFeedback(feedbackEl, "Er ging iets mis, probeer het opnieuw.");
@@ -236,7 +236,7 @@
 
         setFeedback(feedbackEl, "Account aangemaakt! Je wordt doorgestuurd...", "success");
         signupForm.reset();
-        window.location.href = "subscribe.html";
+        window.location.href = "/subscribe";
       } catch (err) {
         console.error("Onverwachte fout tijdens signup", err);
         setFeedback(feedbackEl, err?.message || "Er ging iets mis, probeer het opnieuw.");

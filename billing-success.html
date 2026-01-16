@@ -80,7 +80,7 @@
     <div class="card">
       <h1>Betaling gelukt</h1>
       <p>We activeren nu je abonnement. Dit duurt meestal een paar seconden.</p>
-      <a class="btn" href="chat.html">Ga naar de chat</a>
+      <a class="btn" href="/chat">Ga naar de chat</a>
       <div class="status" id="status"></div>
     </div>
 
@@ -109,7 +109,7 @@
           const { data } = await supabase.auth.getSession();
           const accessToken = data?.session?.access_token;
           if (!accessToken) {
-            window.location.href = "login.html";
+            window.location.href = "/login";
             return;
           }
 

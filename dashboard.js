@@ -3,11 +3,11 @@
   const AUTO_REDIRECT_DELAY = 1600;
 
   const redirectToLogin = () => {
-    window.location.href = "login.html";
+    window.location.href = "/login";
   };
 
   const redirectToWorkspace = () => {
-    window.location.href = "chat.html";
+    window.location.href = "/chat";
   };
 
   const getActiveSession = async (supabase) => {

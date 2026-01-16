@@ -2,7 +2,7 @@
 	        .filter((script) => script.textContent && script.textContent.trim().length);
 	      if (inlineScripts.length) {
 	        inlineScripts.forEach((script) => script.remove());
-	        console.warn("[chat] Inline scripts detected in chat.html. Keep scripts in assets/chat.js to avoid CSP issues.");
+	        console.warn("[chat] Inline scripts detected in /chat. Keep scripts in assets/chat.js to avoid CSP issues.");
 	      }
 
       const modelSelects = Array.from(document.querySelectorAll(".model-select"));
@@ -1323,7 +1323,7 @@
           actions.querySelector(".share-session").addEventListener("click", async (event) => {
             event.stopPropagation();
             actions.classList.remove("is-open");
-            const shareText = `${window.location.origin}/chat.html?session=${session.id}`;
+            const shareText = `${window.location.origin}//chat?session=${session.id}`;
             try {
               await navigator.clipboard.writeText(shareText);
               alert("Link gekopieerd naar klembord.");
@@ -1965,7 +1965,7 @@
 		          } catch {
 		            // ignore
 		          }
-		          window.location.href = "login.html";
+		          window.location.href = "/login";
 		        });
 		      };
 
@@ -2403,7 +2403,7 @@
 	            } catch {
 	              // ignore
 	            }
-	            window.location.href = "login.html";
+	            window.location.href = "/login";
 	            return null;
 	          }
 	          currentUser = data.user;
@@ -2418,7 +2418,7 @@
 	          renderEmptyState();
 	          renderEmptySessionMessage("Kon je login niet controleren. Probeer opnieuw in te loggen.");
 	          ensureSessionEmptyActions();
-	          window.location.href = "login.html";
+	          window.location.href = "/login";
 	          return null;
 	        }
 	        titleOverrides = loadTitleOverrides(currentUser.id);
@@ -2440,7 +2440,7 @@
 
         buttons.forEach((btn) => {
           btn.addEventListener("click", () => {
-            window.location.href = "index.html";
+            window.location.href = "/";
           });
         });
       };
@@ -2732,7 +2732,7 @@
               .replace(/\b(?:sk_live|rk_live|whsec)_[A-Za-z0-9]{10,}\b/g, "***REDACTED***")
               .replace(/\bAIza[0-9A-Za-z_-]{20,}\b/g, "***REDACTED***");
             if (response.status === 401) {
-              window.location.href = "login.html";
+              window.location.href = "/login";
             }
             throw new Error(errorMessage);
           }

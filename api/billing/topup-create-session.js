@@ -103,8 +103,8 @@ module.exports = async (req, res) => {
     params.set("payment_method_types[0]", "card");
     params.set("customer_email", email);
     params.set("client_reference_id", userId);
-    params.set("success_url", `${baseUrl}/billing-topup-success.html?session_id={CHECKOUT_SESSION_ID}`);
-    params.set("cancel_url", `${baseUrl}/chat.html?topup_cancelled=1`);
+    params.set("success_url", `${baseUrl}//billing-topup-success?session_id={CHECKOUT_SESSION_ID}`);
+    params.set("cancel_url", `${baseUrl}//chat?topup_cancelled=1`);
     params.set("line_items[0][quantity]", "1");
     params.set("line_items[0][price_data][currency]", "eur");
     params.set("line_items[0][price_data][unit_amount]", String(amountCents));
