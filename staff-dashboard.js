@@ -152,8 +152,8 @@
         const name = getDisplayName(customer);
         const provinceLabel = formatProvince(customer);
         const planLabel = formatPlan(customer);
-        const amount = customer.last_payment_amount_eur || customer.total_paid_eur || 0;
-        const amountLabel = amount ? fmtEUR.format(amount) : "-";
+        const amount = Number(customer.last_payment_amount_eur || customer.total_paid_eur || 0);
+        const amountLabel = fmtEUR.format(Number.isFinite(amount) ? amount : 0);
         return `
           <div class="customer-row">
             <div class="customer-avatar">${name
