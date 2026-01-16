@@ -26,6 +26,7 @@
   let showProfit = false;
   let lastMetrics = null;
   let mapsLoaded = false;
+  let forceLowHeat = false;
 
   const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
   const dateFmt = new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short" });
@@ -165,6 +166,10 @@
 
   const applyProvinceHeat = (provinceEl, count, maxCount) => {
     if (!provinceEl) return;
+    if (forceLowHeat) {
+      provinceEl.style.setProperty("--province-color", "rgba(233, 90, 74, 0.65)");
+      return;
+    }
     const ratio = maxCount ? count / maxCount : 0;
     let color = "rgba(233, 90, 74, 0.65)";
     if (ratio >= 0.66) {
@@ -213,6 +218,7 @@
       return acc;
     }, {});
     customerCounts = counts;
+    forceLowHeat = customers.length > 0 && customers.length < 5;
     if (!mapsLoaded) {
       loadMapSvg(nlMapCanvas, "assets/nl-map.svg");
       loadMapSvg(beMapCanvas, "assets/be-map.svg");
