@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl" class="sidebar-offset-pending">
+<html lang="nl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,6 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link rel="preload" as="image" href="assets/chat-hero.png" fetchpriority="high" />
     <link rel="stylesheet" href="styles.css" />
     <style>
       :root {
@@ -227,11 +228,7 @@
         padding-top: 6px;
         position: relative;
         opacity: 1;
-        transition: opacity 0.2s ease;
-      }
-
-      html.sidebar-offset-pending .sidebar-top {
-        opacity: 0;
+        transition: margin-top 0.2s ease;
       }
 
       .sidebar-bottom {
@@ -2944,6 +2941,11 @@
                 class="sidebar-hero-image"
                 src="assets/chat-hero.png"
                 alt="Mathijs.ai illustratie"
+                width="547"
+                height="456"
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
               />
             </div>
 		        <div class="sidebar-top">
