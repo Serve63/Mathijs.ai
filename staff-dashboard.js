@@ -213,14 +213,6 @@
       return acc;
     }, {});
     customerCounts = counts;
-    const hasProvinceData = Object.keys(counts).length > 0;
-
-    if (!hasProvinceData) {
-      if (nlMapCanvas) nlMapCanvas.innerHTML = "<div class=\"map-error\">Geen locatiegegevens beschikbaar.</div>";
-      if (beMapCanvas) beMapCanvas.innerHTML = "<div class=\"map-error\">Geen locatiegegevens beschikbaar.</div>";
-      return;
-    }
-
     if (!mapsLoaded) {
       loadMapSvg(nlMapCanvas, "assets/nl-map.svg");
       loadMapSvg(beMapCanvas, "assets/be-map.svg");
