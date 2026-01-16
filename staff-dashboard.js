@@ -56,7 +56,12 @@
 
   const startOfDayUtc = (now) => new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
-  const formatProvince = (provinceId) => provinceLabels[provinceId] || provinceId || "Onbekend";
+  const formatProvince = (input) => {
+    const provinceId = typeof input === "string" ? input : input?.province_id;
+    if (provinceId) return provinceLabels[provinceId] || provinceId;
+    const fallbackLabel = input?.location_label;
+    return fallbackLabel || "Onbekend";
+  };
 
   const getDisplayName = (customer) => {
     if (customer?.name) return customer.name;
@@ -145,7 +150,7 @@
     recentCustomersEl.innerHTML = recent
       .map((customer) => {
         const name = getDisplayName(customer);
-        const provinceLabel = formatProvince(customer.province_id);
+        const provinceLabel = formatProvince(customer);
         const planLabel = formatPlan(customer);
         const amount = customer.last_payment_amount_eur || customer.total_paid_eur || 0;
         const amountLabel = amount ? fmtEUR.format(amount) : "-";

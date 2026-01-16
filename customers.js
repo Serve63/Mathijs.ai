@@ -31,7 +31,11 @@
     return client;
   };
 
-  const formatProvince = (provinceId) => provinceLabels[provinceId] || provinceId || "Onbekend";
+  const formatProvince = (customer) => {
+    const provinceId = customer?.province_id;
+    if (provinceId) return provinceLabels[provinceId] || provinceId;
+    return customer?.location_label || "Onbekend";
+  };
 
   const formatDate = (value) => {
     if (!value) return "-";
@@ -94,7 +98,7 @@
     if (!query) return customers.slice();
 
     return customers.filter((customer) => {
-      const provinceLabel = formatProvince(customer.province_id);
+      const provinceLabel = formatProvince(customer);
       const haystack = `${getDisplayName(customer)} ${customer.email || ""} ${customer.plan || ""} ${provinceLabel}`
         .toLowerCase();
       return haystack.includes(query);
@@ -116,7 +120,7 @@
     tableEl.innerHTML = filtered
       .map((customer) => {
         const name = getDisplayName(customer);
-        const provinceLabel = formatProvince(customer.province_id);
+        const provinceLabel = formatProvince(customer);
         const status = getStatusConfig(customer);
         const lastActive = formatDate(customer.last_sign_in_at || customer.created_at);
         const lastPayment = formatDate(customer.last_payment_at || customer.subscribed_at);

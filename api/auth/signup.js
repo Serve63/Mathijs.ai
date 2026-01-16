@@ -7,6 +7,7 @@
 // - SUPABASE_SERVICE_ROLE_KEY
 
 const { checkSameOrigin, getClientIp, json, publicError, rateLimit, rateLimitHeaders, readJson } = require("../_lib/security");
+const { getGeoFromRequest } = require("../_lib/geo");
 const { SUPABASE_URL } = require("../_lib/supabase");
 
 const SIGNUP_WINDOW_MS = 15 * 60_000;
@@ -84,13 +85,24 @@ module.exports = async (req, res) => {
     const tokensPerEur = getTokensPerEur();
     const starterTokens = Math.max(0, Math.round(STARTER_CREDITS_EUR * tokensPerEur));
 
+    const geo = getGeoFromRequest(req);
+    const userMeta = { username: email };
+    if (geo.provinceId) userMeta.province_id = geo.provinceId;
+    if (geo.label) userMeta.geo_label = geo.label;
+    if (geo.country) userMeta.geo_country = geo.country;
+    if (geo.regionName || geo.region) userMeta.geo_region = geo.regionName || geo.region;
+    if (geo.city) userMeta.geo_city = geo.city;
+    if (geo.country || geo.regionName || geo.region || geo.city) {
+      userMeta.geo_updated_at = new Date().toISOString();
+    }
+
     await supabaseAuthAdmin("users", {
       accessKey: serviceRoleKey,
       body: {
         email,
         password,
         email_confirm: true,
-        user_metadata: { username: email },
+        user_metadata: userMeta,
         app_metadata: { plan: "free", tokens: starterTokens, credits_initialized: true, starter_credits_eur: STARTER_CREDITS_EUR },
       },
     });

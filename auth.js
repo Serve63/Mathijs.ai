@@ -73,6 +73,21 @@
     return lastError;
   };
 
+  const updateUserLocation = async () => {
+    if (!supabase) return;
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data?.session?.access_token;
+      if (!token) return;
+      await fetch("/api/auth/update-location", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (err) {
+      console.warn("Locatie bijwerken mislukt", err);
+    }
+  };
+
   const initLogin = () => {
     const loginForm = document.querySelector("#login-form");
     if (!loginForm || !supabase) return;
@@ -105,6 +120,7 @@
           return;
         }
         setFeedback(feedbackEl, "Inloggen gelukt, je wordt doorgestuurd...", "success");
+        await updateUserLocation();
         window.location.href = "course.html";
       } catch (err) {
         console.error("Onverwachte fout tijdens login", err);
@@ -216,6 +232,7 @@
         if (userId) {
           await upsertProfile(userId, email);
         }
+        await updateUserLocation();
 
         setFeedback(feedbackEl, "Account aangemaakt! Je wordt doorgestuurd...", "success");
         signupForm.reset();

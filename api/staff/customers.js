@@ -9,6 +9,7 @@ const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHead
 const { SUPABASE_URL, getUserFromAccessToken } = require("../_lib/supabase");
 const { isStaffUser } = require("../_lib/staff");
 const { adminRestCount } = require("../_lib/supabaseAdmin");
+const { COUNTRY_LABELS } = require("../_lib/geo");
 
 const STAFF_WINDOW_MS = 60_000;
 const STAFF_LIMIT = 120;
@@ -78,6 +79,15 @@ function normalizeCustomerFromUser(u) {
     (typeof userMeta.province_id === "string" && userMeta.province_id.trim()) ||
     (typeof userMeta.province === "string" && userMeta.province.trim()) ||
     null;
+  const geoLabel = typeof userMeta.geo_label === "string" ? userMeta.geo_label.trim() : "";
+  const geoRegion = typeof userMeta.geo_region === "string" ? userMeta.geo_region.trim() : "";
+  const geoCountry = typeof userMeta.geo_country === "string" ? userMeta.geo_country.trim() : "";
+  const geoCountryLabel = COUNTRY_LABELS[geoCountry] || geoCountry;
+  const locationLabel =
+    geoLabel ||
+    [geoRegion, geoCountryLabel].filter(Boolean).join(", ") ||
+    geoCountryLabel ||
+    null;
   const totalPaidRaw = Number(appMeta.total_paid_eur || 0);
   const totalPaidEur = Number.isFinite(totalPaidRaw) ? totalPaidRaw : 0;
   const lastPaidRaw = Number(appMeta.last_payment_amount_eur || 0);
@@ -97,6 +107,7 @@ function normalizeCustomerFromUser(u) {
     last_payment_amount_eur: lastPaidEur,
     total_paid_eur: totalPaidEur,
     province_id: provinceId,
+    location_label: locationLabel,
   };
 }
 
