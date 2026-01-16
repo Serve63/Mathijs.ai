@@ -80,7 +80,7 @@
   const getStatusConfig = (customer) => {
     if (customer?.cancelled_at) return { label: "opgezegd", className: "cancelled" };
     if (!isPayingCustomer(customer)) return { label: "gratis", className: "trial" };
-    return { label: "actief", className: "active" };
+    return { label: "Actief", className: "active" };
   };
 
   const isActiveSubscriber = (customer) => {
