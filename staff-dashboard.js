@@ -167,15 +167,15 @@
   const applyProvinceHeat = (provinceEl, count, maxCount) => {
     if (!provinceEl) return;
     if (forceLowHeat) {
-      provinceEl.style.setProperty("--province-color", "rgba(233, 90, 74, 0.65)");
+      provinceEl.style.setProperty("--province-color", "rgb(233, 90, 74)");
       return;
     }
     const ratio = maxCount ? count / maxCount : 0;
-    let color = "rgba(233, 90, 74, 0.65)";
+    let color = "rgb(233, 90, 74)";
     if (ratio >= 0.66) {
-      color = "rgba(56, 191, 127, 0.65)";
+      color = "rgb(56, 191, 127)";
     } else if (ratio >= 0.33) {
-      color = "rgba(242, 173, 63, 0.6)";
+      color = "rgb(242, 173, 63)";
     }
     provinceEl.style.setProperty("--province-color", color);
   };
