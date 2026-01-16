@@ -69,17 +69,26 @@
     return plan.charAt(0).toUpperCase() + plan.slice(1);
   };
 
+  const isPayingCustomer = (customer) => {
+    if (!customer) return false;
+    if (customer.lifetime_free) return true;
+    const totalPaid = Number(customer.total_paid_eur || 0);
+    if (Number.isFinite(totalPaid) && totalPaid > 0) return true;
+    const lastPaid = Number(customer.last_payment_amount_eur || 0);
+    if (Number.isFinite(lastPaid) && lastPaid > 0) return true;
+    return false;
+  };
+
   const getStatusConfig = (customer) => {
     if (customer?.cancelled_at) return { label: "opgezegd", className: "cancelled" };
     if (customer?.lifetime_free) return { label: "lifetime", className: "active" };
-    if ((customer?.plan || "free") === "free") return { label: "gratis", className: "trial" };
+    if (!isPayingCustomer(customer)) return { label: "gratis", className: "trial" };
     return { label: "actief", className: "active" };
   };
 
   const isActiveSubscriber = (customer) => {
     if (!customer) return false;
-    const paidPlan = customer.lifetime_free || (customer.plan && customer.plan !== "free");
-    return paidPlan && !customer.cancelled_at;
+    return isPayingCustomer(customer) && !customer.cancelled_at;
   };
 
   const updateStats = () => {
@@ -256,7 +265,8 @@
     }
 
     try {
-      customers = await fetchCustomers();
+      const allCustomers = await fetchCustomers();
+      customers = allCustomers.filter(isPayingCustomer);
       updateStats();
       renderTable();
     } catch (err) {
