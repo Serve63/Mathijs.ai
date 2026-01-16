@@ -25,6 +25,7 @@
   const barChartEl = document.getElementById("bar-chart");
   const tableMetaEl = document.getElementById("table-meta");
   const tableEl = document.getElementById("analytics-table");
+  const tableOrdersLabelEl = document.getElementById("table-orders-label");
   const tableSubsLabelEl = document.getElementById("table-subs-label");
 
   const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
@@ -236,6 +237,7 @@
 
   const renderTable = (points, includeTotalRow, labels = {}) => {
     if (!tableEl) return;
+    const ordersLabel = labels.orders || "Verstuurde chats";
     const subsLabel = labels.subs || "Nieuwe abonnees";
     const activeLabel = labels.active || "Actieve abonnees";
     const rows = [];
@@ -246,7 +248,7 @@
         <div class="table-row">
           <div class="cell" data-label="Periode"><strong>All time</strong></div>
           <div class="cell" data-label="Omzet"><strong>${fmtEUR.format(totals.revenue)}</strong></div>
-          <div class="cell" data-label="Orders"><strong>${fmtNumber.format(totals.orders)}</strong></div>
+          <div class="cell" data-label="${ordersLabel}"><strong>${fmtNumber.format(totals.orders)}</strong></div>
           <div class="cell" data-label="${subsLabel}"><strong>${fmtNumber.format(totals.subs)}</strong></div>
           <div class="cell" data-label="${activeLabel}"><strong>${fmtNumber.format(totals.active)}</strong></div>
         </div>
@@ -258,7 +260,7 @@
         <div class="table-row">
           <div class="cell" data-label="Periode">${point.label}</div>
           <div class="cell" data-label="Omzet">${fmtEUR.format(point.revenue)}</div>
-          <div class="cell" data-label="Orders">${fmtNumber.format(point.orders)}</div>
+          <div class="cell" data-label="${ordersLabel}">${fmtNumber.format(point.orders)}</div>
           <div class="cell" data-label="${subsLabel}">${fmtNumber.format(point.subs)}</div>
           <div class="cell" data-label="${activeLabel}">${fmtNumber.format(point.active)}</div>
         </div>
@@ -275,6 +277,7 @@
     const isAllTime = rangeId === "all";
     const ordersValue =
       isAllTime && Number.isFinite(totalChatsAllTime) ? totalChatsAllTime : totals.orders;
+    const ordersLabelText = isAllTime ? "Totaal verstuurde chats" : "Verstuurde chats";
 
     rangeButtons.forEach((button) => {
       const isActive = button.dataset.range === rangeId;
@@ -283,7 +286,10 @@
     });
 
     if (ordersLabelEl) {
-      ordersLabelEl.textContent = isAllTime ? "Totaal verstuurde chats" : "Orders";
+      ordersLabelEl.textContent = ordersLabelText;
+    }
+    if (tableOrdersLabelEl) {
+      tableOrdersLabelEl.textContent = ordersLabelText;
     }
     const subsLabelText = isAllTime ? "Abonnees" : "Nieuwe abonnees";
     if (subsLabelEl) {
@@ -312,6 +318,7 @@
 
     renderChart(config.points);
     renderTable(config.points, Boolean(config.showTotalRow), {
+      orders: ordersLabelText,
       subs: subsLabelText,
       active: "Actieve abonnees",
     });

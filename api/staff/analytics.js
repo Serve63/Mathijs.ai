@@ -120,6 +120,29 @@ async function fetchBillingEvents() {
   return events;
 }
 
+async function fetchUserMessageCountsByDay(baselineIso) {
+  const counts = new Map();
+  const limit = 1000;
+  let offset = 0;
+  while (true) {
+    const rows = await adminRestFetch(
+      `messages?select=created_at&role=eq.user&created_at=gte.${encodeURIComponent(baselineIso)}` +
+        `&order=created_at.asc&limit=${limit}&offset=${offset}`,
+      { method: "GET" }
+    );
+    if (!Array.isArray(rows) || rows.length === 0) break;
+    rows.forEach((row) => {
+      const createdAt = parseDate(row?.created_at);
+      if (!createdAt || createdAt < BASELINE_DATE_UTC) return;
+      const dateKey = toDateKey(startOfDayUtc(createdAt));
+      counts.set(dateKey, (counts.get(dateKey) || 0) + 1);
+    });
+    if (rows.length < limit) break;
+    offset += limit;
+  }
+  return counts;
+}
+
 module.exports = async (req, res) => {
   try {
     if (req.method !== "GET") {
@@ -155,6 +178,7 @@ module.exports = async (req, res) => {
     const totalChats = await adminRestCount(
       `messages?select=id&role=eq.user&created_at=gte.${encodeURIComponent(baselineIso)}`
     );
+    const chatCountsByDate = await fetchUserMessageCountsByDay(baselineIso);
     const payingUsers = users.filter(isPayingCustomer);
 
     let events = [];
@@ -204,9 +228,8 @@ module.exports = async (req, res) => {
       if (paidAt < BASELINE_DATE_UTC) return;
       const dateKey = toDateKey(startOfDayUtc(paidAt));
       const amount = Number(event?.amount_eur || 0);
-      const entry = paymentByDate.get(dateKey) || { revenue: 0, orders: 0 };
+      const entry = paymentByDate.get(dateKey) || { revenue: 0 };
       entry.revenue += Number.isFinite(amount) ? amount : 0;
-      entry.orders += 1;
       paymentByDate.set(dateKey, entry);
     });
 
@@ -274,12 +297,13 @@ module.exports = async (req, res) => {
     while (cursor <= today) {
       const dateKey = toDateKey(cursor);
       activeCount += activeDiff.get(dateKey) || 0;
-      const payment = paymentByDate.get(dateKey) || { revenue: 0, orders: 0 };
+      const payment = paymentByDate.get(dateKey) || { revenue: 0 };
+      const chats = chatCountsByDate.get(dateKey) || 0;
       const subs = subsByDate.get(dateKey) || 0;
       points.push({
         date: dateKey,
         revenue: Number(payment.revenue.toFixed(2)),
-        orders: payment.orders,
+        orders: chats,
         subs,
         active: Math.max(0, activeCount),
       });
