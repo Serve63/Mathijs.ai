@@ -128,7 +128,7 @@
         const isLifetime = Boolean(customer?.lifetime_free);
         const actionsMarkup = isLifetime
           ? `
-              <button class="btn tiny secondary" data-action="lifetime" data-enabled="false">Lifetime opzeggen</button>
+              <button class="btn tiny secondary wide" data-action="lifetime" data-enabled="false">Lifetime opzeggen</button>
               <button class="btn tiny ghost" data-action="delete">Klant verwijderen</button>
             `
           : `
