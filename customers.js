@@ -59,7 +59,7 @@
   };
 
   const formatPlan = (customer) => {
-    if (customer?.lifetime_free) return "Lifetime";
+    if (customer?.lifetime_free) return "Lifetime gratis";
     const plan = (customer?.plan || "free").toLowerCase();
     if (plan === "free") return "Gratis";
     if (plan === "standard") return "Standaard";
@@ -125,6 +125,18 @@
         const status = getStatusConfig(customer);
         const lastActive = formatDate(customer.last_sign_in_at || customer.created_at);
         const lastPayment = formatDate(customer.last_payment_at || customer.subscribed_at);
+        const isLifetime = Boolean(customer?.lifetime_free);
+        const actionsMarkup = isLifetime
+          ? `
+              <button class="btn tiny secondary" data-action="lifetime" data-enabled="false">Lifetime opzeggen</button>
+              <button class="btn tiny ghost" data-action="delete">Klant verwijderen</button>
+            `
+          : `
+              <button class="btn tiny secondary" data-action="grant" data-months="1">1 maand gratis</button>
+              <button class="btn tiny secondary" data-action="lifetime" data-enabled="true">Lifetime geven</button>
+              <button class="btn tiny ghost" data-action="delete">Klant verwijderen</button>
+            `;
+
         return `
           <div class="table-row" data-id="${customer.id}">
             <div class="cell customer-cell" data-label="Klant">
@@ -138,9 +150,7 @@
             <div class="cell" data-label="Plan">${formatPlan(customer)}</div>
             <div class="cell" data-label="Status"><span class="status ${status.className}">${status.label}</span></div>
             <div class="cell actions" data-label="Acties">
-              <button class="btn tiny secondary" data-action="grant" data-months="1">1 maand gratis</button>
-              <button class="btn tiny secondary" data-action="lifetime">Lifetime geven</button>
-              <button class="btn tiny ghost" data-action="delete">Klant verwijderen</button>
+              ${actionsMarkup}
             </div>
           </div>
         `;
@@ -208,13 +218,14 @@
       }
 
       if (action === "lifetime") {
+        const enabled = button.dataset.enabled !== "false";
         const resp = await fetch("/api/staff/customers", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ action: "set_lifetime_free", id, enabled: true }),
+          body: JSON.stringify({ action: "set_lifetime_free", id, enabled }),
         });
         const payload = await resp.json().catch(() => ({}));
         if (!resp.ok) throw new Error(payload?.error || "Bijwerken mislukt.");
