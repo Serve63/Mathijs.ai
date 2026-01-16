@@ -70,7 +70,7 @@
   };
 
   const formatPlan = (customer) => {
-    if (customer?.lifetime_free) return "Lifetime";
+    if (customer?.lifetime_free) return "Lifetime Gratis";
     const plan = (customer?.plan || "free").toLowerCase();
     if (plan === "free") return "Gratis";
     if (plan === "standard") return "Standaard";
