@@ -25,8 +25,8 @@
         <feFuncB type="gamma" amplitude="1" exponent="0.9" offset="0" />
       </feComponentTransfer>
     </filter>
-    <pattern id="satelliteBe" patternUnits="userSpaceOnUse" width="1089.6636" height="891.85681">
-      <rect width="1089.6636" height="891.85681" fill="url(#satGradientBe)" filter="url(#satNoiseBe)" />
+    <pattern id="satelliteBe" patternUnits="userSpaceOnUse" x="-50.156907" y="-58.28782" width="1189.702262" height="999.69716">
+      <rect width="1189.702262" height="999.69716" fill="url(#satGradientBe)" filter="url(#satNoiseBe)" />
     </pattern>
   </defs>
   <g transform="translate(-60.246145,-167.86326)">
