@@ -130,12 +130,12 @@
         const actionsMarkup = isLifetime
           ? `
               <button class="btn tiny secondary wide" data-action="lifetime" data-enabled="false">Lifetime opzeggen</button>
-              <button class="btn tiny ghost" data-action="delete">Klant verwijderen</button>
+              <button class="btn tiny danger" data-action="delete">Klant verwijderen</button>
             `
           : `
               <button class="btn tiny secondary" data-action="grant" data-months="1">1 maand gratis</button>
               <button class="btn tiny secondary" data-action="lifetime" data-enabled="true">Lifetime geven</button>
-              <button class="btn tiny ghost" data-action="delete">Klant verwijderen</button>
+              <button class="btn tiny danger" data-action="delete">Klant verwijderen</button>
             `;
 
         return `
