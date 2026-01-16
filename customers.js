@@ -144,7 +144,11 @@
               <div class="customer-avatar">${getInitials(name)}</div>
               <div>
                 <p class="customer-name">${name}</p>
-                <p class="customer-sub">${customer.email || "-"} | lid sinds ${memberSince} | besteed ${totalSpent}</p>
+                <p class="customer-sub">
+                  <span class="customer-subline">${customer.email || "-"}</span>
+                  <span class="customer-subline">Lid sinds ${memberSince}</span>
+                  <span class="customer-subline">Besteed ${totalSpent}</span>
+                </p>
               </div>
             </div>
             <div class="cell" data-label="Provincie">${provinceLabel}</div>
