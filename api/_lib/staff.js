@@ -1,4 +1,4 @@
-const DEFAULT_STAFF_EMAIL_ALLOWLIST = ["servec321@gmail.com"];
+const DEFAULT_STAFF_EMAIL_ALLOWLIST = ["servec321@gmail.com", "martijnven123@gmail.com"];
 
 function parseAllowlistEnv(value) {
   return String(value || "")
@@ -30,4 +30,3 @@ module.exports = {
   STAFF_USER_ID_ALLOWLIST,
   isStaffUser,
 };
-
