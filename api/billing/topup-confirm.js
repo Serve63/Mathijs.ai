@@ -7,6 +7,7 @@
 // Auth: expects `Authorization: Bearer <supabase_access_token>`
 
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, readJson } = require("../_lib/security");
+const { adminRestFetch } = require("../_lib/supabaseAdmin");
 const { SUPABASE_URL, getUserFromAccessToken } = require("../_lib/supabase");
 
 const WINDOW_MS = 60_000;
@@ -51,6 +52,16 @@ async function stripeGet(path, secretKey) {
     throw new Error(`stripe_failed:${resp.status}:${msg}`);
   }
   return payload;
+}
+
+async function recordBillingEvent(payload) {
+  try {
+    await adminRestFetch("billing_events", { method: "POST", body: payload });
+  } catch (e) {
+    const isConflict = e?.statusCode === 409 || String(e?.message || "").includes("supabase_rest_failed:409");
+    if (isConflict) return;
+    console.error("Billing event log failed", e?.message || e);
+  }
 }
 
 module.exports = async (req, res) => {
@@ -116,9 +127,24 @@ module.exports = async (req, res) => {
       body: { app_metadata: { ...currentAppMeta, tokens: nextTokens, topups: nextTopups } },
     });
 
+    const amountCents = Number(session?.amount_total || 0);
+    const amountEur = Number.isFinite(amountCents) ? amountCents / 100 : 0;
+    const currency = typeof session?.currency === "string" ? session.currency.toUpperCase() : "EUR";
+    const paidAt = session?.created ? new Date(session.created * 1000).toISOString() : new Date().toISOString();
+
+    await recordBillingEvent({
+      user_id: userId,
+      provider: "stripe",
+      event_type: "topup",
+      provider_payment_id: sessionId,
+      amount_eur: currency === "EUR" ? amountEur : 0,
+      currency,
+      paid_at: paidAt,
+      metadata: { source: "topup-confirm" },
+    });
+
     return json(res, 200, { ok: true, tokens: nextTokens, added: tokensToAdd });
   } catch (e) {
     return publicError(res, 500, "Opwaarderen bevestigen mislukt. Probeer later opnieuw.", e);
   }
 };
-

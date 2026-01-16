@@ -7,6 +7,7 @@
 // Auth: expects `Authorization: Bearer <supabase_access_token>`
 
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, readJson } = require("../_lib/security");
+const { adminRestFetch } = require("../_lib/supabaseAdmin");
 const { SUPABASE_URL, getUserFromAccessToken } = require("../_lib/supabase");
 
 const CONFIRM_WINDOW_MS = 60_000;
@@ -51,6 +52,16 @@ async function stripeGet(path, secretKey) {
     throw new Error(`stripe_failed:${resp.status}:${msg}`);
   }
   return payload;
+}
+
+async function recordBillingEvent(payload) {
+  try {
+    await adminRestFetch("billing_events", { method: "POST", body: payload });
+  } catch (e) {
+    const isConflict = e?.statusCode === 409 || String(e?.message || "").includes("supabase_rest_failed:409");
+    if (isConflict) return;
+    console.error("Billing event log failed", e?.message || e);
+  }
 }
 
 module.exports = async (req, res) => {
@@ -107,19 +118,58 @@ module.exports = async (req, res) => {
     }
 
     const nowIso = new Date().toISOString();
+    const existingSubscribedAt =
+      typeof user?.app_metadata?.subscribed_at === "string" ? user.app_metadata.subscribed_at.trim() : "";
+    const subscribedAt = existingSubscribedAt || nowIso;
     const nextAppMeta = {
       ...(user?.app_metadata || {}),
       plan: "standard",
       cancelled_at: null,
       stripe_customer_id: customerId || null,
       stripe_subscription_id: subscription?.id || null,
-      subscribed_at: nowIso,
+      subscribed_at: subscribedAt,
     };
 
     await supabaseAuthAdmin(`users/${encodeURIComponent(userId)}`, {
       method: "PUT",
       accessKey: serviceRoleKey,
       body: { app_metadata: nextAppMeta },
+    });
+
+    let invoice = null;
+    const latestInvoiceId =
+      typeof subscription?.latest_invoice === "string"
+        ? subscription.latest_invoice
+        : typeof subscription?.latest_invoice?.id === "string"
+          ? subscription.latest_invoice.id
+          : "";
+    if (latestInvoiceId) {
+      try {
+        invoice = await stripeGet(`invoices/${encodeURIComponent(latestInvoiceId)}`, stripeSecretKey);
+      } catch (err) {
+        console.warn("Stripe invoice ophalen mislukt", err?.message || err);
+        invoice = null;
+      }
+    }
+
+    const amountCents = Number(invoice?.amount_paid || 0);
+    const currency = typeof invoice?.currency === "string" ? invoice.currency.toUpperCase() : "EUR";
+    const amountEur = Number.isFinite(amountCents) ? amountCents / 100 : 0;
+    const paidAt = invoice?.status_transitions?.paid_at
+      ? new Date(invoice.status_transitions.paid_at * 1000).toISOString()
+      : nowIso;
+    const paymentId =
+      typeof invoice?.id === "string" ? invoice.id : subscription?.id || subscriptionId || sessionId || "stripe_subscription";
+
+    await recordBillingEvent({
+      user_id: userId,
+      provider: "stripe",
+      event_type: "subscription",
+      provider_payment_id: paymentId,
+      amount_eur: currency === "EUR" ? amountEur : 0,
+      currency,
+      paid_at: paidAt,
+      metadata: { source: "stripe-confirm", subscription_id: subscription?.id || null },
     });
 
     return json(res, 200, { ok: true, status: subStatus, plan: "standard" });

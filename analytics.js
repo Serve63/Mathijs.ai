@@ -1,4 +1,7 @@
 (() => {
+  const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
+
   const rangeButtons = Array.from(document.querySelectorAll(".range-btn"));
   const rangePickerEl = document.getElementById("range-picker");
   const rangeFromEl = document.getElementById("range-from");
@@ -26,57 +29,50 @@
   const fmtDayMonth = new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short" });
   const fmtMonthShort = new Intl.DateTimeFormat("nl-NL", { month: "short" });
   const fmtMonthShortYear = new Intl.DateTimeFormat("nl-NL", { month: "short", year: "numeric" });
+  const fmtWeekdayShort = new Intl.DateTimeFormat("nl-NL", { weekday: "short" });
 
   const today = new Date();
   const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
 
-  const weekPoints = [
-    { label: "Ma", revenue: 300, orders: 12, subs: 8, active: 214 },
-    { label: "Di", revenue: 250, orders: 10, subs: 7, active: 216 },
-    { label: "Wo", revenue: 350, orders: 14, subs: 9, active: 219 },
-    { label: "Do", revenue: 450, orders: 18, subs: 12, active: 221 },
-    { label: "Vr", revenue: 500, orders: 20, subs: 14, active: 224 },
-    { label: "Za", revenue: 200, orders: 8, subs: 5, active: 223 },
-    { label: "Zo", revenue: 150, orders: 6, subs: 4, active: 222 }
-  ];
+  let dailyPoints = [];
+  let pointMap = new Map();
+  let ranges = {};
+  let rangeBounds = { from: todayUTC, to: todayUTC };
+  let dataReady = false;
 
-  const ranges = {
-    week: {
-      label: "DEZE WEEK",
-      meta: "DEZE WEEK",
-      points: weekPoints
-    },
-    month: {
-      label: "DEZE MAAND",
-      meta: "DEZE MAAND",
-      points: []
-    },
-    quarter: {
-      label: "DIT KWARTAAL",
-      meta: "DIT KWARTAAL",
-      points: []
-    },
-    year: {
-      label: "DIT JAAR",
-      meta: "DIT JAAR",
-      points: []
-    },
-    all: {
-      label: "ALL TIME",
-      meta: "Sinds 2021",
-      points: [
-        { label: "2021", revenue: 50400, orders: 2016, subs: 240, active: 168 },
-        { label: "2022", revenue: 59400, orders: 2376, subs: 280, active: 198 },
-        { label: "2023", revenue: 65400, orders: 2616, subs: 320, active: 218 },
-        { label: "2024", revenue: 71400, orders: 2856, subs: 360, active: 238 }
-      ],
-      showTotalRow: true
+  const createSupabaseClient = () => {
+    if (!window.supabase?.createClient) return null;
+    if (window.mathijsSupabase) return window.mathijsSupabase;
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+    });
+    window.mathijsSupabase = client;
+    return client;
+  };
+
+  const getAccessToken = async (supabase) => {
+    if (!supabase) return null;
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.access_token || null;
+  };
+
+  const ensureStaff = async (supabase, token) => {
+    if (!token) return false;
+    const resp = await fetch("/api/staff/me", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const payload = await resp.json().catch(() => ({}));
+    if (!resp.ok || !payload?.staff) {
+      await supabase.auth.signOut();
+      return false;
     }
+    return true;
   };
 
   const toISODate = (date) => {
     const pad = (n) => String(n).padStart(2, "0");
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
   };
 
   const parseISODate = (value) => {
@@ -86,6 +82,8 @@
     return new Date(Date.UTC(y, m - 1, d));
   };
 
+  const addDays = (date, days) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+
   const daysBetweenInclusive = (a, b) => {
     const ms = 24 * 60 * 60 * 1000;
     const start = Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate());
@@ -93,53 +91,40 @@
     return Math.floor((end - start) / ms) + 1;
   };
 
-  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const normalizePoints = (points) =>
+    (Array.isArray(points) ? points : []).map((point) => ({
+      date: String(point?.date || ""),
+      revenue: Number(point?.revenue || 0),
+      orders: Number(point?.orders || 0),
+      subs: Number(point?.subs || 0),
+      active: Number(point?.active || 0),
+    }));
 
-  const seedFromDate = (iso) => {
-    let h = 2166136261;
-    for (let i = 0; i < iso.length; i += 1) {
-      h ^= iso.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return h >>> 0;
+  const rebuildPointMap = () => {
+    pointMap = new Map();
+    dailyPoints.forEach((point) => {
+      if (!point.date) return;
+      pointMap.set(point.date, point);
+    });
   };
 
-  const rand01 = (seed) => {
-    // xorshift32
-    let x = seed >>> 0;
-    x ^= x << 13;
-    x ^= x >>> 17;
-    x ^= x << 5;
-    return (x >>> 0) / 4294967296;
-  };
-
-  const makeDailyPoint = (date) => {
-    const iso = toISODate(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())));
-    const seed = seedFromDate(iso);
-    const r = rand01(seed);
-    const r2 = rand01(seed ^ 0x9e3779b9);
-    const revenue = Math.round(220 + r * 980); // 220..1200
-    const orders = Math.round(6 + r2 * 26); // 6..32
-    const subs = Math.round(3 + r * 18); // 3..21
-    const active = Math.round(160 + r2 * 120); // 160..280
-    return {
-      label: fmtDayMonth.format(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))),
-      revenue,
-      orders,
-      subs,
-      active
-    };
-  };
-
-  const dailySeries = (fromDate, toDate, labelFn) => {
-    const ms = 24 * 60 * 60 * 1000;
-    const days = daysBetweenInclusive(fromDate, toDate);
+  const buildDailySeries = (fromDate, toDate, labelFn) => {
     const points = [];
-    for (let i = 0; i < days; i += 1) {
-      const d = new Date(fromDate.getTime() + i * ms);
-      const p = makeDailyPoint(d);
-      if (labelFn) p.label = labelFn(d);
-      points.push(p);
+    let cursor = new Date(fromDate);
+    let lastActive = 0;
+    while (cursor <= toDate) {
+      const dateKey = toISODate(cursor);
+      const base = pointMap.get(dateKey) || {};
+      const active = Number.isFinite(base.active) ? base.active : lastActive;
+      lastActive = active;
+      points.push({
+        label: labelFn ? labelFn(cursor) : dateKey,
+        revenue: Number(base.revenue || 0),
+        orders: Number(base.orders || 0),
+        subs: Number(base.subs || 0),
+        active,
+      });
+      cursor = addDays(cursor, 1);
     }
     return points;
   };
@@ -163,34 +148,18 @@
     const monthEnd = new Date(Date.UTC(year, monthIndex + 1, 0));
     const realEnd = maxDate && monthEnd > maxDate ? maxDate : monthEnd;
     if (realEnd < monthStart) return null;
-    const points = dailySeries(monthStart, realEnd);
+    const points = buildDailySeries(monthStart, realEnd);
     const label = fmtMonthShort.format(monthStart).toLowerCase();
     return sumPoints(points, label);
   };
 
-  const initFixedRanges = () => {
-    // DEZE MAAND = dagen in huidige maand (tot vandaag)
-    const y = todayUTC.getUTCFullYear();
-    const m = todayUTC.getUTCMonth();
-    const monthStart = new Date(Date.UTC(y, m, 1));
-    ranges.month.points = dailySeries(monthStart, todayUTC, (d) => String(d.getUTCDate()));
-
-    // DIT KWARTAAL = maanden in huidig kwartaal (tot huidige maand)
-    const qStart = Math.floor(m / 3) * 3;
-    const quarterPoints = [];
-    for (let mi = qStart; mi <= m; mi += 1) {
-      const agg = monthAggregate(y, mi, todayUTC);
-      if (agg) quarterPoints.push(agg);
-    }
-    ranges.quarter.points = quarterPoints;
-
-    // DIT JAAR = maanden in huidig jaar (tot huidige maand)
-    const yearPoints = [];
-    for (let mi = 0; mi <= m; mi += 1) {
-      const agg = monthAggregate(y, mi, todayUTC);
-      if (agg) yearPoints.push(agg);
-    }
-    ranges.year.points = yearPoints;
+  const yearAggregate = (year, maxDate) => {
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const yearEnd = new Date(Date.UTC(year + 1, 0, 0));
+    const realEnd = maxDate && yearEnd > maxDate ? maxDate : yearEnd;
+    if (realEnd < yearStart) return null;
+    const points = buildDailySeries(yearStart, realEnd);
+    return sumPoints(points, String(year));
   };
 
   const generateCustomPoints = (fromDate, toDate) => {
@@ -198,24 +167,22 @@
     const points = [];
     const ms = 24 * 60 * 60 * 1000;
 
-    // daily (<= 21d), weekly buckets (<= 120d), else monthly buckets
     if (totalDays <= 21) {
-      return dailySeries(fromDate, toDate, (d) => fmtDayMonth.format(d).toUpperCase());
+      return buildDailySeries(fromDate, toDate, (d) => fmtDayMonth.format(d).toUpperCase());
     }
 
     if (totalDays <= 120) {
       let start = new Date(fromDate);
       while (start <= toDate) {
         const end = new Date(Math.min(toDate.getTime(), start.getTime() + 6 * ms));
-        const bucket = dailySeries(start, end);
+        const bucket = buildDailySeries(start, end);
         const label = `${fmtDayMonth.format(start)}–${fmtDayMonth.format(end)}`;
         points.push(sumPoints(bucket, label));
-        start = new Date(end.getTime() + ms);
+        start = addDays(end, 1);
       }
       return points;
     }
 
-    // monthly buckets
     let cursor = new Date(Date.UTC(fromDate.getUTCFullYear(), fromDate.getUTCMonth(), 1));
     const endMonth = new Date(Date.UTC(toDate.getUTCFullYear(), toDate.getUTCMonth(), 1));
     while (cursor <= endMonth) {
@@ -223,7 +190,7 @@
       const monthEnd = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 0));
       const realStart = new Date(Math.max(monthStart.getTime(), fromDate.getTime()));
       const realEnd = new Date(Math.min(monthEnd.getTime(), toDate.getTime()));
-      const bucket = dailySeries(realStart, realEnd);
+      const bucket = buildDailySeries(realStart, realEnd);
       const label = fmtMonthShortYear.format(monthStart);
       points.push(sumPoints(bucket, label));
       cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
@@ -245,7 +212,7 @@
 
   const renderChart = (points) => {
     if (!barChartEl) return;
-    const maxRevenue = points.reduce((max, point) => Math.max(max, point.revenue), 0);
+    const maxRevenue = points.length ? points.reduce((max, point) => Math.max(max, point.revenue), 0) : 0;
 
     barChartEl.innerHTML = points
       .map((point) => {
@@ -295,6 +262,7 @@
 
   const setActiveRange = (rangeId) => {
     const config = ranges[rangeId] || ranges.week;
+    if (!config) return;
     const totals = computeTotals(config.points);
 
     rangeButtons.forEach((button) => {
@@ -332,7 +300,130 @@
     if (rangeFromEl) rangeFromEl.focus();
   };
 
-  initFixedRanges();
+  const setLoadingState = (message) => {
+    if (revenueEl) revenueEl.textContent = "--";
+    if (ordersEl) ordersEl.textContent = "--";
+    if (subsEl) subsEl.textContent = "--";
+    if (activeEl) activeEl.textContent = "--";
+    if (chartMetaEl) chartMetaEl.textContent = message || "Data laden";
+    if (tableEl) {
+      tableEl.innerHTML = `<div class="table-row"><div class="cell">${message || "Data laden..."}</div></div>`;
+    }
+  };
+
+  const setErrorState = (message) => {
+    if (revenueEl) revenueEl.textContent = "--";
+    if (ordersEl) ordersEl.textContent = "--";
+    if (subsEl) subsEl.textContent = "--";
+    if (activeEl) activeEl.textContent = "--";
+    if (chartMetaEl) chartMetaEl.textContent = message || "Analytics laden mislukt";
+    if (tableEl) {
+      tableEl.innerHTML = `<div class="table-row"><div class="cell">${message || "Analytics laden mislukt."}</div></div>`;
+    }
+  };
+
+  const buildRangesFromData = () => {
+    if (!dailyPoints.length) {
+      ranges = {
+        week: { label: "DEZE WEEK", meta: "DEZE WEEK", points: [] },
+      };
+      return;
+    }
+
+    const rangeStart = rangeBounds.from;
+    const rangeEnd = rangeBounds.to;
+    const weekStart = addDays(rangeEnd, -6);
+    const monthStart = new Date(Date.UTC(rangeEnd.getUTCFullYear(), rangeEnd.getUTCMonth(), 1));
+    const quarterStartMonth = Math.floor(rangeEnd.getUTCMonth() / 3) * 3;
+    const quarterStart = new Date(Date.UTC(rangeEnd.getUTCFullYear(), quarterStartMonth, 1));
+    const yearStart = new Date(Date.UTC(rangeEnd.getUTCFullYear(), 0, 1));
+
+    const weekPoints = buildDailySeries(weekStart, rangeEnd, (d) => {
+      const label = fmtWeekdayShort.format(d);
+      return label.charAt(0).toUpperCase() + label.slice(1);
+    });
+
+    const monthPoints = buildDailySeries(monthStart, rangeEnd, (d) => String(d.getUTCDate()));
+
+    const quarterPoints = [];
+    for (let mi = quarterStartMonth; mi <= rangeEnd.getUTCMonth(); mi += 1) {
+      const agg = monthAggregate(rangeEnd.getUTCFullYear(), mi, rangeEnd);
+      if (agg) quarterPoints.push(agg);
+    }
+
+    const yearPoints = [];
+    for (let mi = 0; mi <= rangeEnd.getUTCMonth(); mi += 1) {
+      const agg = monthAggregate(rangeEnd.getUTCFullYear(), mi, rangeEnd);
+      if (agg) yearPoints.push(agg);
+    }
+
+    const allPoints = [];
+    for (let year = rangeStart.getUTCFullYear(); year <= rangeEnd.getUTCFullYear(); year += 1) {
+      const agg = yearAggregate(year, rangeEnd);
+      if (agg) allPoints.push(agg);
+    }
+
+    const allMeta = `Sinds ${rangeStart.getUTCFullYear()}`;
+
+    ranges = {
+      week: { label: "DEZE WEEK", meta: "DEZE WEEK", points: weekPoints },
+      month: { label: "DEZE MAAND", meta: "DEZE MAAND", points: monthPoints },
+      quarter: { label: "DIT KWARTAAL", meta: "DIT KWARTAAL", points: quarterPoints },
+      year: { label: "DIT JAAR", meta: "DIT JAAR", points: yearPoints },
+      all: { label: "ALL TIME", meta: allMeta, points: allPoints, showTotalRow: true },
+    };
+  };
+
+  const fetchAnalytics = async (token) => {
+    const resp = await fetch("/api/staff/analytics", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const payload = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      throw new Error(payload?.error || "Analytics ophalen mislukt.");
+    }
+    return payload;
+  };
+
+  const loadAnalytics = async () => {
+    const supabase = createSupabaseClient();
+    if (!supabase) {
+      setErrorState("Supabase ontbreekt. Vernieuw de pagina.");
+      return;
+    }
+
+    const token = await getAccessToken(supabase);
+    if (!token) {
+      window.location.href = "staff-login.html";
+      return;
+    }
+
+    const isStaff = await ensureStaff(supabase, token);
+    if (!isStaff) {
+      window.location.href = "staff-login.html";
+      return;
+    }
+
+    try {
+      setLoadingState("Data laden...");
+      const payload = await fetchAnalytics(token);
+      const points = normalizePoints(payload?.points);
+      dailyPoints = points;
+      rebuildPointMap();
+
+      const fromDate = parseISODate(payload?.range?.from) || (points[0]?.date ? parseISODate(points[0].date) : todayUTC);
+      const toDate = parseISODate(payload?.range?.to) || todayUTC;
+      rangeBounds = { from: fromDate || todayUTC, to: toDate || todayUTC };
+
+      buildRangesFromData();
+      dataReady = true;
+      setActiveRange("week");
+    } catch (err) {
+      console.error("Analytics load failed", err);
+      setErrorState(err?.message || "Analytics laden mislukt.");
+    }
+  };
 
   // defaults for date picker: last 7 days
   const fromDefault = new Date(todayUTC.getTime() - 6 * 24 * 60 * 60 * 1000);
@@ -341,6 +432,7 @@
 
   rangeButtons.forEach((button) => {
     button.addEventListener("click", () => {
+      if (!dataReady) return;
       const rangeId = button.dataset.range || "week";
       if (rangeId === "custom") {
         openPicker();
@@ -357,21 +449,18 @@
 
   if (rangeApplyEl) {
     rangeApplyEl.addEventListener("click", () => {
+      if (!dataReady) return;
       const from = parseISODate(rangeFromEl?.value);
       const to = parseISODate(rangeToEl?.value);
       if (!from || !to) return;
       if (from.getTime() > to.getTime()) return;
-
-      const totalDays = daysBetweenInclusive(from, to);
-      // keep the UI usable
-      if (totalDays > 730) return; // max 2 years in demo
 
       const points = generateCustomPoints(from, to);
       const meta = `${fmtDateLong.format(from)} – ${fmtDateLong.format(to)}`.toUpperCase();
       ranges.custom = {
         label: "AANGEPAST",
         meta,
-        points
+        points,
       };
       closePicker();
       setActiveRange("custom");
@@ -388,5 +477,7 @@
     closePicker();
   });
 
-  setActiveRange("week");
+  document.addEventListener("DOMContentLoaded", () => {
+    loadAnalytics();
+  });
 })();

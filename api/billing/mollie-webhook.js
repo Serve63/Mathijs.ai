@@ -5,6 +5,7 @@
 // - SUPABASE_SERVICE_ROLE_KEY
 
 const { json, publicError } = require("../_lib/security");
+const { adminRestFetch } = require("../_lib/supabaseAdmin");
 const { SUPABASE_URL } = require("../_lib/supabase");
 
 const MAX_BODY_BYTES = 4096;
@@ -95,6 +96,16 @@ async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {})
   }
 }
 
+async function recordBillingEvent(payload) {
+  try {
+    await adminRestFetch("billing_events", { method: "POST", body: payload });
+  } catch (e) {
+    const isConflict = e?.statusCode === 409 || String(e?.message || "").includes("supabase_rest_failed:409");
+    if (isConflict) return;
+    console.error("Billing event log failed", e?.message || e);
+  }
+}
+
 module.exports = async (req, res) => {
   try {
     if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
@@ -156,6 +167,17 @@ module.exports = async (req, res) => {
       method: "PUT",
       accessKey: serviceRoleKey,
       body: { app_metadata: nextAppMeta },
+    });
+
+    await recordBillingEvent({
+      user_id: userId,
+      provider: "mollie",
+      event_type: "subscription",
+      provider_payment_id: paymentId,
+      amount_eur: amountEur,
+      currency: currency || "EUR",
+      paid_at: paidAt,
+      metadata: { source: "mollie-webhook" },
     });
 
     return json(res, 200, { ok: true, status: "paid" });
