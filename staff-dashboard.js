@@ -275,10 +275,14 @@
     setupProvinceInteractions(beMapCanvas);
   };
 
-  const computeMetrics = (usage) => {
+  const computeMetrics = () => {
     const now = new Date();
     const startToday = startOfDayUtc(now);
     const activeCount = payingCustomers.filter(isActiveSubscriber).length;
+    const onlineTodayCount = customers.filter((customer) => {
+      const lastSeen = parseDate(customer?.last_sign_in_at || customer?.created_at);
+      return lastSeen && lastSeen >= startToday;
+    }).length;
     const newCustomersToday = payingCustomers.filter((customer) => {
       const paidAt = getCustomerStartDate(customer);
       return paidAt && paidAt >= startToday;
@@ -292,19 +296,17 @@
       return sum + PRICE_EUR;
     }, 0);
 
-    const visitsToday = Number(usage?.usage?.today?.chats || 0);
-
-    return { activeCount, newCustomersToday, salesToday, visitsToday };
+    return { activeCount, newCustomersToday, salesToday, onlineTodayCount };
   };
 
   const updateKpis = (metrics) => {
     if (elVisitors) elVisitors.textContent = String(metrics.activeCount || 0);
-    if (elVisits) elVisits.textContent = String(metrics.visitsToday || 0);
+    if (elVisits) elVisits.textContent = String(metrics.onlineTodayCount || 0);
     if (elOrders) elOrders.textContent = String(metrics.newCustomersToday || 0);
     updateSalesDisplay(metrics.salesToday || 0);
 
     if (lastMetrics) {
-      setSparkTrend("visits", metrics.visitsToday >= lastMetrics.visitsToday);
+      setSparkTrend("visits", metrics.onlineTodayCount >= lastMetrics.onlineTodayCount);
       setSparkTrend("customers", metrics.newCustomersToday >= lastMetrics.newCustomersToday);
       setSparkTrend("sales", metrics.salesToday >= lastMetrics.salesToday);
     }
@@ -349,18 +351,6 @@
     return Array.isArray(payload?.customers) ? payload.customers : [];
   };
 
-  const fetchUsage = async (token) => {
-    const resp = await fetch("/api/staff/customers?action=api-usage", {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const payload = await resp.json().catch(() => ({}));
-    if (!resp.ok) {
-      throw new Error(payload?.error || "Usage ophalen mislukt.");
-    }
-    return payload;
-  };
-
   const loadData = async () => {
     const supabase = createSupabaseClient();
     if (!supabase) {
@@ -383,16 +373,9 @@
     try {
       setLoadingState("Data laden...");
       const customersData = await fetchCustomers(token);
-      let usageData = null;
-      try {
-        usageData = await fetchUsage(token);
-      } catch (err) {
-        console.warn("Usage ophalen mislukt", err);
-        usageData = null;
-      }
       customers = customersData;
       payingCustomers = customers.filter(isPayingCustomer);
-      const metrics = computeMetrics(usageData);
+      const metrics = computeMetrics();
       renderRecentCustomers();
       updateMaps();
       updateKpis(metrics);
