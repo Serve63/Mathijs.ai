@@ -17,6 +17,7 @@
     month: "short",
     year: "numeric"
   });
+  const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
 
   const createSupabaseClient = () => {
     if (!window.supabase?.createClient) return null;
@@ -123,8 +124,8 @@
         const name = getDisplayName(customer);
         const provinceLabel = formatProvince(customer);
         const status = getStatusConfig(customer);
-        const lastActive = formatDate(customer.last_sign_in_at || customer.created_at);
-        const lastPayment = formatDate(customer.last_payment_at || customer.subscribed_at);
+        const memberSince = formatDate(customer.subscribed_at || customer.created_at);
+        const totalSpent = fmtEUR.format(Number(customer.total_paid_eur || 0) || 0);
         const isLifetime = Boolean(customer?.lifetime_free);
         const actionsMarkup = isLifetime
           ? `
@@ -143,7 +144,7 @@
               <div class="customer-avatar">${getInitials(name)}</div>
               <div>
                 <p class="customer-name">${name}</p>
-                <p class="customer-sub">${customer.email || "-"} | laatst actief ${lastActive} | betaling ${lastPayment}</p>
+                <p class="customer-sub">${customer.email || "-"} | lid sinds ${memberSince} | besteed ${totalSpent}</p>
               </div>
             </div>
             <div class="cell" data-label="Provincie">${provinceLabel}</div>
