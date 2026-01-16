@@ -12,6 +12,70 @@
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/staff-dashboard",
+      "destination": "/staff-dashboard.html"
+    },
+    {
+      "source": "/customers",
+      "destination": "/customers.html"
+    },
+    {
+      "source": "/analytics",
+      "destination": "/analytics.html"
+    },
+    {
+      "source": "/boekhouding",
+      "destination": "/boekhouding.html"
+    },
+    {
+      "source": "/course-editor",
+      "destination": "/course-editor.html"
+    },
+    {
+      "source": "/course",
+      "destination": "/course.html"
+    },
+    {
+      "source": "/chat",
+      "destination": "/chat.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/staff-login",
+      "destination": "/staff-login.html"
+    },
+    {
+      "source": "/signup",
+      "destination": "/signup.html"
+    },
+    {
+      "source": "/subscribe",
+      "destination": "/subscribe.html"
+    },
+    {
+      "source": "/billing-success",
+      "destination": "/billing-success.html"
+    },
+    {
+      "source": "/billing-topup-success",
+      "destination": "/billing-topup-success.html"
+    },
+    {
+      "source": "/billing-cancelled",
+      "destination": "/billing-cancelled.html"
     }
   ],
   "headers": [
