@@ -78,7 +78,6 @@
 
   const getStatusConfig = (customer) => {
     if (customer?.cancelled_at) return { label: "opgezegd", className: "cancelled" };
-    if (customer?.lifetime_free) return { label: "lifetime", className: "active" };
     if (!isPayingCustomer(customer)) return { label: "gratis", className: "trial" };
     return { label: "actief", className: "active" };
   };
