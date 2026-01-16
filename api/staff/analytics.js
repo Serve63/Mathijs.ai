@@ -8,7 +8,7 @@
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders } = require("../_lib/security");
 const { SUPABASE_URL, getUserFromAccessToken } = require("../_lib/supabase");
 const { isStaffUser } = require("../_lib/staff");
-const { adminRestFetch } = require("../_lib/supabaseAdmin");
+const { adminRestFetch, adminRestCount } = require("../_lib/supabaseAdmin");
 const { getSupabaseServiceRoleKey } = require("../_lib/env");
 
 const STAFF_WINDOW_MS = 60_000;
@@ -150,6 +150,7 @@ module.exports = async (req, res) => {
     if (!isStaffUser(user)) return json(res, 403, { error: "Forbidden (not staff)" });
 
     const users = await fetchAllUsers(serviceRoleKey);
+    const totalChats = await adminRestCount("messages?select=id&role=eq.user");
     const payingUsers = users.filter(isPayingCustomer);
 
     let events = [];
@@ -265,6 +266,7 @@ module.exports = async (req, res) => {
       currency: "EUR",
       range: { from: toDateKey(startDate), to: toDateKey(today) },
       points,
+      total_chats: totalChats,
     });
   } catch (e) {
     return publicError(res, 500, "Analytics ophalen mislukt. Probeer later opnieuw.", e);

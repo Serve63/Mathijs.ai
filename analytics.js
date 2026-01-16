@@ -11,10 +11,13 @@
   const revenueEl = document.getElementById("stat-revenue");
   const revenueSubEl = document.getElementById("stat-revenue-sub");
   const ordersEl = document.getElementById("stat-orders");
+  const ordersLabelEl = document.getElementById("stat-orders-label");
   const ordersSubEl = document.getElementById("stat-orders-sub");
   const subsEl = document.getElementById("stat-subs");
+  const subsLabelEl = document.getElementById("stat-subs-label");
   const subsSubEl = document.getElementById("stat-subs-sub");
   const activeEl = document.getElementById("stat-active");
+  const activeLabelEl = document.getElementById("stat-active-label");
   const activeSubEl = document.getElementById("stat-active-sub");
   const chartTitleEl = document.getElementById("chart-title");
   const chartMetaEl = document.getElementById("chart-meta");
@@ -22,6 +25,7 @@
   const barChartEl = document.getElementById("bar-chart");
   const tableMetaEl = document.getElementById("table-meta");
   const tableEl = document.getElementById("analytics-table");
+  const tableSubsLabelEl = document.getElementById("table-subs-label");
 
   const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
   const fmtNumber = new Intl.NumberFormat("nl-NL");
@@ -39,6 +43,7 @@
   let ranges = {};
   let rangeBounds = { from: todayUTC, to: todayUTC };
   let dataReady = false;
+  let totalChatsAllTime = null;
 
   const createSupabaseClient = () => {
     if (!window.supabase?.createClient) return null;
@@ -228,8 +233,10 @@
       .join("");
   };
 
-  const renderTable = (points, includeTotalRow) => {
+  const renderTable = (points, includeTotalRow, labels = {}) => {
     if (!tableEl) return;
+    const subsLabel = labels.subs || "Nieuwe abonnees";
+    const activeLabel = labels.active || "Actieve abonnees";
     const rows = [];
 
     if (includeTotalRow) {
@@ -239,8 +246,8 @@
           <div class="cell" data-label="Periode"><strong>All time</strong></div>
           <div class="cell" data-label="Omzet"><strong>${fmtEUR.format(totals.revenue)}</strong></div>
           <div class="cell" data-label="Orders"><strong>${fmtNumber.format(totals.orders)}</strong></div>
-          <div class="cell" data-label="Nieuwe abonnees"><strong>${fmtNumber.format(totals.subs)}</strong></div>
-          <div class="cell" data-label="Actieve klanten"><strong>${fmtNumber.format(totals.active)}</strong></div>
+          <div class="cell" data-label="${subsLabel}"><strong>${fmtNumber.format(totals.subs)}</strong></div>
+          <div class="cell" data-label="${activeLabel}"><strong>${fmtNumber.format(totals.active)}</strong></div>
         </div>
       `);
     }
@@ -251,8 +258,8 @@
           <div class="cell" data-label="Periode">${point.label}</div>
           <div class="cell" data-label="Omzet">${fmtEUR.format(point.revenue)}</div>
           <div class="cell" data-label="Orders">${fmtNumber.format(point.orders)}</div>
-          <div class="cell" data-label="Nieuwe abonnees">${fmtNumber.format(point.subs)}</div>
-          <div class="cell" data-label="Actieve klanten">${fmtNumber.format(point.active)}</div>
+          <div class="cell" data-label="${subsLabel}">${fmtNumber.format(point.subs)}</div>
+          <div class="cell" data-label="${activeLabel}">${fmtNumber.format(point.active)}</div>
         </div>
       `);
     });
@@ -264,6 +271,9 @@
     const config = ranges[rangeId] || ranges.week;
     if (!config) return;
     const totals = computeTotals(config.points);
+    const isAllTime = rangeId === "all";
+    const ordersValue =
+      isAllTime && Number.isFinite(totalChatsAllTime) ? totalChatsAllTime : totals.orders;
 
     rangeButtons.forEach((button) => {
       const isActive = button.dataset.range === rangeId;
@@ -271,9 +281,23 @@
       button.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
 
+    if (ordersLabelEl) {
+      ordersLabelEl.textContent = isAllTime ? "Totaal verstuurde chats" : "Orders";
+    }
+    const subsLabelText = isAllTime ? "Abonnees" : "Nieuwe abonnees";
+    if (subsLabelEl) {
+      subsLabelEl.textContent = subsLabelText;
+    }
+    if (tableSubsLabelEl) {
+      tableSubsLabelEl.textContent = subsLabelText;
+    }
+    if (activeLabelEl) {
+      activeLabelEl.textContent = "Actieve abonnees";
+    }
+
     if (revenueEl) revenueEl.textContent = fmtEUR.format(totals.revenue);
     if (revenueSubEl) revenueSubEl.textContent = config.meta;
-    if (ordersEl) ordersEl.textContent = fmtNumber.format(totals.orders);
+    if (ordersEl) ordersEl.textContent = fmtNumber.format(ordersValue);
     if (ordersSubEl) ordersSubEl.textContent = config.meta;
     if (subsEl) subsEl.textContent = fmtNumber.format(totals.subs);
     if (subsSubEl) subsSubEl.textContent = config.meta;
@@ -286,7 +310,10 @@
     if (tableMetaEl) tableMetaEl.textContent = config.meta;
 
     renderChart(config.points);
-    renderTable(config.points, Boolean(config.showTotalRow));
+    renderTable(config.points, Boolean(config.showTotalRow), {
+      subs: subsLabelText,
+      active: "Actieve abonnees",
+    });
   };
 
   const closePicker = () => {
@@ -411,6 +438,7 @@
       const points = normalizePoints(payload?.points);
       dailyPoints = points;
       rebuildPointMap();
+      totalChatsAllTime = Number.isFinite(payload?.total_chats) ? payload.total_chats : null;
 
       const fromDate = parseISODate(payload?.range?.from) || (points[0]?.date ? parseISODate(points[0].date) : todayUTC);
       const toDate = parseISODate(payload?.range?.to) || todayUTC;
