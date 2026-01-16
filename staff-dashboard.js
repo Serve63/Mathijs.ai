@@ -22,6 +22,7 @@
 
   const provinceLabels = window.provinceLabels || {};
   let customers = [];
+  let payingCustomers = [];
   let customerCounts = {};
   let showProfit = false;
   let lastMetrics = null;
@@ -71,10 +72,19 @@
     return plan.charAt(0).toUpperCase() + plan.slice(1);
   };
 
-  const isActiveSubscriber = (customer) => {
+  const isPayingCustomer = (customer) => {
     if (!customer) return false;
-    const paidPlan = customer.lifetime_free || (customer.plan && customer.plan !== "free");
-    return paidPlan && !customer.cancelled_at;
+    if (customer.lifetime_free) return true;
+    const totalPaid = Number(customer.total_paid_eur || 0);
+    if (Number.isFinite(totalPaid) && totalPaid > 0) return true;
+    const lastPaid = Number(customer.last_payment_amount_eur || 0);
+    if (Number.isFinite(lastPaid) && lastPaid > 0) return true;
+    return false;
+  };
+
+  const isActiveSubscriber = (customer) => {
+    if (!isPayingCustomer(customer)) return false;
+    return !customer.cancelled_at;
   };
 
   const setSparkTrend = (key, isUp) => {
@@ -113,16 +123,23 @@
     }
   };
 
+  const getCustomerStartDate = (customer) =>
+    parseDate(customer?.subscribed_at || customer?.last_payment_at || (customer?.lifetime_free ? customer?.created_at : null));
+
   const renderRecentCustomers = () => {
     if (!recentCustomersEl) return;
-    if (!customers.length) {
+    if (!payingCustomers.length) {
       recentCustomersEl.innerHTML = "<div class=\"customer-row\">Nog geen klanten gevonden.</div>";
       return;
     }
 
-    const recent = customers
+    const recent = payingCustomers
       .slice()
-      .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
+      .sort((a, b) => {
+        const aDate = getCustomerStartDate(a);
+        const bDate = getCustomerStartDate(b);
+        return (bDate?.getTime() || 0) - (aDate?.getTime() || 0);
+      })
       .slice(0, 5);
 
     recentCustomersEl.innerHTML = recent
@@ -235,13 +252,13 @@
   };
 
   const updateMaps = () => {
-    const counts = customers.reduce((acc, customer) => {
+    const counts = payingCustomers.reduce((acc, customer) => {
       if (!customer.province_id) return acc;
       acc[customer.province_id] = (acc[customer.province_id] || 0) + 1;
       return acc;
     }, {});
     customerCounts = counts;
-    forceLowHeat = customers.length > 0 && customers.length < 5;
+    forceLowHeat = payingCustomers.length > 0 && payingCustomers.length < 5;
     if (!mapsLoaded) {
       loadMapSvg(nlMapCanvas, "assets/nl-map.svg");
       loadMapSvg(beMapCanvas, "assets/be-map.svg");
@@ -256,13 +273,13 @@
   const computeMetrics = (usage) => {
     const now = new Date();
     const startToday = startOfDayUtc(now);
-    const activeCount = customers.filter(isActiveSubscriber).length;
-    const newCustomersToday = customers.filter((customer) => {
-      const created = parseDate(customer.created_at);
-      return created && created >= startToday;
+    const activeCount = payingCustomers.filter(isActiveSubscriber).length;
+    const newCustomersToday = payingCustomers.filter((customer) => {
+      const paidAt = getCustomerStartDate(customer);
+      return paidAt && paidAt >= startToday;
     }).length;
 
-    const salesToday = customers.reduce((sum, customer) => {
+    const salesToday = payingCustomers.reduce((sum, customer) => {
       const paidAt = parseDate(customer.last_payment_at || customer.subscribed_at);
       if (!paidAt || paidAt < startToday) return sum;
       const amount = Number(customer.last_payment_amount_eur || 0);
@@ -369,6 +386,7 @@
         usageData = null;
       }
       customers = customersData;
+      payingCustomers = customers.filter(isPayingCustomer);
       const metrics = computeMetrics(usageData);
       renderRecentCustomers();
       updateMaps();

@@ -128,6 +128,9 @@ module.exports = async (req, res) => {
     });
 
     const nowIso = new Date().toISOString();
+    const existingSubscribedAt =
+      typeof user?.app_metadata?.subscribed_at === "string" ? user.app_metadata.subscribed_at.trim() : "";
+    const subscribedAt = existingSubscribedAt || nowIso;
     const paidAt = payment?.paidAt || payment?.createdAt || nowIso;
     const currency = payment?.amount?.currency || "EUR";
     const amountValue = Number(payment?.amount?.value || 0);
@@ -146,7 +149,7 @@ module.exports = async (req, res) => {
       last_payment_at: paidAt,
       last_payment_amount_eur: amountEur,
       total_paid_eur: nextTotal,
-      subscribed_at: nowIso,
+      subscribed_at: subscribedAt,
     };
 
     await supabaseAuthAdmin(`users/${encodeURIComponent(userId)}`, {
