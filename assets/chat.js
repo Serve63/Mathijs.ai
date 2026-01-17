@@ -20,13 +20,7 @@
       };
 
       const syncSidebarTopOffset = () => {
-        if (!sidebarTop || !modelTrigger || !newChatButton) return;
-        const targetTop = modelTrigger.getBoundingClientRect().top;
-        const buttonTop = newChatButton.getBoundingClientRect().top;
-        const currentOffset = parseFloat(getComputedStyle(sidebarTop).marginTop) || 0;
-        const delta = Math.round(targetTop - buttonTop);
-        const nextOffset = Math.round(currentOffset + delta);
-        document.documentElement.style.setProperty("--sidebar-top-offset", `${nextOffset}px`);
+        document.documentElement.style.setProperty("--sidebar-top-offset", "0px");
       };
 
 	      const scheduleSidebarTopOffsetSync = () => {
