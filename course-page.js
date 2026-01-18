@@ -14,19 +14,30 @@
     const lessons = Array.isArray(data.lessons) ? data.lessons : [];
     const categories = Array.isArray(data.categories) ? data.categories : [];
 
+    const normalizeText = (value) =>
+      String(value || "")
+        .replace(/\s+/g, " ")
+        .trim();
+
     if (heroTitle && data.title) {
-      heroTitle.innerHTML = data.title.replace(/\n/g, "<br>");
+      const incomingTitle = data.title;
+      const currentTitle = normalizeText(heroTitle.textContent);
+      const nextTitle = normalizeText(incomingTitle);
+      if (currentTitle !== nextTitle) {
+        heroTitle.innerHTML = incomingTitle.replace(/\n/g, "<br>");
+      }
     }
     if (heroSubtitle && data.description) {
-      heroSubtitle.textContent = data.description;
+      setText(heroSubtitle, data.description);
     }
     if (statLessons) {
-      statLessons.textContent = String(
-        data.lessonCount || lessons.filter((l) => l.category !== "Bonus").length || lessons.length
+      setText(
+        statLessons,
+        String(data.lessonCount || lessons.filter((l) => l.category !== "Bonus").length || lessons.length)
       );
     }
-    if (statHours) statHours.textContent = data.hours || "";
-    if (statLevel) statLevel.textContent = data.level || "";
+    if (statHours) setText(statHours, data.hours || "");
+    if (statLevel) setText(statLevel, data.level || "");
 
     const expectedFilters = ["Alles", ...categories];
 
@@ -223,4 +234,3 @@
 
   init();
 })();
-
