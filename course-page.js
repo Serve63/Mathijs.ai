@@ -28,55 +28,118 @@
     if (statHours) statHours.textContent = data.hours || "";
     if (statLevel) statLevel.textContent = data.level || "";
 
+    const expectedFilters = ["Alles", ...categories];
+
+    const setText = (el, value) => {
+      if (!el || value == null) return;
+      if (el.textContent !== value) el.textContent = value;
+    };
+
+    const buildTile = (lesson, label) => {
+      const tile = document.createElement("div");
+      tile.className = "lesson-tile";
+      tile.dataset.category = lesson.category || "";
+      tile.dataset.videoSrc = lesson.videoUrl || "";
+
+      const number = document.createElement("div");
+      number.className = "lesson-number";
+      number.textContent = label;
+
+      const title = document.createElement("h2");
+      title.className = "lesson-title";
+      title.textContent = lesson.title || "Les";
+
+      const meta = document.createElement("div");
+      meta.className = "lesson-meta";
+      meta.textContent = `Duur: ${lesson.duration || "-"} · Niveau: ${lesson.level || "-"}`;
+
+      tile.append(number, title, meta);
+      return tile;
+    };
+
     const renderFilters = () => {
       if (!filterWrap) return;
-      filterWrap.innerHTML = "";
+      const frag = document.createDocumentFragment();
       const allBtn = document.createElement("button");
       allBtn.className = "filter-btn active";
       allBtn.dataset.filter = "all";
       allBtn.textContent = "Alles";
-      filterWrap.appendChild(allBtn);
+      frag.appendChild(allBtn);
 
       categories.forEach((cat) => {
         const btn = document.createElement("button");
         btn.className = "filter-btn";
         btn.dataset.filter = cat;
         btn.textContent = cat;
-        filterWrap.appendChild(btn);
+        frag.appendChild(btn);
+      });
+      filterWrap.replaceChildren(frag);
+    };
+
+    const hydrateFilters = () => {
+      if (!filterWrap) return;
+      const buttons = Array.from(filterWrap.querySelectorAll(".filter-btn"));
+      const labels = buttons.map((btn) => btn.textContent.trim());
+      const isMatch =
+        labels.length === expectedFilters.length &&
+        expectedFilters.every((label, idx) => label === labels[idx]);
+
+      if (!isMatch) {
+        const height = filterWrap.offsetHeight;
+        if (height) filterWrap.style.minHeight = `${height}px`;
+        renderFilters();
+        filterWrap.style.minHeight = "";
+      }
+
+      const updatedButtons = Array.from(filterWrap.querySelectorAll(".filter-btn"));
+      updatedButtons.forEach((btn, idx) => {
+        btn.dataset.filter = idx === 0 ? "all" : expectedFilters[idx];
       });
     };
 
     const renderLessons = () => {
       if (!grid) return;
-      grid.innerHTML = "";
+      const frag = document.createDocumentFragment();
       let nonBonusIndex = 0;
-      lessons.forEach((lesson, index) => {
-        const tile = document.createElement("div");
-        tile.className = "lesson-tile";
-        tile.dataset.category = lesson.category || "";
-        tile.dataset.videoSrc = lesson.videoUrl || "";
-
-        const number = document.createElement("div");
-        number.className = "lesson-number";
-        if (lesson.category === "Bonus") {
-          const bonusIndex = lessons.filter((l) => l.category === "Bonus").indexOf(lesson) + 1;
-          number.textContent = `Bonus ${String(bonusIndex).padStart(2, "0")}`;
-        } else {
-          nonBonusIndex += 1;
-          number.textContent = `Les ${String(nonBonusIndex).padStart(2, "0")}`;
-        }
-
-        const title = document.createElement("h2");
-        title.className = "lesson-title";
-        title.textContent = lesson.title || "Les";
-
-        const meta = document.createElement("div");
-        meta.className = "lesson-meta";
-        meta.textContent = `Duur: ${lesson.duration || "-"} · Niveau: ${lesson.level || "-"}`;
-
-        tile.append(number, title, meta);
-        grid.appendChild(tile);
+      let bonusIndex = 0;
+      lessons.forEach((lesson) => {
+        const label =
+          lesson.category === "Bonus"
+            ? `Bonus ${String((bonusIndex += 1)).padStart(2, "0")}`
+            : `Les ${String((nonBonusIndex += 1)).padStart(2, "0")}`;
+        frag.appendChild(buildTile(lesson, label));
       });
+      grid.replaceChildren(frag);
+    };
+
+    const hydrateLessons = () => {
+      if (!grid) return;
+      const tiles = Array.from(grid.querySelectorAll(".lesson-tile"));
+      if (tiles.length === lessons.length && tiles.length > 0) {
+        let nonBonusIndex = 0;
+        let bonusIndex = 0;
+        lessons.forEach((lesson, idx) => {
+          const tile = tiles[idx];
+          const label =
+            lesson.category === "Bonus"
+              ? `Bonus ${String((bonusIndex += 1)).padStart(2, "0")}`
+              : `Les ${String((nonBonusIndex += 1)).padStart(2, "0")}`;
+
+          tile.dataset.category = lesson.category || "";
+          tile.dataset.videoSrc = lesson.videoUrl || "";
+          setText(tile.querySelector(".lesson-number"), label);
+          setText(tile.querySelector(".lesson-title"), lesson.title || "Les");
+          setText(
+            tile.querySelector(".lesson-meta"),
+            `Duur: ${lesson.duration || "-"} · Niveau: ${lesson.level || "-"}`
+          );
+        });
+      } else {
+        const height = grid.offsetHeight;
+        if (height) grid.style.minHeight = `${height}px`;
+        renderLessons();
+        grid.style.minHeight = "";
+      }
     };
 
     const bindFilters = () => {
@@ -151,8 +214,8 @@
       }
     };
 
-    renderFilters();
-    renderLessons();
+    hydrateFilters();
+    hydrateLessons();
     bindFilters();
     initModal();
     initBackGuard();
@@ -160,5 +223,4 @@
 
   init();
 })();
-
 
