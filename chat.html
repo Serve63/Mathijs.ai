@@ -2233,7 +2233,7 @@
       }
 
       .chat-footer {
-        margin-top: auto;
+        margin-top: 0;
         padding: 16px 24px 14px;
         /* seamless with chat pane background (no separate footer band) */
         background: transparent;
@@ -2251,6 +2251,11 @@
         bottom: 0;
         z-index: 5;
         overflow: visible;
+      }
+
+      .chat-bottom-spacer {
+        height: 56px;
+        flex-shrink: 0;
       }
 
       /* footer overlay removed */
@@ -2881,6 +2886,10 @@
           padding: 12px 16px 12px;
         }
 
+        .chat-bottom-spacer {
+          height: 44px;
+        }
+
         .chat-input__inner {
           max-width: 100%;
           border-radius: 18px;
@@ -3141,6 +3150,7 @@
         <div class="chat-content-wrapper">
           <section class="chat-log"></section>
         </div>
+        <div class="chat-bottom-spacer" aria-hidden="true"></div>
         <footer class="chat-footer">
           <div class="chat-input">
             <div class="chat-input__inner">
