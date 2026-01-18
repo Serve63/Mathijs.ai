@@ -821,6 +821,7 @@
 
       const chatLog = document.querySelector(".chat-log");
       const chatScrollContainer = document.querySelector(".chat-content-wrapper");
+      const chatFooter = document.querySelector(".chat-footer");
       const chatInput = document.querySelector(".chat-input textarea");
       const sendButton = document.querySelector('.chat-input__inner > button[aria-label="Stuur bericht"]');
       const profileNameEl = document.getElementById("profile-name");
@@ -853,6 +854,23 @@
 
 	      const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
 	      const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
+
+      const syncChatFooterGap = () => {
+        if (!chatScrollContainer || !chatFooter) return;
+        const footerHeight = chatFooter.getBoundingClientRect().height || 0;
+        const extraGap = 56;
+        const paddingBottom = Math.max(footerHeight + extraGap, extraGap);
+        chatScrollContainer.style.paddingBottom = `${paddingBottom}px`;
+        chatScrollContainer.style.scrollPaddingBottom = `${paddingBottom}px`;
+      };
+      if (chatScrollContainer && chatFooter) {
+        syncChatFooterGap();
+        if (window.ResizeObserver) {
+          const footerObserver = new ResizeObserver(syncChatFooterGap);
+          footerObserver.observe(chatFooter);
+        }
+        window.addEventListener("resize", syncChatFooterGap);
+      }
 
       const getSupabaseClient = () => {
         if (window.mathijsSupabase) {
