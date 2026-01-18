@@ -41,7 +41,8 @@
     level: "Pro",
     lessonCount: 50,
     hours: "10+",
-    description: "Van strategie tot implementatie. Leer alles over governance, automatisering en adoptie.",
+    description:
+      "Van strategie tot implementatie. Leer alles over governance, automatisering en adoptie. Doorloop de lessen in je eigen tempo en transformeer naar een AI-native organisatie.",
     categories: ["Strategie", "Governance", "Automatisering", "Bonus"],
     lessons: createDefaultLessons(),
     updatedAt: null,
@@ -104,5 +105,4 @@
     defaults: clone(DEFAULT_COURSE),
   };
 })();
-
 

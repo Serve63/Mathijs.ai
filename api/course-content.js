@@ -25,12 +25,16 @@ const createDefaultLessons = () => {
   return items;
 };
 
+const LEGACY_DESCRIPTION =
+  "Van strategie tot implementatie. Leer alles over governance, automatisering en adoptie.";
+
 const DEFAULT_COURSE = {
   title: "Word een AI-Expert in 50 Lessen",
   level: "Pro",
   lessonCount: 50,
   hours: "10+",
-  description: "Van strategie tot implementatie. Leer alles over governance, automatisering en adoptie.",
+  description:
+    "Van strategie tot implementatie. Leer alles over governance, automatisering en adoptie. Doorloop de lessen in je eigen tempo en transformeer naar een AI-native organisatie.",
   categories: ["Strategie", "Governance", "Automatisering", "Bonus"],
   lessons: createDefaultLessons(),
   updatedAt: null,
@@ -43,7 +47,18 @@ async function getRow() {
 
 async function ensureRow() {
   const existing = await getRow();
-  if (existing) return existing;
+  if (existing) {
+    const payload = existing.payload;
+    if (payload?.description === LEGACY_DESCRIPTION) {
+      const nextPayload = { ...payload, description: DEFAULT_COURSE.description };
+      const [updated] = await adminRestFetch(`${TABLE}?id=eq.${DEFAULT_ID}`, {
+        method: "PATCH",
+        body: { payload: nextPayload },
+      });
+      return updated || { ...existing, payload: nextPayload };
+    }
+    return existing;
+  }
   const [created] = await adminRestFetch(TABLE, {
     method: "POST",
     body: { id: DEFAULT_ID, payload: DEFAULT_COURSE },
@@ -101,5 +116,4 @@ module.exports = async (req, res) => {
     return json(res, status, { error: message });
   }
 };
-
 

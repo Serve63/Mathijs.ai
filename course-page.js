@@ -84,8 +84,15 @@
     };
 
     updateHeroTitle();
+    const setTextNormalized = (el, value) => {
+      if (!el || value == null) return;
+      if (normalizeText(el.textContent) !== normalizeText(value)) {
+        el.textContent = value;
+      }
+    };
+
     if (heroSubtitle && data.description) {
-      setText(heroSubtitle, data.description);
+      setTextNormalized(heroSubtitle, data.description);
     }
     if (statLessons) {
       setText(
