@@ -14,19 +14,76 @@
     const lessons = Array.isArray(data.lessons) ? data.lessons : [];
     const categories = Array.isArray(data.categories) ? data.categories : [];
 
+    const setText = (el, value) => {
+      if (!el || value == null) return;
+      if (el.textContent !== value) el.textContent = value;
+    };
+
     const normalizeText = (value) =>
       String(value || "")
         .replace(/\s+/g, " ")
         .trim();
 
-    if (heroTitle && data.title) {
-      const incomingTitle = data.title;
-      const currentTitle = normalizeText(heroTitle.textContent);
-      const nextTitle = normalizeText(incomingTitle);
-      if (currentTitle !== nextTitle) {
-        heroTitle.innerHTML = incomingTitle.replace(/\n/g, "<br>");
+    const getHeroTitleLines = () => {
+      if (!heroTitle) return [];
+      const lineEls = heroTitle.querySelectorAll(".hero-title-line");
+      if (lineEls.length) {
+        return Array.from(lineEls)
+          .map((el) => normalizeText(el.textContent))
+          .filter(Boolean);
       }
-    }
+      return (heroTitle.innerText || "")
+        .split(/\n+/)
+        .map((line) => normalizeText(line))
+        .filter(Boolean);
+    };
+
+    const formatHeroTitleLines = (value, fallbackLines) => {
+      const raw = String(value || "").trim();
+      if (!raw) return [];
+      const normalized = raw.replace(/<br\s*\/?>/gi, "\n");
+      const parts = normalized
+        .split(/\n+/)
+        .map((line) => normalizeText(line))
+        .filter(Boolean);
+      if (parts.length > 1) return parts;
+
+      const single = parts[0] || normalizeText(normalized);
+      if (fallbackLines.length >= 2) {
+        const firstLine = fallbackLines[0];
+        if (single.startsWith(firstLine)) {
+          const rest = single.slice(firstLine.length).trim();
+          if (rest) return [firstLine, rest];
+        }
+      }
+
+      const words = single.split(" ").filter(Boolean);
+      if (words.length <= 3) return [single];
+      const midpoint = Math.ceil(words.length / 2);
+      return [words.slice(0, midpoint).join(" "), words.slice(midpoint).join(" ")];
+    };
+
+    const updateHeroTitle = () => {
+      if (!heroTitle || !data.title) return;
+      const existingLines = getHeroTitleLines();
+      const nextLines = formatHeroTitleLines(data.title, existingLines);
+      if (!nextLines.length) return;
+      const isSame =
+        existingLines.length === nextLines.length &&
+        existingLines.every((line, idx) => normalizeText(line) === normalizeText(nextLines[idx]));
+      if (isSame) return;
+
+      const frag = document.createDocumentFragment();
+      nextLines.forEach((line) => {
+        const span = document.createElement("span");
+        span.className = "hero-title-line";
+        span.textContent = line;
+        frag.appendChild(span);
+      });
+      heroTitle.replaceChildren(frag);
+    };
+
+    updateHeroTitle();
     if (heroSubtitle && data.description) {
       setText(heroSubtitle, data.description);
     }
@@ -40,11 +97,6 @@
     if (statLevel) setText(statLevel, data.level || "");
 
     const expectedFilters = ["Alles", ...categories];
-
-    const setText = (el, value) => {
-      if (!el || value == null) return;
-      if (el.textContent !== value) el.textContent = value;
-    };
 
     const buildTile = (lesson, label) => {
       const tile = document.createElement("div");
