@@ -468,6 +468,173 @@
         color: rgba(255, 255, 255, 0.65);
       }
 
+      .summary-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .summary-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .summary-toggle {
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      .summary-toggle:focus-visible {
+        outline: 2px solid rgba(230, 194, 0, 0.8);
+        outline-offset: 2px;
+      }
+
+      .summary-settings {
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--accent);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .summary-settings:hover {
+        border-color: rgba(230, 194, 0, 0.5);
+        background: rgba(230, 194, 0, 0.12);
+      }
+
+      .summary-settings:focus-visible {
+        outline: 2px solid rgba(230, 194, 0, 0.8);
+        outline-offset: 2px;
+      }
+
+      .summary-settings svg {
+        width: 14px;
+        height: 14px;
+        display: block;
+      }
+
+      .settings-modal[hidden] {
+        display: none;
+      }
+
+      .settings-modal {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(8, 12, 24, 0.7);
+        padding: 24px;
+        z-index: 9999;
+      }
+
+      .settings-modal__dialog {
+        width: min(420px, 92vw);
+        background: rgba(15, 23, 42, 0.94);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        padding: 18px 20px 20px;
+        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.4);
+      }
+
+      .settings-modal__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .settings-modal__title {
+        margin: 0;
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+      }
+
+      .settings-modal__close {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.85);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+      }
+
+      .settings-modal__field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+
+      .settings-modal__field label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 600;
+      }
+
+      .settings-modal__field input {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(6, 10, 24, 0.7);
+        color: #fff;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+      }
+
+      .settings-modal__field small {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.75rem;
+      }
+
+      .settings-modal__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 8px;
+      }
+
+      .settings-modal__btn {
+        border-radius: 12px;
+        border: 1px solid transparent;
+        padding: 8px 14px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .settings-modal__btn.primary {
+        background: var(--accent);
+        color: #1a1600;
+      }
+
+      .settings-modal__btn.ghost {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.18);
+        color: rgba(255, 255, 255, 0.9);
+      }
+
       .panel {
         background: rgba(12, 18, 44, 0.78);
         border: 1px solid rgba(255, 255, 255, 0.12);
@@ -703,7 +870,20 @@
 
       <section class="summary-grid" aria-label="Kernstatistieken">
         <div class="summary-card">
-          <div class="summary-label">Omzet</div>
+          <div class="summary-head">
+            <div class="summary-label" id="stat-revenue-label">Omzet</div>
+            <div class="summary-actions">
+              <button class="summary-toggle" id="stat-revenue-toggle" type="button" aria-pressed="false">
+                Toon winst
+              </button>
+              <button class="summary-settings" id="stat-revenue-settings" type="button" aria-label="Winst instellingen">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
           <div class="summary-value" id="stat-revenue">€0</div>
           <div class="summary-sub" id="stat-revenue-sub">Totaal periode</div>
         </div>
@@ -740,5 +920,29 @@
     <script src="assets/vendor/supabase.min.js" defer></script>
     <script src="assets/ui.js" defer></script>
     <script src="analytics.js" defer></script>
+    <div class="settings-modal" id="analytics-profit-settings" hidden>
+      <div class="settings-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="analytics-profit-title">
+        <div class="settings-modal__header">
+          <h3 class="settings-modal__title" id="analytics-profit-title">Winst instellingen</h3>
+          <button class="settings-modal__close" type="button" id="analytics-profit-close" aria-label="Sluiten">x</button>
+        </div>
+        <form id="analytics-profit-form" novalidate>
+          <div class="settings-modal__field">
+            <label for="analytics-profit-cost">Creditskosten per klant (EUR)</label>
+            <input id="analytics-profit-cost" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" />
+            <small>Gemiddelde kosten per actieve klant in deze periode.</small>
+          </div>
+          <div class="settings-modal__field">
+            <label for="analytics-profit-vat">BTW percentage</label>
+            <input id="analytics-profit-vat" type="number" inputmode="decimal" min="0" max="100" step="0.1" placeholder="21" />
+            <small>Bijv. 21 voor NL.</small>
+          </div>
+          <div class="settings-modal__actions">
+            <button class="settings-modal__btn ghost" type="button" id="analytics-profit-cancel">Annuleren</button>
+            <button class="settings-modal__btn primary" type="submit">Opslaan</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </body>
 </html>

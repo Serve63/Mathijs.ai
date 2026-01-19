@@ -17,7 +17,16 @@
   const rangeApplyEl = document.getElementById("range-apply");
   const rangeCancelEl = document.getElementById("range-cancel");
   const revenueEl = document.getElementById("stat-revenue");
+  const revenueLabelEl = document.getElementById("stat-revenue-label");
   const revenueSubEl = document.getElementById("stat-revenue-sub");
+  const revenueToggleEl = document.getElementById("stat-revenue-toggle");
+  const revenueSettingsBtn = document.getElementById("stat-revenue-settings");
+  const profitSettingsModal = document.getElementById("analytics-profit-settings");
+  const profitSettingsForm = document.getElementById("analytics-profit-form");
+  const profitSettingsClose = document.getElementById("analytics-profit-close");
+  const profitSettingsCancel = document.getElementById("analytics-profit-cancel");
+  const profitSettingsCost = document.getElementById("analytics-profit-cost");
+  const profitSettingsVat = document.getElementById("analytics-profit-vat");
   const ordersEl = document.getElementById("stat-orders");
   const ordersLabelEl = document.getElementById("stat-orders-label");
   const ordersSubEl = document.getElementById("stat-orders-sub");
@@ -48,6 +57,7 @@
 
   const today = new Date();
   const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+  const PROFIT_SETTINGS_KEY = "mathijs_profit_settings_v1";
 
   let dailyPoints = [];
   let pointMap = new Map();
@@ -55,6 +65,9 @@
   let rangeBounds = { from: todayUTC, to: todayUTC };
   let dataReady = false;
   let totalChatsAllTime = null;
+  let showProfit = false;
+  let lastRange = null;
+  let profitSettings = { creditCostPerCustomer: 0, vatPercent: 0 };
 
   const createSupabaseClient = () => {
     if (!window.supabase?.createClient) return null;
@@ -96,6 +109,39 @@
     const [y, m, d] = value.split("-").map((v) => Number(v));
     if (!y || !m || !d) return null;
     return new Date(Date.UTC(y, m - 1, d));
+  };
+
+  const clampNumber = (value, min = 0, max = Number.POSITIVE_INFINITY) => {
+    if (!Number.isFinite(value)) return min;
+    return Math.min(Math.max(value, min), max);
+  };
+
+  const loadProfitSettings = () => {
+    try {
+      const raw = localStorage.getItem(PROFIT_SETTINGS_KEY);
+      if (!raw) return { creditCostPerCustomer: 0, vatPercent: 0 };
+      const parsed = JSON.parse(raw);
+      return {
+        creditCostPerCustomer: clampNumber(Number(parsed?.creditCostPerCustomer || 0), 0),
+        vatPercent: clampNumber(Number(parsed?.vatPercent || 0), 0, 100),
+      };
+    } catch (e) {
+      console.warn("Kon winst instellingen niet laden", e);
+      return { creditCostPerCustomer: 0, vatPercent: 0 };
+    }
+  };
+
+  const saveProfitSettings = (settings) => {
+    try {
+      localStorage.setItem(PROFIT_SETTINGS_KEY, JSON.stringify(settings));
+    } catch (e) {
+      console.warn("Kon winst instellingen niet opslaan", e);
+    }
+  };
+
+  const formatSettingValue = (value) => {
+    if (!Number.isFinite(value)) return "0";
+    return value.toFixed(2);
   };
 
   const WEEKDAY_LABELS = ["ma", "di", "wo", "do", "vr", "za", "zo"];
@@ -293,6 +339,40 @@
       { revenue: 0, orders: 0, subs: 0, active: 0 }
     );
 
+  const computeProfitTotal = (points, totals) => {
+    const revenue = Number(totals?.revenue || 0);
+    if (!points || !points.length || !Number.isFinite(revenue)) return 0;
+    const vatRate = clampNumber(Number(profitSettings.vatPercent || 0), 0, 100) / 100;
+    const costPerCustomer = clampNumber(Number(profitSettings.creditCostPerCustomer || 0), 0);
+    const activeSum = points.reduce((sum, point) => sum + (Number(point?.active) || 0), 0);
+    const vatAmount = revenue * vatRate;
+    const creditsCost = costPerCustomer * activeSum;
+    return revenue - vatAmount - creditsCost;
+  };
+
+  const updateRevenueCard = (config, totals) => {
+    if (!revenueEl || !revenueSubEl || !config || !totals) return;
+    const meta = config.meta || "";
+    const profitTotal = computeProfitTotal(config.points || [], totals);
+
+    if (showProfit) {
+      if (revenueLabelEl) revenueLabelEl.textContent = "Winst";
+      revenueEl.textContent = fmtEUR.format(profitTotal);
+      if (revenueToggleEl) {
+        revenueToggleEl.textContent = "Toon omzet";
+        revenueToggleEl.setAttribute("aria-pressed", "true");
+      }
+    } else {
+      if (revenueLabelEl) revenueLabelEl.textContent = "Omzet";
+      revenueEl.textContent = fmtEUR.format(totals.revenue || 0);
+      if (revenueToggleEl) {
+        revenueToggleEl.textContent = "Toon winst";
+        revenueToggleEl.setAttribute("aria-pressed", "false");
+      }
+    }
+    revenueSubEl.textContent = meta;
+  };
+
   const renderChart = (points) => {
     if (!barChartEl) return;
     const maxRevenue = points.length ? points.reduce((max, point) => Math.max(max, point.revenue), 0) : 0;
@@ -378,8 +458,8 @@
       activeLabelEl.textContent = "Actieve abonnees";
     }
 
-    if (revenueEl) revenueEl.textContent = fmtEUR.format(totals.revenue);
-    if (revenueSubEl) revenueSubEl.textContent = config.meta;
+    lastRange = { config, totals };
+    updateRevenueCard(config, totals);
     if (ordersEl) ordersEl.textContent = fmtNumber.format(ordersValue);
     if (ordersSubEl) ordersSubEl.textContent = config.meta;
     if (subsEl) subsEl.textContent = fmtNumber.format(totals.subs);
@@ -524,6 +604,7 @@
 
     try {
       setLoadingState("Data laden...");
+      profitSettings = loadProfitSettings();
       const payload = await fetchAnalytics(token);
       const points = normalizePoints(payload?.points);
       dailyPoints = points;
@@ -641,6 +722,60 @@
       };
       closePicker();
       setActiveRange("custom");
+    });
+  }
+
+  if (revenueToggleEl) {
+    revenueToggleEl.addEventListener("click", () => {
+      showProfit = !showProfit;
+      if (lastRange?.config && lastRange?.totals) {
+        updateRevenueCard(lastRange.config, lastRange.totals);
+      }
+    });
+  }
+
+  const openProfitSettings = () => {
+    if (!profitSettingsModal || !profitSettingsCost || !profitSettingsVat) return;
+    profitSettingsCost.value = formatSettingValue(profitSettings.creditCostPerCustomer);
+    profitSettingsVat.value = formatSettingValue(profitSettings.vatPercent);
+    profitSettingsModal.hidden = false;
+    profitSettingsCost.focus();
+  };
+
+  const closeProfitSettings = () => {
+    if (!profitSettingsModal) return;
+    profitSettingsModal.hidden = true;
+  };
+
+  if (revenueSettingsBtn) {
+    revenueSettingsBtn.addEventListener("click", openProfitSettings);
+  }
+
+  if (profitSettingsClose) {
+    profitSettingsClose.addEventListener("click", closeProfitSettings);
+  }
+
+  if (profitSettingsCancel) {
+    profitSettingsCancel.addEventListener("click", closeProfitSettings);
+  }
+
+  if (profitSettingsModal) {
+    profitSettingsModal.addEventListener("click", (event) => {
+      if (event.target === profitSettingsModal) closeProfitSettings();
+    });
+  }
+
+  if (profitSettingsForm) {
+    profitSettingsForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const cost = clampNumber(Number(profitSettingsCost?.value || 0), 0);
+      const vat = clampNumber(Number(profitSettingsVat?.value || 0), 0, 100);
+      profitSettings = { creditCostPerCustomer: cost, vatPercent: vat };
+      saveProfitSettings(profitSettings);
+      if (lastRange?.config && lastRange?.totals) {
+        updateRevenueCard(lastRange.config, lastRange.totals);
+      }
+      closeProfitSettings();
     });
   }
 
