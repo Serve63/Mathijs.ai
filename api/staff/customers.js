@@ -35,6 +35,21 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+function isDuplicateUserError(message = "") {
+  const msg = message.toLowerCase();
+  return (
+    msg.includes("already registered") ||
+    msg.includes("already exists") ||
+    msg.includes("duplicate") ||
+    msg.includes("users_email_key") ||
+    msg.includes("user already exists")
+  );
+}
+
 function startOfDayUtc(now) {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
@@ -72,6 +87,25 @@ async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {})
   } catch {
     return text;
   }
+}
+
+async function findUserByEmail(accessKey, email) {
+  const needle = normalizeEmail(email);
+  if (!needle) return null;
+  let page = 1;
+  const perPage = 200;
+  while (page <= 5) {
+    const resp = await supabaseAuthAdmin(`users?page=${page}&per_page=${perPage}`, {
+      method: "GET",
+      accessKey,
+    });
+    const users = resp?.users || [];
+    const found = users.find((u) => normalizeEmail(u?.email) === needle);
+    if (found) return found;
+    if (users.length < perPage) break;
+    page += 1;
+  }
+  return null;
 }
 
 function normalizeCustomerFromUser(u) {
@@ -278,11 +312,58 @@ module.exports = async (req, res) => {
           return json(res, 200, {
             ok: true,
             customer: normalizeCustomerFromUser(createdUser),
+            created: true,
           });
         } catch (e) {
           const msg = String(e?.message || "");
-          if (msg.toLowerCase().includes("already registered")) {
-            return json(res, 409, { error: "Deze klant bestaat al." });
+          if (isDuplicateUserError(msg)) {
+            const existing = await findUserByEmail(serviceRoleKey, email);
+            if (!existing?.id) {
+              return json(res, 409, { error: "Deze klant bestaat al." });
+            }
+            const existingMeta = existing?.app_metadata || {};
+            const existingUserMeta = existing?.user_metadata || {};
+
+            const nextMeta = {
+              ...existingMeta,
+              ...appMeta,
+            };
+            if (Number.isFinite(existingMeta?.tokens)) {
+              nextMeta.tokens = existingMeta.tokens;
+            }
+            if (Number.isFinite(existingMeta?.starter_credits_eur)) {
+              nextMeta.starter_credits_eur = existingMeta.starter_credits_eur;
+            }
+            if (plan === "standard" && Number.isFinite(existingMeta?.total_paid_eur)) {
+              nextMeta.total_paid_eur = Math.max(Number(existingMeta.total_paid_eur || 0), Number(nextMeta.total_paid_eur || 0));
+            }
+            if (plan === "trial") {
+              const existingFree = Number(existingMeta.free_months || 0);
+              nextMeta.free_months = Math.max(existingFree, 1);
+            }
+
+            const nextUserMeta = {
+              ...existingUserMeta,
+              ...userMeta,
+            };
+
+            const updated = await supabaseAuthAdmin(`users/${encodeURIComponent(existing.id)}`, {
+              method: "PUT",
+              accessKey: serviceRoleKey,
+              body: {
+                password,
+                email_confirm: true,
+                user_metadata: nextUserMeta,
+                app_metadata: nextMeta,
+              },
+            });
+            const updatedUser = updated?.user || updated || existing;
+            return json(res, 200, {
+              ok: true,
+              customer: normalizeCustomerFromUser(updatedUser),
+              created: false,
+              updated_existing: true,
+            });
           }
           throw e;
         }
