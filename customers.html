@@ -628,7 +628,7 @@
                 <select id="customer-add-plan">
                   <option value="lifetime" selected>Lifetime gratis</option>
                   <option value="standard">Standaard (betaald)</option>
-                  <option value="free">Gratis (niet zichtbaar)</option>
+                  <option value="trial">1 maand gratis</option>
                 </select>
               </div>
               <div class="form-field" id="customer-add-amount-field" hidden>
@@ -637,9 +637,9 @@
                 <small>Gebruik dit alleen als er handmatig is betaald.</small>
               </div>
               <div class="form-field">
-                <label for="customer-add-password">Wachtwoord (optioneel)</label>
-                <input id="customer-add-password" type="text" autocomplete="new-password" minlength="10" placeholder="Laat leeg voor auto-wachtwoord" />
-                <small>Minimaal 10 tekens. Leeg = automatisch wachtwoord.</small>
+                <label for="customer-add-password">Wachtwoord</label>
+                <input id="customer-add-password" type="text" autocomplete="new-password" minlength="10" placeholder="Kies een sterk wachtwoord" required />
+                <small>Minimaal 10 tekens.</small>
               </div>
             </div>
             <div class="form-actions">

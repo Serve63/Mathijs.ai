@@ -35,11 +35,6 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
-function buildTempPassword() {
-  const crypto = require("crypto");
-  return crypto.randomBytes(12).toString("base64url");
-}
-
 function startOfDayUtc(now) {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
@@ -224,16 +219,17 @@ module.exports = async (req, res) => {
 
         if (!email) return json(res, 400, { error: "E-mail is verplicht." });
         if (!isValidEmail(email)) return json(res, 400, { error: "Ongeldig e-mailadres." });
-        if (passwordRaw && passwordRaw.length < 10) {
+        if (!passwordRaw) return json(res, 400, { error: "Wachtwoord is verplicht." });
+        if (passwordRaw.length < 10) {
           return json(res, 400, { error: "Wachtwoord moet minimaal 10 tekens zijn." });
         }
 
-        const plan = ["free", "standard", "lifetime"].includes(planRaw) ? planRaw : "lifetime";
+        const plan = ["standard", "lifetime", "trial"].includes(planRaw) ? planRaw : "lifetime";
         const nowIso = new Date().toISOString();
         const tokensPerEur = getTokensPerEur();
         const starterTokens = Math.max(0, Math.round(STARTER_CREDITS_EUR * tokensPerEur));
         const appMeta = {
-          plan: plan === "lifetime" ? "lifetime" : plan === "standard" ? "standard" : "free",
+          plan: plan === "lifetime" ? "lifetime" : plan === "standard" ? "standard" : "trial",
           lifetime_free: plan === "lifetime",
           tokens: starterTokens,
           credits_initialized: true,
@@ -253,6 +249,11 @@ module.exports = async (req, res) => {
           appMeta.subscribed_at = nowIso;
           appMeta.cancelled_at = null;
         }
+        if (plan === "trial") {
+          appMeta.subscribed_at = nowIso;
+          appMeta.cancelled_at = null;
+          appMeta.free_months = 1;
+        }
 
         const userMeta = {};
         if (name) {
@@ -260,7 +261,7 @@ module.exports = async (req, res) => {
           userMeta.name = name;
         }
 
-        const password = passwordRaw || buildTempPassword();
+        const password = passwordRaw;
 
         try {
           const created = await supabaseAuthAdmin("users", {
@@ -277,7 +278,6 @@ module.exports = async (req, res) => {
           return json(res, 200, {
             ok: true,
             customer: normalizeCustomerFromUser(createdUser),
-            temp_password: passwordRaw ? null : password,
           });
         } catch (e) {
           const msg = String(e?.message || "");

@@ -875,7 +875,9 @@
       const isPaidUser = (user) => {
         const appMeta = user?.app_metadata || {};
         const plan = String(appMeta.plan || "").toLowerCase();
-        if (appMeta.lifetime_free === true || plan === "standard" || plan === "lifetime") return true;
+        if (appMeta.lifetime_free === true || plan === "standard" || plan === "lifetime" || plan === "trial") return true;
+        const freeMonths = Number(appMeta.free_months || 0);
+        if (Number.isFinite(freeMonths) && freeMonths > 0) return true;
         const totalPaid = Number(appMeta.total_paid_eur || 0);
         if (Number.isFinite(totalPaid) && totalPaid > 0) return true;
         const lastPaid = Number(appMeta.last_payment_amount_eur || 0);

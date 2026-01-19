@@ -78,6 +78,7 @@
     if (customer?.lifetime_free) return "Lifetime Gratis";
     const plan = (customer?.plan || "free").toLowerCase();
     if (plan === "free") return "Gratis";
+    if (plan === "trial") return "1 maand gratis";
     if (plan === "standard") return "Standaard";
     return plan.charAt(0).toUpperCase() + plan.slice(1);
   };
@@ -85,6 +86,10 @@
   const isPayingCustomer = (customer) => {
     if (!customer) return false;
     if (customer.lifetime_free) return true;
+    const plan = String(customer.plan || "").toLowerCase();
+    if (plan === "trial") return true;
+    const freeMonths = Number(customer.free_months || 0);
+    if (Number.isFinite(freeMonths) && freeMonths > 0) return true;
     const totalPaid = Number(customer.total_paid_eur || 0);
     if (Number.isFinite(totalPaid) && totalPaid > 0) return true;
     const lastPaid = Number(customer.last_payment_amount_eur || 0);
@@ -426,7 +431,12 @@
       addEmailInput?.focus();
       return;
     }
-    if (password && password.length < 10) {
+    if (!password) {
+      setAddFeedback("Wachtwoord is verplicht.", "error");
+      addPasswordInput?.focus();
+      return;
+    }
+    if (password.length < 10) {
       setAddFeedback("Wachtwoord moet minimaal 10 tekens zijn.", "error");
       addPasswordInput?.focus();
       return;
@@ -455,28 +465,20 @@
           name,
           plan,
           amount_eur: plan === "standard" ? amountRaw : undefined,
-          password: password || undefined,
+          password,
         }),
       });
       const payload = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(payload?.error || "Klant toevoegen mislukt.");
 
-      const tempPassword = payload?.temp_password;
-      const baseMsg = "Klant toegevoegd.";
-      const passwordMsg = tempPassword ? ` Tijdelijk wachtwoord: ${tempPassword}` : "";
-      setAddFeedback(`${baseMsg}${passwordMsg}`, "success");
+      setAddFeedback("Klant toegevoegd.", "success");
 
       const allCustomers = await fetchCustomers();
       customers = allCustomers.filter(isPayingCustomer);
       updateStats();
       renderTable();
-      if (plan === "free") {
-        setAddFeedback("Klant toegevoegd. Gratis klanten zijn niet zichtbaar in dit overzicht.", "success");
-      }
-      if (!tempPassword) {
-        resetAddForm();
-        setAddPanelOpen(false);
-      }
+      resetAddForm();
+      setAddPanelOpen(false);
     } catch (err) {
       console.error("Klant toevoegen mislukt", err);
       setAddFeedback(err?.message || "Klant toevoegen mislukt.", "error");

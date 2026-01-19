@@ -73,6 +73,7 @@
     if (customer?.lifetime_free) return "Lifetime Gratis";
     const plan = (customer?.plan || "free").toLowerCase();
     if (plan === "free") return "Gratis";
+    if (plan === "trial") return "1 maand gratis";
     if (plan === "standard") return "Standaard";
     return plan.charAt(0).toUpperCase() + plan.slice(1);
   };
@@ -80,6 +81,10 @@
   const isPayingCustomer = (customer) => {
     if (!customer) return false;
     if (customer.lifetime_free) return true;
+    const plan = String(customer.plan || "").toLowerCase();
+    if (plan === "trial") return true;
+    const freeMonths = Number(customer.free_months || 0);
+    if (Number.isFinite(freeMonths) && freeMonths > 0) return true;
     const totalPaid = Number(customer.total_paid_eur || 0);
     if (Number.isFinite(totalPaid) && totalPaid > 0) return true;
     const lastPaid = Number(customer.last_payment_amount_eur || 0);
