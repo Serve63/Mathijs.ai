@@ -20,6 +20,10 @@
   const addEmailInput = document.getElementById("customer-add-email");
   const addNameInput = document.getElementById("customer-add-name");
   const addPlanSelect = document.getElementById("customer-add-plan");
+  const addPlanSelectWrap = document.getElementById("customer-add-plan-select");
+  const addPlanTrigger = document.getElementById("customer-add-plan-trigger");
+  const addPlanMenu = document.getElementById("customer-add-plan-menu");
+  const addPlanValue = document.getElementById("customer-add-plan-value");
   const addAmountField = document.getElementById("customer-add-amount-field");
   const addAmountInput = document.getElementById("customer-add-amount");
   const addPasswordInput = document.getElementById("customer-add-password");
@@ -217,6 +221,7 @@
     if (!addPanel) return;
     addPanel.hidden = !open;
     if (addToggleBtn) addToggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (!open) togglePlanMenu(false);
     if (open && addEmailInput) addEmailInput.focus();
   };
 
@@ -238,8 +243,34 @@
     }
   };
 
+  const setPlanValue = (value) => {
+    if (!addPlanSelect) return;
+    addPlanSelect.value = value;
+    if (addPlanValue) {
+      const labelMap = {
+        lifetime: "Lifetime gratis",
+        standard: "Standaard (betaald)",
+        trial: "1 maand gratis",
+      };
+      addPlanValue.textContent = labelMap[value] || value;
+    }
+    if (addPlanMenu) {
+      addPlanMenu.querySelectorAll(".custom-select__option").forEach((option) => {
+        option.classList.toggle("is-selected", option.dataset.value === value);
+      });
+    }
+    updatePlanFields();
+  };
+
+  const togglePlanMenu = (open) => {
+    if (!addPlanSelectWrap || !addPlanTrigger) return;
+    addPlanSelectWrap.classList.toggle("is-open", open);
+    addPlanTrigger.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+
   const resetAddForm = () => {
     if (addForm) addForm.reset();
+    if (addPlanSelect) setPlanValue(addPlanSelect.value || "lifetime");
     updatePlanFields();
     setAddFeedback("");
   };
@@ -505,8 +536,24 @@
       setAddPanelOpen(!isOpen);
     });
   }
-  if (addPlanSelect) {
-    addPlanSelect.addEventListener("change", updatePlanFields);
+  if (addPlanTrigger && addPlanMenu) {
+    addPlanTrigger.addEventListener("click", () => {
+      const isOpen = addPlanSelectWrap?.classList.contains("is-open");
+      togglePlanMenu(!isOpen);
+    });
+    addPlanMenu.addEventListener("click", (event) => {
+      const option = event.target.closest(".custom-select__option");
+      if (!option) return;
+      const value = option.dataset.value;
+      if (!value) return;
+      setPlanValue(value);
+      togglePlanMenu(false);
+    });
+    document.addEventListener("click", (event) => {
+      if (!addPlanSelectWrap) return;
+      if (addPlanSelectWrap.contains(event.target)) return;
+      togglePlanMenu(false);
+    });
   }
   if (addCancelBtn) {
     addCancelBtn.addEventListener("click", () => {
@@ -516,6 +563,9 @@
   }
   if (addForm) {
     addForm.addEventListener("submit", handleAddSubmit);
+  }
+  if (addPlanSelect) {
+    setPlanValue(addPlanSelect.value || "lifetime");
   }
 
   document.addEventListener("DOMContentLoaded", init);

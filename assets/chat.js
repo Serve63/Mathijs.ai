@@ -1325,10 +1325,12 @@
             }
           });
 
-          actions.querySelector(".rename-session").addEventListener("click", (event) => {
+          actions.querySelector(".rename-session").addEventListener("click", async (event) => {
             event.stopPropagation();
             actions.classList.remove("is-open");
-            const newTitle = prompt("Nieuwe naam voor dit gesprek:", getDisplayTitle(session));
+            const defaultTitle = getDisplayTitle(session);
+            if (!window.siteUI?.prompt) return;
+            const newTitle = await window.siteUI.prompt("Nieuwe naam voor dit gesprek:", { defaultValue: defaultTitle });
             if (newTitle && newTitle.trim()) {
               const trimmed = newTitle.trim();
               titleOverrides[session.id] = trimmed;
@@ -1341,7 +1343,8 @@
           actions.querySelector(".delete-session").addEventListener("click", async (event) => {
             event.stopPropagation();
             actions.classList.remove("is-open");
-            const confirmDelete = confirm("Weet je zeker dat je dit gesprek wilt verwijderen?");
+            if (!window.siteUI?.confirm) return;
+            const confirmDelete = await window.siteUI.confirm("Weet je zeker dat je dit gesprek wilt verwijderen?", { danger: true });
             if (!confirmDelete) return;
             await deleteSession(session.id, session.isLegacy);
           });
@@ -1352,9 +1355,17 @@
             const shareText = `${window.location.origin}//chat?session=${session.id}`;
             try {
               await navigator.clipboard.writeText(shareText);
-              alert("Link gekopieerd naar klembord.");
+              if (window.siteUI?.toast) {
+                window.siteUI.toast("Link gekopieerd naar klembord.", { type: "success" });
+              } else {
+                alert("Link gekopieerd naar klembord.");
+              }
             } catch (e) {
-              alert("Kon link niet kopiëren. Kopieer handmatig:\n" + shareText);
+              if (window.siteUI?.alert) {
+                window.siteUI.alert(`Kon link niet kopiëren. Kopieer handmatig:\n${shareText}`);
+              } else {
+                alert("Kon link niet kopiëren. Kopieer handmatig:\n" + shareText);
+              }
             }
           });
 

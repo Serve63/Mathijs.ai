@@ -6,6 +6,14 @@
   const rangePickerEl = document.getElementById("range-picker");
   const rangeFromEl = document.getElementById("range-from");
   const rangeToEl = document.getElementById("range-to");
+  const rangeFromBtn = document.getElementById("range-from-btn");
+  const rangeToBtn = document.getElementById("range-to-btn");
+  const rangeCalendarEl = document.getElementById("range-calendar");
+  const rangeCalendarTitle = document.getElementById("range-calendar-title");
+  const rangeCalendarDays = document.getElementById("range-days");
+  const rangeCalendarWeekdays = document.getElementById("range-weekdays");
+  const rangeCalendarPrev = document.getElementById("range-prev");
+  const rangeCalendarNext = document.getElementById("range-next");
   const rangeApplyEl = document.getElementById("range-apply");
   const rangeCancelEl = document.getElementById("range-cancel");
   const revenueEl = document.getElementById("stat-revenue");
@@ -32,6 +40,7 @@
   const fmtNumber = new Intl.NumberFormat("nl-NL");
   const fmtDateLong = new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short", year: "numeric" });
   const fmtDateLongFull = new Intl.DateTimeFormat("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+  const fmtMonthYear = new Intl.DateTimeFormat("nl-NL", { month: "long", year: "numeric" });
   const fmtDayMonth = new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short" });
   const fmtMonthShort = new Intl.DateTimeFormat("nl-NL", { month: "short" });
   const fmtMonthShortYear = new Intl.DateTimeFormat("nl-NL", { month: "short", year: "numeric" });
@@ -87,6 +96,73 @@
     const [y, m, d] = value.split("-").map((v) => Number(v));
     if (!y || !m || !d) return null;
     return new Date(Date.UTC(y, m - 1, d));
+  };
+
+  const WEEKDAY_LABELS = ["ma", "di", "wo", "do", "vr", "za", "zo"];
+  let calendarMonth = new Date(todayUTC);
+  let activeField = "from";
+
+  const setActiveField = (field) => {
+    activeField = field;
+    if (rangeFromBtn) rangeFromBtn.classList.toggle("is-active", field === "from");
+    if (rangeToBtn) rangeToBtn.classList.toggle("is-active", field === "to");
+  };
+
+  const updateRangeButtons = () => {
+    const fromDate = parseISODate(rangeFromEl?.value);
+    const toDate = parseISODate(rangeToEl?.value);
+    if (rangeFromBtn) rangeFromBtn.textContent = fromDate ? fmtDateLong.format(fromDate) : "--";
+    if (rangeToBtn) rangeToBtn.textContent = toDate ? fmtDateLong.format(toDate) : "--";
+  };
+
+  const renderWeekdays = () => {
+    if (!rangeCalendarWeekdays) return;
+    if (rangeCalendarWeekdays.childElementCount) return;
+    rangeCalendarWeekdays.innerHTML = WEEKDAY_LABELS.map((day) => `<div class="range-calendar__weekday">${day}</div>`).join("");
+  };
+
+  const renderCalendar = () => {
+    if (!rangeCalendarEl || !rangeCalendarDays || !rangeCalendarTitle) return;
+    renderWeekdays();
+    const monthStart = new Date(Date.UTC(calendarMonth.getUTCFullYear(), calendarMonth.getUTCMonth(), 1));
+    const monthEnd = new Date(Date.UTC(calendarMonth.getUTCFullYear(), calendarMonth.getUTCMonth() + 1, 0));
+    rangeCalendarTitle.textContent = fmtMonthYear.format(monthStart);
+
+    const startWeekday = (monthStart.getUTCDay() + 6) % 7;
+    const totalDays = monthEnd.getUTCDate();
+    const cells = [];
+    const fromDate = parseISODate(rangeFromEl?.value);
+    const toDate = parseISODate(rangeToEl?.value);
+
+    for (let i = 0; i < startWeekday; i += 1) {
+      const day = new Date(monthStart.getTime() - (startWeekday - i) * 24 * 60 * 60 * 1000);
+      cells.push({ date: day, outside: true });
+    }
+    for (let day = 1; day <= totalDays; day += 1) {
+      const date = new Date(Date.UTC(calendarMonth.getUTCFullYear(), calendarMonth.getUTCMonth(), day));
+      cells.push({ date, outside: false });
+    }
+    const remainder = cells.length % 7;
+    const needed = remainder === 0 ? 0 : 7 - remainder;
+    for (let i = 1; i <= needed; i += 1) {
+      const day = new Date(monthEnd.getTime() + i * 24 * 60 * 60 * 1000);
+      cells.push({ date: day, outside: true });
+    }
+
+    rangeCalendarDays.innerHTML = cells
+      .map((cell) => {
+        const iso = toISODate(cell.date);
+        const isFrom = fromDate && toISODate(fromDate) === iso;
+        const isTo = toDate && toISODate(toDate) === iso;
+        const inRange =
+          fromDate && toDate && cell.date.getTime() >= fromDate.getTime() && cell.date.getTime() <= toDate.getTime();
+        const classes = ["range-calendar__day"];
+        if (cell.outside) classes.push("is-outside");
+        if (inRange) classes.push("is-in-range");
+        if (isFrom || isTo) classes.push("is-selected");
+        return `<button class="${classes.join(" ")}" type="button" data-date="${iso}">${cell.date.getUTCDate()}</button>`;
+      })
+      .join("");
   };
 
   const addDays = (date, days) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
@@ -332,7 +408,13 @@
   const openPicker = () => {
     if (!rangePickerEl) return;
     rangePickerEl.hidden = false;
-    if (rangeFromEl) rangeFromEl.focus();
+    setActiveField(activeField || "from");
+    const baseDate =
+      activeField === "to" ? parseISODate(rangeToEl?.value) : parseISODate(rangeFromEl?.value);
+    calendarMonth = baseDate || new Date(todayUTC);
+    updateRangeButtons();
+    renderCalendar();
+    if (rangeFromBtn) rangeFromBtn.focus();
   };
 
   const setLoadingState = (message) => {
@@ -465,6 +547,65 @@
   const fromDefault = new Date(todayUTC.getTime() - 6 * 24 * 60 * 60 * 1000);
   if (rangeFromEl && !rangeFromEl.value) rangeFromEl.value = toISODate(fromDefault);
   if (rangeToEl && !rangeToEl.value) rangeToEl.value = toISODate(todayUTC);
+  updateRangeButtons();
+
+  if (rangeFromBtn) {
+    rangeFromBtn.addEventListener("click", () => {
+      setActiveField("from");
+      const fromDate = parseISODate(rangeFromEl?.value);
+      if (fromDate) calendarMonth = fromDate;
+      renderCalendar();
+    });
+  }
+
+  if (rangeToBtn) {
+    rangeToBtn.addEventListener("click", () => {
+      setActiveField("to");
+      const toDate = parseISODate(rangeToEl?.value);
+      if (toDate) calendarMonth = toDate;
+      renderCalendar();
+    });
+  }
+
+  if (rangeCalendarPrev) {
+    rangeCalendarPrev.addEventListener("click", () => {
+      calendarMonth = new Date(Date.UTC(calendarMonth.getUTCFullYear(), calendarMonth.getUTCMonth() - 1, 1));
+      renderCalendar();
+    });
+  }
+
+  if (rangeCalendarNext) {
+    rangeCalendarNext.addEventListener("click", () => {
+      calendarMonth = new Date(Date.UTC(calendarMonth.getUTCFullYear(), calendarMonth.getUTCMonth() + 1, 1));
+      renderCalendar();
+    });
+  }
+
+  if (rangeCalendarDays) {
+    rangeCalendarDays.addEventListener("click", (event) => {
+      const button = event.target.closest(".range-calendar__day");
+      if (!button) return;
+      const iso = button.dataset.date;
+      const picked = parseISODate(iso);
+      if (!picked) return;
+      if (activeField === "from") {
+        rangeFromEl.value = iso;
+      } else {
+        rangeToEl.value = iso;
+      }
+      const fromDate = parseISODate(rangeFromEl?.value);
+      const toDate = parseISODate(rangeToEl?.value);
+      if (fromDate && toDate && fromDate.getTime() > toDate.getTime()) {
+        if (activeField === "from") {
+          rangeToEl.value = rangeFromEl.value;
+        } else {
+          rangeFromEl.value = rangeToEl.value;
+        }
+      }
+      updateRangeButtons();
+      renderCalendar();
+    });
+  }
 
   rangeButtons.forEach((button) => {
     button.addEventListener("click", () => {

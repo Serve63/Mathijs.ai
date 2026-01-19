@@ -323,7 +323,7 @@
         font-weight: 700;
       }
 
-      .range-picker input[type="date"] {
+      .range-field-btn {
         width: 100%;
         padding: 8px 10px;
         border-radius: 10px;
@@ -331,6 +331,82 @@
         border: 1px solid rgba(255, 255, 255, 0.14);
         color: rgba(255, 255, 255, 0.92);
         font-family: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .range-field-btn.is-active {
+        border-color: rgba(230, 194, 0, 0.6);
+        box-shadow: 0 0 0 2px rgba(230, 194, 0, 0.15);
+      }
+
+      .range-calendar {
+        margin-top: 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(6, 10, 24, 0.7);
+        padding: 10px;
+      }
+
+      .range-calendar__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      .range-calendar__nav {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.9);
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      .range-calendar__title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: capitalize;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .range-calendar__weekdays,
+      .range-calendar__days {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 4px;
+      }
+
+      .range-calendar__weekday {
+        text-align: center;
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .range-calendar__day {
+        border: none;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.9);
+        padding: 6px 0;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        cursor: pointer;
+      }
+
+      .range-calendar__day.is-outside {
+        color: rgba(255, 255, 255, 0.35);
+      }
+
+      .range-calendar__day.is-in-range {
+        background: rgba(230, 194, 0, 0.14);
+      }
+
+      .range-calendar__day.is-selected {
+        background: rgba(230, 194, 0, 0.8);
+        color: #1a1600;
+        font-weight: 700;
       }
 
       .range-picker__actions {
@@ -547,6 +623,7 @@
       }
     </style>
       <link rel="stylesheet" href="assets/stability.css" />
+      <link rel="stylesheet" href="assets/ui.css" />
     <script src="assets/stability.js" defer></script>
 </head>
   <body>
@@ -598,12 +675,23 @@
             <div class="range-picker__grid">
               <label>
                 Van
-                <input id="range-from" type="date" />
+                <button class="range-field-btn" id="range-from-btn" type="button">--</button>
+                <input id="range-from" type="hidden" />
               </label>
               <label>
                 Tot
-                <input id="range-to" type="date" />
+                <button class="range-field-btn" id="range-to-btn" type="button">--</button>
+                <input id="range-to" type="hidden" />
               </label>
+            </div>
+            <div class="range-calendar" id="range-calendar">
+              <div class="range-calendar__header">
+                <button class="range-calendar__nav" id="range-prev" type="button" aria-label="Vorige maand">‹</button>
+                <div class="range-calendar__title" id="range-calendar-title">Maart 2026</div>
+                <button class="range-calendar__nav" id="range-next" type="button" aria-label="Volgende maand">›</button>
+              </div>
+              <div class="range-calendar__weekdays" id="range-weekdays"></div>
+              <div class="range-calendar__days" id="range-days"></div>
             </div>
             <div class="range-picker__actions">
               <button class="range-picker__btn" id="range-cancel" type="button">Annuleren</button>
@@ -650,6 +738,7 @@
     </main>
 
     <script src="assets/vendor/supabase.min.js" defer></script>
+    <script src="assets/ui.js" defer></script>
     <script src="analytics.js" defer></script>
   </body>
 </html>
