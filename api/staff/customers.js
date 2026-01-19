@@ -14,6 +14,8 @@ const { COUNTRY_LABELS } = require("../_lib/geo");
 const STAFF_WINDOW_MS = 60_000;
 const STAFF_LIMIT = 120;
 const TOKENS_PER_CHAT = 1;
+const STARTER_CREDITS_EUR = 15;
+const DEFAULT_MANUAL_AMOUNT_EUR = 25;
 
 function getTokensPerEur() {
   const tokensPerEur = Number(process.env.TOPUP_TOKENS_PER_EUR || 100);
@@ -25,6 +27,17 @@ function parseLimit(value) {
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 0) return null;
   return n;
+}
+
+function isValidEmail(email) {
+  const e = (email || "").trim();
+  if (e.length < 6 || e.length > 254) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+}
+
+function buildTempPassword() {
+  const crypto = require("crypto");
+  return crypto.randomBytes(12).toString("base64url");
 }
 
 function startOfDayUtc(now) {
@@ -201,6 +214,79 @@ module.exports = async (req, res) => {
     if (req.method === "POST") {
       const body = await readJson(req);
       const action = body?.action;
+
+      if (action === "create_customer") {
+        const email = typeof body?.email === "string" ? body.email.trim() : "";
+        const name = typeof body?.name === "string" ? body.name.trim() : "";
+        const planRaw = typeof body?.plan === "string" ? body.plan.trim().toLowerCase() : "lifetime";
+        const passwordRaw = typeof body?.password === "string" ? body.password.trim() : "";
+        const amountRaw = Number(body?.amount_eur || DEFAULT_MANUAL_AMOUNT_EUR);
+
+        if (!email) return json(res, 400, { error: "E-mail is verplicht." });
+        if (!isValidEmail(email)) return json(res, 400, { error: "Ongeldig e-mailadres." });
+        if (passwordRaw && passwordRaw.length < 10) {
+          return json(res, 400, { error: "Wachtwoord moet minimaal 10 tekens zijn." });
+        }
+
+        const plan = ["free", "standard", "lifetime"].includes(planRaw) ? planRaw : "lifetime";
+        const nowIso = new Date().toISOString();
+        const tokensPerEur = getTokensPerEur();
+        const starterTokens = Math.max(0, Math.round(STARTER_CREDITS_EUR * tokensPerEur));
+        const appMeta = {
+          plan: plan === "lifetime" ? "lifetime" : plan === "standard" ? "standard" : "free",
+          lifetime_free: plan === "lifetime",
+          tokens: starterTokens,
+          credits_initialized: true,
+          starter_credits_eur: STARTER_CREDITS_EUR,
+        };
+
+        if (plan === "standard") {
+          const amount = Number.isFinite(amountRaw) && amountRaw > 0 ? Math.round(amountRaw * 100) / 100 : DEFAULT_MANUAL_AMOUNT_EUR;
+          appMeta.last_payment_amount_eur = amount;
+          appMeta.total_paid_eur = amount;
+          appMeta.last_payment_at = nowIso;
+          appMeta.subscribed_at = nowIso;
+          appMeta.cancelled_at = null;
+        }
+
+        if (plan === "lifetime") {
+          appMeta.subscribed_at = nowIso;
+          appMeta.cancelled_at = null;
+        }
+
+        const userMeta = {};
+        if (name) {
+          userMeta.full_name = name;
+          userMeta.name = name;
+        }
+
+        const password = passwordRaw || buildTempPassword();
+
+        try {
+          const created = await supabaseAuthAdmin("users", {
+            accessKey: serviceRoleKey,
+            body: {
+              email,
+              password,
+              email_confirm: true,
+              user_metadata: userMeta,
+              app_metadata: appMeta,
+            },
+          });
+          const createdUser = created?.user || created;
+          return json(res, 200, {
+            ok: true,
+            customer: normalizeCustomerFromUser(createdUser),
+            temp_password: passwordRaw ? null : password,
+          });
+        } catch (e) {
+          const msg = String(e?.message || "");
+          if (msg.toLowerCase().includes("already registered")) {
+            return json(res, 409, { error: "Deze klant bestaat al." });
+          }
+          throw e;
+        }
+      }
 
       const id = body?.id;
       if (!id) return json(res, 400, { error: "Missing id" });

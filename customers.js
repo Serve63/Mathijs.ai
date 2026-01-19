@@ -13,6 +13,18 @@
   const searchInput = document.getElementById("customer-search");
   const tableEl = document.getElementById("customers-table");
   const emptyEl = document.getElementById("customers-empty");
+  const addToggleBtn = document.getElementById("customer-add-toggle");
+  const addPanel = document.getElementById("customer-add-panel");
+  const addForm = document.getElementById("customer-add-form");
+  const addFeedback = document.getElementById("customer-add-feedback");
+  const addEmailInput = document.getElementById("customer-add-email");
+  const addNameInput = document.getElementById("customer-add-name");
+  const addPlanSelect = document.getElementById("customer-add-plan");
+  const addAmountField = document.getElementById("customer-add-amount-field");
+  const addAmountInput = document.getElementById("customer-add-amount");
+  const addPasswordInput = document.getElementById("customer-add-password");
+  const addCancelBtn = document.getElementById("customer-add-cancel");
+  const addSubmitBtn = document.getElementById("customer-add-submit");
 
   const dateFmt = new Intl.DateTimeFormat("nl-NL", {
     day: "2-digit",
@@ -20,6 +32,7 @@
     year: "numeric"
   });
   const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
+  const DEFAULT_MANUAL_AMOUNT = 25;
 
   const createSupabaseClient = () => {
     if (!window.supabase?.createClient) return null;
@@ -195,6 +208,37 @@
     }
   };
 
+  const setAddPanelOpen = (open) => {
+    if (!addPanel) return;
+    addPanel.hidden = !open;
+    if (addToggleBtn) addToggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open && addEmailInput) addEmailInput.focus();
+  };
+
+  const setAddFeedback = (message, kind = "") => {
+    if (!addFeedback) return;
+    addFeedback.textContent = message || "";
+    addFeedback.classList.remove("error", "success");
+    if (kind) addFeedback.classList.add(kind);
+  };
+
+  const updatePlanFields = () => {
+    if (!addPlanSelect || !addAmountField || !addAmountInput) return;
+    const plan = addPlanSelect.value;
+    const showAmount = plan === "standard";
+    addAmountField.hidden = !showAmount;
+    addAmountInput.required = showAmount;
+    if (showAmount && !addAmountInput.value) {
+      addAmountInput.value = String(DEFAULT_MANUAL_AMOUNT.toFixed(2));
+    }
+  };
+
+  const resetAddForm = () => {
+    if (addForm) addForm.reset();
+    updatePlanFields();
+    setAddFeedback("");
+  };
+
   const handleTableAction = async (event) => {
     const button = event.target.closest("button");
     if (!button) return;
@@ -365,11 +409,111 @@
     }
   };
 
+  const handleAddSubmit = async (event) => {
+    event.preventDefault();
+    if (!accessToken) {
+      setAddFeedback("Sessie verlopen. Ververs de pagina.", "error");
+      return;
+    }
+    const email = (addEmailInput?.value || "").trim();
+    const name = (addNameInput?.value || "").trim();
+    const plan = (addPlanSelect?.value || "lifetime").trim();
+    const password = (addPasswordInput?.value || "").trim();
+    const amountRaw = Number(addAmountInput?.value || DEFAULT_MANUAL_AMOUNT);
+
+    if (!email) {
+      setAddFeedback("E-mailadres is verplicht.", "error");
+      addEmailInput?.focus();
+      return;
+    }
+    if (password && password.length < 10) {
+      setAddFeedback("Wachtwoord moet minimaal 10 tekens zijn.", "error");
+      addPasswordInput?.focus();
+      return;
+    }
+    if (plan === "standard" && (!Number.isFinite(amountRaw) || amountRaw <= 0)) {
+      setAddFeedback("Vul een geldig betaald bedrag in.", "error");
+      addAmountInput?.focus();
+      return;
+    }
+
+    if (addSubmitBtn) {
+      addSubmitBtn.disabled = true;
+      addSubmitBtn.textContent = "Toevoegen...";
+    }
+
+    try {
+      const resp = await fetch("/api/staff/customers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          action: "create_customer",
+          email,
+          name,
+          plan,
+          amount_eur: plan === "standard" ? amountRaw : undefined,
+          password: password || undefined,
+        }),
+      });
+      const payload = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(payload?.error || "Klant toevoegen mislukt.");
+
+      const tempPassword = payload?.temp_password;
+      const baseMsg = "Klant toegevoegd.";
+      const passwordMsg = tempPassword ? ` Tijdelijk wachtwoord: ${tempPassword}` : "";
+      setAddFeedback(`${baseMsg}${passwordMsg}`, "success");
+
+      const allCustomers = await fetchCustomers();
+      customers = allCustomers.filter(isPayingCustomer);
+      updateStats();
+      renderTable();
+      if (plan === "free") {
+        setAddFeedback("Klant toegevoegd. Gratis klanten zijn niet zichtbaar in dit overzicht.", "success");
+      }
+      if (!tempPassword) {
+        resetAddForm();
+        setAddPanelOpen(false);
+      }
+    } catch (err) {
+      console.error("Klant toevoegen mislukt", err);
+      setAddFeedback(err?.message || "Klant toevoegen mislukt.", "error");
+    } finally {
+      if (addSubmitBtn) {
+        addSubmitBtn.disabled = false;
+        addSubmitBtn.textContent = "Klant toevoegen";
+      }
+    }
+  };
+
   if (searchInput) {
     searchInput.addEventListener("input", renderTable);
   }
   if (tableEl) {
     tableEl.addEventListener("click", handleTableAction);
+  }
+  if (addToggleBtn) {
+    addToggleBtn.addEventListener("click", () => {
+      const isOpen = addPanel ? !addPanel.hidden : false;
+      if (!isOpen) {
+        resetAddForm();
+      }
+      setAddPanelOpen(!isOpen);
+    });
+  }
+  if (addPlanSelect) {
+    addPlanSelect.addEventListener("change", updatePlanFields);
+  }
+  if (addCancelBtn) {
+    addCancelBtn.addEventListener("click", () => {
+      resetAddForm();
+      setAddPanelOpen(false);
+    });
+  }
+  if (addForm) {
+    addForm.addEventListener("submit", handleAddSubmit);
   }
 
   document.addEventListener("DOMContentLoaded", init);

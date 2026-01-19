@@ -274,6 +274,12 @@
         font-size: 0.9rem;
       }
 
+      .panel-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
       .search {
         display: flex;
         align-items: center;
@@ -291,6 +297,75 @@
 
       .search input::placeholder {
         color: rgba(255, 255, 255, 0.55);
+      }
+
+      .add-customer-panel {
+        margin-top: 14px;
+        padding: 14px;
+        border-radius: 12px;
+        background: rgba(7, 12, 28, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .form-field label {
+        display: block;
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 6px;
+        font-weight: 700;
+      }
+
+      .form-field input,
+      .form-field select {
+        width: 100%;
+        background: rgba(6, 10, 24, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 12px;
+        padding: 10px 12px;
+        color: #fff;
+        font-size: 0.92rem;
+      }
+
+      .form-field small {
+        display: block;
+        margin-top: 6px;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 0.78rem;
+      }
+
+      .form-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .form-feedback {
+        margin-top: 8px;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.65);
+      }
+
+      .form-feedback.error { color: rgba(233, 90, 74, 0.95); }
+      .form-feedback.success { color: rgba(56, 191, 127, 0.95); }
+
+      .btn.primary {
+        background: var(--accent);
+        color: #1a1600;
+        border-color: transparent;
+      }
+
+      .btn.primary:hover {
+        background: var(--accent-strong);
       }
 
       .table-head,
@@ -451,6 +526,20 @@
           align-items: flex-start;
         }
 
+        .panel-actions {
+          width: 100%;
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .search input {
+          min-width: 100%;
+        }
+
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+
         .table-head {
           display: none;
         }
@@ -508,14 +597,57 @@
             <h1>Klantenbestand</h1>
             <p>Zoek, beheer en stuur klanten direct vanuit een overzicht.</p>
           </div>
-          <div class="search">
-            <input
-              type="search"
-              id="customer-search"
-              placeholder="Zoek op naam, mail of provincie"
-              aria-label="Zoek klanten"
-            />
+          <div class="panel-actions">
+            <div class="search">
+              <input
+                type="search"
+                id="customer-search"
+                placeholder="Zoek op naam, mail of provincie"
+                aria-label="Zoek klanten"
+              />
+            </div>
+            <button class="btn secondary" id="customer-add-toggle" type="button" aria-expanded="false">
+              Klant toevoegen
+            </button>
           </div>
+        </div>
+
+        <div class="add-customer-panel" id="customer-add-panel" hidden>
+          <form id="customer-add-form" novalidate>
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="customer-add-email">E-mail</label>
+                <input id="customer-add-email" type="email" autocomplete="email" placeholder="klant@bedrijf.nl" required />
+              </div>
+              <div class="form-field">
+                <label for="customer-add-name">Naam</label>
+                <input id="customer-add-name" type="text" autocomplete="name" placeholder="Voornaam Achternaam" />
+              </div>
+              <div class="form-field">
+                <label for="customer-add-plan">Plan</label>
+                <select id="customer-add-plan">
+                  <option value="lifetime" selected>Lifetime gratis</option>
+                  <option value="standard">Standaard (betaald)</option>
+                  <option value="free">Gratis (niet zichtbaar)</option>
+                </select>
+              </div>
+              <div class="form-field" id="customer-add-amount-field" hidden>
+                <label for="customer-add-amount">Betaald bedrag (EUR)</label>
+                <input id="customer-add-amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="25.00" />
+                <small>Gebruik dit alleen als er handmatig is betaald.</small>
+              </div>
+              <div class="form-field">
+                <label for="customer-add-password">Wachtwoord (optioneel)</label>
+                <input id="customer-add-password" type="text" autocomplete="new-password" minlength="10" placeholder="Laat leeg voor auto-wachtwoord" />
+                <small>Minimaal 10 tekens. Leeg = automatisch wachtwoord.</small>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn ghost" type="button" id="customer-add-cancel">Annuleren</button>
+              <button class="btn primary" type="submit" id="customer-add-submit">Klant toevoegen</button>
+            </div>
+            <div class="form-feedback" id="customer-add-feedback" aria-live="polite"></div>
+          </form>
         </div>
 
         <div class="table-head" aria-hidden="true">
