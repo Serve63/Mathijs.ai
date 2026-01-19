@@ -116,31 +116,8 @@
 
       .payment-methods {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
-      }
-
-      .payment-option {
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 12px 12px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: #fafafa;
-        cursor: pointer;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-      }
-
-      .payment-option input {
-        width: auto;
-        margin: 0;
-      }
-
-      .payment-option:has(input:checked) {
-        border-color: var(--accent);
-        background: #fff;
-        box-shadow: 0 0 0 3px rgba(230, 194, 0, 0.15);
       }
 
       label {
@@ -194,7 +171,7 @@
 
       .payment-methods {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
       }
 
@@ -211,14 +188,14 @@
       }
 
       .payment-card {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 12px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 10px 12px 12px;
         border-radius: 12px;
         border: 1px solid var(--border);
         background: #f8f8fb;
-        box-shadow: 0 10px 20px -20px rgba(16, 20, 40, 0.35);
+        box-shadow: 0 10px 20px -22px rgba(16, 20, 40, 0.35);
         transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
       }
 
@@ -238,9 +215,9 @@
       }
 
       .payment-logo {
-        width: 42px;
-        height: 28px;
-        border-radius: 8px;
+        width: 38px;
+        height: 26px;
+        border-radius: 7px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -250,8 +227,8 @@
       }
 
       .payment-logo svg {
-        width: 32px;
-        height: 20px;
+        width: 28px;
+        height: 18px;
       }
 
       .payment-meta {
@@ -262,25 +239,25 @@
 
       .payment-title {
         font-weight: 700;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         color: var(--fg);
       }
 
       .payment-sub {
-        font-size: 0.72rem;
+        font-size: 0.68rem;
         color: var(--fg-muted);
       }
 
       .payment-check {
-        margin-left: auto;
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         border-radius: 999px;
         border: 2px solid rgba(0, 0, 0, 0.18);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         background: #fff;
+        justify-self: end;
       }
 
       .payment-option input:checked + .payment-card .payment-check {
@@ -289,10 +266,16 @@
 
       .payment-option input:checked + .payment-card .payment-check::after {
         content: "";
-        width: 6px;
-        height: 6px;
+        width: 5px;
+        height: 5px;
         border-radius: 999px;
         background: var(--accent);
+      }
+
+      @media (max-width: 640px) {
+        .payment-methods {
+          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        }
       }
 
       .feedback {
