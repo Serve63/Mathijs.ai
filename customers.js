@@ -185,6 +185,12 @@
     if (index === -1) return;
 
     const action = button.dataset.action;
+    if (action === "delete") {
+      const name = getDisplayName(customers[index]);
+      const label = name && name !== "Onbekend" ? name : (customers[index]?.email || "deze klant");
+      const ok = window.confirm(`Weet je zeker dat je ${label} wilt verwijderen? Deze actie is definitief.`);
+      if (!ok) return;
+    }
     setActionLoading(button, true);
     try {
       if (action === "delete") {
