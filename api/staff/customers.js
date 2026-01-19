@@ -300,6 +300,7 @@ module.exports = async (req, res) => {
 
         try {
           const created = await supabaseAuthAdmin("users", {
+            method: "POST",
             accessKey: serviceRoleKey,
             body: {
               email,
@@ -318,10 +319,29 @@ module.exports = async (req, res) => {
         } catch (e) {
           const { redactSecrets } = require("../_lib/security");
           const msg = String(e?.message || "");
+          console.error("[create_customer] Error:", msg);
+
+          // Parse Supabase error detail
+          const parseAuthError = (rawMsg) => {
+            if (!rawMsg.startsWith("auth_admin_failed:")) return null;
+            const parts = rawMsg.split(":");
+            const status = Number(parts[1]) || 500;
+            const detail = parts.slice(2).join(":").trim();
+            let detailMsg = detail;
+            try {
+              const parsed = JSON.parse(detail);
+              detailMsg = parsed?.msg || parsed?.message || parsed?.error_description || parsed?.error || detail;
+            } catch {
+              detailMsg = detail;
+            }
+            return { status, detailMsg };
+          };
+
           if (isDuplicateUserError(msg)) {
+            console.log("[create_customer] Duplicate user detected, attempting update");
             const existing = await findUserByEmail(serviceRoleKey, email);
             if (!existing?.id) {
-              return json(res, 409, { error: "Deze klant bestaat al." });
+              return json(res, 409, { error: "Deze klant bestaat al maar kon niet worden bijgewerkt." });
             }
             const existingMeta = existing?.app_metadata || {};
             const existingUserMeta = existing?.user_metadata || {};
@@ -362,22 +382,14 @@ module.exports = async (req, res) => {
               });
             } catch (updateError) {
               const updateMsg = String(updateError?.message || "");
-              if (updateMsg.startsWith("auth_admin_failed:")) {
-                const parts = updateMsg.split(":");
-                const status = Number(parts[1]) || 500;
-                const detail = parts.slice(2).join(":").trim();
-                let detailMsg = detail;
-                try {
-                  const parsed = JSON.parse(detail);
-                  detailMsg = parsed?.message || parsed?.error_description || parsed?.error || detail;
-                } catch {
-                  detailMsg = detail;
-                }
-                return json(res, status, {
-                  error: redactSecrets(detailMsg) || "Verzoek mislukt. Probeer later opnieuw.",
+              console.error("[create_customer] Update error:", updateMsg);
+              const parsed = parseAuthError(updateMsg);
+              if (parsed) {
+                return json(res, parsed.status, {
+                  error: redactSecrets(parsed.detailMsg) || "Bijwerken klant mislukt.",
                 });
               }
-              return json(res, 500, { error: "Verzoek mislukt. Probeer later opnieuw." });
+              return json(res, 500, { error: "Bijwerken bestaande klant mislukt: " + redactSecrets(updateMsg) });
             }
             const updatedUser = updated?.user || updated || existing;
             return json(res, 200, {
@@ -387,22 +399,16 @@ module.exports = async (req, res) => {
               updated_existing: true,
             });
           }
-          if (msg.startsWith("auth_admin_failed:")) {
-            const parts = msg.split(":");
-            const status = Number(parts[1]) || 500;
-            const detail = parts.slice(2).join(":").trim();
-            let detailMsg = detail;
-            try {
-              const parsed = JSON.parse(detail);
-              detailMsg = parsed?.message || parsed?.error_description || parsed?.error || detail;
-            } catch {
-              detailMsg = detail;
-            }
-            return json(res, status, {
-              error: redactSecrets(detailMsg) || "Verzoek mislukt. Probeer later opnieuw.",
+
+          const parsed = parseAuthError(msg);
+          if (parsed) {
+            return json(res, parsed.status, {
+              error: redactSecrets(parsed.detailMsg) || "Aanmaken klant mislukt.",
             });
           }
-          return json(res, 500, { error: "Verzoek mislukt. Probeer later opnieuw." });
+
+          // Fallback: return the actual error message for debugging
+          return json(res, 500, { error: "Aanmaken klant mislukt: " + redactSecrets(msg) });
         }
       }
 
@@ -515,6 +521,11 @@ module.exports = async (req, res) => {
         detailMsg = detail;
       }
       return json(res, status, { error: redactSecrets(detailMsg) || "Verzoek mislukt. Probeer later opnieuw." });
+    }
+    const status = Number(e?.statusCode) || 500;
+    const detail = redactSecrets(e?.publicMessage || e?.message || "");
+    if (detail) {
+      return json(res, status, { error: detail });
     }
     return publicError(res, 500, "Verzoek mislukt. Probeer later opnieuw.", e);
   }
