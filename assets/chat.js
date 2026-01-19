@@ -872,6 +872,18 @@
         window.addEventListener("resize", syncChatFooterGap);
       }
 
+      const isPaidUser = (user) => {
+        const appMeta = user?.app_metadata || {};
+        const plan = String(appMeta.plan || "").toLowerCase();
+        if (appMeta.lifetime_free === true || plan === "standard" || plan === "lifetime") return true;
+        const totalPaid = Number(appMeta.total_paid_eur || 0);
+        if (Number.isFinite(totalPaid) && totalPaid > 0) return true;
+        const lastPaid = Number(appMeta.last_payment_amount_eur || 0);
+        if (Number.isFinite(lastPaid) && lastPaid > 0) return true;
+        if (typeof appMeta.last_payment_at === "string" && appMeta.last_payment_at.trim()) return true;
+        return false;
+      };
+
       const getSupabaseClient = () => {
         if (window.mathijsSupabase) {
           console.log("Hergebruik bestaande Supabase client");
@@ -2401,10 +2413,14 @@
 	          ensureSessionEmptyActions();
 	          return null;
 	        }
-	        if (currentUser) {
-	          console.log("requireAuthenticatedUser: gebruiker al bekend", currentUser.id, currentUser.email);
-	          return currentUser;
-	        }
+        if (currentUser) {
+          if (!isPaidUser(currentUser)) {
+            window.location.href = "/subscribe";
+            return null;
+          }
+          console.log("requireAuthenticatedUser: gebruiker al bekend", currentUser.id, currentUser.email);
+          return currentUser;
+        }
 	        try {
 	          console.log("requireAuthenticatedUser: ophalen gebruiker via getUser()");
 	          const { data, error } = await supabaseClient.auth.getUser();
@@ -2418,8 +2434,12 @@
 	            window.location.href = "/login";
 	            return null;
 	          }
-	          currentUser = data.user;
-	          console.log("requireAuthenticatedUser: gebruiker gevonden", currentUser.id, currentUser.email);
+          currentUser = data.user;
+          if (!isPaidUser(currentUser)) {
+            window.location.href = "/subscribe";
+            return null;
+          }
+          console.log("requireAuthenticatedUser: gebruiker gevonden", currentUser.id, currentUser.email);
 	        } catch (error) {
 	          console.error("requireAuthenticatedUser: kon gebruiker niet ophalen", error);
 	          try {

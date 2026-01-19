@@ -30,6 +30,17 @@ const CHAT_WINDOW_MS = 60_000;
 const CHAT_LIMIT_FREE = 20;
 const CHAT_LIMIT_PAID = 60;
 const TOKENS_PER_CHAT_DEFAULT = 1;
+
+const isPaidAppMeta = (appMeta = {}) => {
+  const plan = String(appMeta.plan || "").toLowerCase();
+  if (appMeta.lifetime_free === true || plan === "standard" || plan === "lifetime") return true;
+  const totalPaid = Number(appMeta.total_paid_eur || 0);
+  if (Number.isFinite(totalPaid) && totalPaid > 0) return true;
+  const lastPaid = Number(appMeta.last_payment_amount_eur || 0);
+  if (Number.isFinite(lastPaid) && lastPaid > 0) return true;
+  if (typeof appMeta.last_payment_at === "string" && appMeta.last_payment_at.trim()) return true;
+  return false;
+};
 const STARTER_CREDITS_EUR = 15;
 const MODEL_TOKEN_COSTS = {
   chatgpt52: 2,
@@ -535,9 +546,14 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const userPlan = String(appMeta?.plan || "free").toLowerCase();
-    const isPaid = userPlan === "standard" || userPlan === "lifetime" || appMeta?.lifetime_free === true;
-    const limit = isPaid ? CHAT_LIMIT_PAID : CHAT_LIMIT_FREE;
+    const isPaid = isPaidAppMeta(appMeta);
+    if (!isPaid) {
+      return json(res, 402, {
+        error: "Abonnement vereist om te chatten.",
+        subscribe_required: true,
+      });
+    }
+    const limit = CHAT_LIMIT_PAID;
 
     // Rate limit before deducting tokens.
     const userLimit = rateLimit({ key: `chat:user:${user.id}`, limit, windowMs: CHAT_WINDOW_MS });
