@@ -445,10 +445,21 @@
     }
   };
 
+  const refreshAccessToken = async () => {
+    const supabase = createSupabaseClient();
+    if (!supabase) return null;
+    const { data } = await supabase.auth.getSession();
+    accessToken = data?.session?.access_token || null;
+    return accessToken;
+  };
+
   const handleAddSubmit = async (event) => {
     event.preventDefault();
-    if (!accessToken) {
-      setAddFeedback("Sessie verlopen. Ververs de pagina.", "error");
+    // Refresh token before making request
+    const token = await refreshAccessToken();
+    if (!token) {
+      setAddFeedback("Sessie verlopen. Log opnieuw in.", "error");
+      window.location.href = "/staff-login";
       return;
     }
     const email = (addEmailInput?.value || "").trim();
