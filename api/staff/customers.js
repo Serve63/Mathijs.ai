@@ -175,7 +175,10 @@ module.exports = async (req, res) => {
     }
 
     const user = await getUserFromAccessToken(token);
-    if (!user?.id || !user?.email) return json(res, 401, { error: "Unauthorized" });
+    if (!user?.id || !user?.email) {
+      console.log("[staff/customers] Token verification failed. Token length:", token?.length);
+      return json(res, 401, { error: "Sessie verlopen. Log opnieuw in en probeer het nog eens." });
+    }
     const confirmedAt = user?.email_confirmed_at || user?.confirmed_at;
     if (!confirmedAt) return json(res, 403, { error: "Forbidden (email not verified)" });
     if (!isStaffUser(user)) return json(res, 403, { error: "Forbidden (not staff)" });

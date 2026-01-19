@@ -5,17 +5,21 @@ const SUPABASE_ANON_KEY = getSupabaseAnonKey();
 
 async function getUserFromAccessToken(accessToken) {
   if (!accessToken) return null;
-  const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    method: "GET",
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-  if (!resp.ok) return null;
   try {
+    const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      method: "GET",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!resp.ok) {
+      console.log(`[getUserFromAccessToken] Supabase returned ${resp.status}`);
+      return null;
+    }
     return await resp.json();
-  } catch {
+  } catch (e) {
+    console.log("[getUserFromAccessToken] Error:", e?.message || e);
     return null;
   }
 }
