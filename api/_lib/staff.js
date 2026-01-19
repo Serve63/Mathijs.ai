@@ -14,7 +14,7 @@ const STAFF_EMAIL_ALLOWLIST = new Set([
 
 const STAFF_USER_ID_ALLOWLIST = new Set(parseAllowlistEnv(process.env.STAFF_USER_ID_ALLOWLIST));
 
-function isStaffUser(user) {
+function isAllowlistedStaff(user) {
   const email = (user?.email || "").toLowerCase().trim();
   if (email && STAFF_EMAIL_ALLOWLIST.has(email)) return true;
 
@@ -24,9 +24,18 @@ function isStaffUser(user) {
   return false;
 }
 
+function isStaffUser(user) {
+  const appMeta = user?.app_metadata || {};
+  const role = String(appMeta.role || "").toLowerCase();
+  if (appMeta.is_staff === true || role === "staff") return true;
+
+  return isAllowlistedStaff(user);
+}
+
 module.exports = {
   parseAllowlistEnv,
   STAFF_EMAIL_ALLOWLIST,
   STAFF_USER_ID_ALLOWLIST,
+  isAllowlistedStaff,
   isStaffUser,
 };

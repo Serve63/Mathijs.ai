@@ -26,6 +26,10 @@
       "destination": "/customers.html"
     },
     {
+      "source": "/personeel",
+      "destination": "/staff-team.html"
+    },
+    {
       "source": "/analytics",
       "destination": "/analytics.html"
     },

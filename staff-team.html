@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+    <title>Mathijs.ai | Personeel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #fafafa;
+        --ink: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.72);
+        --accent: #e6c200;
+        --accent-strong: #c9a900;
+        --dark: #1a1a2e;
+        --hero-1: #1a1a2e;
+        --hero-2: #16213e;
+        --hero-3: #0f3460;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 30% 20%, rgba(230, 194, 0, 0.16), transparent 45%),
+          linear-gradient(135deg, var(--hero-1) 0%, var(--hero-2) 48%, var(--hero-3) 100%);
+        color: var(--ink);
+        font-family: "Manrope", "Segoe UI", sans-serif;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        position: relative;
+        overflow-x: hidden;
+        min-height: 100vh;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(circle at 20% 30%, rgba(230, 194, 0, 0.08) 0%, transparent 50%),
+          radial-gradient(circle at 80% 70%, rgba(15, 52, 96, 0.12) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: -2;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='50' cy='50' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: -1;
+        opacity: 1;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        padding: 0;
+        background: var(--dark);
+        backdrop-filter: blur(32px) saturate(200%);
+        -webkit-backdrop-filter: blur(32px) saturate(200%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.05) inset,
+          0 4px 24px rgba(0, 0, 0, 0.3),
+          0 0 0 1px rgba(0, 0, 0, 0.1);
+      }
+
+      .site-header::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 80% 50% at 0% 0%, rgba(230, 194, 0, 0.06) 0%, transparent 60%),
+          radial-gradient(ellipse 80% 50% at 100% 0%, rgba(15, 52, 96, 0.06) 0%, transparent 60%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%);
+        pointer-events: none;
+        opacity: 1;
+      }
+
+      .site-header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(230, 194, 0, 0.3) 50%,
+          transparent 100%
+        );
+        pointer-events: none;
+      }
+
+      .header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        position: relative;
+        z-index: 1;
+        padding: 14px 40px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        color: #fff;
+        letter-spacing: 0.05em;
+        position: relative;
+      }
+
+      .brand-logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        border: 2px solid rgba(230, 194, 0, 0.4);
+        box-shadow:
+          0 0 0 1px rgba(230, 194, 0, 0.15),
+          0 2px 12px rgba(230, 194, 0, 0.2);
+      }
+
+      .brand-text {
+        font-family: "Sora", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .brand-dot {
+        color: var(--accent);
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 10px 22px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .btn.secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      .btn.ghost {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+
+      .btn.danger {
+        background: rgba(233, 90, 74, 0.2);
+        border-color: rgba(233, 90, 74, 0.4);
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+
+      .btn.tiny {
+        padding: 7px 10px;
+        font-size: 0.78rem;
+        border-radius: 999px;
+        min-height: 30px;
+      }
+
+      .customers-shell {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 18px 20px 32px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .summary-card {
+        padding: 16px 18px;
+        border-radius: 14px;
+        background: rgba(12, 18, 44, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 24px 70px -55px rgba(0, 0, 0, 0.75);
+      }
+
+      .summary-label {
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 700;
+      }
+
+      .summary-value {
+        font-family: "Sora", sans-serif;
+        font-size: 1.8rem;
+        margin-top: 6px;
+        color: #fff;
+      }
+
+      .summary-sub {
+        margin-top: 2px;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.65);
+      }
+
+      .customers-panel {
+        background: rgba(12, 18, 44, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        padding: 16px 18px 18px;
+        box-shadow: 0 24px 70px -55px rgba(0, 0, 0, 0.7);
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .panel-head h1 {
+        margin: 0;
+        font-family: "Sora", sans-serif;
+        font-size: 1.35rem;
+        color: #fff;
+      }
+
+      .panel-head p {
+        margin: 6px 0 0;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+      }
+
+      .panel-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .search {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .search input {
+        background: rgba(7, 12, 28, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 12px;
+        padding: 10px 12px;
+        color: #fff;
+        min-width: 240px;
+      }
+
+      .search input::placeholder {
+        color: rgba(255, 255, 255, 0.55);
+      }
+
+      .add-customer-panel {
+        margin-top: 14px;
+        padding: 14px;
+        border-radius: 12px;
+        background: rgba(7, 12, 28, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .form-field label {
+        display: block;
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 6px;
+        font-weight: 700;
+      }
+
+      .form-field input,
+      .form-field select {
+        width: 100%;
+        background: rgba(6, 10, 24, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 12px;
+        padding: 10px 12px;
+        color: #fff;
+        font-size: 0.92rem;
+      }
+
+      .custom-select {
+        position: relative;
+      }
+
+      .custom-select__trigger {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: rgba(6, 10, 24, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        color: #fff;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 0.92rem;
+        cursor: pointer;
+      }
+
+      .custom-select__menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: rgba(12, 18, 44, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 12px;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+        display: none;
+        z-index: 20;
+        padding: 6px;
+      }
+
+      .custom-select.is-open .custom-select__menu {
+        display: grid;
+        gap: 4px;
+      }
+
+      .custom-select__option {
+        text-align: left;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: transparent;
+        border: 1px solid transparent;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.88rem;
+        cursor: pointer;
+      }
+
+      .custom-select__option:hover,
+      .custom-select__option:focus {
+        background: rgba(255, 255, 255, 0.08);
+        outline: none;
+      }
+
+      .custom-select__option.is-selected {
+        background: rgba(230, 194, 0, 0.18);
+        border-color: rgba(230, 194, 0, 0.4);
+        color: #fff;
+      }
+
+      .form-field small {
+        display: block;
+        margin-top: 6px;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 0.78rem;
+      }
+
+      .form-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .form-feedback {
+        margin-top: 8px;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.65);
+      }
+
+      .form-feedback.error { color: rgba(233, 90, 74, 0.95); }
+      .form-feedback.success { color: rgba(56, 191, 127, 0.95); }
+
+      .btn.primary {
+        background: var(--accent);
+        color: #1a1600;
+        border-color: transparent;
+      }
+
+      .btn.primary:hover {
+        background: var(--accent-strong);
+      }
+
+      .table-head,
+      .table-row {
+        display: grid;
+        grid-template-columns: 1.6fr 0.9fr 0.8fr 1.2fr;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .table-head {
+        margin-top: 16px;
+        padding-bottom: 10px;
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.55);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .table-row {
+        padding: 12px 6px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .table-row:last-child {
+        border-bottom: none;
+      }
+
+      .cell {
+        font-size: 0.92rem;
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      .customer-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .customer-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: rgba(84, 162, 255, 0.22);
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        color: #fff;
+        font-size: 0.85rem;
+      }
+
+      .customer-name {
+        margin: 0;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .customer-sub {
+        margin: 4px 0 0;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .customer-subline {
+        display: block;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      .status.active {
+        background: rgba(56, 191, 127, 0.18);
+        color: rgba(56, 191, 127, 0.95);
+        border: 1px solid rgba(56, 191, 127, 0.35);
+      }
+
+      .status.trial {
+        background: rgba(242, 173, 63, 0.2);
+        color: rgba(242, 173, 63, 0.95);
+        border: 1px solid rgba(242, 173, 63, 0.4);
+      }
+
+      .status.cancelled {
+        background: rgba(233, 90, 74, 0.2);
+        color: rgba(233, 90, 74, 0.95);
+        border: 1px solid rgba(233, 90, 74, 0.4);
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        align-items: center;
+      }
+
+      .actions .btn {
+        width: 100%;
+        justify-content: center;
+        white-space: nowrap;
+      }
+
+      .actions .btn.ghost,
+      .actions .btn.wide {
+        grid-column: 1 / -1;
+      }
+
+      .delete-confirm {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        align-items: center;
+      }
+
+      .delete-confirm__text {
+        grid-column: 1 / -1;
+        text-align: center;
+        font-size: 0.78rem;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .customers-empty {
+        padding: 20px 0 4px;
+        color: rgba(255, 255, 255, 0.65);
+      }
+
+      @media (max-width: 1100px) {
+        .summary-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 900px) {
+        .header-inner {
+          padding: 14px 18px;
+        }
+
+        .panel-head {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .panel-actions {
+          width: 100%;
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .search input {
+          min-width: 100%;
+        }
+
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .table-head {
+          display: none;
+        }
+
+        .table-row {
+          grid-template-columns: 1fr;
+          gap: 10px;
+          padding: 14px 0;
+        }
+
+        .cell::before {
+          content: attr(data-label);
+          display: block;
+          font-size: 0.72rem;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.55);
+          margin-bottom: 4px;
+        }
+      }
+    </style>
+      <link rel="stylesheet" href="assets/stability.css" />
+      <link rel="stylesheet" href="assets/ui.css" />
+    <script src="assets/stability.js" defer></script>
+</head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a href="/" class="brand" aria-label="Mathijs.ai startpagina">
+          <img src="assets/logo.png" alt="Mathijs.ai-logo" class="brand-logo" width="40" height="40" />
+          <span class="brand-text">MATHIJS<span class="brand-dot">.AI</span></span>
+        </a>
+        <div class="header-actions">
+          <a class="btn secondary" href="/staff-dashboard">Terug naar dashboard</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="customers-shell" aria-label="Personeel">
+      <section class="summary-grid" aria-label="Samenvatting">
+        <div class="summary-card">
+          <div class="summary-label">Medewerkers totaal</div>
+          <div class="summary-value" id="stat-total-staff">0</div>
+          <div class="summary-sub">Personeelsleden</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Actieve medewerkers</div>
+          <div class="summary-value" id="stat-active-staff">0</div>
+          <div class="summary-sub">Ingelogd</div>
+        </div>
+      </section>
+
+      <section class="customers-panel" aria-label="Personeelsoverzicht">
+        <div class="panel-head">
+          <div>
+            <h1>Personeel</h1>
+            <p>Beheer personeel direct vanuit een overzicht.</p>
+          </div>
+          <div class="panel-actions">
+            <div class="search">
+              <input
+                type="search"
+                id="staff-search"
+                placeholder="Zoek op naam of mail"
+                aria-label="Zoek personeel"
+              />
+            </div>
+            <button class="btn secondary" id="staff-add-toggle" type="button" aria-expanded="false">
+              Medewerker toevoegen
+            </button>
+          </div>
+        </div>
+
+        <div class="add-customer-panel" id="staff-add-panel" hidden>
+          <form id="staff-add-form" novalidate>
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="staff-add-email">E-mail</label>
+                <input id="staff-add-email" type="email" autocomplete="email" placeholder="team@bedrijf.nl" required />
+              </div>
+              <div class="form-field">
+                <label for="staff-add-name">Naam</label>
+                <input id="staff-add-name" type="text" autocomplete="name" placeholder="Voornaam Achternaam" />
+              </div>
+              <div class="form-field">
+                <label for="staff-add-password">Wachtwoord</label>
+                <input id="staff-add-password" type="text" autocomplete="new-password" minlength="10" placeholder="Kies een sterk wachtwoord" required />
+                <small>Minimaal 10 tekens.</small>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn ghost" type="button" id="staff-add-cancel">Annuleren</button>
+              <button class="btn primary" type="submit" id="staff-add-submit">Medewerker toevoegen</button>
+            </div>
+            <div class="form-feedback" id="staff-add-feedback" aria-live="polite"></div>
+          </form>
+        </div>
+
+        <div class="table-head" aria-hidden="true">
+          <div>Medewerker</div>
+          <div>Rol</div>
+          <div>Status</div>
+          <div>Acties</div>
+        </div>
+        <div id="staff-table"></div>
+        <div class="customers-empty" id="staff-empty" hidden>Geen medewerkers gevonden.</div>
+      </section>
+    </main>
+
+    <script src="assets/vendor/supabase.min.js" defer></script>
+    <script src="assets/ui.js" defer></script>
+    <script src="staff-team.js" defer></script>
+  </body>
+</html>
