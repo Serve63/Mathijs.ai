@@ -82,7 +82,7 @@
     if (customer?.lifetime_free) return "Lifetime Gratis";
     const plan = (customer?.plan || "free").toLowerCase();
     if (plan === "free") return "Gratis";
-    if (plan === "trial") return "1 maand gratis";
+    if (plan === "trial") return "1 Maand Gratis";
     if (plan === "standard") return "Standaard";
     return plan.charAt(0).toUpperCase() + plan.slice(1);
   };
@@ -172,6 +172,7 @@
           : isLifetime
           ? `
               <button class="btn tiny secondary wide" data-action="lifetime" data-enabled="false">Lifetime opzeggen</button>
+              <button class="btn tiny ghost" data-action="reset-password">Wachtwoord aanpassen</button>
               <button class="btn tiny ghost" data-action="delete">Klant verwijderen</button>
             `
           : `
@@ -234,13 +235,8 @@
 
   const updatePlanFields = () => {
     if (!addPlanSelect || !addAmountField || !addAmountInput) return;
-    const plan = addPlanSelect.value;
-    const showAmount = plan === "standard";
-    addAmountField.hidden = !showAmount;
-    addAmountInput.required = showAmount;
-    if (showAmount && !addAmountInput.value) {
-      addAmountInput.value = String(DEFAULT_MANUAL_AMOUNT.toFixed(2));
-    }
+    addAmountField.hidden = true;
+    addAmountInput.required = false;
   };
 
   const setPlanValue = (value) => {
@@ -248,9 +244,8 @@
     addPlanSelect.value = value;
     if (addPlanValue) {
       const labelMap = {
-        lifetime: "Lifetime gratis",
-        standard: "Standaard (betaald)",
-        trial: "1 maand gratis",
+        lifetime: "Lifetime Gratis",
+        trial: "1 Maand Gratis",
       };
       addPlanValue.textContent = labelMap[value] || value;
     }
@@ -325,6 +320,42 @@
         customers.splice(index, 1);
         updateStats();
         renderTable();
+        return;
+      }
+
+      if (action === "reset-password") {
+        const prompt = window.siteUI?.prompt;
+        if (!prompt) {
+          throw new Error("Wachtwoord aanpassen is niet beschikbaar.");
+        }
+        const newPassword = await prompt(
+          "Vul een nieuw wachtwoord in voor deze lifetime klant.",
+          {
+            title: "Wachtwoord aanpassen",
+            placeholder: "Nieuw wachtwoord",
+            confirmText: "Opslaan",
+            inputType: "password",
+          }
+        );
+        if (newPassword === null) return;
+        const trimmed = newPassword.trim();
+        if (trimmed.length < 10) {
+          throw new Error("Wachtwoord moet minimaal 10 tekens zijn.");
+        }
+
+        const resp = await fetch("/api/staff/customers", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ action: "update_password", id, password: trimmed }),
+        });
+        const payload = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(payload?.error || "Wachtwoord aanpassen mislukt.");
+        if (window.siteUI?.toast) {
+          window.siteUI.toast("Wachtwoord aangepast.", { type: "success" });
+        }
         return;
       }
 

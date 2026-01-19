@@ -44,7 +44,7 @@
       if (input) {
         inputEl = document.createElement("input");
         inputEl.className = "ui-modal__input";
-        inputEl.type = "text";
+        inputEl.type = input.type || "text";
         inputEl.value = input.value || "";
         if (input.placeholder) inputEl.placeholder = input.placeholder;
         modal.appendChild(inputEl);
@@ -137,6 +137,7 @@
       input: {
         value: options.defaultValue || "",
         placeholder: options.placeholder || "",
+        type: options.inputType || "text",
       },
     }).then((value) => (typeof value === "string" ? value : null));
 

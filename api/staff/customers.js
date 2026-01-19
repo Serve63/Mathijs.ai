@@ -418,6 +418,32 @@ module.exports = async (req, res) => {
       const id = body?.id;
       if (!id) return json(res, 400, { error: "Missing id" });
 
+      if (action === "update_password") {
+        const passwordRaw = typeof body?.password === "string" ? body.password.trim() : "";
+        if (!passwordRaw) return json(res, 400, { error: "Wachtwoord is verplicht." });
+        if (passwordRaw.length < 10) {
+          return json(res, 400, { error: "Wachtwoord moet minimaal 10 tekens zijn." });
+        }
+
+        const u = await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
+          method: "GET",
+          accessKey: serviceRoleKey,
+        });
+        const meta = u?.user?.app_metadata || {};
+        const plan = String(meta.plan || "").toLowerCase();
+        const isLifetime = Boolean(meta.lifetime_free) || plan === "lifetime";
+        if (!isLifetime) {
+          return json(res, 403, { error: "Wachtwoord aanpassen kan alleen bij lifetime gratis klanten." });
+        }
+
+        await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
+          method: "PUT",
+          accessKey: serviceRoleKey,
+          body: { password: passwordRaw },
+        });
+        return json(res, 200, { ok: true });
+      }
+
       if (action === "grant_free_months") {
         const months = Number(body?.months || 0);
         if (!Number.isFinite(months) || months <= 0) return json(res, 400, { error: "Invalid months" });
