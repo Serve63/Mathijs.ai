@@ -495,6 +495,27 @@ module.exports = async (req, res) => {
 
     return json(res, 405, { error: "Method not allowed" });
   } catch (e) {
+    const { redactSecrets } = require("../_lib/security");
+    const raw = String(e?.message || "");
+    if (raw === "payload_too_large") {
+      return json(res, 413, { error: "Aanvraag is te groot." });
+    }
+    if (raw === "invalid_json") {
+      return json(res, 400, { error: "Ongeldige aanvraag." });
+    }
+    if (raw.startsWith("auth_admin_failed:")) {
+      const parts = raw.split(":");
+      const status = Number(parts[1]) || 500;
+      const detail = parts.slice(2).join(":").trim();
+      let detailMsg = detail;
+      try {
+        const parsed = JSON.parse(detail);
+        detailMsg = parsed?.message || parsed?.error_description || parsed?.error || detail;
+      } catch {
+        detailMsg = detail;
+      }
+      return json(res, status, { error: redactSecrets(detailMsg) || "Verzoek mislukt. Probeer later opnieuw." });
+    }
     return publicError(res, 500, "Verzoek mislukt. Probeer later opnieuw.", e);
   }
 };
