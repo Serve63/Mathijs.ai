@@ -349,15 +349,36 @@ module.exports = async (req, res) => {
               ...userMeta,
             };
 
-            const updated = await supabaseAuthAdmin(`users/${encodeURIComponent(existing.id)}`, {
-              method: "PUT",
-              accessKey: serviceRoleKey,
-              body: {
-                password,
-                user_metadata: nextUserMeta,
-                app_metadata: nextMeta,
-              },
-            });
+            let updated = null;
+            try {
+              updated = await supabaseAuthAdmin(`users/${encodeURIComponent(existing.id)}`, {
+                method: "PUT",
+                accessKey: serviceRoleKey,
+                body: {
+                  password,
+                  user_metadata: nextUserMeta,
+                  app_metadata: nextMeta,
+                },
+              });
+            } catch (updateError) {
+              const updateMsg = String(updateError?.message || "");
+              if (updateMsg.startsWith("auth_admin_failed:")) {
+                const parts = updateMsg.split(":");
+                const status = Number(parts[1]) || 500;
+                const detail = parts.slice(2).join(":").trim();
+                let detailMsg = detail;
+                try {
+                  const parsed = JSON.parse(detail);
+                  detailMsg = parsed?.message || parsed?.error_description || parsed?.error || detail;
+                } catch {
+                  detailMsg = detail;
+                }
+                return json(res, status, {
+                  error: redactSecrets(detailMsg) || "Verzoek mislukt. Probeer later opnieuw.",
+                });
+              }
+              return json(res, 500, { error: "Verzoek mislukt. Probeer later opnieuw." });
+            }
             const updatedUser = updated?.user || updated || existing;
             return json(res, 200, {
               ok: true,
