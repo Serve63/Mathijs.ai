@@ -245,12 +245,37 @@ module.exports = async (req, res) => {
           method: "GET",
           accessKey: serviceRoleKey,
         });
+        const currentMeta = u?.user?.app_metadata || {};
+        const currentPlan = String(currentMeta.plan || "free").toLowerCase();
+        let nextPlan = currentPlan;
+        let nextCancelledAt = currentMeta.cancelled_at || null;
+
+        if (enabled) {
+          if (currentPlan !== "standard") nextPlan = "lifetime";
+          nextCancelledAt = null;
+        } else if (currentPlan !== "standard") {
+          nextPlan = "free";
+          nextCancelledAt = new Date().toISOString();
+        }
+
+        const nextMeta = {
+          ...currentMeta,
+          lifetime_free: enabled,
+          plan: nextPlan,
+          cancelled_at: nextCancelledAt,
+        };
+
         await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
           method: "PUT",
           accessKey: serviceRoleKey,
-          body: { app_metadata: { ...(u?.user?.app_metadata || {}), lifetime_free: enabled } },
+          body: { app_metadata: nextMeta },
         });
-        return json(res, 200, { ok: true, lifetime_free: enabled });
+        return json(res, 200, {
+          ok: true,
+          lifetime_free: enabled,
+          plan: nextPlan,
+          cancelled_at: nextCancelledAt || null,
+        });
       }
 
       if (action === "delete_customer") {

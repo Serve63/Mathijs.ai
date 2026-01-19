@@ -257,6 +257,8 @@
         const payload = await resp.json().catch(() => ({}));
         if (!resp.ok) throw new Error(payload?.error || "Bijwerken mislukt.");
         customers[index].lifetime_free = Boolean(payload?.lifetime_free);
+        if (payload?.plan) customers[index].plan = payload.plan;
+        if ("cancelled_at" in payload) customers[index].cancelled_at = payload.cancelled_at;
         updateStats();
         renderTable();
       }
