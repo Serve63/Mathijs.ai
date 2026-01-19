@@ -352,7 +352,6 @@ module.exports = async (req, res) => {
               accessKey: serviceRoleKey,
               body: {
                 password,
-                email_confirm: true,
                 user_metadata: nextUserMeta,
                 app_metadata: nextMeta,
               },
