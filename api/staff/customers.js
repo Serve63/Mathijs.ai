@@ -44,6 +44,7 @@ function isDuplicateUserError(message = "") {
   return (
     msg.includes("already registered") ||
     msg.includes("already exists") ||
+    msg.includes("email_exists") ||
     msg.includes("duplicate") ||
     msg.includes("users_email_key") ||
     msg.includes("user already exists")
@@ -315,6 +316,7 @@ module.exports = async (req, res) => {
             created: true,
           });
         } catch (e) {
+          const { redactSecrets } = require("../_lib/security");
           const msg = String(e?.message || "");
           if (isDuplicateUserError(msg)) {
             const existing = await findUserByEmail(serviceRoleKey, email);
@@ -364,7 +366,22 @@ module.exports = async (req, res) => {
               updated_existing: true,
             });
           }
-          throw e;
+          if (msg.startsWith("auth_admin_failed:")) {
+            const parts = msg.split(":");
+            const status = Number(parts[1]) || 500;
+            const detail = parts.slice(2).join(":").trim();
+            let detailMsg = detail;
+            try {
+              const parsed = JSON.parse(detail);
+              detailMsg = parsed?.message || parsed?.error_description || parsed?.error || detail;
+            } catch {
+              detailMsg = detail;
+            }
+            return json(res, status, {
+              error: redactSecrets(detailMsg) || "Verzoek mislukt. Probeer later opnieuw.",
+            });
+          }
+          return json(res, 500, { error: "Verzoek mislukt. Probeer later opnieuw." });
         }
       }
 
