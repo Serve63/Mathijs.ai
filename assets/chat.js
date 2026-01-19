@@ -1218,8 +1218,11 @@
         list: [],
         activeId: null,
         untitledCount: 0,
+        loading: true,
       };
       const LEGACY_SESSION_ID = "__legacy_session__";
+      const SESSION_LOADING_MESSAGE = "Chats laden...";
+      const SESSION_EMPTY_MESSAGE = "Nog geen gesprekken. Start je eerste chat.";
 
       const generateSessionId = () => {
         if (window.crypto && crypto.randomUUID) {
@@ -1270,10 +1273,9 @@
         sessionListEl.innerHTML = "";
         if (!sessionState.list.length) {
           if (sessionEmptyEl) {
-            sessionEmptyEl.textContent = "Nog geen gesprekken. Start je eerste chat.";
+            sessionEmptyEl.textContent = sessionState.loading ? SESSION_LOADING_MESSAGE : SESSION_EMPTY_MESSAGE;
             sessionEmptyEl.style.removeProperty("display");
           }
-          // Verwijder de actieknoppen als de lijst leeg is maar er geen error was
           removeSessionEmptyActions();
           return;
         }
@@ -1407,7 +1409,7 @@
         renderSessionList();
       };
 
-	      const renderEmptySessionMessage = (message = "Nog geen gesprekken. Start je eerste chat.") => {
+	      const renderEmptySessionMessage = (message = SESSION_EMPTY_MESSAGE) => {
 	        if (!sessionEmptyEl) return;
 	        sessionEmptyEl.textContent = message;
 	        sessionEmptyEl.style.removeProperty("display");
@@ -1415,6 +1417,14 @@
 	          sessionListEl.innerHTML = "";
 	        }
 	      };
+
+      const setSessionsLoading = (loading) => {
+        sessionState.loading = loading;
+        if (loading) {
+          renderEmptySessionMessage(SESSION_LOADING_MESSAGE);
+          removeSessionEmptyActions();
+        }
+      };
 
       const SESSION_TITLE_KEY = "mathijs_session_titles_v1";
       const loadTitleOverrides = (userId) => {
@@ -2173,7 +2183,9 @@
 	        const { goToLatest = false } = options;
 	        const user = await requireAuthenticatedUser();
 	        if (!user?.id) return;
+	        setSessionsLoading(true);
 	        const applySessions = (data) => {
+	          setSessionsLoading(false);
 	          const derivedSessions = data.map((session) => ({
 	            ...session,
 	            title:
@@ -2223,26 +2235,28 @@
 	            console.log("refreshSessionsFromSupabase: geen legacy, probeer direct");
 	            const recovered = await tryDirectSessions();
 	            if (recovered) return;
-	            console.log("refreshSessionsFromSupabase: geen sessies gevonden - dit kan normaal zijn voor nieuwe gebruikers");
-	            sessionState.list = [];
-	            sessionState.activeId = null;
-	            sessionState.untitledCount = 0;
-	            renderSessionList();
-	            // Geen actieknoppen tonen als dit een nieuwe gebruiker is zonder chat geschiedenis
-	            // (de "Nieuw gesprek" knop is al beschikbaar)
-	            return;
-	          }
-
-	          applySessions(data);
-	        } catch (error) {
-	          console.error("Sessies ophalen mislukt", error);
-	          const recovered = await tryDirectSessions();
-	          if (recovered) return;
+	          console.log("refreshSessionsFromSupabase: geen sessies gevonden - dit kan normaal zijn voor nieuwe gebruikers");
+	          sessionState.list = [];
+	          sessionState.activeId = null;
+	          sessionState.untitledCount = 0;
+	          setSessionsLoading(false);
 	          renderSessionList();
-	          renderEmptySessionMessage("Kon gesprekken niet laden. Probeer opnieuw laden.");
-	          ensureSessionEmptyActions();
+	          // Geen actieknoppen tonen als dit een nieuwe gebruiker is zonder chat geschiedenis
+	          // (de "Nieuw gesprek" knop is al beschikbaar)
+	          return;
 	        }
-	      };
+
+	        applySessions(data);
+	      } catch (error) {
+	        console.error("Sessies ophalen mislukt", error);
+	        const recovered = await tryDirectSessions();
+	        if (recovered) return;
+	        setSessionsLoading(false);
+	        renderSessionList();
+	        renderEmptySessionMessage("Kon gesprekken niet laden. Probeer opnieuw laden.");
+	        ensureSessionEmptyActions();
+	      }
+	    };
 
 	      const loadMessagesForSession = async (sessionId) => {
 	        const user = await requireAuthenticatedUser();

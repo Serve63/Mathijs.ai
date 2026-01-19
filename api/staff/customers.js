@@ -154,6 +154,10 @@ function normalizeCustomerFromUser(u) {
   };
 }
 
+function getAdminUserPayload(payload) {
+  return payload?.user || payload;
+}
+
 module.exports = async (req, res) => {
   try {
     const { getSupabaseServiceRoleKey } = require("../_lib/env");
@@ -429,7 +433,9 @@ module.exports = async (req, res) => {
           method: "GET",
           accessKey: serviceRoleKey,
         });
-        const meta = u?.user?.app_metadata || {};
+        const adminUser = getAdminUserPayload(u);
+        if (!adminUser?.id) return json(res, 404, { error: "Klant niet gevonden." });
+        const meta = adminUser?.app_metadata || {};
         const plan = String(meta.plan || "").toLowerCase();
         const isLifetime = Boolean(meta.lifetime_free) || plan === "lifetime";
         if (!isLifetime) {
@@ -453,13 +459,14 @@ module.exports = async (req, res) => {
           method: "GET",
           accessKey: serviceRoleKey,
         });
-        const current = Number(u?.user?.app_metadata?.free_months || 0);
+        const adminUser = getAdminUserPayload(u);
+        const current = Number(adminUser?.app_metadata?.free_months || 0);
         const next = current + months;
 
         await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
           method: "PUT",
           accessKey: serviceRoleKey,
-          body: { app_metadata: { ...(u?.user?.app_metadata || {}), free_months: next } },
+          body: { app_metadata: { ...(adminUser?.app_metadata || {}), free_months: next } },
         });
         return json(res, 200, { ok: true, free_months: next });
       }
@@ -470,10 +477,11 @@ module.exports = async (req, res) => {
           method: "GET",
           accessKey: serviceRoleKey,
         });
+        const adminUser = getAdminUserPayload(u);
         await supabaseAuthAdmin(`users/${encodeURIComponent(id)}`, {
           method: "PUT",
           accessKey: serviceRoleKey,
-          body: { app_metadata: { ...(u?.user?.app_metadata || {}), cancelled_at: nowIso } },
+          body: { app_metadata: { ...(adminUser?.app_metadata || {}), cancelled_at: nowIso } },
         });
         return json(res, 200, { ok: true, cancelled_at: nowIso });
       }
@@ -484,7 +492,8 @@ module.exports = async (req, res) => {
           method: "GET",
           accessKey: serviceRoleKey,
         });
-        const currentMeta = u?.user?.app_metadata || {};
+        const adminUser = getAdminUserPayload(u);
+        const currentMeta = adminUser?.app_metadata || {};
         const currentPlan = String(currentMeta.plan || "free").toLowerCase();
         let nextPlan = currentPlan;
         let nextCancelledAt = currentMeta.cancelled_at || null;

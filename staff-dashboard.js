@@ -1,7 +1,6 @@
 (() => {
   const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
-  const PRICE_EUR = 25;
 
   const elVisitors = document.getElementById("kpi-visitors");
   const elVisits = document.getElementById("kpi-visits");
@@ -10,6 +9,13 @@
   const elSalesLabel = document.getElementById("kpi-sales-label");
   const elSalesSub = document.getElementById("kpi-sales-sub");
   const salesToggle = document.getElementById("kpi-sales-toggle");
+  const salesSettingsBtn = document.getElementById("kpi-sales-settings");
+  const profitSettingsModal = document.getElementById("profit-settings");
+  const profitSettingsForm = document.getElementById("profit-settings-form");
+  const profitSettingsClose = document.getElementById("profit-settings-close");
+  const profitSettingsCancel = document.getElementById("profit-settings-cancel");
+  const profitSettingsCost = document.getElementById("profit-settings-cost");
+  const profitSettingsVat = document.getElementById("profit-settings-vat");
   const sparkMap = Array.from(document.querySelectorAll("[data-spark]")).reduce((acc, line) => {
     if (line.dataset.spark) {
       acc[line.dataset.spark] = line;
@@ -28,10 +34,11 @@
   let lastMetrics = null;
   let mapsLoaded = false;
   let forceLowHeat = false;
+  let profitSettings = { creditCostPerCustomer: 0, vatPercent: 0 };
 
   const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
   const dateFmt = new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short" });
-  const PROFIT_MARGIN = 0.35;
+  const PROFIT_SETTINGS_KEY = "mathijs_profit_settings_v1";
   const SPARK_COLORS = {
     up: "rgba(56, 191, 127, 0.95)",
     down: "rgba(233, 90, 74, 0.95)"
@@ -55,6 +62,39 @@
   };
 
   const startOfDayUtc = (now) => new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+  const clampNumber = (value, min = 0, max = Number.POSITIVE_INFINITY) => {
+    if (!Number.isFinite(value)) return min;
+    return Math.min(Math.max(value, min), max);
+  };
+
+  const loadProfitSettings = () => {
+    try {
+      const raw = localStorage.getItem(PROFIT_SETTINGS_KEY);
+      if (!raw) return { creditCostPerCustomer: 0, vatPercent: 0 };
+      const parsed = JSON.parse(raw);
+      return {
+        creditCostPerCustomer: clampNumber(Number(parsed?.creditCostPerCustomer || 0), 0),
+        vatPercent: clampNumber(Number(parsed?.vatPercent || 0), 0, 100),
+      };
+    } catch (e) {
+      console.warn("Kon winst instellingen niet laden", e);
+      return { creditCostPerCustomer: 0, vatPercent: 0 };
+    }
+  };
+
+  const saveProfitSettings = (settings) => {
+    try {
+      localStorage.setItem(PROFIT_SETTINGS_KEY, JSON.stringify(settings));
+    } catch (e) {
+      console.warn("Kon winst instellingen niet opslaan", e);
+    }
+  };
+
+  const formatSettingValue = (value) => {
+    if (!Number.isFinite(value)) return "0";
+    return value.toFixed(2);
+  };
 
   const formatProvince = (input) => {
     const provinceId = typeof input === "string" ? input : input?.province_id;
@@ -111,11 +151,20 @@
     Object.keys(sparkMap).forEach((key) => setSparkTrend(key, true));
   };
 
-  const updateSalesDisplay = (salesToday) => {
+  const computeProfit = (salesToday, paidCustomersToday) => {
+    const vatRate = clampNumber(Number(profitSettings.vatPercent || 0), 0, 100) / 100;
+    const costPerCustomer = clampNumber(Number(profitSettings.creditCostPerCustomer || 0), 0);
+    const vatAmount = salesToday * vatRate;
+    const creditsCost = costPerCustomer * paidCustomersToday;
+    return salesToday - vatAmount - creditsCost;
+  };
+
+  const updateSalesDisplay = (metrics) => {
     if (!elSales) return;
+    const salesToday = Number(metrics?.salesToday || 0);
+    const profitToday = Number(metrics?.profitToday || 0);
     if (showProfit) {
-      const profit = salesToday * PROFIT_MARGIN;
-      elSales.textContent = fmtEUR.format(profit);
+      elSales.textContent = fmtEUR.format(profitToday);
       if (elSalesLabel) elSalesLabel.textContent = "Winst vandaag";
       if (elSalesSub) elSalesSub.textContent = "Winst";
       if (salesToggle) {
@@ -294,22 +343,39 @@
       return paidAt && paidAt >= startToday;
     }).length;
 
-    const salesToday = payingCustomers.reduce((sum, customer) => {
-      const paidAt = parseDate(customer.last_payment_at || customer.subscribed_at);
-      if (!paidAt || paidAt < startToday) return sum;
-      const amount = Number(customer.last_payment_amount_eur || 0);
-      if (Number.isFinite(amount) && amount > 0) return sum + amount;
-      return sum + PRICE_EUR;
-    }, 0);
+    const salesData = payingCustomers.reduce(
+      (acc, customer) => {
+        const paidAt = parseDate(customer.last_payment_at || customer.subscribed_at);
+        if (!paidAt || paidAt < startToday) return acc;
+        const amount = Number(customer.last_payment_amount_eur || 0);
+        const totalPaid = Number(customer.total_paid_eur || 0);
+        const revenue =
+          Number.isFinite(amount) && amount > 0
+            ? amount
+            : Number.isFinite(totalPaid) && totalPaid > 0
+            ? totalPaid
+            : 0;
+        if (revenue > 0) {
+          acc.sales += revenue;
+          acc.paidCount += 1;
+        }
+        return acc;
+      },
+      { sales: 0, paidCount: 0 }
+    );
 
-    return { activeCount, newCustomersToday, salesToday, onlineTodayCount };
+    const salesToday = salesData.sales;
+    const paidCustomersToday = salesData.paidCount;
+    const profitToday = computeProfit(salesToday, paidCustomersToday);
+
+    return { activeCount, newCustomersToday, salesToday, onlineTodayCount, paidCustomersToday, profitToday };
   };
 
   const updateKpis = (metrics) => {
     if (elVisitors) elVisitors.textContent = String(metrics.activeCount || 0);
     if (elVisits) elVisits.textContent = String(metrics.onlineTodayCount || 0);
     if (elOrders) elOrders.textContent = String(metrics.newCustomersToday || 0);
-    updateSalesDisplay(metrics.salesToday || 0);
+    updateSalesDisplay(metrics);
 
     if (lastMetrics) {
       setSparkTrend("visits", metrics.onlineTodayCount >= lastMetrics.onlineTodayCount);
@@ -378,6 +444,7 @@
 
     try {
       setLoadingState("Data laden...");
+      profitSettings = loadProfitSettings();
       const customersData = await fetchCustomers(token);
       customers = customersData;
       payingCustomers = customers.filter(isPayingCustomer);
@@ -394,8 +461,54 @@
   if (salesToggle) {
     salesToggle.addEventListener("click", () => {
       showProfit = !showProfit;
-      const metrics = lastMetrics || computeMetrics(null);
-      updateSalesDisplay(metrics.salesToday || 0);
+      const metrics = lastMetrics || computeMetrics();
+      updateSalesDisplay(metrics);
+    });
+  }
+
+  const openProfitSettings = () => {
+    if (!profitSettingsModal || !profitSettingsCost || !profitSettingsVat) return;
+    profitSettingsCost.value = formatSettingValue(profitSettings.creditCostPerCustomer);
+    profitSettingsVat.value = formatSettingValue(profitSettings.vatPercent);
+    profitSettingsModal.hidden = false;
+    profitSettingsCost.focus();
+  };
+
+  const closeProfitSettings = () => {
+    if (!profitSettingsModal) return;
+    profitSettingsModal.hidden = true;
+  };
+
+  if (salesSettingsBtn) {
+    salesSettingsBtn.addEventListener("click", openProfitSettings);
+  }
+
+  if (profitSettingsClose) {
+    profitSettingsClose.addEventListener("click", closeProfitSettings);
+  }
+
+  if (profitSettingsCancel) {
+    profitSettingsCancel.addEventListener("click", closeProfitSettings);
+  }
+
+  if (profitSettingsModal) {
+    profitSettingsModal.addEventListener("click", (event) => {
+      if (event.target === profitSettingsModal) closeProfitSettings();
+    });
+  }
+
+  if (profitSettingsForm) {
+    profitSettingsForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const cost = clampNumber(Number(profitSettingsCost?.value || 0), 0);
+      const vat = clampNumber(Number(profitSettingsVat?.value || 0), 0, 100);
+      profitSettings = { creditCostPerCustomer: cost, vatPercent: vat };
+      saveProfitSettings(profitSettings);
+      if (lastMetrics) {
+        lastMetrics.profitToday = computeProfit(lastMetrics.salesToday || 0, lastMetrics.paidCustomersToday || 0);
+        updateSalesDisplay(lastMetrics);
+      }
+      closeProfitSettings();
     });
   }
 
