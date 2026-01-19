@@ -279,8 +279,9 @@
     const now = new Date();
     const startToday = startOfDayUtc(now);
     const activeCount = payingCustomers.filter(isActiveSubscriber).length;
-    const onlineTodayCount = customers.filter((customer) => {
-      const lastSeen = parseDate(customer?.last_sign_in_at || customer?.created_at);
+    const onlineTodayCount = payingCustomers.filter((customer) => {
+      if (!isActiveSubscriber(customer)) return false;
+      const lastSeen = parseDate(customer?.last_sign_in_at);
       return lastSeen && lastSeen >= startToday;
     }).length;
     const newCustomersToday = payingCustomers.filter((customer) => {
