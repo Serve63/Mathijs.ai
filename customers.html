@@ -189,6 +189,12 @@
         border-color: rgba(255, 255, 255, 0.12);
       }
 
+      .btn.danger {
+        background: rgba(233, 90, 74, 0.2);
+        border-color: rgba(233, 90, 74, 0.4);
+        color: rgba(255, 255, 255, 0.95);
+      }
+
 
       .btn.tiny {
         padding: 7px 10px;
@@ -407,6 +413,21 @@
       .actions .btn.ghost,
       .actions .btn.wide {
         grid-column: 1 / -1;
+      }
+
+      .delete-confirm {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        align-items: center;
+      }
+
+      .delete-confirm__text {
+        grid-column: 1 / -1;
+        text-align: center;
+        font-size: 0.78rem;
+        color: rgba(255, 255, 255, 0.7);
       }
 
       .customers-empty {

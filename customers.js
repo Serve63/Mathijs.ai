@@ -5,6 +5,7 @@
   const provinceLabels = window.provinceLabels || {};
   let customers = [];
   let accessToken = null;
+  let pendingDeleteId = null;
 
   const totalCustomersEl = document.getElementById("stat-total-customers");
   const activeCustomersEl = document.getElementById("stat-active-customers");
@@ -127,7 +128,16 @@
         const memberSince = formatDate(customer.subscribed_at || customer.created_at);
         const totalSpent = fmtEUR.format(Number(customer.total_paid_eur || 0) || 0);
         const isLifetime = Boolean(customer?.lifetime_free);
-        const actionsMarkup = isLifetime
+        const isPendingDelete = pendingDeleteId === customer.id;
+        const actionsMarkup = isPendingDelete
+          ? `
+              <div class="delete-confirm">
+                <span class="delete-confirm__text">Weet je zeker dat je deze klant wilt verwijderen?</span>
+                <button class="btn tiny danger" data-action="confirm-delete">Verwijderen</button>
+                <button class="btn tiny ghost" data-action="cancel-delete">Annuleren</button>
+              </div>
+            `
+          : isLifetime
           ? `
               <button class="btn tiny secondary wide" data-action="lifetime" data-enabled="false">Lifetime opzeggen</button>
               <button class="btn tiny ghost" data-action="delete">Klant verwijderen</button>
@@ -186,14 +196,19 @@
 
     const action = button.dataset.action;
     if (action === "delete") {
-      const name = getDisplayName(customers[index]);
-      const label = name && name !== "Onbekend" ? name : (customers[index]?.email || "deze klant");
-      const ok = window.confirm(`Weet je zeker dat je ${label} wilt verwijderen? Deze actie is definitief.`);
-      if (!ok) return;
+      pendingDeleteId = id;
+      renderTable();
+      return;
     }
+    if (action === "cancel-delete") {
+      if (pendingDeleteId === id) pendingDeleteId = null;
+      renderTable();
+      return;
+    }
+
     setActionLoading(button, true);
     try {
-      if (action === "delete") {
+      if (action === "confirm-delete") {
         const resp = await fetch("/api/staff/customers", {
           method: "POST",
           headers: {
@@ -204,6 +219,7 @@
         });
         const payload = await resp.json().catch(() => ({}));
         if (!resp.ok) throw new Error(payload?.error || "Verwijderen mislukt.");
+        pendingDeleteId = null;
         customers.splice(index, 1);
         updateStats();
         renderTable();
