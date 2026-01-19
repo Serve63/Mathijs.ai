@@ -6,6 +6,7 @@
   let customers = [];
   let accessToken = null;
   let pendingDeleteId = null;
+  let pendingLifetimeRevokeId = null;
 
   const totalCustomersEl = document.getElementById("stat-total-customers");
   const activeCustomersEl = document.getElementById("stat-active-customers");
@@ -129,12 +130,21 @@
         const totalSpent = fmtEUR.format(Number(customer.total_paid_eur || 0) || 0);
         const isLifetime = Boolean(customer?.lifetime_free);
         const isPendingDelete = pendingDeleteId === customer.id;
+        const isPendingLifetimeRevoke = pendingLifetimeRevokeId === customer.id;
         const actionsMarkup = isPendingDelete
           ? `
               <div class="delete-confirm">
                 <span class="delete-confirm__text">Weet je zeker dat je deze klant wilt verwijderen?</span>
                 <button class="btn tiny danger" data-action="confirm-delete">Verwijderen</button>
                 <button class="btn tiny ghost" data-action="cancel-delete">Annuleren</button>
+              </div>
+            `
+          : isPendingLifetimeRevoke
+          ? `
+              <div class="delete-confirm">
+                <span class="delete-confirm__text">Lifetime opzeggen? Dit maakt het account inactief.</span>
+                <button class="btn tiny danger" data-action="confirm-lifetime-revoke">Opzeggen</button>
+                <button class="btn tiny ghost" data-action="cancel-lifetime-revoke">Annuleren</button>
               </div>
             `
           : isLifetime
@@ -197,11 +207,23 @@
     const action = button.dataset.action;
     if (action === "delete") {
       pendingDeleteId = id;
+      pendingLifetimeRevokeId = null;
       renderTable();
       return;
     }
     if (action === "cancel-delete") {
       if (pendingDeleteId === id) pendingDeleteId = null;
+      renderTable();
+      return;
+    }
+    if (action === "lifetime" && button.dataset.enabled === "false") {
+      pendingLifetimeRevokeId = id;
+      pendingDeleteId = null;
+      renderTable();
+      return;
+    }
+    if (action === "cancel-lifetime-revoke") {
+      if (pendingLifetimeRevokeId === id) pendingLifetimeRevokeId = null;
       renderTable();
       return;
     }
@@ -244,6 +266,26 @@
         return;
       }
 
+      if (action === "confirm-lifetime-revoke") {
+        const resp = await fetch("/api/staff/customers", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ action: "set_lifetime_free", id, enabled: false }),
+        });
+        const payload = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(payload?.error || "Bijwerken mislukt.");
+        customers[index].lifetime_free = Boolean(payload?.lifetime_free);
+        if (payload?.plan) customers[index].plan = payload.plan;
+        if ("cancelled_at" in payload) customers[index].cancelled_at = payload.cancelled_at;
+        pendingLifetimeRevokeId = null;
+        updateStats();
+        renderTable();
+        return;
+      }
+
       if (action === "lifetime") {
         const enabled = button.dataset.enabled !== "false";
         const resp = await fetch("/api/staff/customers", {
@@ -259,6 +301,7 @@
         customers[index].lifetime_free = Boolean(payload?.lifetime_free);
         if (payload?.plan) customers[index].plan = payload.plan;
         if ("cancelled_at" in payload) customers[index].cancelled_at = payload.cancelled_at;
+        pendingLifetimeRevokeId = null;
         updateStats();
         renderTable();
       }
