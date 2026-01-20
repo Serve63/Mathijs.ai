@@ -186,37 +186,73 @@ async function fetchOpenAiUsagePeriod({ startTime, endTime, preferLegacy = false
       ];
 
   for (const endpoint of endpoints) {
-    try {
-      const resp = await fetch(endpoint.url, { method: "GET", headers });
-      if (!resp.ok) continue;
-      const payload = await resp.json().catch(() => ({}));
+    let url = endpoint.url;
+    let pageCount = 0;
+    let rows = [];
+    let currency = null;
+    let lastPayload = null;
+    while (url) {
+      try {
+        const resp = await fetch(url, { method: "GET", headers });
+        if (!resp.ok) break;
+        const payload = await resp.json().catch(() => ({}));
+        lastPayload = payload;
 
-      // Normalize possible shapes
-      if (Array.isArray(payload?.data) && payload.data.length) {
-        return {
-          source: endpoint.name,
-          currency: payload?.currency || "USD",
-          rows: payload.data,
-        };
-      }
+        if (typeof payload?.total_usage === "number") {
+          return {
+            source: endpoint.name,
+            currency: "USD",
+            rows: [
+              {
+                model: "OpenAI totaal",
+                model_label: "OpenAI totaal",
+                cost_usd: payload.total_usage / 100,
+                tokens: payload.total_tokens || 0,
+                requests: payload.total_requests || 0,
+              },
+            ],
+          };
+        }
 
-      if (typeof payload?.total_usage === "number") {
-        return {
-          source: endpoint.name,
-          currency: "USD",
-          rows: [
-            {
-              model: "OpenAI totaal",
-              model_label: "OpenAI totaal",
-              cost_usd: payload.total_usage / 100,
-              tokens: payload.total_tokens || 0,
-              requests: payload.total_requests || 0,
-            },
-          ],
-        };
+        if (Array.isArray(payload?.data) && payload.data.length) {
+          const pageRows = [];
+          payload.data.forEach((item) => {
+            if (Array.isArray(item?.results)) {
+              item.results.forEach((result) => pageRows.push(result));
+            } else {
+              pageRows.push(item);
+            }
+          });
+          if (pageRows.length) {
+            rows = rows.concat(pageRows);
+            if (!currency) {
+              const fromRow = pageRows.find((row) => row?.amount && typeof row.amount === "object")?.amount?.currency;
+              currency = fromRow || payload?.currency || null;
+            }
+          }
+        }
+
+        if (payload?.has_more && payload?.next_page) {
+          const nextUrl = new URL(endpoint.url);
+          nextUrl.searchParams.set("page", payload.next_page);
+          url = nextUrl.toString();
+        } else {
+          url = null;
+        }
+
+        pageCount += 1;
+        if (pageCount > 50) url = null;
+      } catch (_) {
+        break;
       }
-    } catch (_) {
-      // try next endpoint
+    }
+
+    if (rows.length) {
+      return {
+        source: endpoint.name,
+        currency: currency || lastPayload?.currency || "USD",
+        rows,
+      };
     }
   }
 
