@@ -198,6 +198,74 @@
         color: rgba(255, 255, 255, 0.92);
       }
 
+      .credit-shell {
+        position: relative;
+      }
+
+      .credit-overlay {
+        position: absolute;
+        inset: 0;
+        border-radius: 22px;
+        background: rgba(4, 6, 12, 0.72);
+        backdrop-filter: blur(2px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.92);
+        z-index: 5;
+      }
+
+      .credit-overlay[hidden] {
+        display: none;
+      }
+
+      .credit-overlay__card {
+        display: grid;
+        gap: 10px;
+        padding: 18px 24px;
+        border-radius: 16px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+      }
+
+      .credit-overlay__icon {
+        width: 36px;
+        height: 36px;
+        margin: 0 auto;
+        color: var(--accent);
+      }
+
+      .credit-overlay__title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .credit-overlay__meta {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .credit-overlay__info {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        max-width: 280px;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .credit-overlay__info svg {
+        width: 16px;
+        height: 16px;
+        margin-top: 2px;
+        color: var(--accent);
+        flex: 0 0 auto;
+      }
+
       .analytics-shell {
         max-width: 1200px;
         margin: 0 auto;
@@ -909,66 +977,101 @@
         </div>
       </section>
 
-      <section class="summary-grid" id="summary-grid" aria-label="Kernstatistieken">
-        <div class="summary-card">
-          <div class="summary-head">
-            <div class="summary-label" id="stat-revenue-label">Omzet</div>
-            <div class="summary-actions" id="stat-revenue-actions">
-              <button class="summary-toggle" id="stat-revenue-toggle" type="button" aria-pressed="false">
-                Toon winst
-              </button>
-              <button class="summary-settings" id="stat-revenue-settings" type="button" aria-label="Winst instellingen">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="12" r="4"></circle>
-                  <path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"></path>
-                </svg>
-              </button>
+      <div class="credit-shell" id="credit-shell">
+        <section class="summary-grid" id="summary-grid" aria-label="Kernstatistieken">
+          <div class="summary-card">
+            <div class="summary-head">
+              <div class="summary-label" id="stat-revenue-label">Omzet</div>
+              <div class="summary-actions" id="stat-revenue-actions">
+                <button class="summary-toggle" id="stat-revenue-toggle" type="button" aria-pressed="false">
+                  Toon winst
+                </button>
+                <button class="summary-settings" id="stat-revenue-settings" type="button" aria-label="Winst instellingen">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"></path>
+                  </svg>
+                </button>
+              </div>
             </div>
+            <div class="summary-value" id="stat-revenue">€0</div>
+            <div class="summary-sub" id="stat-revenue-sub">Totaal periode</div>
           </div>
-          <div class="summary-value" id="stat-revenue">€0</div>
-          <div class="summary-sub" id="stat-revenue-sub">Totaal periode</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-label" id="stat-orders-label">Verstuurde chats</div>
-          <div class="summary-value" id="stat-orders">0</div>
-          <div class="summary-sub" id="stat-orders-sub">Totaal periode</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-label" id="stat-subs-label">Nieuwe abonnees</div>
-          <div class="summary-value" id="stat-subs">0</div>
-          <div class="summary-sub" id="stat-subs-sub">Totaal periode</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-label" id="stat-active-label">Actieve abonnees</div>
-          <div class="summary-value" id="stat-active">0</div>
-          <div class="summary-sub" id="stat-active-sub">Laatste meetpunt</div>
-        </div>
-      </section>
+          <div class="summary-card">
+            <div class="summary-label" id="stat-orders-label">Verstuurde chats</div>
+            <div class="summary-value" id="stat-orders">0</div>
+            <div class="summary-sub" id="stat-orders-sub">Totaal periode</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label" id="stat-subs-label">Nieuwe abonnees</div>
+            <div class="summary-value" id="stat-subs">0</div>
+            <div class="summary-sub" id="stat-subs-sub">Totaal periode</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label" id="stat-active-label">Actieve abonnees</div>
+            <div class="summary-value" id="stat-active">0</div>
+            <div class="summary-sub" id="stat-active-sub">Laatste meetpunt</div>
+          </div>
+        </section>
 
-      <section class="panel" aria-label="Omzet trend">
-        <div class="panel-head">
-          <div>
-            <h2 id="chart-title">Omzet trend</h2>
-            <p id="chart-meta">Laatste 7 dagen</p>
+        <section class="panel" aria-label="Omzet trend">
+          <div class="panel-head">
+            <div>
+              <h2 id="chart-title">Omzet trend</h2>
+              <p id="chart-meta">Laatste 7 dagen</p>
+            </div>
+            <div class="panel-pill" id="chart-total">€0 totaal</div>
           </div>
-          <div class="panel-pill" id="chart-total">€0 totaal</div>
-        </div>
-        <div class="bar-chart" id="bar-chart"></div>
-      </section>
+          <div class="bar-chart" id="bar-chart"></div>
+        </section>
 
       <section class="panel" id="credit-savings-panel" aria-label="Extra winst" hidden>
-        <div class="panel-head">
-          <div>
-            <h2>Extra winst (ongebruikt krediet)</h2>
-            <p id="credit-savings-meta">Per maand</p>
+          <div class="panel-head">
+            <div>
+              <h2>Extra winst (ongebruikt krediet)</h2>
+              <p id="credit-savings-meta">Per maand</p>
+            </div>
+            <div class="panel-pill" id="credit-savings-total">€0 extra</div>
           </div>
-          <div class="panel-pill" id="credit-savings-total">€0 extra</div>
+          <div class="credit-savings-body">
+            <div class="credit-savings-value" id="credit-savings-value">€0,00</div>
+            <div class="credit-savings-note">Niet gebruikte credits in deze periode.</div>
+          </div>
+        </section>
+
+        <div class="credit-overlay" id="credit-overlay" hidden>
+          <div class="credit-overlay__card">
+            <svg class="credit-overlay__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M7 11V8a5 5 0 0 1 10 0v3"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+              <rect
+                x="5"
+                y="11"
+                width="14"
+                height="9"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+              <circle cx="12" cy="15.5" r="1" fill="currentColor" />
+            </svg>
+            <div class="credit-overlay__title">Kredietgebruik</div>
+            <div class="credit-overlay__meta">Coming soon</div>
+            <div class="credit-overlay__info">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
+                <path d="M12 10v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                <circle cx="12" cy="7.5" r="1" fill="currentColor" />
+              </svg>
+              <span>Dit overzicht toont straks winst uit ongebruikt krediet, maar de berekening is nu te complex en code modellen krijgen het nog niet betrouwbaar.</span>
+            </div>
+          </div>
         </div>
-        <div class="credit-savings-body">
-          <div class="credit-savings-value" id="credit-savings-value">€0,00</div>
-          <div class="credit-savings-note">Niet gebruikte credits in deze periode.</div>
-        </div>
-      </section>
+      </div>
 
     </main>
 

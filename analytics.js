@@ -51,6 +51,7 @@
   const creditSavingsMetaEl = document.getElementById("credit-savings-meta");
   const creditSavingsTotalEl = document.getElementById("credit-savings-total");
   const creditSavingsValueEl = document.getElementById("credit-savings-value");
+  const creditOverlayEl = document.getElementById("credit-overlay");
 
   const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
   const fmtNumber = new Intl.NumberFormat("nl-NL");
@@ -81,6 +82,15 @@
   let tokensPerChat = 1;
   let tokensPerEur = 100;
   let creditAllowanceEur = 10;
+
+  const setCreditButtonActive = (isActive) => {
+    modeButtons.forEach((button) => {
+      const isCredit = button.dataset.mode === "credits";
+      if (!isCredit) return;
+      button.classList.toggle("is-active", Boolean(isActive));
+      button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
+  };
 
   const createSupabaseClient = () => {
     if (!window.supabase?.createClient) return null;
@@ -662,7 +672,6 @@
       updateCreditCard({ ...config, meta: creditMeta }, creditTotals);
       const savings = getAllTimeCreditSavings();
       updateCreditSavings(savings.meta, savings.extra);
-      if (creditSavingsPanel) creditSavingsPanel.hidden = false;
       if (summaryGridEl) summaryGridEl.hidden = true;
       if (chartTitleEl) chartTitleEl.textContent = `Kredietgebruik per maand (${config.label})`;
       if (chartMetaEl) chartMetaEl.textContent = creditMeta;
@@ -672,7 +681,6 @@
       renderChart(creditPoints, { mode: "credits" });
     } else {
       updateRevenueCard(config, totals);
-      if (creditSavingsPanel) creditSavingsPanel.hidden = true;
       if (summaryGridEl) summaryGridEl.hidden = false;
       if (chartTitleEl) chartTitleEl.textContent = `Omzet trend (${config.label})`;
       if (chartMetaEl) chartMetaEl.textContent = config.meta;
@@ -721,7 +729,7 @@
       revenueActionsEl.hidden = metricMode === "credits";
     }
     if (creditSavingsPanel) {
-      creditSavingsPanel.hidden = metricMode !== "credits";
+      creditSavingsPanel.hidden = false;
     }
     if (summaryGridEl) {
       summaryGridEl.hidden = metricMode === "credits";
@@ -749,7 +757,7 @@
       revenueActionsEl.hidden = metricMode === "credits";
     }
     if (creditSavingsPanel) {
-      creditSavingsPanel.hidden = metricMode !== "credits";
+      creditSavingsPanel.hidden = false;
     }
     if (summaryGridEl) {
       summaryGridEl.hidden = metricMode === "credits";
@@ -882,14 +890,7 @@
       } else if (savedView?.rangeId && ranges[savedView.rangeId]) {
         initialRange = savedView.rangeId;
       }
-      if (savedView?.mode === "credits" && initialRange === "week") {
-        initialRange = "month";
-      }
-      if (savedView?.mode === "credits") {
-        setMetricMode("credits");
-      } else {
-        setMetricMode("revenue");
-      }
+      setMetricMode("revenue");
       setActiveRange(initialRange);
     } catch (err) {
       console.error("Analytics load failed", err);
@@ -1005,7 +1006,7 @@
       revenueActionsEl.hidden = metricMode === "credits";
     }
     if (creditSavingsPanel) {
-      creditSavingsPanel.hidden = metricMode !== "credits";
+      creditSavingsPanel.hidden = false;
     }
     if (summaryGridEl) {
       summaryGridEl.hidden = metricMode === "credits";
@@ -1025,6 +1026,13 @@
     button.addEventListener("click", () => {
       if (!dataReady) return;
       const mode = button.dataset.mode || "revenue";
+      if (mode === "credits") {
+        if (creditOverlayEl) creditOverlayEl.hidden = false;
+        if (summaryGridEl) summaryGridEl.hidden = true;
+        setCreditButtonActive(true);
+        setRangeButtonState(activeRangeId, false);
+        return;
+      }
       if (mode === "credits" && metricMode === "credits") {
         setMetricMode("revenue");
         return;
@@ -1120,6 +1128,15 @@
     if (btn) return;
     closePicker();
   });
+
+  if (creditOverlayEl) {
+    creditOverlayEl.addEventListener("click", () => {
+      creditOverlayEl.hidden = true;
+      if (summaryGridEl) summaryGridEl.hidden = false;
+      setCreditButtonActive(false);
+      setRangeButtonState(activeRangeId, metricMode === "revenue");
+    });
+  }
 
   document.addEventListener("DOMContentLoaded", () => {
     loadAnalytics();

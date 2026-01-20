@@ -211,6 +211,50 @@
         flex-wrap: wrap;
         gap: 10px;
       }
+
+      .locked-shell {
+        position: relative;
+        min-height: calc(100vh - 120px);
+        display: grid;
+        place-items: center;
+      }
+
+      .lock-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(4, 6, 12, 0.78);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .lock-card {
+        display: grid;
+        gap: 10px;
+        padding: 22px 26px;
+        border-radius: 18px;
+        background: rgba(0, 0, 0, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        text-align: center;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+      }
+
+      .lock-icon {
+        width: 38px;
+        height: 38px;
+        margin: 0 auto;
+        color: var(--accent);
+      }
+
+      .lock-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+
+      .lock-meta {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.7);
+      }
     </style>
       <link rel="stylesheet" href="assets/stability.css" />
     <script src="assets/stability.js" defer></script>
@@ -223,23 +267,28 @@
           <span class="brand-text">MATHIJS<span class="brand-dot">.AI</span></span>
         </a>
         <div class="header-actions">
-          <a class="btn secondary" href="/analytics">Analytics</a>
-          <a class="btn secondary" href="/customers">Klanten</a>
+          <a class="btn secondary" href="/staff-dashboard">Terug naar dashboard</a>
         </div>
       </div>
     </header>
 
-    <main class="shell">
-      <section class="card" aria-label="Boekhouding">
-        <h1>Boekhouding</h1>
-        <p>Placeholder pagina. Hier kunnen we straks omzet, payouts, facturen en exports bundelen.</p>
-        <div class="card-actions">
-          <a class="btn secondary" href="/customers">Open klantenbestand</a>
-          <a class="btn secondary" href="/staff-dashboard">Terug naar dashboard</a>
+    <main class="shell locked-shell">
+      <div class="lock-overlay" aria-label="Boekhouding coming soon">
+        <div class="lock-card">
+          <svg class="lock-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M7 11V8a5 5 0 0 1 10 0v3"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            />
+            <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.8" />
+            <circle cx="12" cy="15.5" r="1" fill="currentColor" />
+          </svg>
+          <div class="lock-title">Boekhouding</div>
+          <div class="lock-meta">Coming soon</div>
         </div>
-      </section>
+      </div>
     </main>
   </body>
 </html>
-
-

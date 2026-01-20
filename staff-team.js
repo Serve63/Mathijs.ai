@@ -140,7 +140,7 @@
               </div>
             `
           : `
-              <button class="btn tiny secondary" data-action="reset-password">Wachtwoord aanpassen</button>
+              <button class="btn tiny secondary wide" data-action="reset-password">Wachtwoord aanpassen</button>
               ${
                 locked
                   ? "<button class=\"btn tiny ghost\" data-action=\"delete\">Ontneem toegang</button>"
