@@ -45,6 +45,7 @@ const isPaidAppMeta = (appMeta = {}) => {
   return false;
 };
 const STARTER_CREDITS_EUR = 15;
+const DEFAULT_CREDIT_ALLOWANCE_EUR = 10;
 const MODEL_TOKEN_COSTS = {
   chatgpt52: 2,
   gemini3: 1,
@@ -85,6 +86,95 @@ function getTokensPerEur() {
   const tokensPerEur = Number(process.env.TOPUP_TOKENS_PER_EUR || 100);
   if (!Number.isFinite(tokensPerEur) || tokensPerEur <= 0) return 100;
   return Math.floor(tokensPerEur);
+}
+
+function getCreditAllowanceEur() {
+  const value = Number(process.env.CREDIT_ALLOWANCE_EUR || DEFAULT_CREDIT_ALLOWANCE_EUR);
+  if (!Number.isFinite(value) || value < 0) return DEFAULT_CREDIT_ALLOWANCE_EUR;
+  return Math.round(value * 100) / 100;
+}
+
+function parseDailyLimit() {
+  const value = Number(process.env.API_DAILY_LIMIT_EUR || 0);
+  if (!Number.isFinite(value) || value <= 0) return null;
+  return Math.round(value * 100) / 100;
+}
+
+async function fetchAllUsers(serviceRoleKey) {
+  const out = [];
+  let page = 1;
+  const perPage = 200;
+  while (page <= 5) {
+    const resp = await supabaseAuthAdmin(`users?page=${page}&per_page=${perPage}`, {
+      method: "GET",
+      accessKey: serviceRoleKey,
+    });
+    const users = resp?.users || [];
+    users.forEach((u) => out.push(u));
+    if (users.length < perPage) break;
+    page += 1;
+  }
+  return out;
+}
+
+function isPayingCustomer(user) {
+  if (!user) return false;
+  const appMeta = user.app_metadata || {};
+  if (appMeta.lifetime_free || appMeta.plan === "lifetime" || appMeta.plan === "trial") return true;
+  const freeMonths = Number(appMeta.free_months || 0);
+  if (Number.isFinite(freeMonths) && freeMonths > 0) return true;
+  const totalPaid = Number(appMeta.total_paid_eur || 0);
+  if (Number.isFinite(totalPaid) && totalPaid > 0) return true;
+  const lastPaid = Number(appMeta.last_payment_amount_eur || 0);
+  if (Number.isFinite(lastPaid) && lastPaid > 0) return true;
+  return false;
+}
+
+function isActiveCustomer(user) {
+  if (!isPayingCustomer(user)) return false;
+  const cancelledAt = user?.app_metadata?.cancelled_at;
+  return !cancelledAt;
+}
+
+async function getDailyLimitEur(serviceRoleKey) {
+  const creditAllowance = getCreditAllowanceEur();
+  try {
+    const users = await fetchAllUsers(serviceRoleKey);
+    const activeCustomers = users.filter(isActiveCustomer).length;
+    if (Number.isFinite(creditAllowance) && creditAllowance > 0) {
+      return Math.round(activeCustomers * creditAllowance * 100) / 100;
+    }
+  } catch (_) {
+    // fall back to env limit below
+  }
+  return parseDailyLimit();
+}
+
+function startOfDayUtc(now) {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
+async function getTodaySpendEur() {
+  const now = new Date();
+  const sinceIso = startOfDayUtc(now).toISOString();
+  let total = 0;
+  let offset = 0;
+  const limit = 1000;
+  while (true) {
+    const rows =
+      (await adminRestFetch(
+        `api_usage_events?select=cost_eur&created_at=gte.${encodeURIComponent(sinceIso)}&order=created_at.desc&limit=${limit}&offset=${offset}`,
+        { method: "GET" }
+      )) || [];
+    if (!Array.isArray(rows) || rows.length === 0) break;
+    rows.forEach((row) => {
+      const cost = Number(row?.cost_eur || 0);
+      if (Number.isFinite(cost)) total += cost;
+    });
+    if (rows.length < limit) break;
+    offset += limit;
+  }
+  return Math.round(total * 100) / 100;
 }
 
 async function recordUsageEvent({
@@ -601,6 +691,20 @@ module.exports = async function handler(req, res) {
 
     // Token gating + deduct (stored server-side in app_metadata.tokens) - best-effort.
     const tokenBalance = Number(appMeta?.tokens || 0);
+    const dailyLimit = await getDailyLimitEur(serviceRoleKey);
+    if (Number.isFinite(dailyLimit) && dailyLimit > 0) {
+      const todaySpend = await getTodaySpendEur();
+      const requestCost = Math.round((tokensRequired / tokensPerEur) * 100) / 100;
+      if (todaySpend + requestCost > dailyLimit) {
+        return json(res, 429, {
+          error: "Daglimiet bereikt. Probeer morgen opnieuw.",
+          daily_limit_eur: dailyLimit,
+          today_spend_eur: todaySpend,
+          request_cost_eur: requestCost,
+          remaining_eur: Math.max(0, Math.round((dailyLimit - todaySpend) * 100) / 100),
+        });
+      }
+    }
     if (tokenOpsEnabled) {
       if (!Number.isFinite(tokenBalance) || tokenBalance < tokensRequired) {
         return json(res, 402, {
