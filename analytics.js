@@ -545,6 +545,19 @@
     tableEl.innerHTML = rows.join("");
   };
 
+  const setRangeButtonState = (rangeId, enabled) => {
+    rangeButtons.forEach((button) => {
+      if (!enabled) {
+        button.classList.remove("is-active");
+        button.setAttribute("aria-pressed", "false");
+        return;
+      }
+      const isActive = button.dataset.range === rangeId;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
+  };
+
   const setActiveRange = (rangeId) => {
     activeRangeId = rangeId;
     const config = ranges[rangeId] || ranges.week;
@@ -554,12 +567,7 @@
     const ordersValue =
       isAllTime && Number.isFinite(totalChatsAllTime) ? totalChatsAllTime : totals.orders;
     const ordersLabelText = isAllTime ? "Totaal verstuurde chats" : "Verstuurde chats";
-
-    rangeButtons.forEach((button) => {
-      const isActive = button.dataset.range === rangeId;
-      button.classList.toggle("is-active", isActive);
-      button.setAttribute("aria-pressed", isActive ? "true" : "false");
-    });
+    setRangeButtonState(rangeId, metricMode === "revenue");
 
     if (ordersLabelEl) {
       ordersLabelEl.textContent = ordersLabelText;
@@ -884,6 +892,7 @@
       button.classList.toggle("is-active", isActive);
       button.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
+    setRangeButtonState(activeRangeId, metricMode === "revenue");
     if (revenueActionsEl) {
       revenueActionsEl.hidden = metricMode === "credits";
     }
