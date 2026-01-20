@@ -8,7 +8,7 @@
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders } = require("../_lib/security");
 const { SUPABASE_URL, getUserFromAccessToken } = require("../_lib/supabase");
 const { isStaffUser } = require("../_lib/staff");
-const { adminRestFetch, adminRestCount } = require("../_lib/supabaseAdmin");
+const { adminRestFetch } = require("../_lib/supabaseAdmin");
 const { getOpenAIApiKey, getOpenAICostsKey, getSupabaseServiceRoleKey } = require("../_lib/env");
 
 const STAFF_WINDOW_MS = 60_000;
@@ -17,8 +17,17 @@ const BASELINE_DATE_UTC = new Date(Date.UTC(2026, 0, 1));
 const TOKENS_PER_CHAT = 1;
 const DEFAULT_TOKENS_PER_EUR = 100;
 const DEFAULT_CREDIT_ALLOWANCE_EUR = 10;
+const DEFAULT_FETCH_TIMEOUT_MS = 4_000;
+const DEFAULT_FX_TIMEOUT_MS = 2_000;
 let cachedUsdToEurRate = null;
 let cachedFxAt = 0;
+
+function fetchWithTimeout(url, options = {}, timeoutMs = DEFAULT_FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const merged = { ...options, signal: controller.signal };
+  return fetch(url, merged).finally(() => clearTimeout(timeoutId));
+}
 
 function getRequestedOpenAiCurrency() {
   const raw = String(process.env.OPENAI_COSTS_CURRENCY || "EUR").trim();
@@ -38,7 +47,7 @@ async function getUsdToEurRate() {
   ];
   for (const url of endpoints) {
     try {
-      const resp = await fetch(url);
+      const resp = await fetchWithTimeout(url, {}, DEFAULT_FX_TIMEOUT_MS);
       if (!resp.ok) continue;
       const payload = await resp.json().catch(() => ({}));
       const rate = Number(payload?.rates?.EUR);
@@ -92,7 +101,7 @@ async function fetchOpenAiCostsBucketsWithHeaders({ baseUrl, headers }) {
 
   while (url) {
     try {
-      const resp = await fetch(url, { method: "GET", headers });
+      const resp = await fetchWithTimeout(url, { method: "GET", headers });
       if (!resp.ok) break;
       const payload = await resp.json().catch(() => ({}));
       if (Array.isArray(payload?.data)) {
@@ -156,18 +165,25 @@ async function fetchOpenAiCostsBuckets({ startTime, endTime }) {
   const endSec = Math.floor(new Date(endTime).getTime() / 1000);
   const baseUrl = `https://api.openai.com/v1/organization/costs?start_time=${startSec}&end_time=${endSec}`;
 
+  const attempts = await Promise.allSettled(
+    variants.map(async (variant) => {
+      const headers = buildOpenAiHeaders({ apiKey, orgId: variant.orgId, projectId: variant.projectId });
+      const result = await fetchOpenAiCostsBucketsWithHeaders({ baseUrl, headers });
+      if (!result?.buckets?.length) return null;
+      const total = result.buckets.reduce((sum, bucket) => sum + Number(bucket?.amount || 0), 0);
+      return { result, total };
+    })
+  );
+
   let best = null;
   let bestTotal = 0;
-  for (const variant of variants) {
-    const headers = buildOpenAiHeaders({ apiKey, orgId: variant.orgId, projectId: variant.projectId });
-    const result = await fetchOpenAiCostsBucketsWithHeaders({ baseUrl, headers });
-    if (!result?.buckets?.length) continue;
-    const total = result.buckets.reduce((sum, bucket) => sum + Number(bucket?.amount || 0), 0);
-    if (!best || total > bestTotal) {
-      best = result;
-      bestTotal = total;
+  attempts.forEach((attempt) => {
+    if (attempt.status !== "fulfilled" || !attempt.value) return;
+    if (!best || attempt.value.total > bestTotal) {
+      best = attempt.value.result;
+      bestTotal = attempt.value.total;
     }
-  }
+  });
 
   return best;
 }
@@ -185,7 +201,7 @@ async function convertOpenAiAmount(amount, currency) {
       }
     }
   }
-  return { amount: Math.round(finalAmount * 100) / 100, currency: finalCurrency };
+  return { amount: finalAmount, currency: finalCurrency };
 }
 
 async function fetchOpenAiCostsByDate(startIso, endIso) {
@@ -198,7 +214,7 @@ async function fetchOpenAiCostsByDate(startIso, endIso) {
     const dateKey = toDateKey(startOfDayUtc(new Date(startMs)));
     const converted = await convertOpenAiAmount(bucket.amount || 0, result.currency);
     const existing = out.get(dateKey) || 0;
-    out.set(dateKey, Math.round((existing + converted.amount) * 100) / 100);
+    out.set(dateKey, existing + converted.amount);
   }
   return out;
 }
@@ -308,60 +324,118 @@ async function fetchAllUsers(serviceRoleKey) {
 async function fetchBillingEvents() {
   const events = [];
   const limit = 1000;
-  let offset = 0;
-  while (true) {
-    const rows = await adminRestFetch(
-      `billing_events?select=provider,provider_payment_id,event_type,amount_eur,currency,paid_at&order=paid_at.asc&limit=${limit}&offset=${offset}`,
-      { method: "GET" }
-    );
+  const maxPages = 10;
+  const baselineIso = BASELINE_DATE_UTC.toISOString();
+  let lastPaidAt = null;
+  let lastId = null;
+  let pageCount = 0;
+  while (pageCount < maxPages) {
+    pageCount += 1;
+    const filters = [];
+    if (lastPaidAt) {
+      const cursor = `or=(paid_at.gt.${lastPaidAt},and(paid_at.eq.${lastPaidAt},id.gt.${lastId}))`;
+      filters.push(cursor);
+    } else {
+      filters.push(`paid_at=gte.${encodeURIComponent(baselineIso)}`);
+    }
+    const query = [
+      "billing_events?select=id,provider,provider_payment_id,event_type,amount_eur,currency,paid_at",
+      ...filters,
+      "order=paid_at.asc,id.asc",
+      `limit=${limit}`,
+    ]
+      .filter(Boolean)
+      .join("&");
+    const rows = await adminRestFetch(query, { method: "GET" });
     if (!Array.isArray(rows) || rows.length === 0) break;
     rows.forEach((row) => events.push(row));
     if (rows.length < limit) break;
-    offset += limit;
+    const lastRow = rows[rows.length - 1];
+    lastPaidAt = encodeURIComponent(String(lastRow?.paid_at || ""));
+    lastId = Number(lastRow?.id || 0);
+    if (!lastPaidAt || !Number.isFinite(lastId)) break;
   }
   return events;
 }
 
 async function fetchUserMessageCountsByDay(baselineIso) {
   const counts = new Map();
+  let totalChats = 0;
   const limit = 1000;
-  let offset = 0;
-  while (true) {
-    const rows = await adminRestFetch(
-      `messages?select=created_at&role=eq.user&created_at=gte.${encodeURIComponent(baselineIso)}` +
-        `&order=created_at.asc&limit=${limit}&offset=${offset}`,
-      { method: "GET" }
-    );
+  const maxPages = 20;
+  let lastCreatedAt = null;
+  let lastId = null;
+  let pageCount = 0;
+  while (pageCount < maxPages) {
+    pageCount += 1;
+    const filters = [];
+    if (lastCreatedAt) {
+      const cursor = `or=(created_at.gt.${lastCreatedAt},and(created_at.eq.${lastCreatedAt},id.gt.${lastId}))`;
+      filters.push(cursor);
+    } else {
+      filters.push(`created_at=gte.${encodeURIComponent(baselineIso)}`);
+    }
+    const query = [
+      "messages?select=id,created_at&role=eq.user",
+      ...filters,
+      "order=created_at.asc,id.asc",
+      `limit=${limit}`,
+    ]
+      .filter(Boolean)
+      .join("&");
+    const rows = await adminRestFetch(query, { method: "GET" });
     if (!Array.isArray(rows) || rows.length === 0) break;
     rows.forEach((row) => {
       const createdAt = parseDate(row?.created_at);
       if (!createdAt || createdAt < BASELINE_DATE_UTC) return;
       const dateKey = toDateKey(startOfDayUtc(createdAt));
       counts.set(dateKey, (counts.get(dateKey) || 0) + 1);
+      totalChats += 1;
     });
     if (rows.length < limit) break;
-    offset += limit;
+    const lastRow = rows[rows.length - 1];
+    lastCreatedAt = encodeURIComponent(String(lastRow?.created_at || ""));
+    lastId = Number(lastRow?.id || 0);
+    if (!lastCreatedAt || !Number.isFinite(lastId)) break;
   }
-  return counts;
+  return { counts, totalChats };
 }
 
-async function fetchUsageSpendByDay(baselineIso) {
+async function fetchUsageStatsByDay(baselineIso) {
+  const counts = new Map();
   const openai = new Map();
   const other = new Map();
+  let totalChats = 0;
   const limit = 1000;
-  let offset = 0;
-  while (true) {
-    const rows = await adminRestFetch(
-      `api_usage_events?select=provider,cost_eur,created_at&created_at=gte.${encodeURIComponent(
-        baselineIso
-      )}&order=created_at.asc&limit=${limit}&offset=${offset}`,
-      { method: "GET" }
-    );
+  const maxPages = 20;
+  let lastCreatedAt = null;
+  let lastId = null;
+  let pageCount = 0;
+  while (pageCount < maxPages) {
+    pageCount += 1;
+    const filters = [];
+    if (lastCreatedAt) {
+      const cursor = `or=(created_at.gt.${lastCreatedAt},and(created_at.eq.${lastCreatedAt},id.gt.${lastId}))`;
+      filters.push(cursor);
+    } else {
+      filters.push(`created_at=gte.${encodeURIComponent(baselineIso)}`);
+    }
+    const query = [
+      "api_usage_events?select=id,provider,cost_eur,created_at",
+      ...filters,
+      "order=created_at.asc,id.asc",
+      `limit=${limit}`,
+    ]
+      .filter(Boolean)
+      .join("&");
+    const rows = await adminRestFetch(query, { method: "GET" });
     if (!Array.isArray(rows) || rows.length === 0) break;
     rows.forEach((row) => {
       const createdAt = parseDate(row?.created_at);
       if (!createdAt || createdAt < BASELINE_DATE_UTC) return;
       const dateKey = toDateKey(startOfDayUtc(createdAt));
+      counts.set(dateKey, (counts.get(dateKey) || 0) + 1);
+      totalChats += 1;
       const amount = Number(row?.cost_eur || 0);
       if (!Number.isFinite(amount)) return;
       if (String(row?.provider || "").toLowerCase() === "openai") {
@@ -371,9 +445,12 @@ async function fetchUsageSpendByDay(baselineIso) {
       }
     });
     if (rows.length < limit) break;
-    offset += limit;
+    const lastRow = rows[rows.length - 1];
+    lastCreatedAt = encodeURIComponent(String(lastRow?.created_at || ""));
+    lastId = Number(lastRow?.id || 0);
+    if (!lastCreatedAt || !Number.isFinite(lastId)) break;
   }
-  return { openai, other };
+  return { counts, openai, other, totalChats };
 }
 
 module.exports = async (req, res) => {
@@ -408,21 +485,23 @@ module.exports = async (req, res) => {
 
     const users = await fetchAllUsers(serviceRoleKey);
     const baselineIso = BASELINE_DATE_UTC.toISOString();
-    const totalChats = await adminRestCount(
-      `messages?select=id&role=eq.user&created_at=gte.${encodeURIComponent(baselineIso)}`
-    );
-    const chatCountsByDate = await fetchUserMessageCountsByDay(baselineIso);
-    const payingUsers = users.filter(isPayingCustomer);
-
+    let totalChats = 0;
+    let chatCountsByDate = new Map();
     let spendByDate = null;
     let openaiExactByDate = null;
     try {
-      const usageSpend = await fetchUsageSpendByDay(baselineIso);
-      spendByDate = usageSpend;
+      const usageStats = await fetchUsageStatsByDay(baselineIso);
+      chatCountsByDate = usageStats.counts;
+      totalChats = usageStats.totalChats;
+      spendByDate = { openai: usageStats.openai, other: usageStats.other };
     } catch (e) {
       const isMissingTable = e?.statusCode === 404 || String(e?.detail || "").includes("api_usage_events");
       if (!isMissingTable) throw e;
+      const fallback = await fetchUserMessageCountsByDay(baselineIso);
+      chatCountsByDate = fallback.counts;
+      totalChats = fallback.totalChats;
     }
+    const payingUsers = users.filter(isPayingCustomer);
 
     let events = [];
     try {
@@ -528,7 +607,8 @@ module.exports = async (req, res) => {
       }
     });
 
-    const today = startOfDayUtc(new Date());
+    const now = new Date();
+    const today = startOfDayUtc(now);
     const monthStart = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
     let startDate = earliestDate || BASELINE_DATE_UTC;
     if (startDate < BASELINE_DATE_UTC) startDate = BASELINE_DATE_UTC;
@@ -538,13 +618,10 @@ module.exports = async (req, res) => {
     const points = [];
     let cursor = new Date(startDate);
     let activeCount = baselineActiveCount;
-    try {
-      if (getOpenAICostsKey() || getOpenAIApiKey()) {
-        openaiExactByDate = await fetchOpenAiCostsByDate(startDate.toISOString(), today.toISOString());
-      }
-    } catch (_) {
-      openaiExactByDate = null;
-    }
+    const recentCutoff = addDays(today, -2);
+    // Skip slow OpenAI costs API call - use internal tracking only for speed
+    // openaiExactByDate remains null, we use spendByDate from api_usage_events instead
+    openaiExactByDate = null;
 
     while (cursor <= today) {
       const dateKey = toDateKey(cursor);
@@ -557,8 +634,17 @@ module.exports = async (req, res) => {
         const otherSpend = spendByDate ? spendByDate.other.get(dateKey) || 0 : 0;
         const openaiUsageSpend = spendByDate ? spendByDate.openai.get(dateKey) || 0 : 0;
         const hasOpenAiExact = Boolean(openaiExactByDate && openaiExactByDate.size);
-        const openaiExactSpend = hasOpenAiExact ? openaiExactByDate.get(dateKey) || 0 : null;
-        const openaiSpend = hasOpenAiExact ? openaiExactSpend : openaiUsageSpend;
+        const hasOpenAiExactForDay = hasOpenAiExact && openaiExactByDate.has(dateKey);
+        const openaiExactSpend = hasOpenAiExactForDay ? openaiExactByDate.get(dateKey) || 0 : null;
+        const isRecent = cursor >= recentCutoff;
+        let openaiSpend = openaiUsageSpend;
+        if (hasOpenAiExactForDay) {
+          if (isRecent && openaiExactSpend <= 0 && openaiUsageSpend > 0) {
+            openaiSpend = openaiUsageSpend;
+          } else {
+            openaiSpend = openaiExactSpend;
+          }
+        }
         spendEur = Math.round((otherSpend + openaiSpend) * 100) / 100;
       }
       points.push({
