@@ -229,9 +229,10 @@
       .range-toggle {
         position: relative;
         display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 6px;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 6px;
+        padding: 5px;
         background: rgba(10, 14, 26, 0.7);
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 14px;
@@ -241,19 +242,20 @@
         border: 1px solid transparent;
         background: transparent;
         color: rgba(255, 255, 255, 0.72);
-        padding: 6px 14px;
-        font-size: 0.8rem;
+        padding: 5px 12px;
+        font-size: 0.76rem;
         border-radius: 10px;
         cursor: pointer;
         font-weight: 600;
+        white-space: nowrap;
       }
 
       .range-btn--icon {
-        padding: 6px 10px;
+        padding: 5px 8px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 40px;
+        min-width: 34px;
       }
 
       .range-btn--icon svg {
@@ -262,8 +264,8 @@
       }
 
       .range-btn--mode {
-        padding: 6px 12px;
-        font-size: 0.72rem;
+        padding: 5px 10px;
+        font-size: 0.68rem;
         letter-spacing: 0.08em;
       }
 
@@ -271,7 +273,7 @@
         width: 1px;
         align-self: stretch;
         background: rgba(255, 255, 255, 0.14);
-        margin: 4px 2px;
+        margin: 3px 2px;
       }
 
       .range-btn:hover {
