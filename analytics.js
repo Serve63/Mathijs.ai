@@ -65,6 +65,7 @@
   const today = new Date();
   const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
   const PROFIT_SETTINGS_KEY = "mathijs_profit_settings_v1";
+  const VIEW_STATE_KEY = "mathijs_analytics_view_v1";
 
   let dailyPoints = [];
   let pointMap = new Map();
@@ -160,6 +161,30 @@
     const perEur = clampNumber(Number(tokensPerEur || 0), 1, Number.POSITIVE_INFINITY);
     const perChat = clampNumber(Number(tokensPerChat || 0), 1, Number.POSITIVE_INFINITY);
     return perChat / perEur;
+  };
+
+  const loadViewState = () => {
+    try {
+      const raw = localStorage.getItem(VIEW_STATE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      const rangeId = typeof parsed?.rangeId === "string" ? parsed.rangeId : null;
+      const mode = parsed?.mode === "credits" ? "credits" : "revenue";
+      const from = typeof parsed?.from === "string" ? parsed.from : null;
+      const to = typeof parsed?.to === "string" ? parsed.to : null;
+      return { rangeId, mode, from, to };
+    } catch (e) {
+      console.warn("Kon analytics view state niet laden", e);
+      return null;
+    }
+  };
+
+  const saveViewState = (state) => {
+    try {
+      localStorage.setItem(VIEW_STATE_KEY, JSON.stringify(state));
+    } catch (e) {
+      console.warn("Kon analytics view state niet opslaan", e);
+    }
   };
 
   const WEEKDAY_LABELS = ["ma", "di", "wo", "do", "vr", "za", "zo"];
@@ -568,6 +593,13 @@
       isAllTime && Number.isFinite(totalChatsAllTime) ? totalChatsAllTime : totals.orders;
     const ordersLabelText = isAllTime ? "Totaal verstuurde chats" : "Verstuurde chats";
     setRangeButtonState(rangeId, metricMode === "revenue");
+    if (rangeId === "custom") {
+      const from = rangeFromEl?.value || null;
+      const to = rangeToEl?.value || null;
+      saveViewState({ rangeId, mode: metricMode, from, to });
+    } else {
+      saveViewState({ rangeId, mode: metricMode });
+    }
 
     if (ordersLabelEl) {
       ordersLabelEl.textContent = ordersLabelText;
@@ -801,17 +833,48 @@
 
       buildRangesFromData();
       dataReady = true;
-      setActiveRange("week");
+      let initialRange = "week";
+      if (savedView?.rangeId === "custom") {
+        const from = parseISODate(savedView.from);
+        const to = parseISODate(savedView.to);
+        if (from && to && from.getTime() <= to.getTime()) {
+          const points = generateCustomPoints(from, to);
+          const meta = `${fmtDateLong.format(from)} – ${fmtDateLong.format(to)}`.toUpperCase();
+          ranges.custom = { label: "AANGEPAST", meta, points };
+          initialRange = "custom";
+        }
+      } else if (savedView?.rangeId && ranges[savedView.rangeId]) {
+        initialRange = savedView.rangeId;
+      }
+      if (savedView?.mode === "credits") {
+        setMetricMode("credits");
+      } else {
+        setMetricMode("revenue");
+      }
+      setActiveRange(initialRange);
     } catch (err) {
       console.error("Analytics load failed", err);
       setErrorState(err?.message || "Analytics laden mislukt.");
     }
   };
 
+  const savedView = loadViewState();
   // defaults for date picker: last 7 days
   const fromDefault = new Date(todayUTC.getTime() - 6 * 24 * 60 * 60 * 1000);
-  if (rangeFromEl && !rangeFromEl.value) rangeFromEl.value = toISODate(fromDefault);
-  if (rangeToEl && !rangeToEl.value) rangeToEl.value = toISODate(todayUTC);
+  if (rangeFromEl && !rangeFromEl.value) {
+    if (savedView?.rangeId === "custom" && savedView.from) {
+      rangeFromEl.value = savedView.from;
+    } else {
+      rangeFromEl.value = toISODate(fromDefault);
+    }
+  }
+  if (rangeToEl && !rangeToEl.value) {
+    if (savedView?.rangeId === "custom" && savedView.to) {
+      rangeToEl.value = savedView.to;
+    } else {
+      rangeToEl.value = toISODate(todayUTC);
+    }
+  }
   updateRangeButtons();
 
   if (rangeFromBtn) {
@@ -905,6 +968,12 @@
     if (summaryGridEl) {
       summaryGridEl.hidden = metricMode === "credits";
     }
+    saveViewState({
+      rangeId: activeRangeId,
+      mode: metricMode,
+      from: rangeFromEl?.value || null,
+      to: rangeToEl?.value || null,
+    });
     if (lastRange?.config) {
       setActiveRange(activeRangeId);
     }
