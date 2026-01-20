@@ -4,6 +4,7 @@ const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHead
 const { getUserFromAccessToken } = require("./_lib/supabase");
 const { SUPABASE_URL } = require("./_lib/supabase");
 const { getOpenAIApiKey, getGeminiApiKey, getSupabaseServiceRoleKey } = require("./_lib/env");
+const { adminRestFetch } = require("./_lib/supabaseAdmin");
 
 // NOTE: UI labels may map to marketing names; server maps them to real OpenAI model IDs.
 // Keep this conservative and stable across accounts/keys.
@@ -84,6 +85,35 @@ function getTokensPerEur() {
   const tokensPerEur = Number(process.env.TOPUP_TOKENS_PER_EUR || 100);
   if (!Number.isFinite(tokensPerEur) || tokensPerEur <= 0) return 100;
   return Math.floor(tokensPerEur);
+}
+
+async function recordUsageEvent({
+  userId,
+  provider,
+  model,
+  modelLabel,
+  tokens,
+  tokensPerEur,
+}) {
+  if (!userId || !provider) return;
+  const costEur = Math.round(((Number(tokens) || 0) / Number(tokensPerEur || 100)) * 100) / 100;
+  try {
+    await adminRestFetch("api_usage_events", {
+      method: "POST",
+      body: {
+        user_id: userId,
+        provider,
+        model: model || null,
+        model_label: modelLabel || null,
+        tokens: Math.max(0, Math.floor(Number(tokens) || 0)),
+        tokens_per_eur: Math.max(1, Math.floor(Number(tokensPerEur) || 100)),
+        cost_eur: costEur,
+        created_at: new Date().toISOString(),
+      },
+    });
+  } catch (e) {
+    console.warn("api_usage_events insert failed", e?.detail || e?.message || e);
+  }
 }
 
 function resolveOpenAIModel(requested) {
@@ -623,6 +653,14 @@ module.exports = async function handler(req, res) {
         }
         console.log(`[gemini] Using model: ${geminiModel}, messages: ${normalizedMessages.length}`);
         const text = await runGeminiChat({ apiKey, model: geminiModel, messages: normalizedMessages });
+        await recordUsageEvent({
+          userId: user.id,
+          provider: "gemini",
+          model: geminiModel,
+          modelLabel: modelLabel || modelKey || requestedModel || geminiModel,
+          tokens: tokensRequired,
+          tokensPerEur,
+        });
         return json(res, 200, { text: text || "" });
       }
 
@@ -651,6 +689,14 @@ module.exports = async function handler(req, res) {
         throw wrapped;
       }
       const text = extractResponseText(response);
+      await recordUsageEvent({
+        userId: user.id,
+        provider: "openai",
+        model: openaiModel,
+        modelLabel: modelLabel || modelKey || requestedModel || openaiModel,
+        tokens: tokensRequired,
+        tokensPerEur,
+      });
       return json(res, 200, { text: text || "" });
     } catch (err) {
       // Refund tokens for provider errors (best effort). If this throws, the outer catch handles it.
