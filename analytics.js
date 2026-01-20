@@ -911,6 +911,10 @@
     button.addEventListener("click", () => {
       if (!dataReady) return;
       const mode = button.dataset.mode || "revenue";
+      if (mode === "credits" && metricMode === "credits") {
+        setMetricMode("revenue");
+        return;
+      }
       setMetricMode(mode);
     });
   });
