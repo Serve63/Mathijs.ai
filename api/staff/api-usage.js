@@ -604,19 +604,9 @@ module.exports = async (req, res) => {
         cost_exact: true,
       });
     }
-    if (Number.isFinite(openaiLimit?.limit) && openaiLimit.limit > 0) {
-      models.push({
-        provider: "openai",
-        model_label: "OpenAI limiet (budget)",
-        tokens: "-",
-        spend_eur: openaiLimit.limit,
-        chats: "-",
-        currency: openaiLimit.currency || "USD",
-        source: openaiLimit.source || "openai_subscription",
-        cost_exact: true,
-        row_type: "limit",
-      });
-    }
+    const openaiLimitValue =
+      Number.isFinite(openaiLimit?.limit) && openaiLimit.limit > 0 ? openaiLimit.limit : null;
+    const openaiLimitCurrency = openaiLimit?.currency || "EUR";
     const creditAllowanceEur = getCreditAllowanceEur();
     let monthlyLimit = null;
     let monthlyLimitSource = "credits";
@@ -674,6 +664,13 @@ module.exports = async (req, res) => {
         since: monthIso,
       },
       month_real: monthReal,
+      openai_limit: openaiLimitValue
+        ? {
+            amount: openaiLimitValue,
+            currency: openaiLimitCurrency,
+            source: openaiLimit?.source || "openai_subscription",
+          }
+        : null,
       models,
       limits: {
         monthly_eur: monthlyLimit,

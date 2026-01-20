@@ -58,7 +58,7 @@
     }
   };
 
-  const renderTable = (rows) => {
+  const renderTable = (rows, openAiLimit) => {
     if (!tableEl) return;
     if (!rows || !rows.length) {
       tableEl.innerHTML = "";
@@ -74,6 +74,10 @@
         const tokens = row.tokens || 0;
         const spend = row.spend_eur;
         const currency = row.currency || "EUR";
+        const isOpenAiTotal = row.provider === "openai" && row.cost_exact;
+        const limitValue = isOpenAiTotal ? openAiLimit?.amount : null;
+        const limitCurrency = openAiLimit?.currency || "EUR";
+        const limitDisplay = isOpenAiTotal ? formatExactMoney(limitValue, limitCurrency) : "-";
         return `
           <div class="table-row">
             <div class="cell" data-label="Model">${modelLabel}</div>
@@ -81,6 +85,7 @@
             <div class="cell" data-label="Chats">${chats}</div>
             <div class="cell" data-label="Tokens">${tokens}</div>
             <div class="cell" data-label="Kosten (exact)">${formatExactMoney(spend, currency)}</div>
+            <div class="cell" data-label="OpenAI limiet">${limitDisplay}</div>
           </div>
         `;
       })
@@ -110,7 +115,7 @@
       monthlyLimit: payload?.limits?.monthly_eur ?? null,
       remaining: payload?.month?.remaining_eur ?? null,
     });
-    renderTable(payload?.models || []);
+    renderTable(payload?.models || [], payload?.openai_limit);
     if (noteEl) {
       const noteParts = [];
       if (payload?.note) noteParts.push(payload.note);
