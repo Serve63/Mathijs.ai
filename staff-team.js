@@ -143,7 +143,7 @@
               <button class="btn tiny secondary" data-action="reset-password">Wachtwoord aanpassen</button>
               ${
                 locked
-                  ? "<button class=\"btn tiny ghost\" type=\"button\" disabled aria-disabled=\"true\">Vast personeel</button>"
+                  ? "<button class=\"btn tiny ghost\" data-action=\"delete\">Ontneem toegang</button>"
                   : "<button class=\"btn tiny ghost\" data-action=\"delete\">Medewerker verwijderen</button>"
               }
             `;
