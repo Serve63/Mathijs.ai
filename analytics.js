@@ -498,6 +498,34 @@
     if (creditSavingsValueEl) creditSavingsValueEl.textContent = fmtEUR.format(extraProfit);
   };
 
+  const getAllTimeCreditSavings = () => {
+    const fromDate =
+      rangeBounds.from ||
+      (dailyPoints[0]?.date ? parseISODate(dailyPoints[0].date) : null) ||
+      todayUTC;
+    const lastFullMonthEnd = new Date(Date.UTC(todayUTC.getUTCFullYear(), todayUTC.getUTCMonth(), 0));
+    if (lastFullMonthEnd < fromDate) {
+      return { extra: 0, meta: "All time · nog geen volledige maand" };
+    }
+    const monthlyPoints = buildMonthlySeries(fromDate, lastFullMonthEnd);
+    const eurPerChat = getEurPerChat();
+    const creditPoints = monthlyPoints.map((point) => ({
+      spent: Number(point.orders || 0) * eurPerChat,
+      max: Number(point.active || 0) * creditAllowanceEur,
+    }));
+    const totals = computeCreditTotals(creditPoints);
+    const extra = Math.max(totals.max - totals.spent, 0);
+    const startLabel = fmtMonthYear.format(new Date(Date.UTC(fromDate.getUTCFullYear(), fromDate.getUTCMonth(), 1)));
+    const endLabel = fmtMonthYear.format(
+      new Date(Date.UTC(lastFullMonthEnd.getUTCFullYear(), lastFullMonthEnd.getUTCMonth(), 1))
+    );
+    const meta =
+      startLabel === endLabel
+        ? `Volledige maanden: ${startLabel}`
+        : `Volledige maanden: ${startLabel} – ${endLabel}`;
+    return { extra, meta };
+  };
+
   const renderChart = (points, options = {}) => {
     if (!barChartEl) return;
     const mode = options.mode || "revenue";
@@ -622,10 +650,10 @@
     if (metricMode === "credits") {
       const creditPoints = buildCreditSeries(rangeId);
       const creditTotals = computeCreditTotals(creditPoints);
-      const creditExtra = Math.max(creditTotals.max - creditTotals.spent, 0);
       const creditMeta = config.meta ? `${config.meta} · per maand` : "per maand";
       updateCreditCard({ ...config, meta: creditMeta }, creditTotals);
-      updateCreditSavings(creditMeta, creditExtra);
+      const savings = getAllTimeCreditSavings();
+      updateCreditSavings(savings.meta, savings.extra);
       if (creditSavingsPanel) creditSavingsPanel.hidden = false;
       if (summaryGridEl) summaryGridEl.hidden = true;
       if (chartTitleEl) chartTitleEl.textContent = `Kredietgebruik per maand (${config.label})`;
