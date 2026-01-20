@@ -385,8 +385,8 @@ module.exports = async (req, res) => {
       },
       tokens_per_eur: tokensPerEur,
       note: monthReal
-        ? "OpenAI kosten zijn gekoppeld via OpenAI usage API. Overige providers zijn schattingen."
-        : "Kosten zijn gebaseerd op tokens per chat per model.",
+        ? "OpenAI kosten zijn gekoppeld via OpenAI usage API. Overige providers zijn schattingen. Tokens komen uit provider usage."
+        : "Tokens komen uit provider usage. Kosten zijn gebaseerd op interne credits (TOPUP_TOKENS_PER_EUR).",
     });
   } catch (e) {
     return publicError(res, 500, "API usage ophalen mislukt.", e);

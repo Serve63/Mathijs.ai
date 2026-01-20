@@ -230,9 +230,15 @@ async function recordUsageEvent({
   modelLabel,
   tokens,
   tokensPerEur,
+  costEur,
 }) {
   if (!userId || !provider) return;
-  const costEur = Math.round(((Number(tokens) || 0) / Number(tokensPerEur || 100)) * 100) / 100;
+  const safeTokens = Math.max(0, Math.floor(Number(tokens) || 0));
+  const safeTokensPerEur = Math.max(1, Math.floor(Number(tokensPerEur) || 100));
+  const computedCost =
+    Number.isFinite(Number(costEur)) && Number(costEur) >= 0
+      ? Math.round(Number(costEur) * 100) / 100
+      : Math.round((safeTokens / safeTokensPerEur) * 100) / 100;
   try {
     await adminRestFetch("api_usage_events", {
       method: "POST",
@@ -241,9 +247,9 @@ async function recordUsageEvent({
         provider,
         model: model || null,
         model_label: modelLabel || null,
-        tokens: Math.max(0, Math.floor(Number(tokens) || 0)),
-        tokens_per_eur: Math.max(1, Math.floor(Number(tokensPerEur) || 100)),
-        cost_eur: costEur,
+        tokens: safeTokens,
+        tokens_per_eur: safeTokensPerEur,
+        cost_eur: computedCost,
         created_at: new Date().toISOString(),
       },
     });
@@ -450,6 +456,22 @@ function extractResponseText(response) {
   return text;
 }
 
+function extractOpenAiUsage(response) {
+  const usage = response?.usage || {};
+  const inputTokens = Number(usage?.input_tokens ?? usage?.inputTokens ?? 0);
+  const outputTokens = Number(usage?.output_tokens ?? usage?.outputTokens ?? 0);
+  let totalTokens = Number(usage?.total_tokens ?? usage?.totalTokens ?? 0);
+  if (!Number.isFinite(totalTokens) || totalTokens <= 0) {
+    const summed = (Number.isFinite(inputTokens) ? inputTokens : 0) + (Number.isFinite(outputTokens) ? outputTokens : 0);
+    if (summed > 0) totalTokens = summed;
+  }
+  return {
+    inputTokens: Number.isFinite(inputTokens) ? inputTokens : 0,
+    outputTokens: Number.isFinite(outputTokens) ? outputTokens : 0,
+    totalTokens: Number.isFinite(totalTokens) ? totalTokens : 0,
+  };
+}
+
 function buildGeminiPrompt(normalizedMessages) {
   const developerParts = [];
   const lines = [];
@@ -491,6 +513,22 @@ function extractGeminiText(payload) {
     .join("\n");
 }
 
+function extractGeminiUsage(payload) {
+  const meta = payload?.usageMetadata || payload?.usage_metadata || {};
+  const inputTokens = Number(meta?.promptTokenCount ?? meta?.prompt_token_count ?? 0);
+  const outputTokens = Number(meta?.candidatesTokenCount ?? meta?.candidates_token_count ?? 0);
+  let totalTokens = Number(meta?.totalTokenCount ?? meta?.total_token_count ?? 0);
+  if (!Number.isFinite(totalTokens) || totalTokens <= 0) {
+    const summed = (Number.isFinite(inputTokens) ? inputTokens : 0) + (Number.isFinite(outputTokens) ? outputTokens : 0);
+    if (summed > 0) totalTokens = summed;
+  }
+  return {
+    inputTokens: Number.isFinite(inputTokens) ? inputTokens : 0,
+    outputTokens: Number.isFinite(outputTokens) ? outputTokens : 0,
+    totalTokens: Number.isFinite(totalTokens) ? totalTokens : 0,
+  };
+}
+
 async function geminiGenerateViaRest({ apiKey, model, prompt }) {
   const body = {
     contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -524,7 +562,7 @@ async function geminiGenerateViaRest({ apiKey, model, prompt }) {
         continue;
       }
 
-      return extractGeminiText(payload);
+      return { text: extractGeminiText(payload), usage: extractGeminiUsage(payload) };
     } catch (e) {
       console.error(`[gemini] Network/parse error (${version}, model: ${model}):`, e?.message || e);
       lastErr = e;
@@ -568,9 +606,8 @@ async function runGeminiChat({ apiKey, model, messages }) {
     let lastError = null;
     for (const candidateModel of candidates) {
       try {
-        const text = await geminiGenerateViaRest({ apiKey, model: candidateModel, prompt });
-        if (text) return text;
-        return "";
+        const result = await geminiGenerateViaRest({ apiKey, model: candidateModel, prompt });
+        return { text: result?.text || "", usage: result?.usage || null, modelUsed: candidateModel };
       } catch (e) {
         lastError = e;
       }
@@ -583,9 +620,8 @@ async function runGeminiChat({ apiKey, model, messages }) {
     if (availableModels.length) {
       const firstAvailable = availableModels[0];
       console.log(`[gemini] Trying first available model: ${firstAvailable}`);
-      const text = await geminiGenerateViaRest({ apiKey, model: firstAvailable, prompt });
-      if (text) return text;
-      return "";
+      const result = await geminiGenerateViaRest({ apiKey, model: firstAvailable, prompt });
+      return { text: result?.text || "", usage: result?.usage || null, modelUsed: firstAvailable };
     }
 
     throw lastError || new Error("gemini_rest_failed");
@@ -668,6 +704,7 @@ module.exports = async function handler(req, res) {
     // Initialize / read token balance AFTER we know request is valid.
     let appMeta = user?.app_metadata || {};
     const tokensPerEur = getTokensPerEur();
+    const requestCostEur = Math.round((tokensRequired / tokensPerEur) * 100) / 100;
     const starterTokens = Math.max(0, Math.round(STARTER_CREDITS_EUR * tokensPerEur));
     const tokenMetaValue = Number(appMeta?.tokens);
     const starterCreditsRecorded = Number(appMeta?.starter_credits_eur || 0);
@@ -740,13 +777,12 @@ module.exports = async function handler(req, res) {
     const monthlyLimit = await getMonthlyLimitEur(serviceRoleKey);
     if (Number.isFinite(monthlyLimit)) {
       const monthSpend = await getMonthSpendEur();
-      const requestCost = Math.round((tokensRequired / tokensPerEur) * 100) / 100;
-      if (monthSpend + requestCost > monthlyLimit) {
+      if (monthSpend + requestCostEur > monthlyLimit) {
         return json(res, 429, {
           error: "Maandlimiet bereikt.",
           monthly_limit_eur: monthlyLimit,
           month_spend_eur: monthSpend,
-          request_cost_eur: requestCost,
+          request_cost_eur: requestCostEur,
           remaining_eur: Math.max(0, Math.round((monthlyLimit - monthSpend) * 100) / 100),
           topup_required: true,
         });
@@ -803,16 +839,20 @@ module.exports = async function handler(req, res) {
           return json(res, 500, { error: "Invalid GEMINI_API_KEY format. API key should start with 'AIza'" });
         }
         console.log(`[gemini] Using model: ${geminiModel}, messages: ${normalizedMessages.length}`);
-        const text = await runGeminiChat({ apiKey, model: geminiModel, messages: normalizedMessages });
+        const result = await runGeminiChat({ apiKey, model: geminiModel, messages: normalizedMessages });
+        const usageTokens = Number(result?.usage?.totalTokens || 0);
+        const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
+        const usedModel = result?.modelUsed || geminiModel;
         await recordUsageEvent({
           userId: user.id,
           provider: "gemini",
-          model: geminiModel,
-          modelLabel: modelLabel || modelKey || requestedModel || geminiModel,
-          tokens: tokensRequired,
+          model: usedModel,
+          modelLabel: modelLabel || modelKey || requestedModel || usedModel,
+          tokens: actualTokens,
           tokensPerEur,
+          costEur: requestCostEur,
         });
-        return json(res, 200, { text: text || "" });
+        return json(res, 200, { text: result?.text || "" });
       }
 
       const openaiModel = resolvedOpenAIModel || resolveOpenAIModel(requestedModel);
@@ -840,13 +880,17 @@ module.exports = async function handler(req, res) {
         throw wrapped;
       }
       const text = extractResponseText(response);
+      const usage = extractOpenAiUsage(response);
+      const actualTokens =
+        Number.isFinite(usage?.totalTokens) && usage.totalTokens > 0 ? usage.totalTokens : tokensRequired;
       await recordUsageEvent({
         userId: user.id,
         provider: "openai",
         model: openaiModel,
         modelLabel: modelLabel || modelKey || requestedModel || openaiModel,
-        tokens: tokensRequired,
+        tokens: actualTokens,
         tokensPerEur,
+        costEur: requestCostEur,
       });
       return json(res, 200, { text: text || "" });
     } catch (err) {
