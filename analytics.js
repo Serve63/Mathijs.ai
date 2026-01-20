@@ -876,6 +876,9 @@
     button.addEventListener("click", () => {
       if (!dataReady) return;
       const rangeId = button.dataset.range || "week";
+      if (metricMode === "credits") {
+        setMetricMode("revenue");
+      }
       if (rangeId === "custom") {
         openPicker();
         return;
