@@ -687,6 +687,26 @@
         color: rgba(255, 255, 255, 0.85);
       }
 
+      .credit-savings-body {
+        margin-top: 16px;
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .credit-savings-value {
+        font-family: "Sora", sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .credit-savings-note {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.92rem;
+      }
+
       .bar-chart {
         margin-top: 16px;
         display: grid;
@@ -931,6 +951,20 @@
           <div class="panel-pill" id="chart-total">€0 totaal</div>
         </div>
         <div class="bar-chart" id="bar-chart"></div>
+      </section>
+
+      <section class="panel" id="credit-savings-panel" aria-label="Extra winst" hidden>
+        <div class="panel-head">
+          <div>
+            <h2>Extra winst (ongebruikt krediet)</h2>
+            <p id="credit-savings-meta">Per maand</p>
+          </div>
+          <div class="panel-pill" id="credit-savings-total">€0 extra</div>
+        </div>
+        <div class="credit-savings-body">
+          <div class="credit-savings-value" id="credit-savings-value">€0,00</div>
+          <div class="credit-savings-note">Niet gebruikte credits in deze periode.</div>
+        </div>
       </section>
 
     </main>

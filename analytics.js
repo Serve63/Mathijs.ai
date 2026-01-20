@@ -46,6 +46,10 @@
   const tableEl = document.getElementById("analytics-table");
   const tableOrdersLabelEl = document.getElementById("table-orders-label");
   const tableSubsLabelEl = document.getElementById("table-subs-label");
+  const creditSavingsPanel = document.getElementById("credit-savings-panel");
+  const creditSavingsMetaEl = document.getElementById("credit-savings-meta");
+  const creditSavingsTotalEl = document.getElementById("credit-savings-total");
+  const creditSavingsValueEl = document.getElementById("credit-savings-value");
 
   const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
   const fmtNumber = new Intl.NumberFormat("nl-NL");
@@ -462,6 +466,12 @@
     revenueSubEl.textContent = `${meta} · max ${fmtEUR.format(Number(totals.max || 0))}`;
   };
 
+  const updateCreditSavings = (meta, extraProfit) => {
+    if (creditSavingsMetaEl) creditSavingsMetaEl.textContent = meta || "Per maand";
+    if (creditSavingsTotalEl) creditSavingsTotalEl.textContent = `${fmtEUR.format(extraProfit)} extra`;
+    if (creditSavingsValueEl) creditSavingsValueEl.textContent = fmtEUR.format(extraProfit);
+  };
+
   const renderChart = (points, options = {}) => {
     if (!barChartEl) return;
     const mode = options.mode || "revenue";
@@ -571,8 +581,11 @@
     if (metricMode === "credits") {
       const creditPoints = buildCreditSeries(rangeId);
       const creditTotals = computeCreditTotals(creditPoints);
+      const creditExtra = Math.max(creditTotals.max - creditTotals.spent, 0);
       const creditMeta = config.meta ? `${config.meta} · per maand` : "per maand";
       updateCreditCard({ ...config, meta: creditMeta }, creditTotals);
+      updateCreditSavings(creditMeta, creditExtra);
+      if (creditSavingsPanel) creditSavingsPanel.hidden = false;
       if (chartTitleEl) chartTitleEl.textContent = `Kredietgebruik per maand (${config.label})`;
       if (chartMetaEl) chartMetaEl.textContent = creditMeta;
       if (chartTotalEl) {
@@ -581,6 +594,7 @@
       renderChart(creditPoints, { mode: "credits" });
     } else {
       updateRevenueCard(config, totals);
+      if (creditSavingsPanel) creditSavingsPanel.hidden = true;
       if (chartTitleEl) chartTitleEl.textContent = `Omzet trend (${config.label})`;
       if (chartMetaEl) chartMetaEl.textContent = config.meta;
       if (chartTotalEl) chartTotalEl.textContent = `${fmtEUR.format(totals.revenue)} totaal`;
@@ -627,6 +641,14 @@
     if (revenueActionsEl) {
       revenueActionsEl.hidden = metricMode === "credits";
     }
+    if (creditSavingsPanel) {
+      creditSavingsPanel.hidden = metricMode !== "credits";
+    }
+    if (metricMode === "credits") {
+      if (creditSavingsMetaEl) creditSavingsMetaEl.textContent = message || "Data laden";
+      if (creditSavingsTotalEl) creditSavingsTotalEl.textContent = "--";
+      if (creditSavingsValueEl) creditSavingsValueEl.textContent = "--";
+    }
     if (ordersEl) ordersEl.textContent = "--";
     if (subsEl) subsEl.textContent = "--";
     if (activeEl) activeEl.textContent = "--";
@@ -643,6 +665,14 @@
     }
     if (revenueActionsEl) {
       revenueActionsEl.hidden = metricMode === "credits";
+    }
+    if (creditSavingsPanel) {
+      creditSavingsPanel.hidden = metricMode !== "credits";
+    }
+    if (metricMode === "credits") {
+      if (creditSavingsMetaEl) creditSavingsMetaEl.textContent = message || "Analytics laden mislukt";
+      if (creditSavingsTotalEl) creditSavingsTotalEl.textContent = "--";
+      if (creditSavingsValueEl) creditSavingsValueEl.textContent = "--";
     }
     if (ordersEl) ordersEl.textContent = "--";
     if (subsEl) subsEl.textContent = "--";
@@ -847,6 +877,9 @@
     });
     if (revenueActionsEl) {
       revenueActionsEl.hidden = metricMode === "credits";
+    }
+    if (creditSavingsPanel) {
+      creditSavingsPanel.hidden = metricMode !== "credits";
     }
     if (lastRange?.config) {
       setActiveRange(activeRangeId);
