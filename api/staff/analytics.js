@@ -633,9 +633,19 @@ module.exports = async (req, res) => {
     let cursor = new Date(startDate);
     let activeCount = baselineActiveCount;
     const recentCutoff = addDays(today, -2);
-    // Skip slow OpenAI costs API call - use internal tracking only for speed
-    // openaiExactByDate remains null, we use spendByDate from api_usage_events instead
-    openaiExactByDate = null;
+    // Fetch real OpenAI costs with timeout (max 5 seconds)
+    try {
+      if (getOpenAICostsKey() || getOpenAIApiKey()) {
+        const openAiPromise = fetchOpenAiCostsByDate(startDate.toISOString(), now.toISOString());
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("OpenAI costs timeout")), 5000)
+        );
+        openaiExactByDate = await Promise.race([openAiPromise, timeoutPromise]);
+      }
+    } catch (e) {
+      console.log("[analytics] OpenAI costs fetch skipped:", e?.message || e);
+      openaiExactByDate = null;
+    }
 
     while (cursor <= today) {
       const dateKey = toDateKey(cursor);
