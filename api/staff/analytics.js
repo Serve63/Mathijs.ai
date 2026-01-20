@@ -533,9 +533,9 @@ module.exports = async (req, res) => {
       if (spendByDate || openaiExactByDate) {
         const otherSpend = spendByDate ? spendByDate.other.get(dateKey) || 0 : 0;
         const openaiUsageSpend = spendByDate ? spendByDate.openai.get(dateKey) || 0 : 0;
-        const openaiExactSpend =
-          openaiExactByDate && openaiExactByDate.size ? openaiExactByDate.get(dateKey) : null;
-        const openaiSpend = Number.isFinite(openaiExactSpend) ? openaiExactSpend : openaiUsageSpend;
+        const hasOpenAiExact = Boolean(openaiExactByDate && openaiExactByDate.size);
+        const openaiExactSpend = hasOpenAiExact ? openaiExactByDate.get(dateKey) || 0 : null;
+        const openaiSpend = hasOpenAiExact ? openaiExactSpend : openaiUsageSpend;
         spendEur = Math.round((otherSpend + openaiSpend) * 100) / 100;
       }
       points.push({
