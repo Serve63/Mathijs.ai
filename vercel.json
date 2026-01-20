@@ -34,10 +34,6 @@
       "destination": "/analytics.html"
     },
     {
-      "source": "/api-controle",
-      "destination": "/api-controle.html"
-    },
-    {
       "source": "/boekhouding",
       "destination": "/boekhouding.html"
     },
