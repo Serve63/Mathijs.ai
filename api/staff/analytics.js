@@ -84,18 +84,7 @@ function extractOpenAiAmount(row) {
   return 0;
 }
 
-async function fetchOpenAiCostsBuckets({ startTime, endTime }) {
-  const apiKey = getOpenAICostsKey() || getOpenAIApiKey();
-  if (!apiKey) return null;
-
-  const orgId = String(process.env.OPENAI_ORG_ID || process.env.OPENAI_ORGANIZATION || "").trim();
-  const projectId = getOpenAiProjectId();
-  const headers = buildOpenAiHeaders({ apiKey, orgId, projectId });
-
-  const startSec = Math.floor(new Date(startTime).getTime() / 1000);
-  const endSec = Math.floor(new Date(endTime).getTime() / 1000);
-  const baseUrl = `https://api.openai.com/v1/organization/costs?start_time=${startSec}&end_time=${endSec}`;
-
+async function fetchOpenAiCostsBucketsWithHeaders({ baseUrl, headers }) {
   let url = baseUrl;
   let pageCount = 0;
   let currency = null;
@@ -149,6 +138,38 @@ async function fetchOpenAiCostsBuckets({ startTime, endTime }) {
 
   if (!buckets.length) return null;
   return { currency: currency || "USD", buckets };
+}
+
+async function fetchOpenAiCostsBuckets({ startTime, endTime }) {
+  const apiKey = getOpenAICostsKey() || getOpenAIApiKey();
+  if (!apiKey) return null;
+
+  const orgId = String(process.env.OPENAI_ORG_ID || process.env.OPENAI_ORGANIZATION || "").trim();
+  const projectId = getOpenAiProjectId();
+  const variants = [];
+  if (orgId) variants.push({ orgId, projectId: null });
+  if (orgId && projectId) variants.push({ orgId, projectId });
+  if (!orgId && projectId) variants.push({ orgId: null, projectId });
+  variants.push({ orgId: null, projectId: null });
+
+  const startSec = Math.floor(new Date(startTime).getTime() / 1000);
+  const endSec = Math.floor(new Date(endTime).getTime() / 1000);
+  const baseUrl = `https://api.openai.com/v1/organization/costs?start_time=${startSec}&end_time=${endSec}`;
+
+  let best = null;
+  let bestTotal = 0;
+  for (const variant of variants) {
+    const headers = buildOpenAiHeaders({ apiKey, orgId: variant.orgId, projectId: variant.projectId });
+    const result = await fetchOpenAiCostsBucketsWithHeaders({ baseUrl, headers });
+    if (!result?.buckets?.length) continue;
+    const total = result.buckets.reduce((sum, bucket) => sum + Number(bucket?.amount || 0), 0);
+    if (!best || total > bestTotal) {
+      best = result;
+      bestTotal = total;
+    }
+  }
+
+  return best;
 }
 
 async function convertOpenAiAmount(amount, currency) {
