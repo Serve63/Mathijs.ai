@@ -38,6 +38,7 @@
   const activeEl = document.getElementById("stat-active");
   const activeLabelEl = document.getElementById("stat-active-label");
   const activeSubEl = document.getElementById("stat-active-sub");
+  const summaryGridEl = document.getElementById("summary-grid");
   const chartTitleEl = document.getElementById("chart-title");
   const chartMetaEl = document.getElementById("chart-meta");
   const chartTotalEl = document.getElementById("chart-total");
@@ -586,6 +587,7 @@
       updateCreditCard({ ...config, meta: creditMeta }, creditTotals);
       updateCreditSavings(creditMeta, creditExtra);
       if (creditSavingsPanel) creditSavingsPanel.hidden = false;
+      if (summaryGridEl) summaryGridEl.hidden = true;
       if (chartTitleEl) chartTitleEl.textContent = `Kredietgebruik per maand (${config.label})`;
       if (chartMetaEl) chartMetaEl.textContent = creditMeta;
       if (chartTotalEl) {
@@ -595,6 +597,7 @@
     } else {
       updateRevenueCard(config, totals);
       if (creditSavingsPanel) creditSavingsPanel.hidden = true;
+      if (summaryGridEl) summaryGridEl.hidden = false;
       if (chartTitleEl) chartTitleEl.textContent = `Omzet trend (${config.label})`;
       if (chartMetaEl) chartMetaEl.textContent = config.meta;
       if (chartTotalEl) chartTotalEl.textContent = `${fmtEUR.format(totals.revenue)} totaal`;
@@ -644,6 +647,9 @@
     if (creditSavingsPanel) {
       creditSavingsPanel.hidden = metricMode !== "credits";
     }
+    if (summaryGridEl) {
+      summaryGridEl.hidden = metricMode === "credits";
+    }
     if (metricMode === "credits") {
       if (creditSavingsMetaEl) creditSavingsMetaEl.textContent = message || "Data laden";
       if (creditSavingsTotalEl) creditSavingsTotalEl.textContent = "--";
@@ -668,6 +674,9 @@
     }
     if (creditSavingsPanel) {
       creditSavingsPanel.hidden = metricMode !== "credits";
+    }
+    if (summaryGridEl) {
+      summaryGridEl.hidden = metricMode === "credits";
     }
     if (metricMode === "credits") {
       if (creditSavingsMetaEl) creditSavingsMetaEl.textContent = message || "Analytics laden mislukt";
@@ -880,6 +889,9 @@
     }
     if (creditSavingsPanel) {
       creditSavingsPanel.hidden = metricMode !== "credits";
+    }
+    if (summaryGridEl) {
+      summaryGridEl.hidden = metricMode === "credits";
     }
     if (lastRange?.config) {
       setActiveRange(activeRangeId);
