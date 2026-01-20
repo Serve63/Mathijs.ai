@@ -29,6 +29,30 @@ function parseLimit(value) {
   return n;
 }
 
+let cachedUsdToEurRate = null;
+let cachedFxAt = 0;
+
+async function getUsdToEurRate() {
+  const override = Number(process.env.OPENAI_USD_EUR_RATE || 0);
+  if (Number.isFinite(override) && override > 0) return override;
+  const now = Date.now();
+  if (cachedUsdToEurRate && now - cachedFxAt < 6 * 60 * 60 * 1000) {
+    return cachedUsdToEurRate;
+  }
+  try {
+    const resp = await fetch("https://api.exchangerate.host/latest?base=USD&symbols=EUR");
+    if (!resp.ok) return null;
+    const payload = await resp.json().catch(() => ({}));
+    const rate = Number(payload?.rates?.EUR);
+    if (!Number.isFinite(rate) || rate <= 0) return null;
+    cachedUsdToEurRate = rate;
+    cachedFxAt = now;
+    return rate;
+  } catch (_) {
+    return null;
+  }
+}
+
 function getCreditAllowanceEur() {
   const value = Number(process.env.CREDIT_ALLOWANCE_EUR || DEFAULT_CREDIT_ALLOWANCE_EUR);
   if (!Number.isFinite(value) || value < 0) return DEFAULT_CREDIT_ALLOWANCE_EUR;
@@ -121,7 +145,7 @@ function isActiveCustomer(user) {
   return !cancelledAt;
 }
 
-async function fetchOpenAiUsagePeriod({ startTime, endTime }) {
+async function fetchOpenAiUsagePeriod({ startTime, endTime, preferLegacy = false }) {
   const apiKey = getOpenAICostsKey() || getOpenAIApiKey();
   if (!apiKey) return null;
 
@@ -135,18 +159,31 @@ async function fetchOpenAiUsagePeriod({ startTime, endTime }) {
   const startDate = new Date(startTime).toISOString().slice(0, 10);
   const endDate = new Date(endTime).toISOString().slice(0, 10);
 
-  const endpoints = [
-    {
-      name: "org_costs",
+  const endpoints = preferLegacy
+    ? [
+        {
+          name: "legacy_usage",
+          url: `https://api.openai.com/v1/dashboard/billing/usage?start_date=${startDate}&end_date=${endDate}`,
+        },
+        {
+          name: "org_costs",
+          url: `https://api.openai.com/v1/organization/costs?start_time=${Math.floor(
+            new Date(startTime).getTime() / 1000
+          )}&end_time=${Math.floor(new Date(endTime).getTime() / 1000)}`,
+        },
+      ]
+    : [
+        {
+          name: "org_costs",
       url: `https://api.openai.com/v1/organization/costs?start_time=${Math.floor(
         new Date(startTime).getTime() / 1000
       )}&end_time=${Math.floor(new Date(endTime).getTime() / 1000)}`,
     },
-    {
-      name: "legacy_usage",
-      url: `https://api.openai.com/v1/dashboard/billing/usage?start_date=${startDate}&end_date=${endDate}`,
-    },
-  ];
+        {
+          name: "legacy_usage",
+          url: `https://api.openai.com/v1/dashboard/billing/usage?start_date=${startDate}&end_date=${endDate}`,
+        },
+      ];
 
   for (const endpoint of endpoints) {
     try {
@@ -285,9 +322,9 @@ module.exports = async (req, res) => {
         openaiUsage.rows.find((row) => row?.amount && typeof row.amount === "object" && row.amount.currency)?.amount
           ?.currency ||
         "USD";
-      const openaiCurrency =
+      let openaiCurrency =
         typeof openaiCurrencyRaw === "string" ? openaiCurrencyRaw.toUpperCase() : "USD";
-      const openaiTotal = openaiUsage.rows.reduce((acc, row) => {
+      let openaiTotal = openaiUsage.rows.reduce((acc, row) => {
         const candidates = [
           row?.cost_eur,
           row?.cost_usd,
@@ -305,10 +342,53 @@ module.exports = async (req, res) => {
         }
         return acc + spend;
       }, 0);
+
+      if (openaiTotal <= 0 && openaiAgg.tokens > 0) {
+        const legacyUsage = await fetchOpenAiUsagePeriod({
+          startTime: monthIso,
+          endTime: now.toISOString(),
+          preferLegacy: true,
+        });
+        if (legacyUsage?.rows?.length) {
+          const legacyTotal = legacyUsage.rows.reduce((acc, row) => {
+            const candidates = [row?.cost_usd, row?.total_cost, row?.cost_eur, row?.value, row?.amount];
+            let spend = 0;
+            for (const candidate of candidates) {
+              const num = Number(candidate);
+              if (Number.isFinite(num)) {
+                spend = num;
+                break;
+              }
+            }
+            return acc + spend;
+          }, 0);
+          if (legacyTotal > 0) {
+            openaiTotal = legacyTotal;
+            openaiCurrency = (legacyUsage.currency || "USD").toUpperCase();
+          }
+        }
+      }
+
+      const requestedCurrency = String(process.env.OPENAI_COSTS_CURRENCY || "").trim().toUpperCase();
+      let finalTotal = openaiTotal;
+      let finalCurrency = openaiCurrency;
+      let fxRateUsed = null;
+      if (requestedCurrency && requestedCurrency !== openaiCurrency) {
+        if (requestedCurrency === "EUR" && openaiCurrency === "USD") {
+          const fxRate = await getUsdToEurRate();
+          if (Number.isFinite(fxRate) && fxRate > 0) {
+            finalTotal = openaiTotal * fxRate;
+            finalCurrency = "EUR";
+            fxRateUsed = fxRate;
+          }
+        }
+      }
+
       monthReal = {
-        spend: Math.round(openaiTotal * 100) / 100,
-        currency: openaiCurrency,
+        spend: Math.round(finalTotal * 100) / 100,
+        currency: finalCurrency,
         source: openaiUsage.source || "openai_api",
+        fx_rate: fxRateUsed,
       };
     }
 
@@ -371,8 +451,15 @@ module.exports = async (req, res) => {
 
     const hasOpenAiCostsKey = Boolean(getOpenAICostsKey() || getOpenAIApiKey());
     const openAiOrgId = String(process.env.OPENAI_ORG_ID || process.env.OPENAI_ORGANIZATION || "").trim();
+    const fxNote =
+      monthReal?.fx_rate && monthReal.currency === "EUR" ? "OpenAI kosten omgerekend van USD naar EUR." : null;
     const exactCostsNote = monthReal
-      ? "Exacte kosten beschikbaar voor OpenAI (totaal). Gemini heeft geen kosten-API. Tokens komen uit provider usage."
+      ? [
+          "Exacte kosten beschikbaar voor OpenAI (totaal). Gemini heeft geen kosten-API. Tokens komen uit provider usage.",
+          fxNote,
+        ]
+          .filter(Boolean)
+          .join(" ")
       : [
           "Exacte kosten nog niet beschikbaar. Gemini heeft geen kosten-API. Tokens komen uit provider usage.",
           !hasOpenAiCostsKey ? "OPENAI_COSTS_KEY ontbreekt." : null,
