@@ -270,6 +270,7 @@
       orders: Number(point?.orders || 0),
       subs: Number(point?.subs || 0),
       active: Number(point?.active || 0),
+      spend_eur: Number.isFinite(Number(point?.spend_eur)) ? Number(point.spend_eur) : null,
     }));
 
   const rebuildPointMap = () => {
@@ -295,6 +296,7 @@
         orders: Number(base.orders || 0),
         subs: Number(base.subs || 0),
         active,
+        spend_eur: Number.isFinite(base.spend_eur) ? base.spend_eur : null,
       });
       cursor = addDays(cursor, 1);
     }
@@ -302,17 +304,23 @@
   };
 
   const sumPoints = (points, label) => {
+    let spendSum = 0;
+    let hasSpend = false;
     const totals = points.reduce(
       (acc, p) => {
         acc.revenue += p.revenue;
         acc.orders += p.orders;
         acc.subs += p.subs;
         acc.active = p.active;
+        if (Number.isFinite(p.spend_eur)) {
+          spendSum += p.spend_eur;
+          hasSpend = true;
+        }
         return acc;
       },
       { revenue: 0, orders: 0, subs: 0, active: 0 }
     );
-    return { label, ...totals };
+    return { label, ...totals, spend_eur: hasSpend ? spendSum : null };
   };
 
   const monthAggregate = (year, monthIndex, maxDate) => {
@@ -444,7 +452,7 @@
     const monthlyPoints = buildMonthlySeries(from, to);
     const eurPerChat = getEurPerChat();
     return monthlyPoints.map((point) => {
-      const spent = Number(point.orders || 0) * eurPerChat;
+      const spent = Number.isFinite(point.spend_eur) ? point.spend_eur : Number(point.orders || 0) * eurPerChat;
       const max = Number(point.active || 0) * creditAllowanceEur;
       return { ...point, spent, max };
     });
@@ -510,7 +518,7 @@
     const monthlyPoints = buildMonthlySeries(fromDate, lastFullMonthEnd);
     const eurPerChat = getEurPerChat();
     const creditPoints = monthlyPoints.map((point) => ({
-      spent: Number(point.orders || 0) * eurPerChat,
+      spent: Number.isFinite(point.spend_eur) ? point.spend_eur : Number(point.orders || 0) * eurPerChat,
       max: Number(point.active || 0) * creditAllowanceEur,
     }));
     const totals = computeCreditTotals(creditPoints);

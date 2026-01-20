@@ -9,7 +9,7 @@ const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHead
 const { SUPABASE_URL, getUserFromAccessToken } = require("../_lib/supabase");
 const { isStaffUser } = require("../_lib/staff");
 const { adminRestFetch, adminRestCount } = require("../_lib/supabaseAdmin");
-const { getSupabaseServiceRoleKey } = require("../_lib/env");
+const { getOpenAIApiKey, getOpenAICostsKey, getSupabaseServiceRoleKey } = require("../_lib/env");
 
 const STAFF_WINDOW_MS = 60_000;
 const STAFF_LIMIT = 120;
@@ -17,6 +17,170 @@ const BASELINE_DATE_UTC = new Date(Date.UTC(2026, 0, 1));
 const TOKENS_PER_CHAT = 1;
 const DEFAULT_TOKENS_PER_EUR = 100;
 const DEFAULT_CREDIT_ALLOWANCE_EUR = 10;
+let cachedUsdToEurRate = null;
+let cachedFxAt = 0;
+
+function getRequestedOpenAiCurrency() {
+  const raw = String(process.env.OPENAI_COSTS_CURRENCY || "EUR").trim();
+  return raw ? raw.toUpperCase() : "EUR";
+}
+
+async function getUsdToEurRate() {
+  const override = Number(process.env.OPENAI_USD_EUR_RATE || 0);
+  if (Number.isFinite(override) && override > 0) return override;
+  const now = Date.now();
+  if (cachedUsdToEurRate && now - cachedFxAt < 6 * 60 * 60 * 1000) {
+    return cachedUsdToEurRate;
+  }
+  const endpoints = [
+    "https://api.exchangerate.host/latest?base=USD&symbols=EUR",
+    "https://open.er-api.com/v6/latest/USD",
+  ];
+  for (const url of endpoints) {
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) continue;
+      const payload = await resp.json().catch(() => ({}));
+      const rate = Number(payload?.rates?.EUR);
+      if (!Number.isFinite(rate) || rate <= 0) continue;
+      cachedUsdToEurRate = rate;
+      cachedFxAt = now;
+      return rate;
+    } catch (_) {
+      continue;
+    }
+  }
+  return null;
+}
+
+function getOpenAiProjectId() {
+  const raw = String(process.env.OPENAI_PROJECT_ID || "").trim();
+  return raw || null;
+}
+
+function buildOpenAiHeaders({ apiKey, orgId, projectId }) {
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+  if (orgId) headers["OpenAI-Organization"] = orgId;
+  if (projectId) headers["OpenAI-Project"] = projectId;
+  return headers;
+}
+
+function extractOpenAiAmount(row) {
+  const candidates = [
+    row?.amount?.value,
+    row?.amount?.usd,
+    row?.amount,
+    row?.value,
+    row?.total,
+    row?.cost,
+  ];
+  for (const candidate of candidates) {
+    const num = Number(candidate);
+    if (Number.isFinite(num)) return num;
+  }
+  return 0;
+}
+
+async function fetchOpenAiCostsBuckets({ startTime, endTime }) {
+  const apiKey = getOpenAICostsKey() || getOpenAIApiKey();
+  if (!apiKey) return null;
+
+  const orgId = String(process.env.OPENAI_ORG_ID || process.env.OPENAI_ORGANIZATION || "").trim();
+  const projectId = getOpenAiProjectId();
+  const headers = buildOpenAiHeaders({ apiKey, orgId, projectId });
+
+  const startSec = Math.floor(new Date(startTime).getTime() / 1000);
+  const endSec = Math.floor(new Date(endTime).getTime() / 1000);
+  const baseUrl = `https://api.openai.com/v1/organization/costs?start_time=${startSec}&end_time=${endSec}`;
+
+  let url = baseUrl;
+  let pageCount = 0;
+  let currency = null;
+  const buckets = [];
+
+  while (url) {
+    try {
+      const resp = await fetch(url, { method: "GET", headers });
+      if (!resp.ok) break;
+      const payload = await resp.json().catch(() => ({}));
+      if (Array.isArray(payload?.data)) {
+        payload.data.forEach((bucket) => {
+          const start = Number(bucket?.start_time);
+          if (!Number.isFinite(start)) return;
+          let amount = 0;
+          if (Array.isArray(bucket?.results)) {
+            bucket.results.forEach((row) => {
+              amount += extractOpenAiAmount(row);
+              if (!currency) {
+                const rowCurrency = row?.amount?.currency;
+                if (typeof rowCurrency === "string" && rowCurrency.trim()) {
+                  currency = rowCurrency.trim().toUpperCase();
+                }
+              }
+            });
+          } else {
+            amount += extractOpenAiAmount(bucket);
+          }
+          buckets.push({ start_time: start, amount });
+        });
+      }
+
+      if (!currency && typeof payload?.currency === "string" && payload.currency.trim()) {
+        currency = payload.currency.trim().toUpperCase();
+      }
+
+      if (payload?.has_more && payload?.next_page) {
+        const nextUrl = new URL(baseUrl);
+        nextUrl.searchParams.set("page", payload.next_page);
+        url = nextUrl.toString();
+      } else {
+        url = null;
+      }
+
+      pageCount += 1;
+      if (pageCount > 50) url = null;
+    } catch (_) {
+      break;
+    }
+  }
+
+  if (!buckets.length) return null;
+  return { currency: currency || "USD", buckets };
+}
+
+async function convertOpenAiAmount(amount, currency) {
+  const requestedCurrency = getRequestedOpenAiCurrency();
+  let finalAmount = Number(amount || 0);
+  let finalCurrency = (currency || "USD").toUpperCase();
+  if (requestedCurrency && requestedCurrency !== finalCurrency) {
+    if (requestedCurrency === "EUR" && finalCurrency === "USD") {
+      const fxRate = await getUsdToEurRate();
+      if (Number.isFinite(fxRate) && fxRate > 0) {
+        finalAmount = finalAmount * fxRate;
+        finalCurrency = "EUR";
+      }
+    }
+  }
+  return { amount: Math.round(finalAmount * 100) / 100, currency: finalCurrency };
+}
+
+async function fetchOpenAiCostsByDate(startIso, endIso) {
+  const result = await fetchOpenAiCostsBuckets({ startTime: startIso, endTime: endIso });
+  if (!result?.buckets?.length) return null;
+  const out = new Map();
+  for (const bucket of result.buckets) {
+    const startMs = Number(bucket?.start_time) * 1000;
+    if (!Number.isFinite(startMs)) continue;
+    const dateKey = toDateKey(startOfDayUtc(new Date(startMs)));
+    const converted = await convertOpenAiAmount(bucket.amount || 0, result.currency);
+    const existing = out.get(dateKey) || 0;
+    out.set(dateKey, Math.round((existing + converted.amount) * 100) / 100);
+  }
+  return out;
+}
 
 function getTokensPerEur() {
   const tokensPerEur = Number(process.env.TOPUP_TOKENS_PER_EUR || DEFAULT_TOKENS_PER_EUR);
@@ -160,6 +324,37 @@ async function fetchUserMessageCountsByDay(baselineIso) {
   return counts;
 }
 
+async function fetchUsageSpendByDay(baselineIso) {
+  const openai = new Map();
+  const other = new Map();
+  const limit = 1000;
+  let offset = 0;
+  while (true) {
+    const rows = await adminRestFetch(
+      `api_usage_events?select=provider,cost_eur,created_at&created_at=gte.${encodeURIComponent(
+        baselineIso
+      )}&order=created_at.asc&limit=${limit}&offset=${offset}`,
+      { method: "GET" }
+    );
+    if (!Array.isArray(rows) || rows.length === 0) break;
+    rows.forEach((row) => {
+      const createdAt = parseDate(row?.created_at);
+      if (!createdAt || createdAt < BASELINE_DATE_UTC) return;
+      const dateKey = toDateKey(startOfDayUtc(createdAt));
+      const amount = Number(row?.cost_eur || 0);
+      if (!Number.isFinite(amount)) return;
+      if (String(row?.provider || "").toLowerCase() === "openai") {
+        openai.set(dateKey, Math.round(((openai.get(dateKey) || 0) + amount) * 100) / 100);
+      } else {
+        other.set(dateKey, Math.round(((other.get(dateKey) || 0) + amount) * 100) / 100);
+      }
+    });
+    if (rows.length < limit) break;
+    offset += limit;
+  }
+  return { openai, other };
+}
+
 module.exports = async (req, res) => {
   try {
     if (req.method !== "GET") {
@@ -197,6 +392,16 @@ module.exports = async (req, res) => {
     );
     const chatCountsByDate = await fetchUserMessageCountsByDay(baselineIso);
     const payingUsers = users.filter(isPayingCustomer);
+
+    let spendByDate = null;
+    let openaiExactByDate = null;
+    try {
+      const usageSpend = await fetchUsageSpendByDay(baselineIso);
+      spendByDate = usageSpend;
+    } catch (e) {
+      const isMissingTable = e?.statusCode === 404 || String(e?.detail || "").includes("api_usage_events");
+      if (!isMissingTable) throw e;
+    }
 
     let events = [];
     try {
@@ -310,6 +515,13 @@ module.exports = async (req, res) => {
     const points = [];
     let cursor = new Date(startDate);
     let activeCount = baselineActiveCount;
+    if (spendByDate) {
+      try {
+        openaiExactByDate = await fetchOpenAiCostsByDate(startDate.toISOString(), today.toISOString());
+      } catch (_) {
+        openaiExactByDate = null;
+      }
+    }
 
     while (cursor <= today) {
       const dateKey = toDateKey(cursor);
@@ -317,12 +529,22 @@ module.exports = async (req, res) => {
       const payment = paymentByDate.get(dateKey) || { revenue: 0 };
       const chats = chatCountsByDate.get(dateKey) || 0;
       const subs = subsByDate.get(dateKey) || 0;
+      let spendEur = null;
+      if (spendByDate) {
+        const otherSpend = spendByDate.other.get(dateKey) || 0;
+        const openaiUsageSpend = spendByDate.openai.get(dateKey) || 0;
+        const openaiExactSpend =
+          openaiExactByDate && openaiExactByDate.size ? openaiExactByDate.get(dateKey) || 0 : null;
+        const openaiSpend = openaiExactSpend === null ? openaiUsageSpend : openaiExactSpend;
+        spendEur = Math.round((otherSpend + openaiSpend) * 100) / 100;
+      }
       points.push({
         date: dateKey,
         revenue: Number(payment.revenue.toFixed(2)),
         orders: chats,
         subs,
         active: Math.max(0, activeCount),
+        spend_eur: Number.isFinite(spendEur) ? spendEur : null,
       });
       cursor = addDays(cursor, 1);
     }
