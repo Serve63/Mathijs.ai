@@ -313,6 +313,7 @@ module.exports = async (req, res) => {
       providerTotals.set(provider, providerAgg);
     });
 
+    const openaiAgg = providerTotals.get("openai") || { tokens: 0, chats: 0 };
     const openaiUsage = await fetchOpenAiUsagePeriod({ startTime: monthIso, endTime: now.toISOString() });
     let monthReal = null;
 
@@ -392,7 +393,6 @@ module.exports = async (req, res) => {
       };
     }
 
-    const openaiAgg = providerTotals.get("openai") || { tokens: 0, chats: 0 };
     const models = Array.from(totals.values()).sort((a, b) => b.tokens - a.tokens);
     if (monthReal) {
       models.unshift({
