@@ -98,6 +98,7 @@
     }
 
     const todayReal = payload?.today_real;
+    const limitSource = payload?.limits?.source;
     renderSummary({
       todaySpend: todayReal?.spend ?? payload?.today?.spend_eur ?? 0,
       todayCurrency: todayReal?.currency || "EUR",
@@ -105,6 +106,11 @@
       dailyLimit: payload?.limits?.daily_eur || null,
       remaining: payload?.today?.remaining_eur ?? null,
     });
+    if (noteEl && limitSource === "credits") {
+      noteEl.textContent = `Daglimiet = actieve klanten × €${(payload?.limits?.credit_allowance_eur ?? 0).toFixed(2)} krediet.`;
+    } else if (noteEl && !noteEl.textContent) {
+      noteEl.textContent = payload?.note || "";
+    }
     renderTable(payload?.models || []);
     if (noteEl) noteEl.textContent = payload?.note || "";
   };

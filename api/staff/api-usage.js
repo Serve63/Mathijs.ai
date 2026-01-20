@@ -3,14 +3,15 @@
 // Requires Supabase service role key and api_usage_events table.
 
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders } = require("../_lib/security");
-const { getUserFromAccessToken } = require("../_lib/supabase");
+const { SUPABASE_URL, getUserFromAccessToken } = require("../_lib/supabase");
 const { isStaffUser } = require("../_lib/staff");
 const { adminRestFetch } = require("../_lib/supabaseAdmin");
-const { getOpenAIApiKey } = require("../_lib/env");
+const { getOpenAIApiKey, getSupabaseServiceRoleKey } = require("../_lib/env");
 
 const STAFF_WINDOW_MS = 60_000;
 const STAFF_LIMIT = 120;
 const DEFAULT_TOKENS_PER_EUR = 100;
+const DEFAULT_CREDIT_ALLOWANCE_EUR = 10;
 
 function startOfDayUtc(now) {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
@@ -28,9 +29,73 @@ function parseLimit(value) {
   return n;
 }
 
+function getCreditAllowanceEur() {
+  const value = Number(process.env.CREDIT_ALLOWANCE_EUR || DEFAULT_CREDIT_ALLOWANCE_EUR);
+  if (!Number.isFinite(value) || value < 0) return DEFAULT_CREDIT_ALLOWANCE_EUR;
+  return Math.round(value * 100) / 100;
+}
+
 function toEur(tokens, tokensPerEur) {
   const amount = Number(tokens || 0) / Number(tokensPerEur || DEFAULT_TOKENS_PER_EUR);
   return Math.round(amount * 100) / 100;
+}
+
+async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {}) {
+  const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/${path}`, {
+    method,
+    headers: {
+      apikey: accessKey,
+      Authorization: `Bearer ${accessKey}`,
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const text = await resp.text();
+  if (!resp.ok) {
+    throw new Error(`auth_admin_failed:${resp.status}:${text}`);
+  }
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+async function fetchAllUsers(serviceRoleKey) {
+  const out = [];
+  let page = 1;
+  const perPage = 200;
+  while (page <= 5) {
+    const resp = await supabaseAuthAdmin(`users?page=${page}&per_page=${perPage}`, {
+      method: "GET",
+      accessKey: serviceRoleKey,
+    });
+    const users = resp?.users || [];
+    users.forEach((u) => out.push(u));
+    if (users.length < perPage) break;
+    page += 1;
+  }
+  return out;
+}
+
+function isPayingCustomer(user) {
+  if (!user) return false;
+  const appMeta = user.app_metadata || {};
+  if (appMeta.lifetime_free || appMeta.plan === "lifetime" || appMeta.plan === "trial") return true;
+  const freeMonths = Number(appMeta.free_months || 0);
+  if (Number.isFinite(freeMonths) && freeMonths > 0) return true;
+  const totalPaid = Number(appMeta.total_paid_eur || 0);
+  if (Number.isFinite(totalPaid) && totalPaid > 0) return true;
+  const lastPaid = Number(appMeta.last_payment_amount_eur || 0);
+  if (Number.isFinite(lastPaid) && lastPaid > 0) return true;
+  return false;
+}
+
+function isActiveCustomer(user) {
+  if (!isPayingCustomer(user)) return false;
+  const cancelledAt = user?.app_metadata?.cancelled_at;
+  return !cancelledAt;
 }
 
 async function fetchOpenAiUsageToday({ startTime, endTime }) {
@@ -225,7 +290,26 @@ module.exports = async (req, res) => {
     }
 
     const models = Array.from(totals.values()).sort((a, b) => b.spend_eur - a.spend_eur);
-    const dailyLimit = parseLimit(process.env.API_DAILY_LIMIT_EUR);
+    const creditAllowanceEur = getCreditAllowanceEur();
+    let dailyLimit = null;
+    let dailyLimitSource = "env";
+
+    try {
+      const serviceRoleKey = getSupabaseServiceRoleKey();
+      const users = await fetchAllUsers(serviceRoleKey);
+      const activeCustomers = users.filter(isActiveCustomer).length;
+      if (Number.isFinite(creditAllowanceEur) && creditAllowanceEur > 0) {
+        dailyLimit = Math.round(activeCustomers * creditAllowanceEur * 100) / 100;
+        dailyLimitSource = "credits";
+      }
+    } catch (_) {
+      dailyLimit = parseLimit(process.env.API_DAILY_LIMIT_EUR);
+    }
+
+    if (!Number.isFinite(dailyLimit) || dailyLimit <= 0) {
+      dailyLimit = parseLimit(process.env.API_DAILY_LIMIT_EUR);
+      if (dailyLimit) dailyLimitSource = "env";
+    }
     const remaining = dailyLimit ? Math.max(0, Math.round((dailyLimit - todaySpend) * 100) / 100) : null;
 
     return json(res, 200, {
@@ -242,6 +326,8 @@ module.exports = async (req, res) => {
       models,
       limits: {
         daily_eur: dailyLimit,
+        source: dailyLimitSource,
+        credit_allowance_eur: creditAllowanceEur,
       },
       tokens_per_eur: tokensPerEur,
       note: todayReal
