@@ -483,38 +483,52 @@ module.exports = async (req, res) => {
     if (!confirmedAt) return json(res, 403, { error: "Forbidden (email not verified)" });
     if (!isStaffUser(user)) return json(res, 403, { error: "Forbidden (not staff)" });
 
-    const users = await fetchAllUsers(serviceRoleKey);
     const baselineIso = BASELINE_DATE_UTC.toISOString();
+
+    // Run all fetches in parallel for speed
+    const [usersResult, usageResult, billingResult] = await Promise.allSettled([
+      fetchAllUsers(serviceRoleKey),
+      fetchUsageStatsByDay(baselineIso).catch((e) => {
+        const isMissingTable = e?.statusCode === 404 || String(e?.detail || "").includes("api_usage_events");
+        if (!isMissingTable) throw e;
+        return fetchUserMessageCountsByDay(baselineIso);
+      }),
+      fetchBillingEvents(),
+    ]);
+
+    // Handle users
+    const users = usersResult.status === "fulfilled" ? usersResult.value : [];
+
+    // Handle usage stats
     let totalChats = 0;
     let chatCountsByDate = new Map();
     let spendByDate = null;
     let openaiExactByDate = null;
-    try {
-      const usageStats = await fetchUsageStatsByDay(baselineIso);
-      chatCountsByDate = usageStats.counts;
-      totalChats = usageStats.totalChats;
-      spendByDate = { openai: usageStats.openai, other: usageStats.other };
-    } catch (e) {
-      const isMissingTable = e?.statusCode === 404 || String(e?.detail || "").includes("api_usage_events");
-      if (!isMissingTable) throw e;
-      const fallback = await fetchUserMessageCountsByDay(baselineIso);
-      chatCountsByDate = fallback.counts;
-      totalChats = fallback.totalChats;
+    if (usageResult.status === "fulfilled" && usageResult.value) {
+      chatCountsByDate = usageResult.value.counts || new Map();
+      totalChats = usageResult.value.totalChats || 0;
+      if (usageResult.value.openai || usageResult.value.other) {
+        spendByDate = { openai: usageResult.value.openai || new Map(), other: usageResult.value.other || new Map() };
+      }
     }
-    const payingUsers = users.filter(isPayingCustomer);
 
+    // Handle billing events
     let events = [];
-    try {
-      events = await fetchBillingEvents();
-    } catch (e) {
+    if (billingResult.status === "fulfilled") {
+      events = billingResult.value || [];
+    } else {
+      const e = billingResult.reason;
       const isMissingTable = e?.statusCode === 404 || String(e?.detail || "").includes("billing_events");
       if (isMissingTable) {
         return json(res, 500, {
           error: "Billing events tabel ontbreekt. Run migrations/create_billing_events.sql in Supabase.",
         });
       }
-      throw e;
+      // Log but continue with empty events
+      console.error("Failed to fetch billing events:", e);
     }
+
+    const payingUsers = users.filter(isPayingCustomer);
 
     const knownPaymentIds = new Set(
       events.map((event) => String(event?.provider_payment_id || "").trim()).filter(Boolean)
