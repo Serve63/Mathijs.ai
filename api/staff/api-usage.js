@@ -29,6 +29,35 @@ function parseLimit(value) {
   return n;
 }
 
+const CACHE_TTLS = {
+  usage: 60_000,
+  costs: 300_000,
+  topups: 300_000,
+  active: 300_000,
+};
+
+const cacheStore = {
+  usage: new Map(),
+  costs: new Map(),
+  topups: new Map(),
+  active: new Map(),
+};
+
+function getCached(map, key) {
+  const entry = map.get(key);
+  if (!entry) return undefined;
+  if (entry.expiresAt <= Date.now()) {
+    map.delete(key);
+    return undefined;
+  }
+  return entry.value;
+}
+
+function setCached(map, key, value, ttlMs) {
+  map.set(key, { value, expiresAt: Date.now() + ttlMs });
+  return value;
+}
+
 let cachedUsdToEurRate = null;
 let cachedFxAt = 0;
 
@@ -87,6 +116,17 @@ async function getTopupsThisMonthEur(startIso) {
   return Math.round(total * 100) / 100;
 }
 
+async function getTopupsThisMonthCached(monthKey, startIso) {
+  const cached = getCached(cacheStore.topups, monthKey);
+  if (cached !== undefined) return cached;
+  try {
+    const total = await getTopupsThisMonthEur(startIso);
+    return setCached(cacheStore.topups, monthKey, total, CACHE_TTLS.topups);
+  } catch (_) {
+    return setCached(cacheStore.topups, monthKey, null, CACHE_TTLS.topups);
+  }
+}
+
 async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {}) {
   const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/${path}`, {
     method,
@@ -143,6 +183,21 @@ function isActiveCustomer(user) {
   if (!isPayingCustomer(user)) return false;
   const cancelledAt = user?.app_metadata?.cancelled_at;
   return !cancelledAt;
+}
+
+async function getActiveCustomersCached(monthKey, serviceRoleKey) {
+  const cached = getCached(cacheStore.active, monthKey);
+  if (cached !== undefined) return cached;
+  if (!serviceRoleKey) {
+    return setCached(cacheStore.active, monthKey, null, CACHE_TTLS.active);
+  }
+  try {
+    const users = await fetchAllUsers(serviceRoleKey);
+    const count = users.filter(isActiveCustomer).length;
+    return setCached(cacheStore.active, monthKey, count, CACHE_TTLS.active);
+  } catch (_) {
+    return setCached(cacheStore.active, monthKey, null, CACHE_TTLS.active);
+  }
 }
 
 async function fetchOpenAiUsagePeriod({ startTime, endTime, preferLegacy = false }) {
@@ -259,6 +314,84 @@ async function fetchOpenAiUsagePeriod({ startTime, endTime, preferLegacy = false
   return null;
 }
 
+async function computeOpenAiMonthReal({ monthIso, now, openaiAgg }) {
+  const openaiUsage = await fetchOpenAiUsagePeriod({ startTime: monthIso, endTime: now.toISOString() });
+  if (!openaiUsage?.rows?.length) return null;
+
+  const openaiCurrencyRaw =
+    openaiUsage.currency ||
+    openaiUsage.rows.find((row) => row?.amount && typeof row.amount === "object" && row.amount.currency)?.amount
+      ?.currency ||
+    "USD";
+  let openaiCurrency = typeof openaiCurrencyRaw === "string" ? openaiCurrencyRaw.toUpperCase() : "USD";
+  let openaiTotal = openaiUsage.rows.reduce((acc, row) => {
+    const candidates = [
+      row?.cost_eur,
+      row?.cost_usd,
+      row?.total_cost,
+      row?.amount && typeof row.amount === "object" ? row.amount.value : row?.amount,
+      row?.value,
+    ];
+    let spend = 0;
+    for (const candidate of candidates) {
+      const num = Number(candidate);
+      if (Number.isFinite(num)) {
+        spend = num;
+        break;
+      }
+    }
+    return acc + spend;
+  }, 0);
+
+  if (openaiTotal <= 0 && openaiAgg.tokens > 0) {
+    const legacyUsage = await fetchOpenAiUsagePeriod({
+      startTime: monthIso,
+      endTime: now.toISOString(),
+      preferLegacy: true,
+    });
+    if (legacyUsage?.rows?.length) {
+      const legacyTotal = legacyUsage.rows.reduce((acc, row) => {
+        const candidates = [row?.cost_usd, row?.total_cost, row?.cost_eur, row?.value, row?.amount];
+        let spend = 0;
+        for (const candidate of candidates) {
+          const num = Number(candidate);
+          if (Number.isFinite(num)) {
+            spend = num;
+            break;
+          }
+        }
+        return acc + spend;
+      }, 0);
+      if (legacyTotal > 0) {
+        openaiTotal = legacyTotal;
+        openaiCurrency = (legacyUsage.currency || "USD").toUpperCase();
+      }
+    }
+  }
+
+  const requestedCurrency = String(process.env.OPENAI_COSTS_CURRENCY || "").trim().toUpperCase();
+  let finalTotal = openaiTotal;
+  let finalCurrency = openaiCurrency;
+  let fxRateUsed = null;
+  if (requestedCurrency && requestedCurrency !== openaiCurrency) {
+    if (requestedCurrency === "EUR" && openaiCurrency === "USD") {
+      const fxRate = await getUsdToEurRate();
+      if (Number.isFinite(fxRate) && fxRate > 0) {
+        finalTotal = openaiTotal * fxRate;
+        finalCurrency = "EUR";
+        fxRateUsed = fxRate;
+      }
+    }
+  }
+
+  return {
+    spend: Math.round(finalTotal * 100) / 100,
+    currency: finalCurrency,
+    source: openaiUsage.source || "openai_api",
+    fx_rate: fxRateUsed,
+  };
+}
+
 module.exports = async (req, res) => {
   try {
     if (req.method !== "GET") {
@@ -284,152 +417,112 @@ module.exports = async (req, res) => {
     const now = new Date();
     const monthIso = startOfMonthUtc(now).toISOString();
 
-    let rows = [];
-    try {
-      let offset = 0;
-      const limit = 1000;
-      while (true) {
-        const batch =
-          (await adminRestFetch(
-            `api_usage_events?select=provider,model,model_label,tokens,tokens_per_eur,cost_eur,created_at&created_at=gte.${encodeURIComponent(
-              monthIso
-            )}&order=created_at.desc&limit=${limit}&offset=${offset}`,
-            { method: "GET" }
-          )) || [];
-        if (!Array.isArray(batch) || batch.length === 0) break;
-        rows = rows.concat(batch);
-        if (batch.length < limit) break;
-        offset += limit;
+    const monthKey = monthIso.slice(0, 7);
+    const tokensPerEur = getTokensPerEur();
+    const serviceRoleKey = getSupabaseServiceRoleKey();
+    const activeCustomersPromise = getActiveCustomersCached(monthKey, serviceRoleKey);
+    const topupsThisMonthPromise = getTopupsThisMonthCached(monthKey, monthIso);
+    let usageSummary = getCached(cacheStore.usage, monthKey);
+    if (!usageSummary) {
+      let rows = [];
+      try {
+        let offset = 0;
+        const limit = 1000;
+        while (true) {
+          const batch =
+            (await adminRestFetch(
+              `api_usage_events?select=provider,model,model_label,tokens,tokens_per_eur,cost_eur,created_at&created_at=gte.${encodeURIComponent(
+                monthIso
+              )}&order=created_at.desc&limit=${limit}&offset=${offset}`,
+              { method: "GET" }
+            )) || [];
+          if (!Array.isArray(batch) || batch.length === 0) break;
+          rows = rows.concat(batch);
+          if (batch.length < limit) break;
+          offset += limit;
+        }
+      } catch (e) {
+        const detail = String(e?.detail || "");
+        const isMissingTable = e?.statusCode === 404 || detail.includes("api_usage_events");
+        if (isMissingTable) {
+          return json(res, 500, {
+            error: "API usage tabel ontbreekt. Run migrations/create_api_usage_events.sql in Supabase.",
+          });
+        }
+        throw e;
       }
-    } catch (e) {
-      const detail = String(e?.detail || "");
-      const isMissingTable = e?.statusCode === 404 || detail.includes("api_usage_events");
-      if (isMissingTable) {
-        return json(res, 500, {
-          error: "API usage tabel ontbreekt. Run migrations/create_api_usage_events.sql in Supabase.",
-        });
-      }
-      throw e;
+
+      const totals = new Map();
+      const providerTotals = new Map();
+      let monthTokens = 0;
+      let internalSpend = 0;
+
+      rows.forEach((row) => {
+        const modelLabel = row?.model_label || row?.model || "Onbekend";
+        const provider = row?.provider || "onbekend";
+        const key = `${provider}::${modelLabel}`;
+        const tokens = Number(row?.tokens || 0);
+        const rowTokensPerEur = Number(row?.tokens_per_eur || tokensPerEur || DEFAULT_TOKENS_PER_EUR);
+        const internalCost = Number.isFinite(Number(row?.cost_eur))
+          ? Number(row.cost_eur)
+          : toEur(tokens, rowTokensPerEur);
+
+        monthTokens += tokens;
+        internalSpend += internalCost;
+
+        const existing = totals.get(key) || {
+          provider,
+          model_label: modelLabel,
+          tokens: 0,
+          spend_eur: null,
+          chats: 0,
+          currency: "EUR",
+          source: "usage_events",
+          cost_exact: false,
+        };
+        existing.tokens += tokens;
+        existing.chats += 1;
+        totals.set(key, existing);
+
+        const providerAgg = providerTotals.get(provider) || { tokens: 0, chats: 0 };
+        providerAgg.tokens += tokens;
+        providerAgg.chats += 1;
+        providerTotals.set(provider, providerAgg);
+      });
+
+      usageSummary = {
+        rowCount: rows.length,
+        monthTokens,
+        internalSpend,
+        providerTotals,
+        modelsBase: Array.from(totals.values()).sort((a, b) => b.tokens - a.tokens),
+      };
+      setCached(cacheStore.usage, monthKey, usageSummary, CACHE_TTLS.usage);
     }
 
-    const tokensPerEur = getTokensPerEur();
-    const totals = new Map();
-    const providerTotals = new Map();
-    let monthTokens = 0;
-    let internalSpend = 0;
-
-    rows.forEach((row) => {
-      const modelLabel = row?.model_label || row?.model || "Onbekend";
-      const provider = row?.provider || "onbekend";
-      const key = `${provider}::${modelLabel}`;
-      const tokens = Number(row?.tokens || 0);
-      const rowTokensPerEur = Number(row?.tokens_per_eur || tokensPerEur || DEFAULT_TOKENS_PER_EUR);
-      const internalCost = Number.isFinite(Number(row?.cost_eur)) ? Number(row.cost_eur) : toEur(tokens, rowTokensPerEur);
-
-      monthTokens += tokens;
-      internalSpend += internalCost;
-
-      const existing = totals.get(key) || {
-        provider,
-        model_label: modelLabel,
-        tokens: 0,
-        spend_eur: null,
-        chats: 0,
-        currency: "EUR",
-        source: "usage_events",
-        cost_exact: false,
-      };
-      existing.tokens += tokens;
-      existing.chats += 1;
-      totals.set(key, existing);
-
-      const providerAgg = providerTotals.get(provider) || { tokens: 0, chats: 0 };
-      providerAgg.tokens += tokens;
-      providerAgg.chats += 1;
-      providerTotals.set(provider, providerAgg);
-    });
+    const {
+      rowCount,
+      monthTokens,
+      internalSpend,
+      providerTotals,
+      modelsBase,
+    } = usageSummary;
 
     const openaiAgg = providerTotals.get("openai") || { tokens: 0, chats: 0 };
-    const openaiUsage = await fetchOpenAiUsagePeriod({ startTime: monthIso, endTime: now.toISOString() });
-    let monthReal = null;
-
-    if (openaiUsage?.rows?.length) {
-      const openaiCurrencyRaw =
-        openaiUsage.currency ||
-        openaiUsage.rows.find((row) => row?.amount && typeof row.amount === "object" && row.amount.currency)?.amount
-          ?.currency ||
-        "USD";
-      let openaiCurrency =
-        typeof openaiCurrencyRaw === "string" ? openaiCurrencyRaw.toUpperCase() : "USD";
-      let openaiTotal = openaiUsage.rows.reduce((acc, row) => {
-        const candidates = [
-          row?.cost_eur,
-          row?.cost_usd,
-          row?.total_cost,
-          row?.amount && typeof row.amount === "object" ? row.amount.value : row?.amount,
-          row?.value,
-        ];
-        let spend = 0;
-        for (const candidate of candidates) {
-          const num = Number(candidate);
-          if (Number.isFinite(num)) {
-            spend = num;
-            break;
-          }
-        }
-        return acc + spend;
-      }, 0);
-
-      if (openaiTotal <= 0 && openaiAgg.tokens > 0) {
-        const legacyUsage = await fetchOpenAiUsagePeriod({
-          startTime: monthIso,
-          endTime: now.toISOString(),
-          preferLegacy: true,
-        });
-        if (legacyUsage?.rows?.length) {
-          const legacyTotal = legacyUsage.rows.reduce((acc, row) => {
-            const candidates = [row?.cost_usd, row?.total_cost, row?.cost_eur, row?.value, row?.amount];
-            let spend = 0;
-            for (const candidate of candidates) {
-              const num = Number(candidate);
-              if (Number.isFinite(num)) {
-                spend = num;
-                break;
-              }
-            }
-            return acc + spend;
-          }, 0);
-          if (legacyTotal > 0) {
-            openaiTotal = legacyTotal;
-            openaiCurrency = (legacyUsage.currency || "USD").toUpperCase();
-          }
-        }
-      }
-
-      const requestedCurrency = String(process.env.OPENAI_COSTS_CURRENCY || "").trim().toUpperCase();
-      let finalTotal = openaiTotal;
-      let finalCurrency = openaiCurrency;
-      let fxRateUsed = null;
-      if (requestedCurrency && requestedCurrency !== openaiCurrency) {
-        if (requestedCurrency === "EUR" && openaiCurrency === "USD") {
-          const fxRate = await getUsdToEurRate();
-          if (Number.isFinite(fxRate) && fxRate > 0) {
-            finalTotal = openaiTotal * fxRate;
-            finalCurrency = "EUR";
-            fxRateUsed = fxRate;
-          }
-        }
-      }
-
-      monthReal = {
-        spend: Math.round(finalTotal * 100) / 100,
-        currency: finalCurrency,
-        source: openaiUsage.source || "openai_api",
-        fx_rate: fxRateUsed,
-      };
+    let monthReal = getCached(cacheStore.costs, monthKey);
+    const monthRealPromise =
+      monthReal === undefined ? computeOpenAiMonthReal({ monthIso, now, openaiAgg }) : Promise.resolve(monthReal);
+    const [resolvedMonthReal, activeCustomers, topupsThisMonth] = await Promise.all([
+      monthRealPromise,
+      activeCustomersPromise,
+      topupsThisMonthPromise,
+    ]);
+    if (monthReal === undefined) {
+      monthReal = resolvedMonthReal;
+      setCached(cacheStore.costs, monthKey, monthReal, CACHE_TTLS.costs);
     }
 
-    const models = Array.from(totals.values()).sort((a, b) => b.tokens - a.tokens);
+    const models = Array.from(modelsBase);
     if (monthReal) {
       models.unshift({
         provider: "openai",
@@ -445,34 +538,20 @@ module.exports = async (req, res) => {
     const creditAllowanceEur = getCreditAllowanceEur();
     let monthlyLimit = null;
     let monthlyLimitSource = "credits";
-    let topupsThisMonth = null;
-    let activeCustomers = null;
-
-    try {
-      const serviceRoleKey = getSupabaseServiceRoleKey();
-      const users = await fetchAllUsers(serviceRoleKey);
-      activeCustomers = users.filter(isActiveCustomer).length;
-    } catch (_) {
-      activeCustomers = null;
-    }
-
-    try {
-      topupsThisMonth = await getTopupsThisMonthEur(monthIso);
-    } catch (_) {
-      topupsThisMonth = null;
-    }
+    const activeCustomersValue = Number.isFinite(activeCustomers) ? activeCustomers : null;
+    const topupsThisMonthValue = Number.isFinite(topupsThisMonth) ? topupsThisMonth : null;
 
     const hasActiveCustomers =
-      Number.isFinite(activeCustomers) && Number.isFinite(creditAllowanceEur) && creditAllowanceEur >= 0;
-    const hasTopups = Number.isFinite(topupsThisMonth) && topupsThisMonth > 0;
+      Number.isFinite(activeCustomersValue) && Number.isFinite(creditAllowanceEur) && creditAllowanceEur >= 0;
+    const hasTopups = Number.isFinite(topupsThisMonthValue) && topupsThisMonthValue > 0;
     let computed = false;
     let total = 0;
     if (hasActiveCustomers) {
-      total += activeCustomers * creditAllowanceEur;
+      total += activeCustomersValue * creditAllowanceEur;
       computed = true;
     }
     if (hasTopups) {
-      total += topupsThisMonth;
+      total += topupsThisMonthValue;
       computed = true;
     }
     if (computed) {
@@ -508,7 +587,7 @@ module.exports = async (req, res) => {
       ok: true,
       currency: "EUR",
       month: {
-        chats: rows.length,
+        chats: rowCount,
         tokens: monthTokens,
         spend_eur: null,
         spend_internal_eur: Math.round(internalSpend * 100) / 100,
@@ -523,8 +602,8 @@ module.exports = async (req, res) => {
         monthly_eur: monthlyLimit,
         source: monthlyLimitSource,
         credit_allowance_eur: creditAllowanceEur,
-        topups_this_month_eur: Number.isFinite(topupsThisMonth) ? topupsThisMonth : null,
-        active_customers: Number.isFinite(activeCustomers) ? activeCustomers : null,
+        topups_this_month_eur: topupsThisMonthValue,
+        active_customers: activeCustomersValue,
       },
       tokens_per_eur: tokensPerEur,
       note: exactCostsNote,
