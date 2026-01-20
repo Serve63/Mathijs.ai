@@ -34,6 +34,7 @@ const CACHE_TTLS = {
   costs: 300_000,
   topups: 300_000,
   active: 300_000,
+  openai_limit: 300_000,
 };
 
 const cacheStore = {
@@ -41,6 +42,7 @@ const cacheStore = {
   costs: new Map(),
   topups: new Map(),
   active: new Map(),
+  openai_limit: new Map(),
 };
 
 function getCached(map, key) {
@@ -68,24 +70,36 @@ async function getUsdToEurRate() {
   if (cachedUsdToEurRate && now - cachedFxAt < 6 * 60 * 60 * 1000) {
     return cachedUsdToEurRate;
   }
-  try {
-    const resp = await fetch("https://api.exchangerate.host/latest?base=USD&symbols=EUR");
-    if (!resp.ok) return null;
-    const payload = await resp.json().catch(() => ({}));
-    const rate = Number(payload?.rates?.EUR);
-    if (!Number.isFinite(rate) || rate <= 0) return null;
-    cachedUsdToEurRate = rate;
-    cachedFxAt = now;
-    return rate;
-  } catch (_) {
-    return null;
+  const endpoints = [
+    "https://api.exchangerate.host/latest?base=USD&symbols=EUR",
+    "https://open.er-api.com/v6/latest/USD",
+  ];
+  for (const url of endpoints) {
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) continue;
+      const payload = await resp.json().catch(() => ({}));
+      const rate = Number(payload?.rates?.EUR);
+      if (!Number.isFinite(rate) || rate <= 0) continue;
+      cachedUsdToEurRate = rate;
+      cachedFxAt = now;
+      return rate;
+    } catch (_) {
+      continue;
+    }
   }
+  return null;
 }
 
 function getCreditAllowanceEur() {
   const value = Number(process.env.CREDIT_ALLOWANCE_EUR || DEFAULT_CREDIT_ALLOWANCE_EUR);
   if (!Number.isFinite(value) || value < 0) return DEFAULT_CREDIT_ALLOWANCE_EUR;
   return Math.round(value * 100) / 100;
+}
+
+function getRequestedOpenAiCurrency() {
+  const raw = String(process.env.OPENAI_COSTS_CURRENCY || "EUR").trim();
+  return raw ? raw.toUpperCase() : "EUR";
 }
 
 function toEur(tokens, tokensPerEur) {
@@ -185,6 +199,30 @@ function isActiveCustomer(user) {
   return !cancelledAt;
 }
 
+async function convertOpenAiAmount(amount, currency) {
+  const requestedCurrency = getRequestedOpenAiCurrency();
+  let finalAmount = Number(amount || 0);
+  let finalCurrency = (currency || "USD").toUpperCase();
+  let fxRateUsed = null;
+
+  if (requestedCurrency && requestedCurrency !== finalCurrency) {
+    if (requestedCurrency === "EUR" && finalCurrency === "USD") {
+      const fxRate = await getUsdToEurRate();
+      if (Number.isFinite(fxRate) && fxRate > 0) {
+        finalAmount = finalAmount * fxRate;
+        finalCurrency = "EUR";
+        fxRateUsed = fxRate;
+      }
+    }
+  }
+
+  return {
+    amount: Math.round(finalAmount * 100) / 100,
+    currency: finalCurrency,
+    fx_rate: fxRateUsed,
+  };
+}
+
 async function getActiveCustomersCached(monthKey, serviceRoleKey) {
   const cached = getCached(cacheStore.active, monthKey);
   if (cached !== undefined) return cached;
@@ -230,10 +268,10 @@ async function fetchOpenAiUsagePeriod({ startTime, endTime, preferLegacy = false
     : [
         {
           name: "org_costs",
-      url: `https://api.openai.com/v1/organization/costs?start_time=${Math.floor(
-        new Date(startTime).getTime() / 1000
-      )}&end_time=${Math.floor(new Date(endTime).getTime() / 1000)}`,
-    },
+          url: `https://api.openai.com/v1/organization/costs?start_time=${Math.floor(
+            new Date(startTime).getTime() / 1000
+          )}&end_time=${Math.floor(new Date(endTime).getTime() / 1000)}`,
+        },
         {
           name: "legacy_usage",
           url: `https://api.openai.com/v1/dashboard/billing/usage?start_date=${startDate}&end_date=${endDate}`,
@@ -314,6 +352,49 @@ async function fetchOpenAiUsagePeriod({ startTime, endTime, preferLegacy = false
   return null;
 }
 
+async function fetchOpenAiLimit() {
+  const apiKey = getOpenAICostsKey() || getOpenAIApiKey();
+  if (!apiKey) return null;
+
+  const orgId = process.env.OPENAI_ORG_ID || process.env.OPENAI_ORGANIZATION || "";
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+  if (orgId) headers["OpenAI-Organization"] = orgId;
+
+  try {
+    const resp = await fetch("https://api.openai.com/v1/dashboard/billing/subscription", { method: "GET", headers });
+    if (!resp.ok) return null;
+    const payload = await resp.json().catch(() => ({}));
+    const candidates = [payload?.hard_limit_usd, payload?.system_hard_limit_usd, payload?.soft_limit_usd];
+    const limitUsd = candidates.map((value) => Number(value)).find((value) => Number.isFinite(value) && value > 0);
+    if (!limitUsd) return null;
+    return { limit: limitUsd, currency: "USD", source: "openai_subscription" };
+  } catch (_) {
+    return null;
+  }
+}
+
+async function computeOpenAiLimit() {
+  const limit = await fetchOpenAiLimit();
+  if (!limit) return null;
+  const converted = await convertOpenAiAmount(limit.limit, limit.currency);
+  return {
+    limit: converted.amount,
+    currency: converted.currency,
+    source: limit.source || "openai_subscription",
+    fx_rate: converted.fx_rate,
+  };
+}
+
+async function getOpenAiLimitCached(monthKey) {
+  const cached = getCached(cacheStore.openai_limit, monthKey);
+  if (cached !== undefined) return cached;
+  const limit = await computeOpenAiLimit();
+  return setCached(cacheStore.openai_limit, monthKey, limit, CACHE_TTLS.openai_limit);
+}
+
 async function computeOpenAiMonthReal({ monthIso, now, openaiAgg }) {
   const openaiUsage = await fetchOpenAiUsagePeriod({ startTime: monthIso, endTime: now.toISOString() });
   if (!openaiUsage?.rows?.length) return null;
@@ -369,26 +450,13 @@ async function computeOpenAiMonthReal({ monthIso, now, openaiAgg }) {
     }
   }
 
-  const requestedCurrency = String(process.env.OPENAI_COSTS_CURRENCY || "").trim().toUpperCase();
-  let finalTotal = openaiTotal;
-  let finalCurrency = openaiCurrency;
-  let fxRateUsed = null;
-  if (requestedCurrency && requestedCurrency !== openaiCurrency) {
-    if (requestedCurrency === "EUR" && openaiCurrency === "USD") {
-      const fxRate = await getUsdToEurRate();
-      if (Number.isFinite(fxRate) && fxRate > 0) {
-        finalTotal = openaiTotal * fxRate;
-        finalCurrency = "EUR";
-        fxRateUsed = fxRate;
-      }
-    }
-  }
+  const converted = await convertOpenAiAmount(openaiTotal, openaiCurrency);
 
   return {
-    spend: Math.round(finalTotal * 100) / 100,
-    currency: finalCurrency,
+    spend: converted.amount,
+    currency: converted.currency,
     source: openaiUsage.source || "openai_api",
-    fx_rate: fxRateUsed,
+    fx_rate: converted.fx_rate,
   };
 }
 
@@ -422,6 +490,7 @@ module.exports = async (req, res) => {
     const serviceRoleKey = getSupabaseServiceRoleKey();
     const activeCustomersPromise = getActiveCustomersCached(monthKey, serviceRoleKey);
     const topupsThisMonthPromise = getTopupsThisMonthCached(monthKey, monthIso);
+    const openAiLimitPromise = getOpenAiLimitCached(monthKey);
     let usageSummary = getCached(cacheStore.usage, monthKey);
     if (!usageSummary) {
       let rows = [];
@@ -505,26 +574,26 @@ module.exports = async (req, res) => {
       monthTokens,
       internalSpend,
       providerTotals,
-      modelsBase,
     } = usageSummary;
 
     const openaiAgg = providerTotals.get("openai") || { tokens: 0, chats: 0 };
     let monthReal = getCached(cacheStore.costs, monthKey);
     const monthRealPromise =
       monthReal === undefined ? computeOpenAiMonthReal({ monthIso, now, openaiAgg }) : Promise.resolve(monthReal);
-    const [resolvedMonthReal, activeCustomers, topupsThisMonth] = await Promise.all([
+    const [resolvedMonthReal, activeCustomers, topupsThisMonth, openaiLimit] = await Promise.all([
       monthRealPromise,
       activeCustomersPromise,
       topupsThisMonthPromise,
+      openAiLimitPromise,
     ]);
     if (monthReal === undefined) {
       monthReal = resolvedMonthReal;
       setCached(cacheStore.costs, monthKey, monthReal, CACHE_TTLS.costs);
     }
 
-    const models = Array.from(modelsBase);
+    const models = [];
     if (monthReal) {
-      models.unshift({
+      models.push({
         provider: "openai",
         model_label: "OpenAI totaal (exact)",
         tokens: openaiAgg.tokens,
@@ -533,6 +602,19 @@ module.exports = async (req, res) => {
         currency: monthReal.currency || "USD",
         source: monthReal.source || "openai_api",
         cost_exact: true,
+      });
+    }
+    if (Number.isFinite(openaiLimit?.limit) && openaiLimit.limit > 0) {
+      models.push({
+        provider: "openai",
+        model_label: "OpenAI limiet (budget)",
+        tokens: "-",
+        spend_eur: openaiLimit.limit,
+        chats: "-",
+        currency: openaiLimit.currency || "USD",
+        source: openaiLimit.source || "openai_subscription",
+        cost_exact: true,
+        row_type: "limit",
       });
     }
     const creditAllowanceEur = getCreditAllowanceEur();
@@ -569,14 +651,9 @@ module.exports = async (req, res) => {
     const fxNote =
       monthReal?.fx_rate && monthReal.currency === "EUR" ? "OpenAI kosten omgerekend van USD naar EUR." : null;
     const exactCostsNote = monthReal
-      ? [
-          "Exacte kosten beschikbaar voor OpenAI (totaal). Gemini heeft geen kosten-API. Tokens komen uit provider usage.",
-          fxNote,
-        ]
-          .filter(Boolean)
-          .join(" ")
+      ? ["Exacte kosten beschikbaar voor OpenAI (totaal).", fxNote].filter(Boolean).join(" ")
       : [
-          "Exacte kosten nog niet beschikbaar. Gemini heeft geen kosten-API. Tokens komen uit provider usage.",
+          "Exacte kosten nog niet beschikbaar voor OpenAI.",
           !hasOpenAiCostsKey ? "OPENAI_COSTS_KEY ontbreekt." : null,
           !openAiOrgId ? "OPENAI_ORG_ID ontbreekt." : null,
         ]
