@@ -6,7 +6,7 @@ const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHead
 const { SUPABASE_URL, getUserFromAccessToken } = require("../_lib/supabase");
 const { isStaffUser } = require("../_lib/staff");
 const { adminRestFetch } = require("../_lib/supabaseAdmin");
-const { getOpenAIApiKey, getSupabaseServiceRoleKey } = require("../_lib/env");
+const { getOpenAIApiKey, getOpenAICostsKey, getSupabaseServiceRoleKey } = require("../_lib/env");
 
 const STAFF_WINDOW_MS = 60_000;
 const STAFF_LIMIT = 120;
@@ -122,7 +122,7 @@ function isActiveCustomer(user) {
 }
 
 async function fetchOpenAiUsagePeriod({ startTime, endTime }) {
-  const apiKey = getOpenAIApiKey();
+  const apiKey = getOpenAICostsKey() || getOpenAIApiKey();
   if (!apiKey) return null;
 
   const orgId = process.env.OPENAI_ORG_ID || process.env.OPENAI_ORGANIZATION || "";
@@ -369,6 +369,18 @@ module.exports = async (req, res) => {
       ? Math.max(0, Math.round((monthlyLimit - internalSpend) * 100) / 100)
       : null;
 
+    const hasOpenAiCostsKey = Boolean(getOpenAICostsKey() || getOpenAIApiKey());
+    const openAiOrgId = String(process.env.OPENAI_ORG_ID || process.env.OPENAI_ORGANIZATION || "").trim();
+    const exactCostsNote = monthReal
+      ? "Exacte kosten beschikbaar voor OpenAI (totaal). Gemini heeft geen kosten-API. Tokens komen uit provider usage."
+      : [
+          "Exacte kosten nog niet beschikbaar. Gemini heeft geen kosten-API. Tokens komen uit provider usage.",
+          !hasOpenAiCostsKey ? "OPENAI_COSTS_KEY ontbreekt." : null,
+          !openAiOrgId ? "OPENAI_ORG_ID ontbreekt." : null,
+        ]
+          .filter(Boolean)
+          .join(" ");
+
     return json(res, 200, {
       ok: true,
       currency: "EUR",
@@ -392,9 +404,7 @@ module.exports = async (req, res) => {
         active_customers: Number.isFinite(activeCustomers) ? activeCustomers : null,
       },
       tokens_per_eur: tokensPerEur,
-      note: monthReal
-        ? "Exacte kosten beschikbaar voor OpenAI (totaal). Gemini heeft geen kosten-API. Tokens komen uit provider usage."
-        : "Exacte kosten nog niet beschikbaar. Gemini heeft geen kosten-API. Tokens komen uit provider usage.",
+      note: exactCostsNote,
     });
   } catch (e) {
     return publicError(res, 500, "API usage ophalen mislukt.", e);

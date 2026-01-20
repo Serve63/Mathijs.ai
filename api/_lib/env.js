@@ -23,6 +23,10 @@ function getOpenAIApiKey() {
   return pickEnv(["OPEN_AI_KEY", "OPENAI_API_KEY", "open_ai_key"]);
 }
 
+function getOpenAICostsKey() {
+  return pickEnv(["OPENAI_COSTS_KEY", "OPENAI_USAGE_KEY", "OPENAI_ADMIN_KEY"]);
+}
+
 function getGeminiApiKey() {
   return pickEnv(["GEMINI_API_KEY", "GOOGLE_API_KEY", "google_api_key"]);
 }
@@ -55,6 +59,7 @@ function missingEnvError(label, acceptedNames = []) {
 
 module.exports = {
   getOpenAIApiKey,
+  getOpenAICostsKey,
   getGeminiApiKey,
   getSupabaseServiceRoleKey,
   getSupabaseUrl,
