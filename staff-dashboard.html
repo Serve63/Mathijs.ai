@@ -182,6 +182,25 @@
         justify-content: flex-end;
       }
 
+      .header-nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .header-nav-link:hover {
+        color: rgba(255, 255, 255, 0.95);
+      }
+
       .btn {
         display: inline-flex;
         align-items: center;
@@ -756,11 +775,11 @@
           />
           <span class="brand-text">MATHIJS<span class="brand-dot">.AI</span></span>
         </a>
-        <div class="header-actions">
-          <a class="btn secondary subtle" href="/course-editor">Cursus</a>
-          <a class="btn secondary subtle" href="/boekhouding">Boekhouding</a>
-          <a class="btn secondary subtle" href="/personeel">Personeel</a>
-          <a class="btn secondary subtle" href="/analytics">Analytics +</a>
+        <div class="header-actions" aria-label="Hoofd navigatie">
+          <a class="header-nav-link" href="/course-editor">Cursus</a>
+          <a class="header-nav-link" href="/boekhouding">Boekhouding</a>
+          <a class="header-nav-link" href="/personeel">Personeel</a>
+          <a class="header-nav-link" href="/analytics">Analytics +</a>
         </div>
       </div>
     </header>
