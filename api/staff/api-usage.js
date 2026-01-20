@@ -102,6 +102,18 @@ function getRequestedOpenAiCurrency() {
   return raw ? raw.toUpperCase() : "EUR";
 }
 
+function getOpenAiLimitOverride() {
+  const limitEur = Number(process.env.OPENAI_LIMIT_EUR || 0);
+  if (Number.isFinite(limitEur) && limitEur > 0) {
+    return { limit: limitEur, currency: "EUR", source: "env" };
+  }
+  const limitUsd = Number(process.env.OPENAI_LIMIT_USD || 0);
+  if (Number.isFinite(limitUsd) && limitUsd > 0) {
+    return { limit: limitUsd, currency: "USD", source: "env" };
+  }
+  return null;
+}
+
 function toEur(tokens, tokensPerEur) {
   const amount = Number(tokens || 0) / Number(tokensPerEur || DEFAULT_TOKENS_PER_EUR);
   return Math.round(amount * 100) / 100;
@@ -352,28 +364,70 @@ async function fetchOpenAiUsagePeriod({ startTime, endTime, preferLegacy = false
   return null;
 }
 
-async function fetchOpenAiLimit() {
-  const apiKey = getOpenAICostsKey() || getOpenAIApiKey();
-  if (!apiKey) return null;
+function extractOpenAiLimit(payload) {
+  const candidates = [
+    payload?.hard_limit_usd,
+    payload?.system_hard_limit_usd,
+    payload?.soft_limit_usd,
+    payload?.hard_limit,
+    payload?.soft_limit,
+    payload?.limit,
+    payload?.monthly_limit,
+    payload?.monthly_budget,
+    payload?.budget,
+    payload?.limits?.hard_limit_usd,
+    payload?.limits?.soft_limit_usd,
+  ];
+  const limitUsd = candidates.map((value) => Number(value)).find((value) => Number.isFinite(value) && value > 0);
+  if (!limitUsd) return null;
+  return { limit: limitUsd, currency: "USD" };
+}
 
-  const orgId = process.env.OPENAI_ORG_ID || process.env.OPENAI_ORGANIZATION || "";
+async function fetchOpenAiLimitWithKey(apiKey, orgId) {
+  if (!apiKey) return null;
   const headers = {
     Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
   };
   if (orgId) headers["OpenAI-Organization"] = orgId;
 
-  try {
-    const resp = await fetch("https://api.openai.com/v1/dashboard/billing/subscription", { method: "GET", headers });
-    if (!resp.ok) return null;
-    const payload = await resp.json().catch(() => ({}));
-    const candidates = [payload?.hard_limit_usd, payload?.system_hard_limit_usd, payload?.soft_limit_usd];
-    const limitUsd = candidates.map((value) => Number(value)).find((value) => Number.isFinite(value) && value > 0);
-    if (!limitUsd) return null;
-    return { limit: limitUsd, currency: "USD", source: "openai_subscription" };
-  } catch (_) {
-    return null;
+  const endpoints = [
+    { url: "https://api.openai.com/v1/dashboard/billing/subscription", source: "openai_subscription" },
+    { url: "https://api.openai.com/v1/organization/billing/limits", source: "openai_limits" },
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      const resp = await fetch(endpoint.url, { method: "GET", headers });
+      if (!resp.ok) continue;
+      const payload = await resp.json().catch(() => ({}));
+      const limit = extractOpenAiLimit(payload);
+      if (!limit) continue;
+      return { limit: limit.limit, currency: limit.currency, source: endpoint.source };
+    } catch (_) {
+      continue;
+    }
   }
+
+  return null;
+}
+
+async function fetchOpenAiLimit() {
+  const override = getOpenAiLimitOverride();
+  if (override) return override;
+
+  const orgId = process.env.OPENAI_ORG_ID || process.env.OPENAI_ORGANIZATION || "";
+  const keys = [];
+  const primaryKey = getOpenAIApiKey();
+  const adminKey = getOpenAICostsKey();
+  if (primaryKey) keys.push(primaryKey);
+  if (adminKey && adminKey !== primaryKey) keys.push(adminKey);
+  for (const apiKey of keys) {
+    const limit = await fetchOpenAiLimitWithKey(apiKey, orgId);
+    if (limit) return limit;
+  }
+
+  return null;
 }
 
 async function computeOpenAiLimit() {

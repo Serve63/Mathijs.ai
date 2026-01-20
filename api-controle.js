@@ -85,7 +85,7 @@
             <div class="cell" data-label="Chats">${chats}</div>
             <div class="cell" data-label="Tokens">${tokens}</div>
             <div class="cell" data-label="Kosten (exact)">${formatExactMoney(spend, currency)}</div>
-            <div class="cell" data-label="OpenAI limiet">${limitDisplay}</div>
+            <div class="cell" data-label="OpenAI limiet (maand)">${limitDisplay}</div>
           </div>
         `;
       })
