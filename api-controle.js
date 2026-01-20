@@ -12,7 +12,8 @@
   const emptyEl = document.getElementById("api-usage-empty");
   const noteEl = document.getElementById("api-usage-note");
 
-  const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
+  const formatMoney = (amount, currency = "EUR") =>
+    new Intl.NumberFormat("nl-NL", { style: "currency", currency }).format(amount || 0);
 
   const createSupabaseClient = () => {
     if (!window.supabase?.createClient) return null;
@@ -40,14 +41,14 @@
     return true;
   };
 
-  const renderSummary = ({ todaySpend, todayChats, dailyLimit, remaining }) => {
-    if (todaySpendEl) todaySpendEl.textContent = fmtEUR.format(todaySpend || 0);
+  const renderSummary = ({ todaySpend, todayCurrency, todayChats, dailyLimit, remaining }) => {
+    if (todaySpendEl) todaySpendEl.textContent = formatMoney(todaySpend || 0, todayCurrency || "EUR");
     if (todayChatsEl) todayChatsEl.textContent = `${todayChats || 0} chats`;
-    if (dailyLimitEl) dailyLimitEl.textContent = dailyLimit ? fmtEUR.format(dailyLimit) : "Geen limiet";
+    if (dailyLimitEl) dailyLimitEl.textContent = dailyLimit ? formatMoney(dailyLimit) : "Geen limiet";
     if (dailyRemainingEl) {
       dailyRemainingEl.textContent =
         dailyLimit && Number.isFinite(remaining)
-          ? `${fmtEUR.format(Math.max(0, remaining))} resterend`
+          ? `${formatMoney(Math.max(0, remaining))} resterend`
           : "Geen limiet ingesteld";
     }
   };
@@ -67,13 +68,14 @@
         const chats = row.chats || 0;
         const tokens = row.tokens || 0;
         const spend = row.spend_eur || 0;
+        const currency = row.currency || "EUR";
         return `
           <div class="table-row">
             <div class="cell" data-label="Model">${modelLabel}</div>
             <div class="cell" data-label="Provider">${provider}</div>
             <div class="cell" data-label="Chats">${chats}</div>
             <div class="cell" data-label="Tokens">${tokens}</div>
-            <div class="cell" data-label="Kosten">${fmtEUR.format(spend)}</div>
+            <div class="cell" data-label="Kosten">${formatMoney(spend, currency)}</div>
           </div>
         `;
       })
@@ -95,8 +97,10 @@
       return;
     }
 
+    const todayReal = payload?.today_real;
     renderSummary({
-      todaySpend: payload?.today?.spend_eur || 0,
+      todaySpend: todayReal?.spend ?? payload?.today?.spend_eur ?? 0,
+      todayCurrency: todayReal?.currency || "EUR",
       todayChats: payload?.today?.chats || 0,
       dailyLimit: payload?.limits?.daily_eur || null,
       remaining: payload?.today?.remaining_eur ?? null,
