@@ -515,12 +515,12 @@ module.exports = async (req, res) => {
     const points = [];
     let cursor = new Date(startDate);
     let activeCount = baselineActiveCount;
-    if (spendByDate) {
-      try {
+    try {
+      if (getOpenAICostsKey() || getOpenAIApiKey()) {
         openaiExactByDate = await fetchOpenAiCostsByDate(startDate.toISOString(), today.toISOString());
-      } catch (_) {
-        openaiExactByDate = null;
       }
+    } catch (_) {
+      openaiExactByDate = null;
     }
 
     while (cursor <= today) {
@@ -530,12 +530,12 @@ module.exports = async (req, res) => {
       const chats = chatCountsByDate.get(dateKey) || 0;
       const subs = subsByDate.get(dateKey) || 0;
       let spendEur = null;
-      if (spendByDate) {
-        const otherSpend = spendByDate.other.get(dateKey) || 0;
-        const openaiUsageSpend = spendByDate.openai.get(dateKey) || 0;
+      if (spendByDate || openaiExactByDate) {
+        const otherSpend = spendByDate ? spendByDate.other.get(dateKey) || 0 : 0;
+        const openaiUsageSpend = spendByDate ? spendByDate.openai.get(dateKey) || 0 : 0;
         const openaiExactSpend =
-          openaiExactByDate && openaiExactByDate.size ? openaiExactByDate.get(dateKey) || 0 : null;
-        const openaiSpend = openaiExactSpend === null ? openaiUsageSpend : openaiExactSpend;
+          openaiExactByDate && openaiExactByDate.size ? openaiExactByDate.get(dateKey) : null;
+        const openaiSpend = Number.isFinite(openaiExactSpend) ? openaiExactSpend : openaiUsageSpend;
         spendEur = Math.round((otherSpend + openaiSpend) * 100) / 100;
       }
       points.push({
