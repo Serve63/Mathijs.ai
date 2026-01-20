@@ -2793,6 +2793,12 @@
             if (response.status === 401) {
               window.location.href = "/login";
             }
+            if (response.status === 402 || response.status === 429) {
+              openTopupModal({
+                message: errorMessage,
+                tokensAvailable: Number.isFinite(payload?.tokens_available) ? payload.tokens_available : null,
+              });
+            }
             throw new Error(errorMessage);
           }
 

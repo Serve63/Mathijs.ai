@@ -4,10 +4,10 @@
 
   let accessToken = null;
 
-  const todaySpendEl = document.getElementById("api-today-spend");
-  const todayChatsEl = document.getElementById("api-today-chats");
-  const dailyLimitEl = document.getElementById("api-daily-limit");
-  const dailyRemainingEl = document.getElementById("api-daily-remaining");
+  const monthSpendEl = document.getElementById("api-month-spend");
+  const monthChatsEl = document.getElementById("api-month-chats");
+  const monthLimitEl = document.getElementById("api-month-limit");
+  const monthRemainingEl = document.getElementById("api-month-remaining");
   const tableEl = document.getElementById("api-usage-table");
   const emptyEl = document.getElementById("api-usage-empty");
   const noteEl = document.getElementById("api-usage-note");
@@ -41,13 +41,13 @@
     return true;
   };
 
-  const renderSummary = ({ todaySpend, todayCurrency, todayChats, dailyLimit, remaining }) => {
-    if (todaySpendEl) todaySpendEl.textContent = formatMoney(todaySpend || 0, todayCurrency || "EUR");
-    if (todayChatsEl) todayChatsEl.textContent = `${todayChats || 0} chats`;
-    if (dailyLimitEl) dailyLimitEl.textContent = dailyLimit ? formatMoney(dailyLimit) : "Geen limiet";
-    if (dailyRemainingEl) {
-      dailyRemainingEl.textContent =
-        dailyLimit && Number.isFinite(remaining)
+  const renderSummary = ({ monthSpend, monthCurrency, monthChats, monthlyLimit, remaining }) => {
+    if (monthSpendEl) monthSpendEl.textContent = formatMoney(monthSpend || 0, monthCurrency || "EUR");
+    if (monthChatsEl) monthChatsEl.textContent = `${monthChats || 0} chats`;
+    if (monthLimitEl) monthLimitEl.textContent = Number.isFinite(monthlyLimit) ? formatMoney(monthlyLimit) : "Geen limiet";
+    if (monthRemainingEl) {
+      monthRemainingEl.textContent =
+        Number.isFinite(monthlyLimit) && Number.isFinite(remaining)
           ? `${formatMoney(Math.max(0, remaining))} resterend`
           : "Geen limiet ingesteld";
     }
@@ -93,26 +93,24 @@
       const message = payload?.error || "API usage ophalen mislukt.";
       if (noteEl) noteEl.textContent = message;
       renderTable([]);
-      renderSummary({ todaySpend: 0, todayChats: 0, dailyLimit: null, remaining: null });
+      renderSummary({ monthSpend: 0, monthChats: 0, monthlyLimit: null, remaining: null });
       return;
     }
 
-    const todayReal = payload?.today_real;
-    const limitSource = payload?.limits?.source;
+    const monthReal = payload?.month_real;
     renderSummary({
-      todaySpend: todayReal?.spend ?? payload?.today?.spend_eur ?? 0,
-      todayCurrency: todayReal?.currency || "EUR",
-      todayChats: payload?.today?.chats || 0,
-      dailyLimit: payload?.limits?.daily_eur || null,
-      remaining: payload?.today?.remaining_eur ?? null,
+      monthSpend: monthReal?.spend ?? payload?.month?.spend_eur ?? 0,
+      monthCurrency: monthReal?.currency || "EUR",
+      monthChats: payload?.month?.chats || 0,
+      monthlyLimit: payload?.limits?.monthly_eur ?? null,
+      remaining: payload?.month?.remaining_eur ?? null,
     });
-    if (noteEl && limitSource === "credits") {
-      noteEl.textContent = `Daglimiet = actieve klanten × €${(payload?.limits?.credit_allowance_eur ?? 0).toFixed(2)} krediet.`;
-    } else if (noteEl && !noteEl.textContent) {
-      noteEl.textContent = payload?.note || "";
-    }
     renderTable(payload?.models || []);
-    if (noteEl) noteEl.textContent = payload?.note || "";
+    if (noteEl) {
+      const noteParts = ["Maandlimiet op basis van actieve klanten + topups."];
+      if (payload?.note) noteParts.push(payload.note);
+      noteEl.textContent = noteParts.filter(Boolean).join(" ");
+    }
   };
 
   const init = async () => {
@@ -128,4 +126,3 @@
 
   document.addEventListener("DOMContentLoaded", init);
 })();
-

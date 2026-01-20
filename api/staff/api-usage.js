@@ -1,4 +1,4 @@
-// Vercel Serverless Function: Staff API usage overview (today)
+// Vercel Serverless Function: Staff API usage overview (month)
 //
 // Requires Supabase service role key and api_usage_events table.
 
@@ -13,8 +13,8 @@ const STAFF_LIMIT = 120;
 const DEFAULT_TOKENS_PER_EUR = 100;
 const DEFAULT_CREDIT_ALLOWANCE_EUR = 10;
 
-function startOfDayUtc(now) {
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+function startOfMonthUtc(now) {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 }
 
 function getTokensPerEur() {
@@ -38,6 +38,29 @@ function getCreditAllowanceEur() {
 function toEur(tokens, tokensPerEur) {
   const amount = Number(tokens || 0) / Number(tokensPerEur || DEFAULT_TOKENS_PER_EUR);
   return Math.round(amount * 100) / 100;
+}
+
+async function getTopupsThisMonthEur(startIso) {
+  let total = 0;
+  let offset = 0;
+  const limit = 1000;
+  while (true) {
+    const rows =
+      (await adminRestFetch(
+        `billing_events?select=amount_eur&event_type=eq.topup&paid_at=gte.${encodeURIComponent(
+          startIso
+        )}&order=paid_at.desc&limit=${limit}&offset=${offset}`,
+        { method: "GET" }
+      )) || [];
+    if (!Array.isArray(rows) || rows.length === 0) break;
+    rows.forEach((row) => {
+      const amount = Number(row?.amount_eur || 0);
+      if (Number.isFinite(amount)) total += amount;
+    });
+    if (rows.length < limit) break;
+    offset += limit;
+  }
+  return Math.round(total * 100) / 100;
 }
 
 async function supabaseAuthAdmin(path, { method = "GET", accessKey, body } = {}) {
@@ -98,7 +121,7 @@ function isActiveCustomer(user) {
   return !cancelledAt;
 }
 
-async function fetchOpenAiUsageToday({ startTime, endTime }) {
+async function fetchOpenAiUsagePeriod({ startTime, endTime }) {
   const apiKey = getOpenAIApiKey();
   if (!apiKey) return null;
 
@@ -192,17 +215,25 @@ module.exports = async (req, res) => {
     if (!isStaffUser(user)) return json(res, 403, { error: "Forbidden (not staff)" });
 
     const now = new Date();
-    const todayIso = startOfDayUtc(now).toISOString();
+    const monthIso = startOfMonthUtc(now).toISOString();
 
     let rows = [];
     try {
-      rows =
-        (await adminRestFetch(
-          `api_usage_events?select=provider,model,model_label,tokens,tokens_per_eur,cost_eur,created_at&created_at=gte.${encodeURIComponent(
-            todayIso
-          )}&order=created_at.desc&limit=10000`,
-          { method: "GET" }
-        )) || [];
+      let offset = 0;
+      const limit = 1000;
+      while (true) {
+        const batch =
+          (await adminRestFetch(
+            `api_usage_events?select=provider,model,model_label,tokens,tokens_per_eur,cost_eur,created_at&created_at=gte.${encodeURIComponent(
+              monthIso
+            )}&order=created_at.desc&limit=${limit}&offset=${offset}`,
+            { method: "GET" }
+          )) || [];
+        if (!Array.isArray(batch) || batch.length === 0) break;
+        rows = rows.concat(batch);
+        if (batch.length < limit) break;
+        offset += limit;
+      }
     } catch (e) {
       const detail = String(e?.detail || "");
       const isMissingTable = e?.statusCode === 404 || detail.includes("api_usage_events");
@@ -216,8 +247,8 @@ module.exports = async (req, res) => {
 
     const tokensPerEur = getTokensPerEur();
     const totals = new Map();
-    let todayTokens = 0;
-    let todaySpend = 0;
+    let monthTokens = 0;
+    let monthSpend = 0;
 
     rows.forEach((row) => {
       const modelLabel = row?.model_label || row?.model || "Onbekend";
@@ -227,8 +258,8 @@ module.exports = async (req, res) => {
       const rowTokensPerEur = Number(row?.tokens_per_eur || tokensPerEur || DEFAULT_TOKENS_PER_EUR);
       const spend = Number.isFinite(Number(row?.cost_eur)) ? Number(row.cost_eur) : toEur(tokens, rowTokensPerEur);
 
-      todayTokens += tokens;
-      todaySpend += spend;
+      monthTokens += tokens;
+      monthSpend += spend;
 
       const existing = totals.get(key) || {
         provider,
@@ -245,8 +276,8 @@ module.exports = async (req, res) => {
       totals.set(key, existing);
     });
 
-    const openaiUsage = await fetchOpenAiUsageToday({ startTime: todayIso, endTime: now.toISOString() });
-    let todayReal = null;
+    const openaiUsage = await fetchOpenAiUsagePeriod({ startTime: monthIso, endTime: now.toISOString() });
+    let monthReal = null;
 
     if (openaiUsage?.rows?.length) {
       const realTotals = new Map();
@@ -282,7 +313,7 @@ module.exports = async (req, res) => {
       }
 
       const openaiTotal = Array.from(realTotals.values()).reduce((acc, item) => acc + (item.spend_eur || 0), 0);
-      todayReal = {
+      monthReal = {
         spend: Math.round(openaiTotal * 100) / 100,
         currency: openaiUsage.currency || "USD",
         source: openaiUsage.source || "openai_api",
@@ -291,46 +322,69 @@ module.exports = async (req, res) => {
 
     const models = Array.from(totals.values()).sort((a, b) => b.spend_eur - a.spend_eur);
     const creditAllowanceEur = getCreditAllowanceEur();
-    let dailyLimit = null;
-    let dailyLimitSource = "env";
+    let monthlyLimit = null;
+    let monthlyLimitSource = "credits";
+    let topupsThisMonth = null;
+    let activeCustomers = null;
 
     try {
       const serviceRoleKey = getSupabaseServiceRoleKey();
       const users = await fetchAllUsers(serviceRoleKey);
-      const activeCustomers = users.filter(isActiveCustomer).length;
-      if (Number.isFinite(creditAllowanceEur) && creditAllowanceEur > 0) {
-        dailyLimit = Math.round(activeCustomers * creditAllowanceEur * 100) / 100;
-        dailyLimitSource = "credits";
-      }
+      activeCustomers = users.filter(isActiveCustomer).length;
     } catch (_) {
-      dailyLimit = parseLimit(process.env.API_DAILY_LIMIT_EUR);
+      activeCustomers = null;
     }
 
-    if (!Number.isFinite(dailyLimit) || dailyLimit <= 0) {
-      dailyLimit = parseLimit(process.env.API_DAILY_LIMIT_EUR);
-      if (dailyLimit) dailyLimitSource = "env";
+    try {
+      topupsThisMonth = await getTopupsThisMonthEur(monthIso);
+    } catch (_) {
+      topupsThisMonth = null;
     }
-    const remaining = dailyLimit ? Math.max(0, Math.round((dailyLimit - todaySpend) * 100) / 100) : null;
+
+    const hasActiveCustomers =
+      Number.isFinite(activeCustomers) && Number.isFinite(creditAllowanceEur) && creditAllowanceEur >= 0;
+    const hasTopups = Number.isFinite(topupsThisMonth) && topupsThisMonth > 0;
+    let computed = false;
+    let total = 0;
+    if (hasActiveCustomers) {
+      total += activeCustomers * creditAllowanceEur;
+      computed = true;
+    }
+    if (hasTopups) {
+      total += topupsThisMonth;
+      computed = true;
+    }
+    if (computed) {
+      monthlyLimit = Math.round(total * 100) / 100;
+    } else {
+      monthlyLimit = parseLimit(process.env.API_MONTHLY_LIMIT_EUR);
+      if (monthlyLimit) monthlyLimitSource = "env";
+    }
+    const remaining = Number.isFinite(monthlyLimit)
+      ? Math.max(0, Math.round((monthlyLimit - monthSpend) * 100) / 100)
+      : null;
 
     return json(res, 200, {
       ok: true,
       currency: "EUR",
-      today: {
+      month: {
         chats: rows.length,
-        tokens: todayTokens,
-        spend_eur: Math.round(todaySpend * 100) / 100,
+        tokens: monthTokens,
+        spend_eur: Math.round(monthSpend * 100) / 100,
         remaining_eur: remaining,
-        since: todayIso,
+        since: monthIso,
       },
-      today_real: todayReal,
+      month_real: monthReal,
       models,
       limits: {
-        daily_eur: dailyLimit,
-        source: dailyLimitSource,
+        monthly_eur: monthlyLimit,
+        source: monthlyLimitSource,
         credit_allowance_eur: creditAllowanceEur,
+        topups_this_month_eur: Number.isFinite(topupsThisMonth) ? topupsThisMonth : null,
+        active_customers: Number.isFinite(activeCustomers) ? activeCustomers : null,
       },
       tokens_per_eur: tokensPerEur,
-      note: todayReal
+      note: monthReal
         ? "OpenAI kosten zijn gekoppeld via OpenAI usage API. Overige providers zijn schattingen."
         : "Kosten zijn gebaseerd op tokens per chat per model.",
     });
@@ -338,4 +392,3 @@ module.exports = async (req, res) => {
     return publicError(res, 500, "API usage ophalen mislukt.", e);
   }
 };
-

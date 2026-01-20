@@ -94,8 +94,8 @@ function getCreditAllowanceEur() {
   return Math.round(value * 100) / 100;
 }
 
-function parseDailyLimit() {
-  const value = Number(process.env.API_DAILY_LIMIT_EUR || 0);
+function parseMonthlyLimit() {
+  const value = Number(process.env.API_MONTHLY_LIMIT_EUR || 0);
   if (!Number.isFinite(value) || value <= 0) return null;
   return Math.round(value * 100) / 100;
 }
@@ -136,27 +136,48 @@ function isActiveCustomer(user) {
   return !cancelledAt;
 }
 
-async function getDailyLimitEur(serviceRoleKey) {
+async function getMonthlyLimitEur(serviceRoleKey) {
   const creditAllowance = getCreditAllowanceEur();
+  let activeCustomers = null;
   try {
     const users = await fetchAllUsers(serviceRoleKey);
-    const activeCustomers = users.filter(isActiveCustomer).length;
-    if (Number.isFinite(creditAllowance) && creditAllowance > 0) {
-      return Math.round(activeCustomers * creditAllowance * 100) / 100;
-    }
+    activeCustomers = users.filter(isActiveCustomer).length;
   } catch (_) {
-    // fall back to env limit below
+    // fallback to env limit below
   }
-  return parseDailyLimit();
+
+  let topupsThisMonth = null;
+  try {
+    topupsThisMonth = await getTopupsThisMonthEur();
+  } catch (_) {
+    topupsThisMonth = null;
+  }
+
+  const hasActiveCustomers = Number.isFinite(activeCustomers) && Number.isFinite(creditAllowance) && creditAllowance >= 0;
+  const hasTopups = Number.isFinite(topupsThisMonth) && topupsThisMonth > 0;
+  let computed = false;
+  let total = 0;
+  if (hasActiveCustomers) {
+    total += activeCustomers * creditAllowance;
+    computed = true;
+  }
+  if (hasTopups) {
+    total += topupsThisMonth;
+    computed = true;
+  }
+  if (computed) {
+    return Math.round(total * 100) / 100;
+  }
+  return parseMonthlyLimit();
 }
 
-function startOfDayUtc(now) {
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+function startOfMonthUtc(now) {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 }
 
-async function getTodaySpendEur() {
+async function getMonthSpendEur() {
   const now = new Date();
-  const sinceIso = startOfDayUtc(now).toISOString();
+  const sinceIso = startOfMonthUtc(now).toISOString();
   let total = 0;
   let offset = 0;
   const limit = 1000;
@@ -170,6 +191,31 @@ async function getTodaySpendEur() {
     rows.forEach((row) => {
       const cost = Number(row?.cost_eur || 0);
       if (Number.isFinite(cost)) total += cost;
+    });
+    if (rows.length < limit) break;
+    offset += limit;
+  }
+  return Math.round(total * 100) / 100;
+}
+
+async function getTopupsThisMonthEur() {
+  const now = new Date();
+  const sinceIso = startOfMonthUtc(now).toISOString();
+  let total = 0;
+  let offset = 0;
+  const limit = 1000;
+  while (true) {
+    const rows =
+      (await adminRestFetch(
+        `billing_events?select=amount_eur&event_type=eq.topup&paid_at=gte.${encodeURIComponent(
+          sinceIso
+        )}&order=paid_at.desc&limit=${limit}&offset=${offset}`,
+        { method: "GET" }
+      )) || [];
+    if (!Array.isArray(rows) || rows.length === 0) break;
+    rows.forEach((row) => {
+      const amount = Number(row?.amount_eur || 0);
+      if (Number.isFinite(amount)) total += amount;
     });
     if (rows.length < limit) break;
     offset += limit;
@@ -691,17 +737,18 @@ module.exports = async function handler(req, res) {
 
     // Token gating + deduct (stored server-side in app_metadata.tokens) - best-effort.
     const tokenBalance = Number(appMeta?.tokens || 0);
-    const dailyLimit = await getDailyLimitEur(serviceRoleKey);
-    if (Number.isFinite(dailyLimit) && dailyLimit > 0) {
-      const todaySpend = await getTodaySpendEur();
+    const monthlyLimit = await getMonthlyLimitEur(serviceRoleKey);
+    if (Number.isFinite(monthlyLimit)) {
+      const monthSpend = await getMonthSpendEur();
       const requestCost = Math.round((tokensRequired / tokensPerEur) * 100) / 100;
-      if (todaySpend + requestCost > dailyLimit) {
+      if (monthSpend + requestCost > monthlyLimit) {
         return json(res, 429, {
-          error: "Daglimiet bereikt. Probeer morgen opnieuw.",
-          daily_limit_eur: dailyLimit,
-          today_spend_eur: todaySpend,
+          error: "Maandlimiet bereikt.",
+          monthly_limit_eur: monthlyLimit,
+          month_spend_eur: monthSpend,
           request_cost_eur: requestCost,
-          remaining_eur: Math.max(0, Math.round((dailyLimit - todaySpend) * 100) / 100),
+          remaining_eur: Math.max(0, Math.round((monthlyLimit - monthSpend) * 100) / 100),
+          topup_required: true,
         });
       }
     }

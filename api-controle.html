@@ -291,23 +291,23 @@
     </header>
 
     <main class="shell" aria-label="API controle">
-      <section class="summary-grid" aria-label="API kosten vandaag">
+      <section class="summary-grid" aria-label="API kosten deze maand">
         <div class="summary-card">
-          <div class="summary-label">API kosten vandaag</div>
-          <div class="summary-value" id="api-today-spend">€ 0,00</div>
-          <div class="summary-sub" id="api-today-chats">0 chats</div>
+          <div class="summary-label">API kosten deze maand</div>
+          <div class="summary-value" id="api-month-spend">€ 0,00</div>
+          <div class="summary-sub" id="api-month-chats">0 chats</div>
         </div>
         <div class="summary-card">
-          <div class="summary-label">Daglimiet</div>
-          <div class="summary-value" id="api-daily-limit">-</div>
-          <div class="summary-sub" id="api-daily-remaining">-</div>
+          <div class="summary-label">Maandlimiet</div>
+          <div class="summary-value" id="api-month-limit">-</div>
+          <div class="summary-sub" id="api-month-remaining">-</div>
         </div>
       </section>
 
       <section class="panel" aria-label="API kosten per model">
         <div class="panel-head">
           <h1>API controle</h1>
-          <p>Overzicht van kosten per model voor vandaag.</p>
+          <p>Overzicht van kosten per model voor deze maand.</p>
         </div>
         <div class="table-head" aria-hidden="true">
           <div>Model</div>
@@ -317,7 +317,7 @@
           <div>Kosten</div>
         </div>
         <div id="api-usage-table"></div>
-        <div class="empty" id="api-usage-empty" hidden>Geen usage data voor vandaag.</div>
+        <div class="empty" id="api-usage-empty" hidden>Geen usage data voor deze maand.</div>
         <div class="muted" id="api-usage-note"></div>
       </section>
     </main>
@@ -327,4 +327,3 @@
     <script src="api-controle.js" defer></script>
   </body>
 </html>
-
