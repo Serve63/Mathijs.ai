@@ -323,8 +323,8 @@ async function fetchAllUsers(serviceRoleKey) {
 
 async function fetchBillingEvents() {
   const events = [];
-  const limit = 1000;
-  const maxPages = 10;
+  const limit = 500;
+  const maxPages = 5;
   const baselineIso = BASELINE_DATE_UTC.toISOString();
   let lastPaidAt = null;
   let lastId = null;
@@ -361,8 +361,8 @@ async function fetchBillingEvents() {
 async function fetchUserMessageCountsByDay(baselineIso) {
   const counts = new Map();
   let totalChats = 0;
-  const limit = 1000;
-  const maxPages = 20;
+  const limit = 500;
+  const maxPages = 5;
   let lastCreatedAt = null;
   let lastId = null;
   let pageCount = 0;
@@ -406,8 +406,8 @@ async function fetchUsageStatsByDay(baselineIso) {
   const openai = new Map();
   const other = new Map();
   let totalChats = 0;
-  const limit = 1000;
-  const maxPages = 20;
+  const limit = 500;
+  const maxPages = 5;
   let lastCreatedAt = null;
   let lastId = null;
   let pageCount = 0;
