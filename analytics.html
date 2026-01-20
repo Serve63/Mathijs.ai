@@ -261,6 +261,19 @@
         height: 18px;
       }
 
+      .range-btn--mode {
+        padding: 6px 12px;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+      }
+
+      .range-divider {
+        width: 1px;
+        align-self: stretch;
+        background: rgba(255, 255, 255, 0.14);
+        margin: 4px 2px;
+      }
+
       .range-btn:hover {
         background: rgba(255, 255, 255, 0.06);
         border-color: rgba(255, 255, 255, 0.14);
@@ -818,6 +831,9 @@
           <button class="range-btn" type="button" data-range="quarter" aria-pressed="false">DIT KWARTAAL</button>
           <button class="range-btn" type="button" data-range="year" aria-pressed="false">DIT JAAR</button>
           <button class="range-btn" type="button" data-range="all" aria-pressed="false">ALL TIME</button>
+          <span class="range-divider" aria-hidden="true"></span>
+          <button class="range-btn range-btn--mode is-active" type="button" data-mode="revenue" aria-pressed="true">OMZET</button>
+          <button class="range-btn range-btn--mode" type="button" data-mode="credits" aria-pressed="false">KREDIETGEBRUIK</button>
           <button
             class="range-btn range-btn--icon"
             type="button"
@@ -872,7 +888,7 @@
         <div class="summary-card">
           <div class="summary-head">
             <div class="summary-label" id="stat-revenue-label">Omzet</div>
-            <div class="summary-actions">
+            <div class="summary-actions" id="stat-revenue-actions">
               <button class="summary-toggle" id="stat-revenue-toggle" type="button" aria-pressed="false">
                 Toon winst
               </button>

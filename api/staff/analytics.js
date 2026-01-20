@@ -14,6 +14,21 @@ const { getSupabaseServiceRoleKey } = require("../_lib/env");
 const STAFF_WINDOW_MS = 60_000;
 const STAFF_LIMIT = 120;
 const BASELINE_DATE_UTC = new Date(Date.UTC(2026, 0, 1));
+const TOKENS_PER_CHAT = 1;
+const DEFAULT_TOKENS_PER_EUR = 100;
+const DEFAULT_CREDIT_ALLOWANCE_EUR = 10;
+
+function getTokensPerEur() {
+  const tokensPerEur = Number(process.env.TOPUP_TOKENS_PER_EUR || DEFAULT_TOKENS_PER_EUR);
+  if (!Number.isFinite(tokensPerEur) || tokensPerEur <= 0) return DEFAULT_TOKENS_PER_EUR;
+  return Math.floor(tokensPerEur);
+}
+
+function getCreditAllowanceEur() {
+  const value = Number(process.env.CREDIT_ALLOWANCE_EUR || DEFAULT_CREDIT_ALLOWANCE_EUR);
+  if (!Number.isFinite(value) || value < 0) return DEFAULT_CREDIT_ALLOWANCE_EUR;
+  return Math.round(value * 100) / 100;
+}
 
 function parseDate(value) {
   if (!value) return null;
@@ -318,6 +333,9 @@ module.exports = async (req, res) => {
       range: { from: toDateKey(startDate), to: toDateKey(today) },
       points,
       total_chats: totalChats,
+      tokens_per_chat: TOKENS_PER_CHAT,
+      tokens_per_eur: getTokensPerEur(),
+      credit_allowance_eur: getCreditAllowanceEur(),
     });
   } catch (e) {
     return publicError(res, 500, "Analytics ophalen mislukt. Probeer later opnieuw.", e);

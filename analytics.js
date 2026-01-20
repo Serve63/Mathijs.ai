@@ -2,7 +2,8 @@
   const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
 
-  const rangeButtons = Array.from(document.querySelectorAll(".range-btn"));
+  const rangeButtons = Array.from(document.querySelectorAll("[data-range]"));
+  const modeButtons = Array.from(document.querySelectorAll("[data-mode]"));
   const rangePickerEl = document.getElementById("range-picker");
   const rangeFromEl = document.getElementById("range-from");
   const rangeToEl = document.getElementById("range-to");
@@ -21,6 +22,7 @@
   const revenueSubEl = document.getElementById("stat-revenue-sub");
   const revenueToggleEl = document.getElementById("stat-revenue-toggle");
   const revenueSettingsBtn = document.getElementById("stat-revenue-settings");
+  const revenueActionsEl = document.getElementById("stat-revenue-actions");
   const profitSettingsModal = document.getElementById("analytics-profit-settings");
   const profitSettingsForm = document.getElementById("analytics-profit-form");
   const profitSettingsClose = document.getElementById("analytics-profit-close");
@@ -68,6 +70,11 @@
   let showProfit = false;
   let lastRange = null;
   let profitSettings = { creditCostPerCustomer: 0, vatPercent: 0 };
+  let metricMode = "revenue";
+  let activeRangeId = "week";
+  let tokensPerChat = 1;
+  let tokensPerEur = 100;
+  let creditAllowanceEur = 10;
 
   const createSupabaseClient = () => {
     if (!window.supabase?.createClient) return null;
@@ -142,6 +149,12 @@
   const formatSettingValue = (value) => {
     if (!Number.isFinite(value)) return "0";
     return value.toFixed(2);
+  };
+
+  const getEurPerChat = () => {
+    const perEur = clampNumber(Number(tokensPerEur || 0), 1, Number.POSITIVE_INFINITY);
+    const perChat = clampNumber(Number(tokensPerChat || 0), 1, Number.POSITIVE_INFINITY);
+    return perChat / perEur;
   };
 
   const WEEKDAY_LABELS = ["ma", "di", "wo", "do", "vr", "za", "zo"];
@@ -327,6 +340,27 @@
     return points;
   };
 
+  const buildMonthlySeries = (fromDate, toDate) => {
+    const points = [];
+    let cursor = new Date(Date.UTC(fromDate.getUTCFullYear(), fromDate.getUTCMonth(), 1));
+    const endMonth = new Date(Date.UTC(toDate.getUTCFullYear(), toDate.getUTCMonth(), 1));
+    while (cursor <= endMonth) {
+      const monthStart = new Date(cursor);
+      const monthEnd = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 0));
+      const realStart = new Date(Math.max(monthStart.getTime(), fromDate.getTime()));
+      const realEnd = new Date(Math.min(monthEnd.getTime(), toDate.getTime()));
+      if (realEnd < realStart) {
+        cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
+        continue;
+      }
+      const bucket = buildDailySeries(realStart, realEnd);
+      const label = fmtMonthShortYear.format(monthStart);
+      points.push(sumPoints(bucket, label));
+      cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
+    }
+    return points;
+  };
+
   const computeTotals = (points) =>
     points.reduce(
       (acc, point) => {
@@ -338,6 +372,53 @@
       },
       { revenue: 0, orders: 0, subs: 0, active: 0 }
     );
+
+  const computeCreditTotals = (points) =>
+    points.reduce(
+      (acc, point) => {
+        acc.spent += Number(point.spent || 0);
+        acc.max += Number(point.max || 0);
+        return acc;
+      },
+      { spent: 0, max: 0 }
+    );
+
+  const getRangeBounds = (rangeId) => {
+    const end = rangeBounds.to || todayUTC;
+    if (rangeId === "week") {
+      return { from: addDays(end, -6), to: end };
+    }
+    if (rangeId === "month") {
+      const from = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 1));
+      return { from, to: end };
+    }
+    if (rangeId === "quarter") {
+      const startMonth = Math.floor(end.getUTCMonth() / 3) * 3;
+      const from = new Date(Date.UTC(end.getUTCFullYear(), startMonth, 1));
+      return { from, to: end };
+    }
+    if (rangeId === "year") {
+      const from = new Date(Date.UTC(end.getUTCFullYear(), 0, 1));
+      return { from, to: end };
+    }
+    if (rangeId === "custom") {
+      const from = parseISODate(rangeFromEl?.value) || rangeBounds.from || todayUTC;
+      const to = parseISODate(rangeToEl?.value) || end;
+      return { from, to };
+    }
+    return { from: rangeBounds.from || todayUTC, to: end };
+  };
+
+  const buildCreditSeries = (rangeId) => {
+    const { from, to } = getRangeBounds(rangeId);
+    const monthlyPoints = buildMonthlySeries(from, to);
+    const eurPerChat = getEurPerChat();
+    return monthlyPoints.map((point) => {
+      const spent = Number(point.orders || 0) * eurPerChat;
+      const max = Number(point.active || 0) * creditAllowanceEur;
+      return { ...point, spent, max };
+    });
+  };
 
   const computeProfitTotal = (points, totals) => {
     const revenue = Number(totals?.revenue || 0);
@@ -373,12 +454,39 @@
     revenueSubEl.textContent = meta;
   };
 
-  const renderChart = (points) => {
+  const updateCreditCard = (config, totals) => {
+    if (!revenueEl || !revenueSubEl || !config || !totals) return;
+    const meta = config.meta || "";
+    if (revenueLabelEl) revenueLabelEl.textContent = "Kredietgebruik";
+    revenueEl.textContent = fmtEUR.format(Number(totals.spent || 0));
+    revenueSubEl.textContent = `${meta} · max ${fmtEUR.format(Number(totals.max || 0))}`;
+  };
+
+  const renderChart = (points, options = {}) => {
     if (!barChartEl) return;
-    const maxRevenue = points.length ? points.reduce((max, point) => Math.max(max, point.revenue), 0) : 0;
+    const mode = options.mode || "revenue";
+    const maxRevenue =
+      mode === "credits"
+        ? 1
+        : points.length
+        ? points.reduce((max, point) => Math.max(max, point.revenue), 0)
+        : 0;
 
     barChartEl.innerHTML = points
       .map((point) => {
+        if (mode === "credits") {
+          const max = Number(point.max || 0);
+          const spent = Number(point.spent || 0);
+          const ratio = max ? Math.min(spent / max, 1) : 0;
+          const valueLabel = `${fmtEUR.format(spent)} / ${fmtEUR.format(max)}`;
+          return `
+            <div class="bar" style="--bar: ${ratio}">
+              <div class="bar-value">${valueLabel}</div>
+              <div class="bar-fill" title="${valueLabel}"></div>
+              <div class="bar-label">${point.label}</div>
+            </div>
+          `;
+        }
         const ratio = maxRevenue ? point.revenue / maxRevenue : 0;
         return `
           <div class="bar" style="--bar: ${ratio}">
@@ -427,6 +535,7 @@
   };
 
   const setActiveRange = (rangeId) => {
+    activeRangeId = rangeId;
     const config = ranges[rangeId] || ranges.week;
     if (!config) return;
     const totals = computeTotals(config.points);
@@ -458,8 +567,25 @@
       activeLabelEl.textContent = "Actieve abonnees";
     }
 
-    lastRange = { config, totals };
-    updateRevenueCard(config, totals);
+    lastRange = { config, totals, rangeId };
+    if (metricMode === "credits") {
+      const creditPoints = buildCreditSeries(rangeId);
+      const creditTotals = computeCreditTotals(creditPoints);
+      const creditMeta = config.meta ? `${config.meta} · per maand` : "per maand";
+      updateCreditCard({ ...config, meta: creditMeta }, creditTotals);
+      if (chartTitleEl) chartTitleEl.textContent = `Kredietgebruik per maand (${config.label})`;
+      if (chartMetaEl) chartMetaEl.textContent = creditMeta;
+      if (chartTotalEl) {
+        chartTotalEl.textContent = `${fmtEUR.format(creditTotals.spent)} / ${fmtEUR.format(creditTotals.max)} max`;
+      }
+      renderChart(creditPoints, { mode: "credits" });
+    } else {
+      updateRevenueCard(config, totals);
+      if (chartTitleEl) chartTitleEl.textContent = `Omzet trend (${config.label})`;
+      if (chartMetaEl) chartMetaEl.textContent = config.meta;
+      if (chartTotalEl) chartTotalEl.textContent = `${fmtEUR.format(totals.revenue)} totaal`;
+      renderChart(config.points, { mode: "revenue" });
+    }
     if (ordersEl) ordersEl.textContent = fmtNumber.format(ordersValue);
     if (ordersSubEl) ordersSubEl.textContent = config.meta;
     if (subsEl) subsEl.textContent = fmtNumber.format(totals.subs);
@@ -467,12 +593,8 @@
     if (activeEl) activeEl.textContent = fmtNumber.format(totals.active);
     if (activeSubEl) activeSubEl.textContent = "Laatste meetpunt";
 
-    if (chartTitleEl) chartTitleEl.textContent = `Omzet trend (${config.label})`;
-    if (chartMetaEl) chartMetaEl.textContent = config.meta;
-    if (chartTotalEl) chartTotalEl.textContent = `${fmtEUR.format(totals.revenue)} totaal`;
     if (tableMetaEl) tableMetaEl.textContent = config.meta;
 
-    renderChart(config.points);
     renderTable(config.points, Boolean(config.showTotalRow), {
       orders: ordersLabelText,
       subs: subsLabelText,
@@ -499,6 +621,12 @@
 
   const setLoadingState = (message) => {
     if (revenueEl) revenueEl.textContent = "--";
+    if (revenueLabelEl) {
+      revenueLabelEl.textContent = metricMode === "credits" ? "Kredietgebruik" : "Omzet";
+    }
+    if (revenueActionsEl) {
+      revenueActionsEl.hidden = metricMode === "credits";
+    }
     if (ordersEl) ordersEl.textContent = "--";
     if (subsEl) subsEl.textContent = "--";
     if (activeEl) activeEl.textContent = "--";
@@ -510,6 +638,12 @@
 
   const setErrorState = (message) => {
     if (revenueEl) revenueEl.textContent = "--";
+    if (revenueLabelEl) {
+      revenueLabelEl.textContent = metricMode === "credits" ? "Kredietgebruik" : "Omzet";
+    }
+    if (revenueActionsEl) {
+      revenueActionsEl.hidden = metricMode === "credits";
+    }
     if (ordersEl) ordersEl.textContent = "--";
     if (subsEl) subsEl.textContent = "--";
     if (activeEl) activeEl.textContent = "--";
@@ -606,6 +740,9 @@
       setLoadingState("Data laden...");
       profitSettings = loadProfitSettings();
       const payload = await fetchAnalytics(token);
+      tokensPerChat = clampNumber(Number(payload?.tokens_per_chat || 1), 1);
+      tokensPerEur = clampNumber(Number(payload?.tokens_per_eur || 100), 1);
+      creditAllowanceEur = clampNumber(Number(payload?.credit_allowance_eur || 10), 0);
       const points = normalizePoints(payload?.points);
       dailyPoints = points;
       rebuildPointMap();
@@ -701,6 +838,29 @@
     });
   });
 
+  const setMetricMode = (mode) => {
+    metricMode = mode === "credits" ? "credits" : "revenue";
+    modeButtons.forEach((button) => {
+      const isActive = button.dataset.mode === metricMode;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
+    if (revenueActionsEl) {
+      revenueActionsEl.hidden = metricMode === "credits";
+    }
+    if (lastRange?.config) {
+      setActiveRange(activeRangeId);
+    }
+  };
+
+  modeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      if (!dataReady) return;
+      const mode = button.dataset.mode || "revenue";
+      setMetricMode(mode);
+    });
+  });
+
   if (rangeCancelEl) {
     rangeCancelEl.addEventListener("click", closePicker);
   }
@@ -728,7 +888,7 @@
   if (revenueToggleEl) {
     revenueToggleEl.addEventListener("click", () => {
       showProfit = !showProfit;
-      if (lastRange?.config && lastRange?.totals) {
+      if (metricMode === "revenue" && lastRange?.config && lastRange?.totals) {
         updateRevenueCard(lastRange.config, lastRange.totals);
       }
     });
