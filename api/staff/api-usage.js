@@ -102,6 +102,11 @@ function getRequestedOpenAiCurrency() {
   return raw ? raw.toUpperCase() : "EUR";
 }
 
+function getOpenAiProjectId() {
+  const raw = String(process.env.OPENAI_PROJECT_ID || "").trim();
+  return raw || null;
+}
+
 function getOpenAiLimitOverride() {
   const limitEur = Number(process.env.OPENAI_LIMIT_EUR || 0);
   if (Number.isFinite(limitEur) && limitEur > 0) {
@@ -250,16 +255,23 @@ async function getActiveCustomersCached(monthKey, serviceRoleKey) {
   }
 }
 
-async function fetchOpenAiUsagePeriod({ startTime, endTime, preferLegacy = false }) {
-  const apiKey = getOpenAICostsKey() || getOpenAIApiKey();
-  if (!apiKey) return null;
-
-  const orgId = process.env.OPENAI_ORG_ID || process.env.OPENAI_ORGANIZATION || "";
+function buildOpenAiHeaders({ apiKey, orgId, projectId }) {
   const headers = {
     Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
   };
   if (orgId) headers["OpenAI-Organization"] = orgId;
+  if (projectId) headers["OpenAI-Project"] = projectId;
+  return headers;
+}
+
+async function fetchOpenAiUsagePeriod({ startTime, endTime, preferLegacy = false }) {
+  const apiKey = getOpenAICostsKey() || getOpenAIApiKey();
+  if (!apiKey) return null;
+
+  const orgId = String(process.env.OPENAI_ORG_ID || process.env.OPENAI_ORGANIZATION || "").trim();
+  const projectId = getOpenAiProjectId();
+  const headers = buildOpenAiHeaders({ apiKey, orgId, projectId });
 
   const startDate = new Date(startTime).toISOString().slice(0, 10);
   const endDate = new Date(endTime).toISOString().slice(0, 10);
@@ -377,35 +389,46 @@ function extractOpenAiLimit(payload) {
     payload?.budget,
     payload?.limits?.hard_limit_usd,
     payload?.limits?.soft_limit_usd,
+    payload?.limits?.monthly_budget,
   ];
-  const limitUsd = candidates.map((value) => Number(value)).find((value) => Number.isFinite(value) && value > 0);
+  const extractAmount = (value) => {
+    if (value === null || value === undefined) return null;
+    if (typeof value === "number" || typeof value === "string") return Number(value);
+    if (typeof value === "object") {
+      const nested = value?.amount ?? value?.value ?? value?.usd ?? value?.limit;
+      if (nested === undefined) return null;
+      return Number(nested);
+    }
+    return null;
+  };
+  const limitUsd = candidates
+    .map((value) => extractAmount(value))
+    .find((value) => Number.isFinite(value) && value > 0);
   if (!limitUsd) return null;
   return { limit: limitUsd, currency: "USD" };
 }
 
-async function fetchOpenAiLimitWithKey(apiKey, orgId) {
+async function fetchOpenAiLimitWithKey(apiKey, headerVariants) {
   if (!apiKey) return null;
-  const headers = {
-    Authorization: `Bearer ${apiKey}`,
-    "Content-Type": "application/json",
-  };
-  if (orgId) headers["OpenAI-Organization"] = orgId;
 
   const endpoints = [
     { url: "https://api.openai.com/v1/dashboard/billing/subscription", source: "openai_subscription" },
     { url: "https://api.openai.com/v1/organization/billing/limits", source: "openai_limits" },
   ];
 
-  for (const endpoint of endpoints) {
-    try {
-      const resp = await fetch(endpoint.url, { method: "GET", headers });
-      if (!resp.ok) continue;
-      const payload = await resp.json().catch(() => ({}));
-      const limit = extractOpenAiLimit(payload);
-      if (!limit) continue;
-      return { limit: limit.limit, currency: limit.currency, source: endpoint.source };
-    } catch (_) {
-      continue;
+  for (const variant of headerVariants) {
+    const headers = buildOpenAiHeaders({ apiKey, orgId: variant.orgId, projectId: variant.projectId });
+    for (const endpoint of endpoints) {
+      try {
+        const resp = await fetch(endpoint.url, { method: "GET", headers });
+        if (!resp.ok) continue;
+        const payload = await resp.json().catch(() => ({}));
+        const limit = extractOpenAiLimit(payload);
+        if (!limit) continue;
+        return { limit: limit.limit, currency: limit.currency, source: endpoint.source };
+      } catch (_) {
+        continue;
+      }
     }
   }
 
@@ -416,14 +439,20 @@ async function fetchOpenAiLimit() {
   const override = getOpenAiLimitOverride();
   if (override) return override;
 
-  const orgId = process.env.OPENAI_ORG_ID || process.env.OPENAI_ORGANIZATION || "";
+  const orgId = String(process.env.OPENAI_ORG_ID || process.env.OPENAI_ORGANIZATION || "").trim();
+  const projectId = getOpenAiProjectId();
+  const headerVariants = [];
+  if (orgId || projectId) headerVariants.push({ orgId, projectId });
+  if (orgId) headerVariants.push({ orgId, projectId: null });
+  if (projectId) headerVariants.push({ orgId: null, projectId });
+  headerVariants.push({ orgId: null, projectId: null });
   const keys = [];
   const primaryKey = getOpenAIApiKey();
   const adminKey = getOpenAICostsKey();
   if (primaryKey) keys.push(primaryKey);
   if (adminKey && adminKey !== primaryKey) keys.push(adminKey);
   for (const apiKey of keys) {
-    const limit = await fetchOpenAiLimitWithKey(apiKey, orgId);
+    const limit = await fetchOpenAiLimitWithKey(apiKey, headerVariants);
     if (limit) return limit;
   }
 
