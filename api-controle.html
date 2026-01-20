@@ -291,11 +291,11 @@
     </header>
 
     <main class="shell" aria-label="API controle">
-      <section class="summary-grid" aria-label="API kosten deze maand">
+      <section class="summary-grid" aria-label="Exacte OpenAI kosten deze maand">
         <div class="summary-card">
-          <div class="summary-label">API kosten deze maand</div>
+          <div class="summary-label">Exacte OpenAI kosten (maand)</div>
           <div class="summary-value" id="api-month-spend">€ 0,00</div>
-          <div class="summary-sub" id="api-month-chats">0 chats</div>
+          <div class="summary-sub" id="api-month-chats">0 OpenAI chats</div>
         </div>
         <div class="summary-card">
           <div class="summary-label">Maandlimiet</div>
@@ -304,17 +304,17 @@
         </div>
       </section>
 
-      <section class="panel" aria-label="API kosten per model">
+      <section class="panel" aria-label="API tokens per model">
         <div class="panel-head">
           <h1>API controle</h1>
-          <p>Overzicht van kosten per model voor deze maand.</p>
+          <p>Tokens per model voor deze maand. Kosten zijn alleen exact beschikbaar voor OpenAI totaal.</p>
         </div>
         <div class="table-head" aria-hidden="true">
           <div>Model</div>
           <div>Provider</div>
           <div>Chats</div>
           <div>Tokens</div>
-          <div>Kosten</div>
+          <div>Kosten (exact)</div>
         </div>
         <div id="api-usage-table"></div>
         <div class="empty" id="api-usage-empty" hidden>Geen usage data voor deze maand.</div>

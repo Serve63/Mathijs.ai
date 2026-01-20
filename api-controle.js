@@ -14,6 +14,11 @@
 
   const formatMoney = (amount, currency = "EUR") =>
     new Intl.NumberFormat("nl-NL", { style: "currency", currency }).format(amount || 0);
+  const formatExactMoney = (amount, currency = "EUR") => {
+    if (amount === null || amount === undefined) return "n.v.t.";
+    const normalized = typeof amount === "number" ? amount : Number(amount);
+    return Number.isFinite(normalized) ? formatMoney(normalized, currency) : "n.v.t.";
+  };
 
   const createSupabaseClient = () => {
     if (!window.supabase?.createClient) return null;
@@ -42,8 +47,8 @@
   };
 
   const renderSummary = ({ monthSpend, monthCurrency, monthChats, monthlyLimit, remaining }) => {
-    if (monthSpendEl) monthSpendEl.textContent = formatMoney(monthSpend || 0, monthCurrency || "EUR");
-    if (monthChatsEl) monthChatsEl.textContent = `${monthChats || 0} chats`;
+    if (monthSpendEl) monthSpendEl.textContent = formatExactMoney(monthSpend, monthCurrency || "EUR");
+    if (monthChatsEl) monthChatsEl.textContent = `${monthChats || 0} OpenAI chats`;
     if (monthLimitEl) monthLimitEl.textContent = Number.isFinite(monthlyLimit) ? formatMoney(monthlyLimit) : "Geen limiet";
     if (monthRemainingEl) {
       monthRemainingEl.textContent =
@@ -67,7 +72,7 @@
         const provider = row.provider || "-";
         const chats = row.chats || 0;
         const tokens = row.tokens || 0;
-        const spend = row.spend_eur || 0;
+        const spend = row.spend_eur;
         const currency = row.currency || "EUR";
         return `
           <div class="table-row">
@@ -75,7 +80,7 @@
             <div class="cell" data-label="Provider">${provider}</div>
             <div class="cell" data-label="Chats">${chats}</div>
             <div class="cell" data-label="Tokens">${tokens}</div>
-            <div class="cell" data-label="Kosten">${formatMoney(spend, currency)}</div>
+            <div class="cell" data-label="Kosten (exact)">${formatExactMoney(spend, currency)}</div>
           </div>
         `;
       })
@@ -93,22 +98,23 @@
       const message = payload?.error || "API usage ophalen mislukt.";
       if (noteEl) noteEl.textContent = message;
       renderTable([]);
-      renderSummary({ monthSpend: 0, monthChats: 0, monthlyLimit: null, remaining: null });
+      renderSummary({ monthSpend: null, monthChats: 0, monthlyLimit: null, remaining: null });
       return;
     }
 
     const monthReal = payload?.month_real;
     renderSummary({
-      monthSpend: monthReal?.spend ?? payload?.month?.spend_eur ?? 0,
+      monthSpend: Number.isFinite(monthReal?.spend) ? monthReal.spend : null,
       monthCurrency: monthReal?.currency || "EUR",
-      monthChats: payload?.month?.chats || 0,
+      monthChats: Number.isFinite(payload?.month?.openai_chats) ? payload.month.openai_chats : payload?.month?.chats || 0,
       monthlyLimit: payload?.limits?.monthly_eur ?? null,
       remaining: payload?.month?.remaining_eur ?? null,
     });
     renderTable(payload?.models || []);
     if (noteEl) {
-      const noteParts = ["Maandlimiet op basis van actieve klanten + topups."];
+      const noteParts = [];
       if (payload?.note) noteParts.push(payload.note);
+      noteParts.push("Maandlimiet op basis van actieve klanten + topups.");
       noteEl.textContent = noteParts.filter(Boolean).join(" ");
     }
   };

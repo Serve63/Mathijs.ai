@@ -137,12 +137,6 @@ async function fetchOpenAiUsagePeriod({ startTime, endTime }) {
 
   const endpoints = [
     {
-      name: "org_usage",
-      url: `https://api.openai.com/v1/organization/usage?start_time=${Math.floor(
-        new Date(startTime).getTime() / 1000
-      )}&end_time=${Math.floor(new Date(endTime).getTime() / 1000)}`,
-    },
-    {
       name: "org_costs",
       url: `https://api.openai.com/v1/organization/costs?start_time=${Math.floor(
         new Date(startTime).getTime() / 1000
@@ -247,8 +241,9 @@ module.exports = async (req, res) => {
 
     const tokensPerEur = getTokensPerEur();
     const totals = new Map();
+    const providerTotals = new Map();
     let monthTokens = 0;
-    let monthSpend = 0;
+    let internalSpend = 0;
 
     rows.forEach((row) => {
       const modelLabel = row?.model_label || row?.model || "Onbekend";
@@ -256,71 +251,81 @@ module.exports = async (req, res) => {
       const key = `${provider}::${modelLabel}`;
       const tokens = Number(row?.tokens || 0);
       const rowTokensPerEur = Number(row?.tokens_per_eur || tokensPerEur || DEFAULT_TOKENS_PER_EUR);
-      const spend = Number.isFinite(Number(row?.cost_eur)) ? Number(row.cost_eur) : toEur(tokens, rowTokensPerEur);
+      const internalCost = Number.isFinite(Number(row?.cost_eur)) ? Number(row.cost_eur) : toEur(tokens, rowTokensPerEur);
 
       monthTokens += tokens;
-      monthSpend += spend;
+      internalSpend += internalCost;
 
       const existing = totals.get(key) || {
         provider,
         model_label: modelLabel,
         tokens: 0,
-        spend_eur: 0,
+        spend_eur: null,
         chats: 0,
         currency: "EUR",
-        source: "estimate",
+        source: "usage_events",
+        cost_exact: false,
       };
       existing.tokens += tokens;
-      existing.spend_eur = Math.round((existing.spend_eur + spend) * 100) / 100;
       existing.chats += 1;
       totals.set(key, existing);
+
+      const providerAgg = providerTotals.get(provider) || { tokens: 0, chats: 0 };
+      providerAgg.tokens += tokens;
+      providerAgg.chats += 1;
+      providerTotals.set(provider, providerAgg);
     });
 
     const openaiUsage = await fetchOpenAiUsagePeriod({ startTime: monthIso, endTime: now.toISOString() });
     let monthReal = null;
 
     if (openaiUsage?.rows?.length) {
-      const realTotals = new Map();
-      openaiUsage.rows.forEach((row) => {
-        const modelLabel = row?.model_label || row?.model || "OpenAI";
-        const provider = "openai";
-        const key = `${provider}::${modelLabel}`;
-        const tokens =
-          Number(row?.tokens || row?.total_tokens || 0) ||
-          Number((row?.input_tokens || 0) + (row?.output_tokens || 0));
-        const spend =
-          Number(row?.cost_eur || row?.cost_usd || row?.total_cost || row?.amount || 0) ||
-          0;
-        const chats = Number(row?.requests || row?.n_requests || row?.count || 0) || 0;
-        const existing = realTotals.get(key) || {
-          provider,
-          model_label: modelLabel,
-          tokens: 0,
-          spend_eur: 0,
-          chats: 0,
-          currency: openaiUsage.currency || "USD",
-          source: "openai_api",
-        };
-        existing.tokens += tokens;
-        existing.spend_eur = Math.round((existing.spend_eur + spend) * 100) / 100;
-        existing.chats += chats || 0;
-        realTotals.set(key, existing);
-      });
-
-      // Replace estimated OpenAI rows with real ones
-      for (const [key, value] of realTotals.entries()) {
-        totals.set(key, value);
-      }
-
-      const openaiTotal = Array.from(realTotals.values()).reduce((acc, item) => acc + (item.spend_eur || 0), 0);
+      const openaiCurrencyRaw =
+        openaiUsage.currency ||
+        openaiUsage.rows.find((row) => row?.amount && typeof row.amount === "object" && row.amount.currency)?.amount
+          ?.currency ||
+        "USD";
+      const openaiCurrency =
+        typeof openaiCurrencyRaw === "string" ? openaiCurrencyRaw.toUpperCase() : "USD";
+      const openaiTotal = openaiUsage.rows.reduce((acc, row) => {
+        const candidates = [
+          row?.cost_eur,
+          row?.cost_usd,
+          row?.total_cost,
+          row?.amount && typeof row.amount === "object" ? row.amount.value : row?.amount,
+          row?.value,
+        ];
+        let spend = 0;
+        for (const candidate of candidates) {
+          const num = Number(candidate);
+          if (Number.isFinite(num)) {
+            spend = num;
+            break;
+          }
+        }
+        return acc + spend;
+      }, 0);
       monthReal = {
         spend: Math.round(openaiTotal * 100) / 100,
-        currency: openaiUsage.currency || "USD",
+        currency: openaiCurrency,
         source: openaiUsage.source || "openai_api",
       };
     }
 
-    const models = Array.from(totals.values()).sort((a, b) => b.spend_eur - a.spend_eur);
+    const openaiAgg = providerTotals.get("openai") || { tokens: 0, chats: 0 };
+    const models = Array.from(totals.values()).sort((a, b) => b.tokens - a.tokens);
+    if (monthReal) {
+      models.unshift({
+        provider: "openai",
+        model_label: "OpenAI totaal (exact)",
+        tokens: openaiAgg.tokens,
+        spend_eur: monthReal.spend,
+        chats: openaiAgg.chats,
+        currency: monthReal.currency || "USD",
+        source: monthReal.source || "openai_api",
+        cost_exact: true,
+      });
+    }
     const creditAllowanceEur = getCreditAllowanceEur();
     let monthlyLimit = null;
     let monthlyLimitSource = "credits";
@@ -361,7 +366,7 @@ module.exports = async (req, res) => {
       if (monthlyLimit) monthlyLimitSource = "env";
     }
     const remaining = Number.isFinite(monthlyLimit)
-      ? Math.max(0, Math.round((monthlyLimit - monthSpend) * 100) / 100)
+      ? Math.max(0, Math.round((monthlyLimit - internalSpend) * 100) / 100)
       : null;
 
     return json(res, 200, {
@@ -370,7 +375,10 @@ module.exports = async (req, res) => {
       month: {
         chats: rows.length,
         tokens: monthTokens,
-        spend_eur: Math.round(monthSpend * 100) / 100,
+        spend_eur: null,
+        spend_internal_eur: Math.round(internalSpend * 100) / 100,
+        openai_chats: openaiAgg.chats,
+        openai_tokens: openaiAgg.tokens,
         remaining_eur: remaining,
         since: monthIso,
       },
@@ -385,8 +393,8 @@ module.exports = async (req, res) => {
       },
       tokens_per_eur: tokensPerEur,
       note: monthReal
-        ? "OpenAI kosten zijn gekoppeld via OpenAI usage API. Overige providers zijn schattingen. Tokens komen uit provider usage."
-        : "Tokens komen uit provider usage. Kosten zijn gebaseerd op interne credits (TOPUP_TOKENS_PER_EUR).",
+        ? "Exacte kosten beschikbaar voor OpenAI (totaal). Gemini heeft geen kosten-API. Tokens komen uit provider usage."
+        : "Exacte kosten nog niet beschikbaar. Gemini heeft geen kosten-API. Tokens komen uit provider usage.",
     });
   } catch (e) {
     return publicError(res, 500, "API usage ophalen mislukt.", e);
