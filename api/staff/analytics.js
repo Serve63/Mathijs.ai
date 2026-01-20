@@ -529,9 +529,11 @@ module.exports = async (req, res) => {
     });
 
     const today = startOfDayUtc(new Date());
+    const monthStart = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
     let startDate = earliestDate || BASELINE_DATE_UTC;
     if (startDate < BASELINE_DATE_UTC) startDate = BASELINE_DATE_UTC;
     if (startDate > today) startDate = today;
+    if (startDate > monthStart) startDate = monthStart;
 
     const points = [];
     let cursor = new Date(startDate);

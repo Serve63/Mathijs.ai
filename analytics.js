@@ -882,6 +882,9 @@
       } else if (savedView?.rangeId && ranges[savedView.rangeId]) {
         initialRange = savedView.rangeId;
       }
+      if (savedView?.mode === "credits" && initialRange === "week") {
+        initialRange = "month";
+      }
       if (savedView?.mode === "credits") {
         setMetricMode("credits");
       } else {
@@ -989,6 +992,9 @@
 
   const setMetricMode = (mode) => {
     metricMode = mode === "credits" ? "credits" : "revenue";
+    if (metricMode === "credits" && activeRangeId === "week") {
+      activeRangeId = "month";
+    }
     modeButtons.forEach((button) => {
       const isActive = button.dataset.mode === metricMode;
       button.classList.toggle("is-active", isActive);
