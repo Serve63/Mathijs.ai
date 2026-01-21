@@ -651,6 +651,10 @@
     const config = ranges[rangeId] || ranges.week;
     if (!config) return;
     const totals = computeTotals(config.points);
+    if (barChartEl) {
+      barChartEl.dataset.range = rangeId;
+      barChartEl.dataset.mode = metricMode;
+    }
     const isAllTime = rangeId === "all";
     const ordersValue =
       isAllTime && Number.isFinite(totalChatsAllTime) ? totalChatsAllTime : totals.orders;

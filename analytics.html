@@ -790,6 +790,26 @@
         min-height: 200px;
       }
 
+      .bar-chart[data-range="month"][data-mode="revenue"] {
+        grid-template-columns: repeat(16, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+        min-height: 150px;
+      }
+
+      .bar-chart[data-range="month"][data-mode="revenue"] .bar {
+        height: 150px;
+        gap: 6px;
+      }
+
+      .bar-chart[data-range="month"][data-mode="revenue"] .bar-value {
+        font-size: 0.68rem;
+      }
+
+      .bar-chart[data-range="month"][data-mode="revenue"] .bar-label {
+        font-size: 0.66rem;
+      }
+
       .bar {
         display: grid;
         grid-template-rows: auto 1fr auto;
