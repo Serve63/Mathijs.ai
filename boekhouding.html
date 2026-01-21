@@ -219,15 +219,6 @@
         place-items: center;
       }
 
-      .lock-overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(4, 6, 12, 0.78);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
       .lock-card {
         display: grid;
         gap: 10px;
@@ -273,21 +264,19 @@
     </header>
 
     <main class="shell locked-shell">
-      <div class="lock-overlay" aria-label="Boekhouding coming soon">
-        <div class="lock-card">
-          <svg class="lock-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M7 11V8a5 5 0 0 1 10 0v3"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-            />
-            <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.8" />
-            <circle cx="12" cy="15.5" r="1" fill="currentColor" />
-          </svg>
-          <div class="lock-title">Boekhouding</div>
-          <div class="lock-meta">Coming soon</div>
-        </div>
+      <div class="lock-card" aria-label="Boekhouding coming soon">
+        <svg class="lock-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M7 11V8a5 5 0 0 1 10 0v3"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
+          <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.8" />
+          <circle cx="12" cy="15.5" r="1" fill="currentColor" />
+        </svg>
+        <div class="lock-title">Boekhouding</div>
+        <div class="lock-meta">Coming soon</div>
       </div>
     </main>
   </body>
