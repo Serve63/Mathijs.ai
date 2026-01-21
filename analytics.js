@@ -349,7 +349,7 @@
     if (realEnd < monthStart) return null;
     const points = buildDailySeries(monthStart, realEnd);
     const label = fmtMonthShort.format(monthStart).toLowerCase();
-    return sumPoints(points, label);
+    return { ...sumPoints(points, label), date: toISODate(monthStart) };
   };
 
   const yearAggregate = (year, maxDate) => {
@@ -580,14 +580,14 @@
             </div>
           `;
         }
-        const isFutureDay =
+        const isFutureBucket =
           mode === "revenue" &&
-          rangeId === "month" &&
+          (rangeId === "month" || rangeId === "quarter") &&
           point.date &&
           parseISODate(point.date)?.getTime() > maxDate.getTime();
         const ratio = maxRevenue ? point.revenue / maxRevenue : 0;
-        const barRatio = isFutureDay ? 0 : ratio;
-        const valueLabel = isFutureDay ? "" : fmtEUR.format(point.revenue);
+        const barRatio = isFutureBucket ? 0 : ratio;
+        const valueLabel = isFutureBucket ? "" : fmtEUR.format(point.revenue);
         const titleAttr = valueLabel ? ` title="${valueLabel}"` : "";
         return `
           <div class="bar" style="--bar: ${barRatio}">
@@ -834,7 +834,21 @@
     const monthPoints = buildDailySeries(monthStart, monthEnd, (d) => String(d.getUTCDate()));
 
     const quarterPoints = [];
-    for (let mi = quarterStartMonth; mi <= rangeEnd.getUTCMonth(); mi += 1) {
+    for (let offset = 0; offset < 3; offset += 1) {
+      const mi = quarterStartMonth + offset;
+      const monthStart = new Date(Date.UTC(rangeEnd.getUTCFullYear(), mi, 1));
+      if (monthStart.getTime() > rangeEnd.getTime()) {
+        quarterPoints.push({
+          label: fmtMonthShort.format(monthStart).toLowerCase(),
+          revenue: 0,
+          orders: 0,
+          subs: 0,
+          active: 0,
+          spend_eur: null,
+          date: toISODate(monthStart),
+        });
+        continue;
+      }
       const agg = monthAggregate(rangeEnd.getUTCFullYear(), mi, rangeEnd);
       if (agg) quarterPoints.push(agg);
     }
