@@ -38,6 +38,7 @@
     
     <!-- Preload kritieke afbeeldingen -->
     <link rel="preload" as="image" href="assets/logo.png" />
+    <link rel="preload" as="image" href="assets/team-duo.svg" />
     
     <!-- Structured Data voor SEO -->
     <script type="application/ld+json">
@@ -142,15 +143,6 @@
         max-width: 100%;
         height: auto;
         display: block;
-      }
-      
-      img[loading="lazy"] {
-        opacity: 0;
-        transition: opacity 0.3s;
-      }
-      
-      img[loading="lazy"].loaded {
-        opacity: 1;
       }
       
       /* Skip link voor accessibility */
@@ -1494,7 +1486,16 @@
     <header class="site-header">
       <div class="header-inner">
         <a href="/" class="brand" aria-label="Mathijs.ai homepage">
-          <img src="assets/logo.png" alt="Mathijs.ai logo" class="brand-logo" width="40" height="40" />
+          <img
+            src="assets/logo.png"
+            alt="Mathijs.ai logo"
+            class="brand-logo"
+            width="40"
+            height="40"
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
+          />
           <span class="brand-text">MATHIJS<span class="brand-dot">.AI</span></span>
         </a>
         <div class="header-actions">
@@ -1537,7 +1538,16 @@
           <div class="hero-visual">
             <div class="hero-panel">
               <div class="hero-card__header">
-                <img src="assets/logo.png" alt="Mathijs.ai avatar" class="hero-card__avatar" width="46" height="46" loading="eager" decoding="async" />
+                <img
+                  src="assets/logo.png"
+                  alt="Mathijs.ai avatar"
+                  class="hero-card__avatar"
+                  width="46"
+                  height="46"
+                  loading="eager"
+                  decoding="async"
+                  fetchpriority="high"
+                />
                 <div>
                   <p class="hero-card__title">Mathijs.ai</p>
                   <p class="hero-card__subtitle">50+ korte videolessen (zonder theorie-gedoe)</p>
@@ -1851,7 +1861,15 @@
           <div class="team-media">
             <div class="team-photo">
               <span class="team-photo-badge">Team</span>
-              <img src="assets/team-duo.svg" alt="Twee jongens van het Mathijs.ai team" loading="lazy" />
+              <img
+                src="assets/team-duo.svg"
+                alt="Twee jongens van het Mathijs.ai team"
+                width="900"
+                height="640"
+                loading="eager"
+                decoding="async"
+                fetchpriority="low"
+              />
             </div>
             <p class="team-caption">Direct contact, korte lijnen en begeleiding die je echt verder helpt.</p>
           </div>
@@ -1878,21 +1896,6 @@
     </footer>
     
     <script>
-      // Lazy loading voor afbeeldingen
-      if ('loading' in HTMLImageElement.prototype) {
-        const images = document.querySelectorAll('img[loading="lazy"]');
-        images.forEach(img => {
-          img.addEventListener('load', function() {
-            this.classList.add('loaded');
-          });
-        });
-      } else {
-        // Fallback voor browsers zonder native lazy loading
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/lazysizes@5/lazysizes.min.js';
-        document.body.appendChild(script);
-      }
-      
       // Smooth scroll voor anchor links
       document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
