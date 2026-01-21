@@ -268,6 +268,11 @@
   };
 
   const addDays = (date, days) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+  const startOfWeekMonday = (date) => {
+    const day = date.getUTCDay();
+    const diff = (day + 6) % 7;
+    return addDays(date, -diff);
+  };
 
   const daysBetweenInclusive = (a, b) => {
     const ms = 24 * 60 * 60 * 1000;
@@ -798,13 +803,14 @@
 
     const rangeStart = rangeBounds.from;
     const rangeEnd = rangeBounds.to;
-    const weekStart = addDays(rangeEnd, -6);
+    const weekStart = startOfWeekMonday(rangeEnd);
+    const weekEnd = addDays(weekStart, 6);
     const monthStart = new Date(Date.UTC(rangeEnd.getUTCFullYear(), rangeEnd.getUTCMonth(), 1));
     const quarterStartMonth = Math.floor(rangeEnd.getUTCMonth() / 3) * 3;
     const quarterStart = new Date(Date.UTC(rangeEnd.getUTCFullYear(), quarterStartMonth, 1));
     const yearStart = new Date(Date.UTC(rangeEnd.getUTCFullYear(), 0, 1));
 
-    const weekPoints = buildDailySeries(weekStart, rangeEnd, (d) => {
+    const weekPoints = buildDailySeries(weekStart, weekEnd, (d) => {
       const label = fmtWeekdayShort.format(d);
       return label.charAt(0).toUpperCase() + label.slice(1);
     });
