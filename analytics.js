@@ -309,6 +309,7 @@
       const active = Number.isFinite(base.active) ? base.active : lastActive;
       lastActive = active;
       points.push({
+        date: dateKey,
         label: labelFn ? labelFn(cursor) : dateKey,
         revenue: Number(base.revenue || 0),
         orders: Number(base.orders || 0),
@@ -555,6 +556,8 @@
   const renderChart = (points, options = {}) => {
     if (!barChartEl) return;
     const mode = options.mode || "revenue";
+    const rangeId = options.rangeId || barChartEl.dataset.range || activeRangeId;
+    const maxDate = rangeBounds.to || todayUTC;
     const maxRevenue =
       mode === "credits"
         ? 1
@@ -577,11 +580,19 @@
             </div>
           `;
         }
+        const isFutureDay =
+          mode === "revenue" &&
+          rangeId === "month" &&
+          point.date &&
+          parseISODate(point.date)?.getTime() > maxDate.getTime();
         const ratio = maxRevenue ? point.revenue / maxRevenue : 0;
+        const barRatio = isFutureDay ? 0 : ratio;
+        const valueLabel = isFutureDay ? "" : fmtEUR.format(point.revenue);
+        const titleAttr = valueLabel ? ` title="${valueLabel}"` : "";
         return `
-          <div class="bar" style="--bar: ${ratio}">
-            <div class="bar-value">${fmtEUR.format(point.revenue)}</div>
-            <div class="bar-fill" title="${fmtEUR.format(point.revenue)}"></div>
+          <div class="bar" style="--bar: ${barRatio}">
+            <div class="bar-value">${valueLabel}</div>
+            <div class="bar-fill"${titleAttr}></div>
             <div class="bar-label">${point.label}</div>
           </div>
         `;
@@ -699,14 +710,14 @@
       if (chartTotalEl) {
         chartTotalEl.textContent = `${fmtEUR.format(creditTotals.spent)} / ${fmtEUR.format(creditTotals.max)} max`;
       }
-      renderChart(creditPoints, { mode: "credits" });
+      renderChart(creditPoints, { mode: "credits", rangeId });
     } else {
       updateRevenueCard(config, totals);
       if (summaryGridEl) summaryGridEl.hidden = creditOverlayActive;
       if (chartTitleEl) chartTitleEl.textContent = `Omzet trend (${config.label})`;
       if (chartMetaEl) chartMetaEl.textContent = config.meta;
       if (chartTotalEl) chartTotalEl.textContent = `${fmtEUR.format(totals.revenue)} totaal`;
-      renderChart(config.points, { mode: "revenue" });
+      renderChart(config.points, { mode: "revenue", rangeId });
     }
     if (ordersEl) ordersEl.textContent = fmtNumber.format(ordersValue);
     if (ordersSubEl) ordersSubEl.textContent = config.meta;
