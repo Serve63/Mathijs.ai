@@ -798,16 +798,24 @@
       }
 
       .bar-chart[data-range="month"][data-mode="revenue"] .bar {
+        grid-template-rows: 1fr auto auto;
         height: 150px;
         gap: 6px;
       }
 
       .bar-chart[data-range="month"][data-mode="revenue"] .bar-value {
+        order: 3;
+        margin-top: 2px;
         font-size: 0.68rem;
       }
 
       .bar-chart[data-range="month"][data-mode="revenue"] .bar-label {
+        order: 2;
         font-size: 0.66rem;
+      }
+
+      .bar-chart[data-range="month"][data-mode="revenue"] .bar-fill {
+        order: 1;
       }
 
       .bar {
