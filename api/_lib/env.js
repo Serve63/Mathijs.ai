@@ -49,6 +49,18 @@ function getSupabaseAnonKey() {
   return pickEnv(["SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_ANON_KEY"]) || DEFAULT_SUPABASE_ANON_KEY;
 }
 
+function getResendApiKey() {
+  return pickEnv(["RESEND_API_KEY", "RESEND_KEY", "resend_api_key"]);
+}
+
+function getEmailFrom() {
+  return pickEnv(["EMAIL_FROM", "MAIL_FROM", "RESEND_FROM", "email_from"]);
+}
+
+function getEmailReplyTo() {
+  return pickEnv(["EMAIL_REPLY_TO", "MAIL_REPLY_TO", "RESEND_REPLY_TO", "email_reply_to"]);
+}
+
 function missingEnvError(label, acceptedNames = []) {
   const err = new Error(`${label}_missing`);
   err.statusCode = 500;
@@ -64,6 +76,9 @@ module.exports = {
   getSupabaseServiceRoleKey,
   getSupabaseUrl,
   getSupabaseAnonKey,
+  getResendApiKey,
+  getEmailFrom,
+  getEmailReplyTo,
   DEFAULT_SUPABASE_URL,
   DEFAULT_SUPABASE_ANON_KEY,
   missingEnvError,

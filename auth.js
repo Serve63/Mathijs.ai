@@ -259,10 +259,14 @@
       }
       toggleButtonLoading(resetRequestButton, true, "Link versturen...");
       try {
-        const redirectTo = `${window.location.origin}/login`;
-        const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-        if (error) {
-          setFeedback(resetRequestFeedback, error.message || "Kon reset link niet sturen.");
+        const resp = await fetch("/api/auth/password-reset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const payload = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          setFeedback(resetRequestFeedback, payload?.error || "Kon reset link niet sturen.");
           return;
         }
         setFeedback(resetRequestFeedback, "Check je e-mail voor de reset link.", "success");
