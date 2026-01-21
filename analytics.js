@@ -806,6 +806,7 @@
     const weekStart = startOfWeekMonday(rangeEnd);
     const weekEnd = addDays(weekStart, 6);
     const monthStart = new Date(Date.UTC(rangeEnd.getUTCFullYear(), rangeEnd.getUTCMonth(), 1));
+    const monthEnd = new Date(Date.UTC(rangeEnd.getUTCFullYear(), rangeEnd.getUTCMonth() + 1, 0));
     const quarterStartMonth = Math.floor(rangeEnd.getUTCMonth() / 3) * 3;
     const quarterStart = new Date(Date.UTC(rangeEnd.getUTCFullYear(), quarterStartMonth, 1));
     const yearStart = new Date(Date.UTC(rangeEnd.getUTCFullYear(), 0, 1));
@@ -815,7 +816,7 @@
       return label.charAt(0).toUpperCase() + label.slice(1);
     });
 
-    const monthPoints = buildDailySeries(monthStart, rangeEnd, (d) => String(d.getUTCDate()));
+    const monthPoints = buildDailySeries(monthStart, monthEnd, (d) => String(d.getUTCDate()));
 
     const quarterPoints = [];
     for (let mi = quarterStartMonth; mi <= rangeEnd.getUTCMonth(); mi += 1) {
