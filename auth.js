@@ -30,6 +30,20 @@
     }
   };
 
+  const updateAuthHeadline = (config) => {
+    if (!config) return;
+    const eyebrowEl = document.querySelector("#auth-eyebrow");
+    const titleEl = document.querySelector("#auth-title");
+    const subtitleEl = document.querySelector("#auth-subtitle");
+    if (eyebrowEl) eyebrowEl.textContent = config.eyebrow || "";
+    if (titleEl) titleEl.textContent = config.title || "";
+    if (subtitleEl) {
+      const subtitle = config.subtitle || "";
+      subtitleEl.textContent = subtitle;
+      subtitleEl.hidden = !subtitle;
+    }
+  };
+
   const toggleButtonLoading = (button, isLoading, loadingLabel) => {
     if (!button) return;
     if (isLoading) {
@@ -129,6 +143,173 @@
         toggleButtonLoading(submitButton, false);
       }
     });
+  };
+
+  const initPasswordReset = () => {
+    const loginPane = document.querySelector("#login-pane");
+    const resetRequestPane = document.querySelector("#reset-request-pane");
+    const resetPane = document.querySelector("#reset-pane");
+    if (!loginPane || !resetRequestPane || !resetPane || !supabase) return;
+
+    const forgotLink = document.querySelector("#forgot-link");
+    const backToLoginRequest = document.querySelector("#back-to-login-request");
+    const backToLoginReset = document.querySelector("#back-to-login-reset");
+    const resetRequestForm = document.querySelector("#reset-request-form");
+    const resetEmailInput = document.querySelector("#reset-email");
+    const resetRequestFeedback = document.querySelector("#reset-request-feedback");
+    const resetRequestButton = document.querySelector("#reset-request-button");
+    const resetForm = document.querySelector("#reset-form");
+    const resetPasswordInput = document.querySelector("#reset-password");
+    const resetConfirmInput = document.querySelector("#reset-confirm");
+    const resetFeedback = document.querySelector("#reset-feedback");
+    const resetSaveButton = document.querySelector("#reset-save-button");
+    const loginEmailInput = document.querySelector("#login-email");
+    const loginFeedback = document.querySelector("#login-feedback");
+
+    const HEADLINES = {
+      login: {
+        eyebrow: "Welkom terug",
+        title: "Log in op Mathijs.ai",
+        subtitle: "",
+      },
+      request: {
+        eyebrow: "Wachtwoord vergeten",
+        title: "Vraag een reset link aan",
+        subtitle: "We sturen je per e-mail een link om je wachtwoord te resetten.",
+      },
+      reset: {
+        eyebrow: "Nieuw wachtwoord",
+        title: "Stel een nieuw wachtwoord in",
+        subtitle: "Kies een sterk wachtwoord van minimaal 10 tekens.",
+      },
+    };
+
+    const setView = (view) => {
+      loginPane.hidden = view !== "login";
+      resetRequestPane.hidden = view !== "request";
+      resetPane.hidden = view !== "reset";
+      updateAuthHeadline(HEADLINES[view] || HEADLINES.login);
+      if (view === "login") {
+        setFeedback(resetRequestFeedback, "");
+        setFeedback(resetFeedback, "");
+      }
+      if (view === "request") {
+        setFeedback(loginFeedback, "");
+        setFeedback(resetFeedback, "");
+      }
+      if (view === "reset") {
+        setFeedback(loginFeedback, "");
+        setFeedback(resetRequestFeedback, "");
+      }
+    };
+
+    const clearHash = () => {
+      const cleanUrl = `${window.location.pathname}${window.location.search}`;
+      window.history.replaceState({}, document.title, cleanUrl);
+    };
+
+    const handleRecoveryLink = async () => {
+      if (!window.location.hash) return;
+      const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      if (params.get("type") !== "recovery") return;
+      setView("reset");
+      let error = null;
+      if (typeof supabase.auth.getSessionFromUrl === "function") {
+        const resp = await supabase.auth.getSessionFromUrl({ storeSession: true });
+        error = resp?.error || null;
+      } else {
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+        if (accessToken && refreshToken && typeof supabase.auth.setSession === "function") {
+          const resp = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          error = resp?.error || null;
+        } else {
+          error = new Error("Herstellink is ongeldig of verlopen.");
+        }
+      }
+      clearHash();
+      if (error) {
+        setView("request");
+        setFeedback(resetRequestFeedback, "Herstellink ongeldig of verlopen. Vraag een nieuwe link aan.");
+      }
+    };
+
+    forgotLink?.addEventListener("click", () => {
+      setView("request");
+      const email = loginEmailInput?.value?.trim();
+      if (email && resetEmailInput) resetEmailInput.value = email;
+      resetEmailInput?.focus();
+    });
+
+    backToLoginRequest?.addEventListener("click", () => {
+      setView("login");
+    });
+
+    backToLoginReset?.addEventListener("click", () => {
+      setView("login");
+    });
+
+    resetRequestForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      setFeedback(resetRequestFeedback, "");
+      const email = resetEmailInput?.value?.trim();
+      if (!email) {
+        setFeedback(resetRequestFeedback, "Vul je e-mailadres in.");
+        return;
+      }
+      toggleButtonLoading(resetRequestButton, true, "Link versturen...");
+      try {
+        const redirectTo = `${window.location.origin}/login`;
+        const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+        if (error) {
+          setFeedback(resetRequestFeedback, error.message || "Kon reset link niet sturen.");
+          return;
+        }
+        setFeedback(resetRequestFeedback, "Check je e-mail voor de reset link.", "success");
+      } catch (err) {
+        console.error("Reset link versturen mislukt", err);
+        setFeedback(resetRequestFeedback, "Er ging iets mis, probeer opnieuw.");
+      } finally {
+        toggleButtonLoading(resetRequestButton, false);
+      }
+    });
+
+    resetForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      setFeedback(resetFeedback, "");
+      const password = resetPasswordInput?.value?.trim() || "";
+      const confirm = resetConfirmInput?.value?.trim() || "";
+      if (!password || !confirm) {
+        setFeedback(resetFeedback, "Vul beide wachtwoordvelden in.");
+        return;
+      }
+      if (password.length < 10) {
+        setFeedback(resetFeedback, "Wachtwoord moet minimaal 10 tekens zijn.");
+        return;
+      }
+      if (password !== confirm) {
+        setFeedback(resetFeedback, "Wachtwoorden komen niet overeen.");
+        return;
+      }
+      toggleButtonLoading(resetSaveButton, true, "Opslaan...");
+      try {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) {
+          setFeedback(resetFeedback, error.message || "Wachtwoord bijwerken mislukt.");
+          return;
+        }
+        await supabase.auth.signOut();
+        setView("login");
+        setFeedback(loginFeedback, "Wachtwoord aangepast. Log opnieuw in.", "success");
+      } catch (err) {
+        console.error("Wachtwoord reset mislukt", err);
+        setFeedback(resetFeedback, "Er ging iets mis, probeer opnieuw.");
+      } finally {
+        toggleButtonLoading(resetSaveButton, false);
+      }
+    });
+
+    handleRecoveryLink();
   };
 
   const initSignup = () => {
@@ -249,5 +430,6 @@
   document.addEventListener("DOMContentLoaded", () => {
     initLogin();
     initSignup();
+    initPasswordReset();
   });
 })();
