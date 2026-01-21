@@ -78,6 +78,7 @@
   let lastRange = null;
   let profitSettings = { creditCostPerCustomer: 0, vatPercent: 0 };
   let metricMode = "revenue";
+  let creditOverlayActive = false;
   let activeRangeId = "week";
   let tokensPerChat = 1;
   let tokensPerEur = 100;
@@ -91,6 +92,8 @@
       button.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
   };
+
+  const isCreditViewActive = () => creditOverlayActive || metricMode === "credits";
 
   const createSupabaseClient = () => {
     if (!window.supabase?.createClient) return null;
@@ -629,6 +632,15 @@
     });
   };
 
+  const setCreditOverlayState = (isActive) => {
+    creditOverlayActive = Boolean(isActive);
+    if (creditOverlayEl) creditOverlayEl.hidden = !creditOverlayActive;
+    if (creditSavingsPanel) creditSavingsPanel.hidden = !isCreditViewActive();
+    if (summaryGridEl) summaryGridEl.hidden = metricMode === "credits" || creditOverlayActive;
+    setCreditButtonActive(isCreditViewActive());
+    setRangeButtonState(activeRangeId, metricMode === "revenue" && !creditOverlayActive);
+  };
+
   const setActiveRange = (rangeId) => {
     activeRangeId = rangeId;
     const config = ranges[rangeId] || ranges.week;
@@ -638,7 +650,7 @@
     const ordersValue =
       isAllTime && Number.isFinite(totalChatsAllTime) ? totalChatsAllTime : totals.orders;
     const ordersLabelText = isAllTime ? "Totaal verstuurde chats" : "Verstuurde chats";
-    setRangeButtonState(rangeId, metricMode === "revenue");
+    setRangeButtonState(rangeId, metricMode === "revenue" && !creditOverlayActive);
     if (rangeId === "custom") {
       const from = rangeFromEl?.value || null;
       const to = rangeToEl?.value || null;
@@ -681,7 +693,7 @@
       renderChart(creditPoints, { mode: "credits" });
     } else {
       updateRevenueCard(config, totals);
-      if (summaryGridEl) summaryGridEl.hidden = false;
+      if (summaryGridEl) summaryGridEl.hidden = creditOverlayActive;
       if (chartTitleEl) chartTitleEl.textContent = `Omzet trend (${config.label})`;
       if (chartMetaEl) chartMetaEl.textContent = config.meta;
       if (chartTotalEl) chartTotalEl.textContent = `${fmtEUR.format(totals.revenue)} totaal`;
@@ -729,10 +741,10 @@
       revenueActionsEl.hidden = metricMode === "credits";
     }
     if (creditSavingsPanel) {
-      creditSavingsPanel.hidden = false;
+      creditSavingsPanel.hidden = !isCreditViewActive();
     }
     if (summaryGridEl) {
-      summaryGridEl.hidden = metricMode === "credits";
+      summaryGridEl.hidden = metricMode === "credits" || creditOverlayActive;
     }
     if (metricMode === "credits") {
       if (creditSavingsMetaEl) creditSavingsMetaEl.textContent = message || "Data laden";
@@ -757,10 +769,10 @@
       revenueActionsEl.hidden = metricMode === "credits";
     }
     if (creditSavingsPanel) {
-      creditSavingsPanel.hidden = false;
+      creditSavingsPanel.hidden = !isCreditViewActive();
     }
     if (summaryGridEl) {
-      summaryGridEl.hidden = metricMode === "credits";
+      summaryGridEl.hidden = metricMode === "credits" || creditOverlayActive;
     }
     if (metricMode === "credits") {
       if (creditSavingsMetaEl) creditSavingsMetaEl.textContent = message || "Analytics laden mislukt";
@@ -978,6 +990,9 @@
   rangeButtons.forEach((button) => {
     button.addEventListener("click", () => {
       if (!dataReady) return;
+      if (creditOverlayActive) {
+        setCreditOverlayState(false);
+      }
       const rangeId = button.dataset.range || "week";
       if (metricMode === "credits") {
         setMetricMode("revenue");
@@ -1001,16 +1016,17 @@
       button.classList.toggle("is-active", isActive);
       button.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
-    setRangeButtonState(activeRangeId, metricMode === "revenue");
+    setRangeButtonState(activeRangeId, metricMode === "revenue" && !creditOverlayActive);
     if (revenueActionsEl) {
       revenueActionsEl.hidden = metricMode === "credits";
     }
     if (creditSavingsPanel) {
-      creditSavingsPanel.hidden = false;
+      creditSavingsPanel.hidden = !isCreditViewActive();
     }
     if (summaryGridEl) {
-      summaryGridEl.hidden = metricMode === "credits";
+      summaryGridEl.hidden = metricMode === "credits" || creditOverlayActive;
     }
+    setCreditButtonActive(isCreditViewActive());
     saveViewState({
       rangeId: activeRangeId,
       mode: metricMode,
@@ -1027,15 +1043,11 @@
       if (!dataReady) return;
       const mode = button.dataset.mode || "revenue";
       if (mode === "credits") {
-        if (creditOverlayEl) creditOverlayEl.hidden = false;
-        if (summaryGridEl) summaryGridEl.hidden = true;
-        setCreditButtonActive(true);
-        setRangeButtonState(activeRangeId, false);
+        setCreditOverlayState(!creditOverlayActive);
         return;
       }
-      if (mode === "credits" && metricMode === "credits") {
-        setMetricMode("revenue");
-        return;
+      if (creditOverlayActive) {
+        setCreditOverlayState(false);
       }
       setMetricMode(mode);
     });
@@ -1131,10 +1143,7 @@
 
   if (creditOverlayEl) {
     creditOverlayEl.addEventListener("click", () => {
-      creditOverlayEl.hidden = true;
-      if (summaryGridEl) summaryGridEl.hidden = false;
-      setCreditButtonActive(false);
-      setRangeButtonState(activeRangeId, metricMode === "revenue");
+      setCreditOverlayState(false);
     });
   }
 
