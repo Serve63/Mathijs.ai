@@ -86,8 +86,10 @@
       }
 
       if (agentPanel) {
-        agentPanel.addEventListener("click", () => {
-          closeAgentPanel();
+        agentPanel.addEventListener("click", (event) => {
+          if (event.target === agentPanel) {
+            closeAgentPanel();
+          }
         });
       }
 
