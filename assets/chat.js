@@ -3000,6 +3000,7 @@
         const bubble = document.createElement("div");
         bubble.className = "bubble";
         bubble.innerHTML = formatMessageContent(content);
+        enhanceCodeBlocks(bubble);
 
         article.appendChild(bubble);
         chatLog.appendChild(article);
@@ -3027,6 +3028,53 @@
         chatLog.appendChild(article);
         scrollToBottomIfPinned();
         return { article, bubble };
+      };
+
+      const buildCodeToolbar = (langLabel = "CODE") => {
+        const toolbar = document.createElement("div");
+        toolbar.className = "code-block__toolbar";
+        const label = document.createElement("span");
+        label.className = "code-block__label";
+        label.textContent = langLabel;
+        const actions = document.createElement("div");
+        actions.className = "code-block__actions";
+        const previewBtn = document.createElement("button");
+        previewBtn.type = "button";
+        previewBtn.className = "code-block__btn";
+        previewBtn.setAttribute("data-action", "preview");
+        previewBtn.textContent = "Preview";
+        const copyBtn = document.createElement("button");
+        copyBtn.type = "button";
+        copyBtn.className = "code-block__btn";
+        copyBtn.setAttribute("data-action", "copy");
+        copyBtn.textContent = "Kopieer";
+        actions.appendChild(previewBtn);
+        actions.appendChild(copyBtn);
+        toolbar.appendChild(label);
+        toolbar.appendChild(actions);
+        return toolbar;
+      };
+
+      const enhanceCodeBlocks = (container) => {
+        if (!container) return;
+        const blocks = Array.from(container.querySelectorAll("pre > code"));
+        blocks.forEach((codeEl) => {
+          const pre = codeEl.parentElement;
+          if (!pre) return;
+          if (pre.closest(".code-block")) return;
+          const className = codeEl.className || "";
+          const match = className.match(/language-([a-z0-9_-]+)/i);
+          const lang = match ? match[1].toLowerCase() : "";
+          const label = lang ? lang.toUpperCase() : "CODE";
+          const wrapper = document.createElement("div");
+          wrapper.className = "code-block";
+          wrapper.setAttribute("data-lang", lang);
+          wrapper.setAttribute("data-code", encodeURIComponent(codeEl.textContent || ""));
+          const toolbar = buildCodeToolbar(label);
+          pre.replaceWith(wrapper);
+          wrapper.appendChild(toolbar);
+          wrapper.appendChild(pre);
+        });
       };
 
       const streamAssistantMessage = async (content) => {
@@ -3061,6 +3109,7 @@
         }
 
         bubble.innerHTML = formatMessageContent(content);
+        enhanceCodeBlocks(bubble);
         messages.push({ role: "assistant", content });
         updateSessionMetaAfterMessage("assistant", content);
         updateNewChatButtonState();
