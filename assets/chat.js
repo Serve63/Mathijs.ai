@@ -266,7 +266,7 @@
       const getSelectedOpenAIModel = () => OPENAI_MODEL_LABEL_MAP[selectedModelLabel] || null;
       const getSelectedGeminiModel = () => GEMINI_MODEL_LABEL_MAP[selectedModelLabel] || null;
 		      let selectedModel = "chatgpt52";
-		      let selectedModelLabel = "ChatGPT 5.2";
+		      let selectedModelLabel = "GPT-5 mini";
 		      let thinkingIndicator = null;
 
 	      // Toggle fullscreen chat (hide header + sidebar)
@@ -280,7 +280,7 @@
 	      }
 
       const updateSelectedModel = (label) => {
-        selectedModelLabel = label || "ChatGPT 5.2";
+        selectedModelLabel = label || "GPT-5 mini";
         if (label && label.startsWith("Opus 4.5")) {
           selectedModel = "opus45";
         } else if (label && label.startsWith("Sonnet 4.5")) {
@@ -1427,6 +1427,7 @@
       };
 
       const SESSION_TITLE_KEY = "mathijs_session_titles_v1";
+      const LAST_ACTIVE_SESSION_KEY = "mathijs_last_active_session_v1";
       const loadTitleOverrides = (userId) => {
         try {
           const raw = localStorage.getItem(SESSION_TITLE_KEY);
@@ -1463,6 +1464,59 @@
         } catch (e) {
           console.warn("Kon sessietitel niet verwijderen", e);
         }
+      };
+
+      const loadLastActiveSessionId = (userId) => {
+        if (!userId) return null;
+        try {
+          const raw = localStorage.getItem(LAST_ACTIVE_SESSION_KEY);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          const value = parsed[userId];
+          return typeof value === "string" && value.trim() ? value : null;
+        } catch (e) {
+          console.warn("Kon laatste sessie niet laden", e);
+          return null;
+        }
+      };
+
+      const saveLastActiveSessionId = (userId, sessionId) => {
+        if (!userId || !sessionId) return;
+        try {
+          const raw = localStorage.getItem(LAST_ACTIVE_SESSION_KEY);
+          const parsed = raw ? JSON.parse(raw) : {};
+          parsed[userId] = sessionId;
+          localStorage.setItem(LAST_ACTIVE_SESSION_KEY, JSON.stringify(parsed));
+        } catch (e) {
+          console.warn("Kon laatste sessie niet opslaan", e);
+        }
+      };
+
+      const clearLastActiveSessionId = (userId, sessionId) => {
+        if (!userId) return;
+        try {
+          const raw = localStorage.getItem(LAST_ACTIVE_SESSION_KEY);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (!parsed[userId]) return;
+          if (!sessionId || parsed[userId] === sessionId) {
+            delete parsed[userId];
+            localStorage.setItem(LAST_ACTIVE_SESSION_KEY, JSON.stringify(parsed));
+          }
+        } catch (e) {
+          console.warn("Kon laatste sessie niet verwijderen", e);
+        }
+      };
+
+      const getPreferredSessionId = (userId) => {
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const fromUrl = (params.get("session") || params.get("session_id") || "").trim();
+          if (fromUrl) return fromUrl;
+        } catch (e) {
+          // ignore URL parsing issues
+        }
+        return loadLastActiveSessionId(userId);
       };
 
 	      let titleOverrides = {};
@@ -1505,6 +1559,7 @@
         };
         upsertSessionEntry(session);
         sessionState.activeId = session.id;
+        saveLastActiveSessionId(currentUser?.id, session.id);
         renderSessionList();
 	        if (chatInput) {
 	          chatInput.value = "";
@@ -1803,41 +1858,82 @@
         return true;
       };
 
-      let providerStatusCache = { openai: null, gemini: null };
-      const refreshProviderStatus = async () => {
-        try {
-          const { ok, payload } = await apiFetchJson("/api/provider-status");
-          if (!ok) return providerStatusCache;
-          providerStatusCache = {
-            openai: payload?.openai === true,
-            gemini: payload?.gemini === true,
-          };
-          return providerStatusCache;
-        } catch {
+      const PROVIDER_STATUS_TTL_MS = 120000;
+      let providerStatusCache = { openai: null, gemini: null, fetchedAt: 0 };
+      let providerStatusInFlight = null;
+      const refreshProviderStatus = async ({ force = false } = {}) => {
+        const now = Date.now();
+        const hasCache =
+          providerStatusCache.openai !== null || providerStatusCache.gemini !== null;
+        const isFresh = hasCache && now - providerStatusCache.fetchedAt < PROVIDER_STATUS_TTL_MS;
+        if (!force && isFresh) {
           return providerStatusCache;
         }
+        if (providerStatusInFlight) {
+          return hasCache && !force ? providerStatusCache : providerStatusInFlight;
+        }
+        providerStatusInFlight = (async () => {
+          try {
+            const { ok, payload } = await apiFetchJson("/api/provider-status");
+            if (ok) {
+              providerStatusCache = {
+                openai: payload?.openai === true,
+                gemini: payload?.gemini === true,
+                fetchedAt: Date.now(),
+              };
+            }
+          } catch {
+            // keep existing cache
+          } finally {
+            providerStatusInFlight = null;
+          }
+          return providerStatusCache;
+        })();
+        return hasCache && !force ? providerStatusCache : providerStatusInFlight;
       };
 
 		      const creditsBalanceEl = document.getElementById("credits-balance");
 		      const creditsBalanceValueEl = document.getElementById("credits-balance-value");
 
-		      const refreshCreditsBalance = async () => {
-		        if (!creditsBalanceEl || !creditsBalanceValueEl) return;
-		        try {
-		          const { ok, payload } = await apiFetchJson("/api/billing/balance");
-		          if (!ok) {
-		            creditsBalanceValueEl.textContent = "--";
-		            creditsBalanceEl.title = "Kan tokensaldo niet laden";
-		            return;
-		          }
-		          const tokens = typeof payload?.tokens_available === "number" ? payload.tokens_available : null;
-		          creditsBalanceValueEl.textContent = tokens !== null ? String(tokens) : "--";
-		          creditsBalanceEl.title = "Je tokensaldo.";
-		        } catch (e) {
-		          creditsBalanceValueEl.textContent = "--";
-		          creditsBalanceEl.title = "Kan tokensaldo niet laden";
-		        }
-		      };
+      const CREDITS_BALANCE_TTL_MS = 30000;
+      let creditsBalanceCache = { value: null, fetchedAt: 0 };
+      let creditsBalanceInFlight = null;
+      const refreshCreditsBalance = async ({ force = false } = {}) => {
+        if (!creditsBalanceEl || !creditsBalanceValueEl) return;
+        const now = Date.now();
+        const hasCache = Number.isFinite(creditsBalanceCache.value);
+        const isFresh = hasCache && now - creditsBalanceCache.fetchedAt < CREDITS_BALANCE_TTL_MS;
+        if (!force && isFresh) {
+          creditsBalanceValueEl.textContent = String(creditsBalanceCache.value);
+          creditsBalanceEl.title = "Je tokensaldo.";
+          return;
+        }
+        if (creditsBalanceInFlight) {
+          return creditsBalanceInFlight;
+        }
+        try {
+          creditsBalanceInFlight = (async () => {
+            const { ok, payload } = await apiFetchJson("/api/billing/balance");
+            if (!ok) {
+              creditsBalanceValueEl.textContent = "--";
+              creditsBalanceEl.title = "Kan tokensaldo niet laden";
+              return;
+            }
+            const tokens = typeof payload?.tokens_available === "number" ? payload.tokens_available : null;
+            if (tokens !== null) {
+              creditsBalanceCache = { value: tokens, fetchedAt: Date.now() };
+            }
+            creditsBalanceValueEl.textContent = tokens !== null ? String(tokens) : "--";
+            creditsBalanceEl.title = "Je tokensaldo.";
+          })();
+          await creditsBalanceInFlight;
+        } catch (e) {
+          creditsBalanceValueEl.textContent = "--";
+          creditsBalanceEl.title = "Kan tokensaldo niet laden";
+        } finally {
+          creditsBalanceInFlight = null;
+        }
+      };
 
 		      const LEGACY_SESSIONS_KEY_PREFIX = "mathijs_sessions_";
 		      const LEGACY_MIGRATION_KEY = "mathijs_sessions_migrated_v1";
@@ -2175,12 +2271,13 @@
         }
         deleteTitleOverride(user.id, sessionId);
         titleOverrides = loadTitleOverrides(user.id);
+        clearLastActiveSessionId(user.id, sessionId);
         await refreshSessionsFromSupabase({ goToLatest: true });
         renderEmptyState();
       };
 
 	      const refreshSessionsFromSupabase = async (options = {}) => {
-	        const { goToLatest = false } = options;
+	        const { goToLatest = false, preferredSessionId = null } = options;
 	        const user = await requireAuthenticatedUser();
 	        if (!user?.id) return;
 	        setSessionsLoading(true);
@@ -2198,8 +2295,19 @@
 	          sessionState.list = derivedSessions;
 	          sessionState.untitledCount = derivedSessions.length;
 	          const hasActiveSession = derivedSessions.some((session) => session.id === sessionState.activeId);
-	          if (goToLatest || !sessionState.activeId || !hasActiveSession) {
-	            sessionState.activeId = derivedSessions[0] ? derivedSessions[0].id : null;
+	          const hasPreferredSession =
+	            preferredSessionId && derivedSessions.some((session) => session.id === preferredSessionId);
+	          const hasLocalMessages = countConversationMessages() > 0;
+	          const preserveActive = hasLocalMessages && sessionState.activeId;
+	          if (!preserveActive) {
+	            if (hasPreferredSession) {
+	              sessionState.activeId = preferredSessionId;
+	            } else if (goToLatest || !sessionState.activeId || !hasActiveSession) {
+	              sessionState.activeId = derivedSessions[0] ? derivedSessions[0].id : null;
+	            }
+	          }
+	          if (sessionState.activeId) {
+	            saveLastActiveSessionId(user.id, sessionState.activeId);
 	          }
 	          renderSessionList();
 	        };
@@ -2239,6 +2347,7 @@
 	          sessionState.list = [];
 	          sessionState.activeId = null;
 	          sessionState.untitledCount = 0;
+	          clearLastActiveSessionId(user.id);
 	          setSessionsLoading(false);
 	          renderSessionList();
 	          // Geen actieknoppen tonen als dit een nieuwe gebruiker is zonder chat geschiedenis
@@ -2258,16 +2367,30 @@
 	      }
 	    };
 
-	      const loadMessagesForSession = async (sessionId) => {
-	        const user = await requireAuthenticatedUser();
-	        const activeSession = sessionState.list.find((session) => session.id === sessionId);
-	        if (!user || !sessionId || !chatLog || !activeSession) {
-	          renderEmptyState();
-	          updateNewChatButtonState();
-	          return;
-	        }
-	        chatLog.innerHTML = "";
-	        messages = [createSystemMessage()];
+      let sessionsRefreshTimer = null;
+      const scheduleSessionsRefresh = (options = {}) => {
+        if (sessionsRefreshTimer) return;
+        sessionsRefreshTimer = setTimeout(async () => {
+          sessionsRefreshTimer = null;
+          try {
+            await refreshSessionsFromSupabase({ preferredSessionId: sessionState.activeId, ...options });
+          } catch (e) {
+            console.warn("Sessies verversen mislukt (achtergrond).", e?.message || e);
+          }
+        }, 1200);
+      };
+
+      const loadMessagesForSession = async (sessionId) => {
+        const user = await requireAuthenticatedUser();
+        const activeSession = sessionState.list.find((session) => session.id === sessionId);
+        if (!user || !sessionId || !chatLog || !activeSession) {
+          renderEmptyState();
+          updateNewChatButtonState();
+          return;
+        }
+        saveLastActiveSessionId(user.id, sessionId);
+        chatLog.innerHTML = "";
+        messages = [createSystemMessage()];
 	        const applyMessages = (data) => {
 	          const history = [];
 	          data.forEach((entry) => {
@@ -2541,22 +2664,166 @@
         thinkingIndicator = null;
       };
 
+      const escapeHtml = (value) =>
+        String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+
+      const sanitizeUrl = (value) => {
+        const trimmed = String(value || "").trim();
+        if (!trimmed) return null;
+        if (/^(https?:|mailto:)/i.test(trimmed)) return trimmed;
+        return null;
+      };
+
+      const formatInline = (value) => {
+        if (!value) return "";
+        const inlineCode = [];
+        let output = value.replace(/`([^`]+?)`/g, (_, code) => {
+          const token = `__INLINE_CODE_${inlineCode.length}__`;
+          inlineCode.push(code);
+          return token;
+        });
+        output = output.replace(/\*\*([^*]+?)\*\*/g, "<strong>$1</strong>");
+        output = output.replace(/(^|[^*])\*([^*]+?)\*(?!\*)/g, "$1<em>$2</em>");
+        output = output.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, url) => {
+          const safeUrl = sanitizeUrl(url);
+          if (!safeUrl) return label;
+          return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+        });
+        output = output.replace(/__INLINE_CODE_(\d+)__/g, (match, index) => {
+          const idx = Number(index);
+          return Number.isFinite(idx) && inlineCode[idx] !== undefined ? `<code>${inlineCode[idx]}</code>` : match;
+        });
+        return output;
+      };
+
       const formatMessageContent = (text) => {
         if (!text) return "";
-        const escapeHtml = (value) =>
-          value
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;");
-        const escaped = escapeHtml(text);
-        const withHeadings = escaped
-          .replace(/^###\s*(.+)$/gm, "<strong>$1</strong><br>")
-          .replace(/^##\s*(.+)$/gm, "<strong>$1</strong><br>")
-          .replace(/^#\s*(.+)$/gm, "<strong>$1</strong><br>");
-        const withBold = withHeadings.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-        return withBold.replace(/\n/g, "<br>");
+        const normalized = String(text).replace(/\r\n/g, "\n");
+        const codeBlocks = [];
+        const withCodeTokens = normalized.replace(/```([a-z0-9_-]+)?\s*\n([\s\S]*?)```/gi, (_, lang, code) => {
+          const safeLang = String(lang || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
+          const token = `__CODE_BLOCK_${codeBlocks.length}__`;
+          const className = safeLang ? ` class="language-${safeLang}"` : "";
+          codeBlocks.push(`<pre><code${className}>${escapeHtml(code)}</code></pre>`);
+          return token;
+        });
+
+        const escaped = escapeHtml(withCodeTokens);
+        const lines = escaped.split("\n");
+        const html = [];
+        let paragraph = [];
+        let listType = null;
+        let quoteLines = [];
+
+        const flushParagraph = () => {
+          if (!paragraph.length) return;
+          html.push(`<p>${paragraph.join("<br>")}</p>`);
+          paragraph = [];
+        };
+
+        const closeList = () => {
+          if (!listType) return;
+          html.push(`</${listType}>`);
+          listType = null;
+        };
+
+        const flushQuote = () => {
+          if (!quoteLines.length) return;
+          const content = quoteLines.map((line) => formatInline(line)).join("<br>");
+          html.push(`<blockquote>${content}</blockquote>`);
+          quoteLines = [];
+        };
+
+        const pushBlock = (block) => {
+          flushParagraph();
+          flushQuote();
+          closeList();
+          html.push(block);
+        };
+
+        lines.forEach((line) => {
+          if (line.includes("__CODE_BLOCK_")) {
+            pushBlock(line);
+            return;
+          }
+
+          if (!line.trim()) {
+            flushParagraph();
+            flushQuote();
+            closeList();
+            return;
+          }
+
+          const headingMatch = line.match(/^(#{1,3})\s+(.+)$/);
+          if (headingMatch) {
+            const level = headingMatch[1].length;
+            const tag = level === 1 ? "h2" : level === 2 ? "h3" : "h4";
+            pushBlock(`<${tag}>${formatInline(headingMatch[2])}</${tag}>`);
+            return;
+          }
+
+          if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
+            pushBlock("<hr>");
+            return;
+          }
+
+          const quoteMatch = line.match(/^>\s?(.*)$/);
+          if (quoteMatch) {
+            flushParagraph();
+            closeList();
+            quoteLines.push(quoteMatch[1] || "");
+            return;
+          }
+          flushQuote();
+
+          const unorderedMatch = line.match(/^\s*[-*+]\s+(.+)$/);
+          if (unorderedMatch) {
+            flushParagraph();
+            flushQuote();
+            if (listType && listType !== "ul") closeList();
+            if (!listType) {
+              html.push("<ul>");
+              listType = "ul";
+            }
+            html.push(`<li>${formatInline(unorderedMatch[1])}</li>`);
+            return;
+          }
+
+          const orderedMatch = line.match(/^\s*\d+\.\s+(.+)$/);
+          if (orderedMatch) {
+            flushParagraph();
+            flushQuote();
+            if (listType && listType !== "ol") closeList();
+            if (!listType) {
+              html.push("<ol>");
+              listType = "ol";
+            }
+            html.push(`<li>${formatInline(orderedMatch[1])}</li>`);
+            return;
+          }
+
+          if (listType) {
+            closeList();
+          }
+
+          paragraph.push(formatInline(line));
+        });
+
+        flushParagraph();
+        flushQuote();
+        closeList();
+
+        let output = html.join("");
+        output = output.replace(/__CODE_BLOCK_(\d+)__/g, (match, index) => {
+          const idx = Number(index);
+          return Number.isFinite(idx) && codeBlocks[idx] ? codeBlocks[idx] : match;
+        });
+        return output;
       };
 
 	      const appendMessage = (content, role = "assistant", options = {}) => {
@@ -2600,7 +2867,8 @@
       const streamAssistantMessage = async (content) => {
         if (!content) return;
         const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-        if (prefersReduced) {
+        const MAX_STREAM_CHARS = 900;
+        if (prefersReduced || content.length > MAX_STREAM_CHARS) {
           appendMessage(content, "assistant");
           return;
         }
@@ -2609,16 +2877,25 @@
         if (!stream) return;
 
         const { bubble } = stream;
-        const tokens = content.split(/\s+/);
-        let current = "";
-        for (let i = 0; i < tokens.length; i += 1) {
-          const chunk = tokens[i];
-          current = current ? `${current} ${chunk}` : chunk;
-          bubble.innerHTML = formatMessageContent(current);
+        const step = 48;
+        let index = 0;
+        const nextFrame = () =>
+          new Promise((resolve) => {
+            if (window.requestAnimationFrame) {
+              requestAnimationFrame(() => resolve());
+            } else {
+              setTimeout(resolve, 16);
+            }
+          });
+
+        while (index < content.length) {
+          index = Math.min(index + step, content.length);
+          bubble.textContent = content.slice(0, index);
           scrollToBottomIfPinned();
-          await new Promise((resolve) => setTimeout(resolve, 20));
+          await nextFrame();
         }
 
+        bubble.innerHTML = formatMessageContent(content);
         messages.push({ role: "assistant", content });
         updateSessionMetaAfterMessage("assistant", content);
         updateNewChatButtonState();
@@ -2641,14 +2918,24 @@
 		          if (!user) {
 		            return null;
 		          }
-		          await refreshCreditsBalance();
-		          await refreshSessionsFromSupabase({ goToLatest: true });
-		          if (sessionState.activeId) {
-		            await loadMessagesForSession(sessionState.activeId);
-		          } else {
-		            createLocalSession();
-		          }
+		          refreshProviderStatus();
+		          refreshCreditsBalance();
+		          const preferredSessionId = getPreferredSessionId(user.id);
+		          renderEmptyState();
 		          updateNewChatButtonState();
+		          refreshSessionsFromSupabase({ preferredSessionId })
+		            .then(async () => {
+		              const hasMessages = countConversationMessages() > 0;
+		              if (!hasMessages && sessionState.activeId) {
+		                await loadMessagesForSession(sessionState.activeId);
+		              } else if (!hasMessages && !sessionState.activeId) {
+		                createLocalSession();
+		              }
+		              updateNewChatButtonState();
+		            })
+		            .catch((error) => {
+		              console.error("Sessies laden mislukt (achtergrond)", error);
+		            });
 		          return user;
 		        } catch (error) {
 		          console.error("Workspace init failed", error);
@@ -2742,17 +3029,16 @@
         appendMessage(value, "user");
         chatInput.value = "";
         chatInput.focus();
-
-	        try {
-	          const save = await saveMessageToApi(sessionId, "user", value, provider);
-	          if (!save.ok) throw new Error(save?.payload?.error || "Opslaan mislukt");
-	        } catch (error) {
-	          console.error("Gebruikersbericht opslaan mislukt", error);
-	          appendMessage("Je bericht kon niet opgeslagen worden. Probeer het opnieuw.", "assistant");
-          await refreshSessionsFromSupabase();
-          await loadMessagesForSession(sessionId);
-          return;
-        }
+        const userSavePromise = saveMessageToApi(sessionId, "user", value, provider).then((save) => {
+          if (!save.ok) {
+            console.error("Gebruikersbericht opslaan mislukt", save?.payload?.error || save);
+            if (window.siteUI?.toast) {
+              window.siteUI.toast("Je bericht kon niet opgeslagen worden. Probeer het opnieuw.", { type: "error" });
+            }
+            scheduleSessionsRefresh({ goToLatest: true });
+          }
+          return save;
+        });
 
         showThinkingIndicator();
 
@@ -2807,11 +3093,13 @@
           hideThinkingIndicator();
           await streamAssistantMessage(finalContent);
 
+          // Ensure the user message save is at least attempted; we don't block UI on it.
+          await userSavePromise;
           const assistantSave = await saveMessageToApi(sessionId, "assistant", finalContent, provider);
           if (!assistantSave.ok) {
             console.error("AI-antwoord opslaan mislukt", assistantSave?.payload?.error || assistantSave);
           }
-          await refreshSessionsFromSupabase();
+          scheduleSessionsRefresh();
 	        } catch (error) {
 	          console.error("Chat request failed", error);
           console.error("Selected model:", selectedModelLabel);
@@ -2821,7 +3109,7 @@
           const fallbackMessage = `De AI-request mislukte: ${error.message || "Onbekende fout"}. Controleer je verbinding en probeer opnieuw.`;
           appendMessage(fallbackMessage, "assistant", { persist: false });
 	        } finally {
-	          await refreshCreditsBalance();
+	          refreshCreditsBalance();
 	        }
 	      };
 

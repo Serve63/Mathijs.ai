@@ -32,6 +32,32 @@ const CHAT_LIMIT_FREE = 20;
 const CHAT_LIMIT_PAID = 60;
 const TOKENS_PER_CHAT_DEFAULT = 1;
 
+const CACHE_TTLS = {
+  activeCustomers: 5 * 60_000,
+  topupsThisMonth: 5 * 60_000,
+  monthlyLimit: 60_000,
+  monthSpend: 60_000,
+};
+const cacheStore = globalThis.__mathijsChatCache || (globalThis.__mathijsChatCache = {});
+
+function getCacheEntry(key) {
+  const entry = cacheStore[key];
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now()) {
+    delete cacheStore[key];
+    return null;
+  }
+  return entry;
+}
+
+function setCacheEntry(key, value, ttlMs) {
+  cacheStore[key] = {
+    value,
+    expiresAt: Date.now() + ttlMs,
+  };
+  return value;
+}
+
 const isPaidAppMeta = (appMeta = {}) => {
   const plan = String(appMeta.plan || "").toLowerCase();
   if (appMeta.lifetime_free === true || plan === "standard" || plan === "lifetime" || plan === "trial") return true;
@@ -136,22 +162,46 @@ function isActiveCustomer(user) {
   return !cancelledAt;
 }
 
-async function getMonthlyLimitEur(serviceRoleKey) {
-  const creditAllowance = getCreditAllowanceEur();
-  let activeCustomers = null;
+async function getActiveCustomersCached(serviceRoleKey) {
+  const cached = getCacheEntry("activeCustomers");
+  if (cached) return cached.value;
+  if (!serviceRoleKey) {
+    return setCacheEntry("activeCustomers", null, CACHE_TTLS.activeCustomers);
+  }
   try {
     const users = await fetchAllUsers(serviceRoleKey);
-    activeCustomers = users.filter(isActiveCustomer).length;
+    const count = users.filter(isActiveCustomer).length;
+    return setCacheEntry("activeCustomers", count, CACHE_TTLS.activeCustomers);
   } catch (_) {
-    // fallback to env limit below
+    return setCacheEntry("activeCustomers", null, CACHE_TTLS.activeCustomers);
   }
+}
 
-  let topupsThisMonth = null;
-  try {
-    topupsThisMonth = await getTopupsThisMonthEur();
-  } catch (_) {
-    topupsThisMonth = null;
+async function getMonthlyLimitEur(serviceRoleKey) {
+  const cached = getCacheEntry("monthlyLimit");
+  if (cached) return cached.value;
+  if (!serviceRoleKey) {
+    return setCacheEntry("monthlyLimit", parseMonthlyLimit(), CACHE_TTLS.monthlyLimit);
   }
+  const creditAllowance = getCreditAllowanceEur();
+  let activeCustomers = null;
+  let topupsThisMonth = null;
+  const tasks = [];
+  tasks.push(
+    getActiveCustomersCached(serviceRoleKey).then((value) => {
+      activeCustomers = value;
+    })
+  );
+  tasks.push(
+    getTopupsThisMonthEur()
+      .then((value) => {
+        topupsThisMonth = value;
+      })
+      .catch(() => {
+        topupsThisMonth = null;
+      })
+  );
+  await Promise.all(tasks).catch(() => {});
 
   const hasActiveCustomers = Number.isFinite(activeCustomers) && Number.isFinite(creditAllowance) && creditAllowance >= 0;
   const hasTopups = Number.isFinite(topupsThisMonth) && topupsThisMonth > 0;
@@ -166,9 +216,9 @@ async function getMonthlyLimitEur(serviceRoleKey) {
     computed = true;
   }
   if (computed) {
-    return Math.round(total * 100) / 100;
+    return setCacheEntry("monthlyLimit", Math.round(total * 100) / 100, CACHE_TTLS.monthlyLimit);
   }
-  return parseMonthlyLimit();
+  return setCacheEntry("monthlyLimit", parseMonthlyLimit(), CACHE_TTLS.monthlyLimit);
 }
 
 function startOfMonthUtc(now) {
@@ -176,6 +226,8 @@ function startOfMonthUtc(now) {
 }
 
 async function getMonthSpendEur() {
+  const cached = getCacheEntry("monthSpend");
+  if (cached) return cached.value;
   const now = new Date();
   const sinceIso = startOfMonthUtc(now).toISOString();
   let total = 0;
@@ -195,10 +247,12 @@ async function getMonthSpendEur() {
     if (rows.length < limit) break;
     offset += limit;
   }
-  return Math.round(total * 100) / 100;
+  return setCacheEntry("monthSpend", Math.round(total * 100) / 100, CACHE_TTLS.monthSpend);
 }
 
 async function getTopupsThisMonthEur() {
+  const cached = getCacheEntry("topupsThisMonth");
+  if (cached) return cached.value;
   const now = new Date();
   const sinceIso = startOfMonthUtc(now).toISOString();
   let total = 0;
@@ -220,7 +274,7 @@ async function getTopupsThisMonthEur() {
     if (rows.length < limit) break;
     offset += limit;
   }
-  return Math.round(total * 100) / 100;
+  return setCacheEntry("topupsThisMonth", Math.round(total * 100) / 100, CACHE_TTLS.topupsThisMonth);
 }
 
 async function recordUsageEvent({
@@ -843,7 +897,7 @@ module.exports = async function handler(req, res) {
         const usageTokens = Number(result?.usage?.totalTokens || 0);
         const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
         const usedModel = result?.modelUsed || geminiModel;
-        await recordUsageEvent({
+        void recordUsageEvent({
           userId: user.id,
           provider: "gemini",
           model: usedModel,
@@ -883,7 +937,7 @@ module.exports = async function handler(req, res) {
       const usage = extractOpenAiUsage(response);
       const actualTokens =
         Number.isFinite(usage?.totalTokens) && usage.totalTokens > 0 ? usage.totalTokens : tokensRequired;
-      await recordUsageEvent({
+      void recordUsageEvent({
         userId: user.id,
         provider: "openai",
         model: openaiModel,

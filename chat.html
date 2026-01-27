@@ -2088,6 +2088,7 @@
         border: none;
         background: transparent;
         color: var(--chat-text);
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
         font-size: 0.95rem;
         line-height: 1.7;
         box-shadow: none;
@@ -2135,6 +2136,96 @@
       }
 
       .message.system .bubble a:hover {
+        text-decoration: underline;
+      }
+
+      .message .bubble h2,
+      .message .bubble h3,
+      .message .bubble h4 {
+        margin: 0 0 0.5rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--chat-text);
+      }
+
+      .message .bubble h2 {
+        font-size: 1.1rem;
+      }
+
+      .message .bubble h3 {
+        font-size: 1.02rem;
+      }
+
+      .message .bubble h4 {
+        font-size: 0.98rem;
+      }
+
+      .message .bubble p {
+        margin: 0 0 0.75rem;
+      }
+
+      .message .bubble p:last-child {
+        margin-bottom: 0;
+      }
+
+      .message .bubble ul,
+      .message .bubble ol {
+        margin: 0.4rem 0 0.8rem 1.25rem;
+        padding: 0;
+      }
+
+      .message .bubble li {
+        margin: 0.2rem 0;
+      }
+
+      .message .bubble code {
+        font-family: "SFMono-Regular", "JetBrains Mono", "Menlo", "Monaco", "Consolas", "Liberation Mono", monospace;
+        font-size: 0.88em;
+        background: rgba(15, 23, 42, 0.08);
+        padding: 0.12rem 0.3rem;
+        border-radius: 6px;
+      }
+
+      .message .bubble pre {
+        margin: 0.5rem 0 0.9rem;
+        padding: 14px 16px;
+        background: #0f172a;
+        color: #e2e8f0;
+        border-radius: 14px;
+        overflow-x: auto;
+        font-size: 0.88rem;
+        line-height: 1.6;
+      }
+
+      .message .bubble pre code {
+        background: transparent;
+        padding: 0;
+        color: inherit;
+        font-size: inherit;
+      }
+
+      .message .bubble blockquote {
+        margin: 0.6rem 0;
+        padding: 0.4rem 0.9rem;
+        border-left: 3px solid rgba(15, 23, 42, 0.2);
+        background: rgba(15, 23, 42, 0.04);
+        color: var(--chat-text-secondary);
+        border-radius: 10px;
+      }
+
+      .message .bubble hr {
+        border: 0;
+        border-top: 1px solid rgba(15, 23, 42, 0.12);
+        margin: 0.9rem 0;
+      }
+
+      .message.user .bubble a {
+        color: #0b6bff;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .message.user .bubble a:hover {
         text-decoration: underline;
       }
 
@@ -3136,13 +3227,16 @@
               <div class="model-selects">
                 <div class="model-select" data-category="chat" data-label="Model">
                   <button type="button" class="model-select__trigger" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="selected-label">ChatGPT 5.2</span>
+                    <span class="selected-label">GPT-5 mini</span>
                     <svg viewBox="0 0 24 24">
                       <path d="M6 9l6 6 6-6" />
                     </svg>
                   </button>
                   <div class="model-dropdown" role="listbox" aria-label="Kies een model">
-                    <div class="model-option" data-model="ChatGPT 5.2" role="option" aria-selected="true">
+                    <div class="model-option" data-model="GPT-5 mini" role="option" aria-selected="true">
+                      <span class="model-option__label">GPT-5 mini</span>
+                    </div>
+                    <div class="model-option" data-model="ChatGPT 5.2" role="option" aria-selected="false">
                       <span class="model-option__label">ChatGPT 5.2</span>
                     </div>
                     <div class="model-option" data-model="Gemini 3" role="option" aria-selected="false">
