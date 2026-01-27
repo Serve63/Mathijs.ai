@@ -35,6 +35,8 @@
       const sidebarTop = document.querySelector(".sidebar-top");
       const modelTrigger = document.querySelector(".model-select__trigger");
       const newChatButton = document.querySelector(".new-chat");
+      const agentToggle = document.getElementById("agent-toggle");
+      const agentPanel = document.getElementById("agent-panel");
 
       let sidebarOffsetRevealed = false;
       const revealSidebarOffset = () => {
@@ -48,9 +50,52 @@
         document.documentElement.style.setProperty("--sidebar-top-offset", "0px");
       };
 
-	      const scheduleSidebarTopOffsetSync = () => {
-	        requestAnimationFrame(syncSidebarTopOffset);
-	      };
+      const scheduleSidebarTopOffsetSync = () => {
+        requestAnimationFrame(syncSidebarTopOffset);
+      };
+
+      const openAgentPanel = () => {
+        if (!agentPanel) return;
+        agentPanel.classList.add("is-open");
+        agentPanel.setAttribute("aria-hidden", "false");
+        document.body.classList.add("agent-open");
+      };
+
+      const closeAgentPanel = () => {
+        if (!agentPanel) return;
+        agentPanel.classList.remove("is-open");
+        agentPanel.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("agent-open");
+      };
+
+      const toggleAgentPanel = () => {
+        if (!agentPanel) return;
+        if (agentPanel.classList.contains("is-open")) {
+          closeAgentPanel();
+        } else {
+          closeAgentPanel();
+          openAgentPanel();
+        }
+      };
+
+      if (agentToggle) {
+        agentToggle.addEventListener("click", (event) => {
+          event.preventDefault();
+          toggleAgentPanel();
+        });
+      }
+
+      if (agentPanel) {
+        agentPanel.addEventListener("click", () => {
+          closeAgentPanel();
+        });
+      }
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && agentPanel?.classList.contains("is-open")) {
+          closeAgentPanel();
+        }
+      });
 
       syncSidebarTopOffset();
       scheduleSidebarTopOffsetSync();
