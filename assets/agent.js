@@ -12,6 +12,7 @@
     const input = document.getElementById("agent-input");
     const inbox = document.getElementById("agent-inbox");
     const submitBtn = document.getElementById("agent-submit");
+    const modelNodes = Array.from(document.querySelectorAll(".agent-node[data-model]"));
 
     const escapeHtml = (value) =>
       String(value || "")
@@ -282,6 +283,20 @@
       submitBtn.textContent = isLoading ? "Bezig..." : "Start";
     };
 
+    const setModelState = (model, state) => {
+      modelNodes
+        .filter((node) => node.dataset.model === model)
+        .forEach((node) => {
+          node.classList.remove("is-active", "is-done");
+          if (state === "active") node.classList.add("is-active");
+          if (state === "done") node.classList.add("is-done");
+        });
+    };
+
+    const resetModelStates = () => {
+      modelNodes.forEach((node) => node.classList.remove("is-active", "is-done"));
+    };
+
     if (form && input && inbox) {
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -289,6 +304,7 @@
         if (!task) return;
         input.value = "";
         setLoading(true);
+        resetModelStates();
 
         const masterItem = createPendingItem(
           "Mathijs is gestart",
@@ -307,10 +323,11 @@
           // ignore
         }
 
-        const insights = { openai: null, gemini: null };
-        const tasks = [];
-        if (openaiOk) {
-          const openaiItem = createPendingItem("OpenAI bezig", "Model analyseert je opdracht.");
+          const insights = { openai: null, gemini: null };
+          const tasks = [];
+          if (openaiOk) {
+            const openaiItem = createPendingItem("OpenAI bezig", "Model analyseert je opdracht.");
+            setModelState("openai", "active");
           tasks.push(
             runModel({
               provider: "openai",
@@ -321,14 +338,17 @@
               .then((text) => {
                 insights.openai = text;
                 resolveItem(openaiItem, "OpenAI afgerond", "Inzichten ontvangen.");
+                setModelState("openai", "done");
               })
               .catch((err) => {
                 resolveItem(openaiItem, "OpenAI fout", err.message || "OpenAI is niet beschikbaar.");
+                setModelState("openai", "done");
               })
           );
         }
         if (geminiOk) {
           const geminiItem = createPendingItem("Gemini bezig", "Model analyseert je opdracht.");
+          setModelState("gemini", "active");
           tasks.push(
             runModel({
               provider: "gemini",
@@ -339,15 +359,23 @@
               .then((text) => {
                 insights.gemini = text;
                 resolveItem(geminiItem, "Gemini afgerond", "Inzichten ontvangen.");
+                setModelState("gemini", "done");
               })
               .catch((err) => {
                 resolveItem(geminiItem, "Gemini fout", err.message || "Gemini is niet beschikbaar.");
+                setModelState("gemini", "done");
               })
           );
         }
-        if (tasks.length) {
-          await Promise.allSettled(tasks);
-        }
+          if (tasks.length) {
+            await Promise.allSettled(tasks);
+          }
+          if (openaiOk && !insights.openai) {
+            setModelState("openai", "done");
+          }
+          if (geminiOk && !insights.gemini) {
+            setModelState("gemini", "done");
+          }
 
         if (!insights.openai && !insights.gemini) {
           resolveItem(masterItem, "Geen modellen beschikbaar", "Koppel OpenAI of Gemini om te starten.");
@@ -355,12 +383,12 @@
           return;
         }
 
-        try {
-          resolveItem(masterItem, "Mathijs verwerkt", "Inzichten worden samengevoegd tot document...");
-          const doc = await buildFinalDocument({ task, insights });
-          if (!doc) {
-            insertInboxItem("Einddocument", "Geen resultaat ontvangen.");
-          } else {
+          try {
+            resolveItem(masterItem, "Mathijs verwerkt", "Inzichten worden samengevoegd tot document...");
+            const doc = await buildFinalDocument({ task, insights });
+            if (!doc) {
+              insertInboxItem("Einddocument", "Geen resultaat ontvangen.");
+            } else {
             const pdfBlob = buildPdfBlob(doc);
             const url = URL.createObjectURL(pdfBlob);
             const fileName = `Mathijs-document-${Date.now()}.pdf`;

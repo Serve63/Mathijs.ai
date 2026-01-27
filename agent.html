@@ -144,6 +144,22 @@
         letter-spacing: -0.01em;
         box-shadow: 0 12px 28px -22px rgba(15, 23, 42, 0.6);
         white-space: nowrap;
+        transition: all 0.2s ease;
+      }
+
+      .agent-node.is-active {
+        border-color: rgba(250, 204, 21, 0.9);
+        color: #fef3c7;
+        box-shadow:
+          0 0 0 2px rgba(250, 204, 21, 0.25),
+          0 20px 36px -26px rgba(250, 204, 21, 0.6);
+        background: rgba(15, 23, 42, 0.9);
+      }
+
+      .agent-node.is-done {
+        border-color: rgba(34, 197, 94, 0.7);
+        color: #dcfce7;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
       }
 
       .agent-node--center {
@@ -318,9 +334,9 @@
           <line x1="500" y1="300" x2="337" y2="137" stroke="url(#agentLine)" stroke-width="1.1" />
         </svg>
         <div class="agent-node agent-node--center" style="--x: 0px; --y: 0px;">Mathijs</div>
-        <div class="agent-node" style="--x: 0px; --y: -230px;">GPT-5 mini</div>
-        <div class="agent-node" style="--x: 210px; --y: -150px;">ChatGPT 5.2</div>
-        <div class="agent-node" style="--x: 260px; --y: 0px;">Gemini 3</div>
+        <div class="agent-node" data-model="openai" style="--x: 0px; --y: -230px;">GPT-5 mini</div>
+        <div class="agent-node" data-model="openai" style="--x: 210px; --y: -150px;">ChatGPT 5.2</div>
+        <div class="agent-node" data-model="gemini" style="--x: 260px; --y: 0px;">Gemini 3</div>
         <div class="agent-node" style="--x: 210px; --y: 150px;">Grok 4</div>
         <div class="agent-node" style="--x: 0px; --y: 230px;">Opus 4.5</div>
         <div class="agent-node" style="--x: -210px; --y: 150px;">Sonnet 4.5</div>
