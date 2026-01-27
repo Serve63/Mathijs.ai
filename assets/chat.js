@@ -877,6 +877,121 @@
         });
       };
 
+      const decodeCodeAttr = (value) => {
+        try {
+          return decodeURIComponent(value || "");
+        } catch {
+          return value || "";
+        }
+      };
+
+      const isLikelyHtml = (lang, code) => {
+        if (lang === "html" || lang === "htm") return true;
+        const sample = String(code || "").toLowerCase();
+        return /<!doctype|<html|<head|<body|<div|<section|<style/.test(sample);
+      };
+
+      let previewOverlay = null;
+      const closePreview = () => {
+        if (previewOverlay) {
+          previewOverlay.remove();
+          previewOverlay = null;
+        }
+      };
+      const openCodePreview = ({ code, lang }) => {
+        closePreview();
+        const overlay = document.createElement("div");
+        overlay.className = "code-preview-overlay";
+        overlay.innerHTML = `
+          <div class="code-preview">
+            <div class="code-preview__header">
+              <div class="code-preview__title">Preview${lang ? ` · ${lang.toUpperCase()}` : ""}</div>
+              <button type="button" class="code-preview__close" aria-label="Sluiten">✕</button>
+            </div>
+            <div class="code-preview__body"></div>
+          </div>
+        `;
+        const body = overlay.querySelector(".code-preview__body");
+        const closeBtn = overlay.querySelector(".code-preview__close");
+        const shouldRender = isLikelyHtml(lang, code);
+        if (shouldRender) {
+          const frame = document.createElement("iframe");
+          frame.className = "code-preview__frame";
+          frame.setAttribute("sandbox", "");
+          frame.srcdoc = code;
+          body.appendChild(frame);
+        } else {
+          const note = document.createElement("div");
+          note.className = "code-preview__note";
+          note.textContent = "Preview niet beschikbaar voor deze taal.";
+          const pre = document.createElement("pre");
+          const codeEl = document.createElement("code");
+          codeEl.textContent = code;
+          pre.appendChild(codeEl);
+          body.appendChild(note);
+          body.appendChild(pre);
+        }
+        overlay.addEventListener("click", (event) => {
+          if (event.target === overlay) closePreview();
+        });
+        if (closeBtn) closeBtn.addEventListener("click", closePreview);
+        document.addEventListener(
+          "keydown",
+          (event) => {
+            if (event.key === "Escape") closePreview();
+          },
+          { once: true }
+        );
+        document.body.appendChild(overlay);
+        previewOverlay = overlay;
+      };
+
+      if (chatLog) {
+        chatLog.addEventListener("click", (event) => {
+          const button = event.target.closest(".code-block__btn");
+          if (!button) return;
+          const block = button.closest(".code-block");
+          if (!block) return;
+          const action = button.getAttribute("data-action");
+          const code = decodeCodeAttr(block.getAttribute("data-code"));
+          const lang = (block.getAttribute("data-lang") || "").trim();
+          if (action === "copy") {
+            if (!code) return;
+            if (navigator.clipboard?.writeText) {
+              navigator.clipboard
+                .writeText(code)
+                .then(() => {
+                  if (window.siteUI?.toast) {
+                    window.siteUI.toast("Code gekopieerd", { type: "success" });
+                  }
+                })
+                .catch(() => {
+                  if (window.siteUI?.toast) {
+                    window.siteUI.toast("Kopieren mislukt", { type: "error" });
+                  }
+                });
+              return;
+            }
+            const temp = document.createElement("textarea");
+            temp.value = code;
+            temp.setAttribute("readonly", "");
+            temp.style.position = "absolute";
+            temp.style.left = "-9999px";
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand("copy");
+            temp.remove();
+            if (window.siteUI?.toast) {
+              window.siteUI.toast("Code gekopieerd", { type: "success" });
+            }
+            return;
+          }
+          if (action === "preview") {
+            openCodePreview({ code, lang });
+          }
+        });
+      }
+
 	      const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
 	      const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
 
@@ -2746,7 +2861,20 @@
           const safeLang = String(lang || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
           const token = `__CODE_BLOCK_${codeBlocks.length}__`;
           const className = safeLang ? ` class="language-${safeLang}"` : "";
-          codeBlocks.push(`<pre><code${className}>${escapeHtml(code)}</code></pre>`);
+          const encoded = encodeURIComponent(code);
+          const label = safeLang ? safeLang.toUpperCase() : "CODE";
+          const toolbar = `
+            <div class="code-block__toolbar">
+              <span class="code-block__label">${label}</span>
+              <div class="code-block__actions">
+                <button type="button" class="code-block__btn" data-action="preview">Preview</button>
+                <button type="button" class="code-block__btn" data-action="copy">Kopieer</button>
+              </div>
+            </div>
+          `;
+          codeBlocks.push(
+            `<div class="code-block" data-lang="${safeLang}" data-code="${encoded}">${toolbar}<pre><code${className}>${escapeHtml(code)}</code></pre></div>`
+          );
           return token;
         });
 
