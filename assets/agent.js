@@ -124,18 +124,131 @@
       return resp.payload?.text || "";
     };
 
-    const insertInboxItem = (title, body) => {
-      if (!inbox) return null;
-      const item = document.createElement("div");
-      item.className = "agent-inbox__item";
-      const formattedBody = escapeHtml(body).replace(/\n/g, "<br>");
-      item.innerHTML = `
-        <div class="agent-inbox__title">${escapeHtml(title)}</div>
-        <div class="agent-inbox__body">${formattedBody}</div>
-      `;
-      inbox.prepend(item);
-      return item;
+  const insertInboxItem = (title, body) => {
+    if (!inbox) return null;
+    const item = document.createElement("div");
+    item.className = "agent-inbox__item";
+    const formattedBody = escapeHtml(body).replace(/\n/g, "<br>");
+    item.innerHTML = `
+      <div class="agent-inbox__title">${escapeHtml(title)}</div>
+      <div class="agent-inbox__body">${formattedBody}</div>
+    `;
+    inbox.prepend(item);
+    return item;
+  };
+
+  const insertInboxHtml = (title, htmlBody) => {
+    if (!inbox) return null;
+    const item = document.createElement("div");
+    item.className = "agent-inbox__item";
+    item.innerHTML = `
+      <div class="agent-inbox__title">${escapeHtml(title)}</div>
+      <div class="agent-inbox__body">${htmlBody}</div>
+    `;
+    inbox.prepend(item);
+    return item;
+  };
+
+  const wrapText = (text, maxChars) => {
+    const lines = [];
+    const paragraphs = String(text || "").split(/\r?\n/);
+    paragraphs.forEach((para) => {
+      const words = para.trim().split(/\s+/).filter(Boolean);
+      if (!words.length) {
+        lines.push("");
+        return;
+      }
+      let current = "";
+      words.forEach((word) => {
+        if (!current) {
+          current = word;
+          return;
+        }
+        if ((current + " " + word).length <= maxChars) {
+          current += " " + word;
+        } else {
+          lines.push(current);
+          current = word;
+        }
+      });
+      if (current) lines.push(current);
+    });
+    return lines;
+  };
+
+  const pdfEscape = (value) =>
+    String(value || "")
+      .replace(/\\/g, "\\\\")
+      .replace(/\(/g, "\\(")
+      .replace(/\)/g, "\\)");
+
+  const buildPdfBlob = (text) => {
+    const pageWidth = 612;
+    const pageHeight = 792;
+    const marginX = 56;
+    const marginTop = 64;
+    const marginBottom = 64;
+    const lineHeight = 16;
+    const fontSize = 12;
+    const maxChars = 92;
+    const lines = wrapText(text, maxChars);
+    const linesPerPage = Math.max(1, Math.floor((pageHeight - marginTop - marginBottom) / lineHeight));
+    const pages = [];
+    for (let i = 0; i < lines.length; i += linesPerPage) {
+      pages.push(lines.slice(i, i + linesPerPage));
+    }
+
+    const encoder = new TextEncoder();
+    let output = "%PDF-1.4\n";
+    const offsets = [0];
+
+    const addObj = (id, body) => {
+      offsets[id] = encoder.encode(output).length;
+      output += `${id} 0 obj\n${body}\nendobj\n`;
     };
+
+    const fontId = 3;
+    const firstPageId = 4;
+    const pageCount = pages.length;
+    const totalObjects = 3 + pageCount * 2;
+
+    addObj(1, "<< /Type /Catalog /Pages 2 0 R >>");
+    const kids = pages.map((_, idx) => `${firstPageId + idx * 2} 0 R`).join(" ");
+    addObj(2, `<< /Type /Pages /Kids [${kids}] /Count ${pageCount} >>`);
+    addObj(fontId, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+
+    pages.forEach((pageLines, idx) => {
+      const pageId = firstPageId + idx * 2;
+      const contentId = pageId + 1;
+      const contentLines = [];
+      contentLines.push("BT");
+      contentLines.push(`/F1 ${fontSize} Tf`);
+      contentLines.push(`${lineHeight} TL`);
+      contentLines.push(`${marginX} ${pageHeight - marginTop} Td`);
+      pageLines.forEach((line) => {
+        contentLines.push(`(${pdfEscape(line)}) Tj`);
+        contentLines.push("T*");
+      });
+      contentLines.push("ET");
+      const stream = contentLines.join("\n");
+      addObj(
+        pageId,
+        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${contentId} 0 R >>`
+      );
+      addObj(contentId, `<< /Length ${encoder.encode(stream).length} >>\nstream\n${stream}\nendstream`);
+    });
+
+    const xrefOffset = encoder.encode(output).length;
+    output += `xref\n0 ${totalObjects + 1}\n`;
+    output += "0000000000 65535 f \n";
+    for (let i = 1; i <= totalObjects; i += 1) {
+      const offset = offsets[i] || 0;
+      output += `${String(offset).padStart(10, "0")} 00000 n \n`;
+    }
+    output += `trailer\n<< /Size ${totalObjects + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+
+    return new Blob([output], { type: "application/pdf" });
+  };
 
     const createPendingItem = (title, body) => {
       if (!inbox) return null;
@@ -245,7 +358,15 @@
         try {
           resolveItem(masterItem, "Mathijs verwerkt", "Inzichten worden samengevoegd tot document...");
           const doc = await buildFinalDocument({ task, insights });
-          insertInboxItem("Einddocument", doc || "Geen resultaat ontvangen.");
+          if (!doc) {
+            insertInboxItem("Einddocument", "Geen resultaat ontvangen.");
+          } else {
+            const pdfBlob = buildPdfBlob(doc);
+            const url = URL.createObjectURL(pdfBlob);
+            const fileName = `Mathijs-document-${Date.now()}.pdf`;
+            const linkHtml = `<a href="${url}" download="${fileName}">Download PDF</a>`;
+            insertInboxHtml("Einddocument", linkHtml);
+          }
         } catch (err) {
           resolveItem(masterItem, "Document fout", err.message || "Kon einddocument niet maken.");
         } finally {
