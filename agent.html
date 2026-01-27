@@ -37,6 +37,80 @@
         overflow: hidden;
       }
 
+      .agent-stage {
+        width: min(1200px, 96vw);
+        height: min(720px, 86vh);
+        display: grid;
+        grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(240px, 320px);
+        gap: 20px;
+        align-items: center;
+      }
+
+      .agent-panel {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 24px 50px -40px rgba(15, 23, 42, 0.8);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .agent-panel__title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: rgba(226, 232, 240, 0.7);
+      }
+
+      .agent-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .agent-form label {
+        font-size: 0.82rem;
+        color: rgba(226, 232, 240, 0.7);
+      }
+
+      .agent-form textarea {
+        width: 100%;
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: rgba(15, 23, 42, 0.6);
+        color: #e2e8f0;
+        padding: 12px 14px;
+        font-size: 0.9rem;
+        resize: none;
+        outline: none;
+        min-height: 120px;
+      }
+
+      .agent-form textarea:focus {
+        border-color: rgba(230, 194, 0, 0.6);
+        box-shadow: 0 0 0 3px rgba(230, 194, 0, 0.15);
+      }
+
+      .agent-form button {
+        align-self: flex-start;
+        border: none;
+        background: linear-gradient(135deg, rgba(230, 194, 0, 0.95) 0%, rgba(255, 229, 90, 0.95) 100%);
+        color: #0b1020;
+        font-weight: 700;
+        padding: 10px 16px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.86rem;
+        box-shadow: 0 16px 30px -22px rgba(230, 194, 0, 0.9);
+      }
+
+      .agent-form button:active {
+        transform: translateY(1px);
+      }
+
       .agent-map {
         position: relative;
         width: min(980px, 92vw);
@@ -90,42 +164,166 @@
         border-radius: 999px;
         border: 1px solid rgba(230, 194, 0, 0.35);
       }
+
+      .agent-inbox {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow: auto;
+        max-height: 440px;
+        padding-right: 4px;
+      }
+
+      .agent-inbox::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .agent-inbox::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.4);
+        border-radius: 999px;
+      }
+
+      .agent-inbox__item {
+        background: rgba(15, 23, 42, 0.55);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 14px;
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .agent-inbox__title {
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        color: rgba(254, 243, 199, 0.9);
+        text-transform: uppercase;
+      }
+
+      .agent-inbox__body {
+        font-size: 0.88rem;
+        line-height: 1.5;
+        color: #e2e8f0;
+      }
+
+      @media (max-width: 980px) {
+        body {
+          padding: 24px 0;
+          overflow-y: auto;
+        }
+
+        .agent-stage {
+          grid-template-columns: 1fr;
+          height: auto;
+        }
+
+        .agent-map {
+          width: 100%;
+          height: 340px;
+          order: 2;
+        }
+
+        .agent-panel {
+          width: 100%;
+        }
+      }
     </style>
   </head>
   <body>
-    <div class="agent-map" aria-hidden="true">
-      <svg class="agent-web" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <linearGradient id="agentLine" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="rgba(226,232,240,0.35)" />
-            <stop offset="100%" stop-color="rgba(230,194,0,0.45)" />
-          </linearGradient>
-        </defs>
-        <circle cx="500" cy="300" r="230" fill="none" stroke="rgba(148,163,184,0.2)" stroke-width="1.2" />
-        <polyline
-          points="500,70 663,137 730,300 663,463 500,530 337,463 270,300 337,137 500,70"
-          fill="none"
-          stroke="rgba(148,163,184,0.2)"
-          stroke-width="1.1"
-        />
-        <line x1="500" y1="300" x2="500" y2="70" stroke="url(#agentLine)" stroke-width="1.1" />
-        <line x1="500" y1="300" x2="663" y2="137" stroke="url(#agentLine)" stroke-width="1.1" />
-        <line x1="500" y1="300" x2="730" y2="300" stroke="url(#agentLine)" stroke-width="1.1" />
-        <line x1="500" y1="300" x2="663" y2="463" stroke="url(#agentLine)" stroke-width="1.1" />
-        <line x1="500" y1="300" x2="500" y2="530" stroke="url(#agentLine)" stroke-width="1.1" />
-        <line x1="500" y1="300" x2="337" y2="463" stroke="url(#agentLine)" stroke-width="1.1" />
-        <line x1="500" y1="300" x2="270" y2="300" stroke="url(#agentLine)" stroke-width="1.1" />
-        <line x1="500" y1="300" x2="337" y2="137" stroke="url(#agentLine)" stroke-width="1.1" />
-      </svg>
-      <div class="agent-node agent-node--center" style="--x: 0px; --y: 0px;">Mathijs</div>
-      <div class="agent-node" style="--x: 0px; --y: -230px;">GPT-5 mini</div>
-      <div class="agent-node" style="--x: 210px; --y: -150px;">ChatGPT 5.2</div>
-      <div class="agent-node" style="--x: 260px; --y: 0px;">Gemini 3</div>
-      <div class="agent-node" style="--x: 210px; --y: 150px;">Grok 4</div>
-      <div class="agent-node" style="--x: 0px; --y: 230px;">Opus 4.5</div>
-      <div class="agent-node" style="--x: -210px; --y: 150px;">Sonnet 4.5</div>
-      <div class="agent-node" style="--x: -260px; --y: 0px;">Llama 4</div>
-      <div class="agent-node" style="--x: -210px; --y: -150px;">Qwen3-MAX</div>
+    <div class="agent-stage">
+      <div class="agent-panel">
+        <div class="agent-panel__title">Opdracht</div>
+        <form class="agent-form" id="agent-form">
+          <label for="agent-input">Zet Mathijs aan het werk</label>
+          <textarea id="agent-input" placeholder="Zet Mathijs aan het werk..."></textarea>
+          <button type="submit">Start</button>
+        </form>
+      </div>
+
+      <div class="agent-map" aria-hidden="true">
+        <svg class="agent-web" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="agentLine" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="rgba(226,232,240,0.35)" />
+              <stop offset="100%" stop-color="rgba(230,194,0,0.45)" />
+            </linearGradient>
+          </defs>
+          <circle cx="500" cy="300" r="230" fill="none" stroke="rgba(148,163,184,0.2)" stroke-width="1.2" />
+          <polyline
+            points="500,70 663,137 730,300 663,463 500,530 337,463 270,300 337,137 500,70"
+            fill="none"
+            stroke="rgba(148,163,184,0.2)"
+            stroke-width="1.1"
+          />
+          <line x1="500" y1="300" x2="500" y2="70" stroke="url(#agentLine)" stroke-width="1.1" />
+          <line x1="500" y1="300" x2="663" y2="137" stroke="url(#agentLine)" stroke-width="1.1" />
+          <line x1="500" y1="300" x2="730" y2="300" stroke="url(#agentLine)" stroke-width="1.1" />
+          <line x1="500" y1="300" x2="663" y2="463" stroke="url(#agentLine)" stroke-width="1.1" />
+          <line x1="500" y1="300" x2="500" y2="530" stroke="url(#agentLine)" stroke-width="1.1" />
+          <line x1="500" y1="300" x2="337" y2="463" stroke="url(#agentLine)" stroke-width="1.1" />
+          <line x1="500" y1="300" x2="270" y2="300" stroke="url(#agentLine)" stroke-width="1.1" />
+          <line x1="500" y1="300" x2="337" y2="137" stroke="url(#agentLine)" stroke-width="1.1" />
+        </svg>
+        <div class="agent-node agent-node--center" style="--x: 0px; --y: 0px;">Mathijs</div>
+        <div class="agent-node" style="--x: 0px; --y: -230px;">GPT-5 mini</div>
+        <div class="agent-node" style="--x: 210px; --y: -150px;">ChatGPT 5.2</div>
+        <div class="agent-node" style="--x: 260px; --y: 0px;">Gemini 3</div>
+        <div class="agent-node" style="--x: 210px; --y: 150px;">Grok 4</div>
+        <div class="agent-node" style="--x: 0px; --y: 230px;">Opus 4.5</div>
+        <div class="agent-node" style="--x: -210px; --y: 150px;">Sonnet 4.5</div>
+        <div class="agent-node" style="--x: -260px; --y: 0px;">Llama 4</div>
+        <div class="agent-node" style="--x: -210px; --y: -150px;">Qwen3-MAX</div>
+      </div>
+
+      <div class="agent-panel">
+        <div class="agent-panel__title">Postvak</div>
+        <div class="agent-inbox" id="agent-inbox">
+          <div class="agent-inbox__item">
+            <div class="agent-inbox__title">Wacht op opdracht</div>
+            <div class="agent-inbox__body">Resultaten verschijnen hier zodra Mathijs klaar is.</div>
+          </div>
+        </div>
+      </div>
     </div>
+    <script>
+      const form = document.getElementById("agent-form");
+      const input = document.getElementById("agent-input");
+      const inbox = document.getElementById("agent-inbox");
+
+      const escapeHtml = (value) =>
+        String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+
+      if (form && input && inbox) {
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const text = input.value.trim();
+          if (!text) return;
+          const item = document.createElement("div");
+          item.className = "agent-inbox__item";
+          item.innerHTML = `
+            <div class="agent-inbox__title">Mathijs is gestart</div>
+            <div class="agent-inbox__body">Opdracht ontvangen: ${escapeHtml(text)}</div>
+          `;
+          inbox.prepend(item);
+          input.value = "";
+
+          setTimeout(() => {
+            const result = document.createElement("div");
+            result.className = "agent-inbox__item";
+            result.innerHTML = `
+              <div class="agent-inbox__title">Resultaat</div>
+              <div class="agent-inbox__body">Demo-resultaat voor: ${escapeHtml(text)}</div>
+            `;
+            inbox.prepend(result);
+          }, 900);
+        });
+      }
+    </script>
   </body>
 </html>
