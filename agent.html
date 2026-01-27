@@ -38,11 +38,11 @@
       }
 
       .agent-stage {
-        width: min(1200px, 96vw);
-        height: min(680px, 84vh);
+        width: min(1280px, 96vw);
+        height: min(720px, 86vh);
         display: grid;
-        grid-template-columns: minmax(260px, 300px) minmax(320px, 1fr) minmax(260px, 320px);
-        gap: 24px;
+        grid-template-columns: minmax(260px, 320px) minmax(420px, 1fr) minmax(260px, 320px);
+        gap: 28px;
         align-items: stretch;
       }
 
@@ -116,14 +116,16 @@
 
       .agent-map {
         position: relative;
-        width: 100%;
-        height: 100%;
+        width: min(640px, 100%);
+        height: min(640px, 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
         z-index: 1;
         padding: 16px;
+        margin: 0 auto;
+        aspect-ratio: 1 / 1;
       }
 
       .agent-web {
@@ -271,15 +273,15 @@
           <line x1="500" y1="300" x2="270" y2="300" stroke="url(#agentLine)" stroke-width="1.1" />
           <line x1="500" y1="300" x2="337" y2="137" stroke="url(#agentLine)" stroke-width="1.1" />
         </svg>
-        <div class="agent-node agent-node--center" style="--x: 0%; --y: 0%;">Mathijs</div>
-        <div class="agent-node" style="--x: 0%; --y: -40%;">GPT-5 mini</div>
-        <div class="agent-node" style="--x: 32%; --y: -25%;">ChatGPT 5.2</div>
-        <div class="agent-node" style="--x: 42%; --y: 0%;">Gemini 3</div>
-        <div class="agent-node" style="--x: 32%; --y: 25%;">Grok 4</div>
-        <div class="agent-node" style="--x: 0%; --y: 40%;">Opus 4.5</div>
-        <div class="agent-node" style="--x: -32%; --y: 25%;">Sonnet 4.5</div>
-        <div class="agent-node" style="--x: -42%; --y: 0%;">Llama 4</div>
-        <div class="agent-node" style="--x: -32%; --y: -25%;">Qwen3-MAX</div>
+        <div class="agent-node agent-node--center" data-angle="0">Mathijs</div>
+        <div class="agent-node" data-angle="-90">GPT-5 mini</div>
+        <div class="agent-node" data-angle="-45">ChatGPT 5.2</div>
+        <div class="agent-node" data-angle="0">Gemini 3</div>
+        <div class="agent-node" data-angle="45">Grok 4</div>
+        <div class="agent-node" data-angle="90">Opus 4.5</div>
+        <div class="agent-node" data-angle="135">Sonnet 4.5</div>
+        <div class="agent-node" data-angle="180">Llama 4</div>
+        <div class="agent-node" data-angle="-135">Qwen3-MAX</div>
       </div>
 
       <div class="agent-panel">
@@ -330,6 +332,30 @@
           }, 900);
         });
       }
+
+      const map = document.querySelector(".agent-map");
+      const nodes = Array.from(document.querySelectorAll(".agent-node:not(.agent-node--center)"));
+      const center = document.querySelector(".agent-node--center");
+
+      const layoutNodes = () => {
+        if (!map) return;
+        const rect = map.getBoundingClientRect();
+        const radius = Math.min(rect.width, rect.height) * 0.38;
+        nodes.forEach((node) => {
+          const angle = Number(node.dataset.angle || 0) * (Math.PI / 180);
+          const x = Math.cos(angle) * radius;
+          const y = Math.sin(angle) * radius;
+          node.style.setProperty("--x", `${x}px`);
+          node.style.setProperty("--y", `${y}px`);
+        });
+        if (center) {
+          center.style.setProperty("--x", "0px");
+          center.style.setProperty("--y", "0px");
+        }
+      };
+
+      layoutNodes();
+      window.addEventListener("resize", layoutNodes);
     </script>
   </body>
 </html>
