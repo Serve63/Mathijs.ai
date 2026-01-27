@@ -72,6 +72,95 @@
         z-index: 0;
       }
 
+      .app-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+          radial-gradient(900px 600px at 20% 20%, rgba(230, 194, 0, 0.12) 0%, transparent 60%),
+          radial-gradient(900px 700px at 85% 25%, rgba(15, 52, 96, 0.18) 0%, transparent 62%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(242, 247, 255, 0.98) 100%);
+        z-index: 9999;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+      }
+
+      .app-loader.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .app-loader__card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 26px 28px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow: var(--premium-shadow), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+        min-width: 220px;
+      }
+
+      .app-loader__logo {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: #0b1020;
+        background: linear-gradient(135deg, rgba(230, 194, 0, 1) 0%, rgba(255, 229, 90, 1) 100%);
+        box-shadow: 0 12px 28px -20px rgba(230, 194, 0, 0.7);
+      }
+
+      .app-loader__title {
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: var(--chat-text);
+        letter-spacing: -0.01em;
+      }
+
+      .app-loader__subtitle {
+        font-size: 0.82rem;
+        color: var(--chat-text-secondary);
+      }
+
+      .app-loader__bar {
+        width: 160px;
+        height: 4px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(15, 23, 42, 0.08);
+        position: relative;
+        margin-top: 4px;
+      }
+
+      .app-loader__bar::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -40%;
+        width: 40%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent 0%, var(--chat-accent) 45%, rgba(230, 194, 0, 0.2) 100%);
+        animation: loaderBar 1.1s infinite ease-in-out;
+      }
+
+      @keyframes loaderBar {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(260%);
+        }
+      }
+
       .chat-layout {
         display: grid;
         grid-template-columns: 240px minmax(0, 1fr);
@@ -3067,6 +3156,14 @@
     <script src="assets/stability.js" defer></script>
 </head>
   <body>
+    <div class="app-loader" id="app-loader" aria-hidden="true">
+      <div class="app-loader__card">
+        <div class="app-loader__logo">M</div>
+        <div class="app-loader__title">Mathijs.ai</div>
+        <div class="app-loader__subtitle">AI Console laden...</div>
+        <div class="app-loader__bar" aria-hidden="true"></div>
+      </div>
+    </div>
 	    <div class="chat-layout">
 		      <aside class="sidebar">
             <div class="sidebar-hero">

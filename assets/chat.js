@@ -5,6 +5,31 @@
 	        console.warn("[chat] Inline scripts detected in /chat. Keep scripts in assets/chat.js to avoid CSP issues.");
 	      }
 
+      const appLoader = document.getElementById("app-loader");
+      const APP_LOADER_MIN_MS = 1000;
+      const appLoaderStart = Date.now();
+      let appLoaderHidden = false;
+      const hideAppLoader = async (waitFor = null) => {
+        if (!appLoader || appLoaderHidden) return;
+        if (waitFor) {
+          try {
+            await waitFor;
+          } catch {
+            // ignore loader wait failures
+          }
+        }
+        const elapsed = Date.now() - appLoaderStart;
+        const delay = Math.max(0, APP_LOADER_MIN_MS - elapsed);
+        setTimeout(() => {
+          if (!appLoader || appLoaderHidden) return;
+          appLoader.classList.add("is-hidden");
+          appLoaderHidden = true;
+          setTimeout(() => {
+            appLoader.remove();
+          }, 400);
+        }, delay);
+      };
+
       const modelSelects = Array.from(document.querySelectorAll(".model-select"));
       const statusIndicator = null;
       const sidebarTop = document.querySelector(".sidebar-top");
@@ -2914,6 +2939,7 @@
       };
 
 		      const workspaceReady = (async () => {
+            let initialLoadPromise = null;
 		        try {
 		          // Ensure Supabase client is loaded
 		          if (!supabaseClient) {
@@ -2935,7 +2961,7 @@
 		          const preferredSessionId = getPreferredSessionId(user.id);
 		          renderEmptyState();
 		          updateNewChatButtonState();
-		          refreshSessionsFromSupabase({ preferredSessionId })
+		          initialLoadPromise = refreshSessionsFromSupabase({ preferredSessionId })
 		            .then(async () => {
 		              const hasMessages = countConversationMessages() > 0;
 		              if (!hasMessages && sessionState.activeId) {
@@ -2955,7 +2981,9 @@
 		          renderEmptySessionMessage("Kon gesprekken niet laden. Probeer opnieuw laden of log opnieuw in.");
 		          ensureSessionEmptyActions();
 		          return null;
-		        }
+		        } finally {
+              await hideAppLoader(initialLoadPromise);
+            }
 		      })();
 
       const MAX_REQUEST_MESSAGES = 24;
