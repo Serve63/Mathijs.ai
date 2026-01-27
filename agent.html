@@ -194,12 +194,38 @@
         gap: 6px;
       }
 
+      .agent-inbox__item--pending {
+        border-color: rgba(230, 194, 0, 0.35);
+        box-shadow: 0 0 0 1px rgba(230, 194, 0, 0.08);
+      }
+
       .agent-inbox__title {
         font-size: 0.78rem;
         font-weight: 700;
         letter-spacing: 0.03em;
         color: rgba(254, 243, 199, 0.9);
         text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .agent-spinner {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid rgba(230, 194, 0, 0.25);
+        border-top-color: rgba(230, 194, 0, 0.9);
+        animation: agentSpin 0.8s linear infinite;
+      }
+
+      @keyframes agentSpin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
       }
 
       .agent-inbox__body {
@@ -431,6 +457,33 @@
           <div class="agent-inbox__body">${formattedBody}</div>
         `;
         inbox.prepend(item);
+        return item;
+      };
+
+      const createPendingItem = (title, body) => {
+        if (!inbox) return null;
+        const item = document.createElement("div");
+        item.className = "agent-inbox__item agent-inbox__item--pending";
+        const formattedBody = escapeHtml(body).replace(/\n/g, "<br>");
+        item.innerHTML = `
+          <div class="agent-inbox__title">
+            <span class="agent-spinner" aria-hidden="true"></span>
+            ${escapeHtml(title)}
+          </div>
+          <div class="agent-inbox__body">${formattedBody}</div>
+        `;
+        inbox.prepend(item);
+        return item;
+      };
+
+      const resolveItem = (item, title, body) => {
+        if (!item) return;
+        item.classList.remove("agent-inbox__item--pending");
+        const formattedBody = escapeHtml(body).replace(/\n/g, "<br>");
+        item.innerHTML = `
+          <div class="agent-inbox__title">${escapeHtml(title)}</div>
+          <div class="agent-inbox__body">${formattedBody}</div>
+        `;
       };
 
       const setLoading = (isLoading) => {
@@ -447,7 +500,10 @@
           input.value = "";
           setLoading(true);
 
-          insertInboxItem("Mathijs is gestart", "Opdracht ontvangen. Modellen worden aangestuurd...");
+          const masterItem = createPendingItem(
+            "Mathijs is gestart",
+            "Opdracht ontvangen. Modellen worden aangestuurd..."
+          );
 
           let openaiOk = false;
           let geminiOk = false;
@@ -464,6 +520,7 @@
           const insights = { openai: null, gemini: null };
           const tasks = [];
           if (openaiOk) {
+            const openaiItem = createPendingItem("OpenAI bezig", "Model analyseert je opdracht.");
             tasks.push(
               runModel({
                 provider: "openai",
@@ -473,14 +530,15 @@
               })
                 .then((text) => {
                   insights.openai = text;
-                  insertInboxItem("OpenAI afgerond", "Inzichten ontvangen.");
+                  resolveItem(openaiItem, "OpenAI afgerond", "Inzichten ontvangen.");
                 })
                 .catch((err) => {
-                  insertInboxItem("OpenAI fout", err.message || "OpenAI is niet beschikbaar.");
+                  resolveItem(openaiItem, "OpenAI fout", err.message || "OpenAI is niet beschikbaar.");
                 })
             );
           }
           if (geminiOk) {
+            const geminiItem = createPendingItem("Gemini bezig", "Model analyseert je opdracht.");
             tasks.push(
               runModel({
                 provider: "gemini",
@@ -490,10 +548,10 @@
               })
                 .then((text) => {
                   insights.gemini = text;
-                  insertInboxItem("Gemini afgerond", "Inzichten ontvangen.");
+                  resolveItem(geminiItem, "Gemini afgerond", "Inzichten ontvangen.");
                 })
                 .catch((err) => {
-                  insertInboxItem("Gemini fout", err.message || "Gemini is niet beschikbaar.");
+                  resolveItem(geminiItem, "Gemini fout", err.message || "Gemini is niet beschikbaar.");
                 })
             );
           }
@@ -502,16 +560,17 @@
           }
 
           if (!insights.openai && !insights.gemini) {
-            insertInboxItem("Geen modellen beschikbaar", "Koppel OpenAI of Gemini om te starten.");
+            resolveItem(masterItem, "Geen modellen beschikbaar", "Koppel OpenAI of Gemini om te starten.");
             setLoading(false);
             return;
           }
 
           try {
+            resolveItem(masterItem, "Mathijs verwerkt", "Inzichten worden samengevoegd tot document...");
             const doc = await buildFinalDocument({ task, insights });
             insertInboxItem("Einddocument", doc || "Geen resultaat ontvangen.");
           } catch (err) {
-            insertInboxItem("Document fout", err.message || "Kon einddocument niet maken.");
+            resolveItem(masterItem, "Document fout", err.message || "Kon einddocument niet maken.");
           } finally {
             setLoading(false);
           }
