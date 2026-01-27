@@ -1319,7 +1319,8 @@
             if (!isOpen) actions.classList.add("is-open");
           });
 
-          selectBtn.addEventListener("click", async () => {
+          selectBtn.addEventListener("click", async (event) => {
+            event.stopPropagation();
             await setActiveSession(session.id);
             closeAllMenus();
             if (chatInput) {
@@ -1373,6 +1374,17 @@
 
           actions.addEventListener("click", (event) => {
             event.stopPropagation();
+          });
+
+          row.addEventListener("click", async (event) => {
+            if (event.target.closest(".session-menu") || event.target.closest(".session-actions")) {
+              return;
+            }
+            await setActiveSession(session.id);
+            closeAllMenus();
+            if (chatInput) {
+              chatInput.focus();
+            }
           });
 
           document.addEventListener("click", closeAllMenus);
