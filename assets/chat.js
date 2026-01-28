@@ -276,6 +276,9 @@
       const GEMINI_MODEL_LABEL_MAP = {
         "Gemini 3": "gemini-1.5-flash",
       };
+      const GROK_MODEL_LABEL_MAP = {
+        "Grok 4": "grok-beta",
+      };
       const MODEL_PROVIDER_MAP = {
         chatgpt52: "openai",
         opus45: "anthropic",
@@ -290,6 +293,7 @@
       const getSelectedProvider = () => MODEL_PROVIDER_MAP[selectedModel] || "unknown";
       const getSelectedOpenAIModel = () => OPENAI_MODEL_LABEL_MAP[selectedModelLabel] || null;
       const getSelectedGeminiModel = () => GEMINI_MODEL_LABEL_MAP[selectedModelLabel] || null;
+      const getSelectedGrokModel = () => GROK_MODEL_LABEL_MAP[selectedModelLabel] || null;
 		      let selectedModel = "chatgpt52";
 		      let selectedModelLabel = "GPT-5 mini";
 		      let thinkingIndicator = null;
@@ -442,18 +446,25 @@
         const status = await refreshProviderStatus();
 
         const connected =
-          (provider === "openai" && status.openai === true) || (provider === "gemini" && status.gemini === true);
+          (provider === "openai" && status.openai === true) ||
+          (provider === "gemini" && status.gemini === true) ||
+          (provider === "grok" && status.grok === true);
         const statusLabel = connected ? "Verbonden" : "Niet gekoppeld";
         setStatus(statusLabel, "idle");
 
         let message = `${categoryLabel} ${value} is nog niet gekoppeld.`;
         if (connected) {
-          message =
-            provider === "gemini"
-              ? `${categoryLabel} ${value} is verbonden via Gemini.`
-              : `${categoryLabel} ${value} is verbonden via OpenAI.`;
+          if (provider === "gemini") {
+            message = `${categoryLabel} ${value} is verbonden via Gemini.`;
+          } else if (provider === "grok") {
+            message = `${categoryLabel} ${value} is verbonden via Grok.`;
+          } else {
+            message = `${categoryLabel} ${value} is verbonden via OpenAI.`;
+          }
         } else if (provider === "gemini") {
           message = `${categoryLabel} ${value} is nog niet gekoppeld. Voeg GEMINI_API_KEY toe om Gemini te gebruiken.`;
+        } else if (provider === "grok") {
+          message = `${categoryLabel} ${value} is nog niet gekoppeld. Voeg GROK_API_KEY toe om Grok te gebruiken.`;
         }
 
         appendMessage(message, "system", { persist: false });
@@ -2011,12 +2022,12 @@
       };
 
       const PROVIDER_STATUS_TTL_MS = 120000;
-      let providerStatusCache = { openai: null, gemini: null, fetchedAt: 0 };
+      let providerStatusCache = { openai: null, gemini: null, grok: null, fetchedAt: 0 };
       let providerStatusInFlight = null;
       const refreshProviderStatus = async ({ force = false } = {}) => {
         const now = Date.now();
         const hasCache =
-          providerStatusCache.openai !== null || providerStatusCache.gemini !== null;
+          providerStatusCache.openai !== null || providerStatusCache.gemini !== null || providerStatusCache.grok !== null;
         const isFresh = hasCache && now - providerStatusCache.fetchedAt < PROVIDER_STATUS_TTL_MS;
         if (!force && isFresh) {
           return providerStatusCache;
@@ -2031,6 +2042,7 @@
               providerStatusCache = {
                 openai: payload?.openai === true,
                 gemini: payload?.gemini === true,
+                grok: payload?.grok === true,
                 fetchedAt: Date.now(),
               };
             }
@@ -3224,14 +3236,19 @@
           appendMessage("Gemini is niet gekoppeld. Voeg GEMINI_API_KEY toe om te chatten.", "assistant", { persist: false });
           return;
         }
-        if (provider !== "openai" && provider !== "gemini") {
-          appendMessage("Provider nog niet gekoppeld. Kies ChatGPT of Gemini om te chatten.", "assistant", { persist: false });
+        if (provider === "grok" && status.grok !== true) {
+          appendMessage("Grok is niet gekoppeld. Voeg GROK_API_KEY toe om te chatten.", "assistant", { persist: false });
+          return;
+        }
+        if (provider !== "openai" && provider !== "gemini" && provider !== "grok") {
+          appendMessage("Provider nog niet gekoppeld. Kies ChatGPT, Gemini of Grok om te chatten.", "assistant", { persist: false });
           return;
         }
 
         const openaiModel = provider === "openai" ? getSelectedOpenAIModel() : null;
         const geminiModel = provider === "gemini" ? getSelectedGeminiModel() : null;
-        const selectedApiModel = openaiModel || geminiModel;
+        const grokModel = provider === "grok" ? getSelectedGrokModel() : null;
+        const selectedApiModel = openaiModel || geminiModel || grokModel;
         if (!selectedApiModel) {
           appendMessage("Ongeldig model geselecteerd. Kies opnieuw.", "assistant", { persist: false });
           return;

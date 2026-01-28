@@ -3,7 +3,7 @@ const OpenAI = require("openai");
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, readJson } = require("./_lib/security");
 const { getUserFromAccessToken } = require("./_lib/supabase");
 const { SUPABASE_URL } = require("./_lib/supabase");
-const { getOpenAIApiKey, getGeminiApiKey, getSupabaseServiceRoleKey } = require("./_lib/env");
+const { getOpenAIApiKey, getGeminiApiKey, getGrokApiKey, getSupabaseServiceRoleKey } = require("./_lib/env");
 const { adminRestFetch } = require("./_lib/supabaseAdmin");
 
 // NOTE: UI labels may map to marketing names; server maps them to real OpenAI model IDs.
@@ -22,6 +22,10 @@ const GEMINI_ALLOWED_MODELS = [
   "gemini-1.5-flash-001",
   "gemini-1.5-pro-001",
 ];
+
+// Grok model IDs - xAI uses standard model names
+const GROK_DEFAULT_MODEL = "grok-beta";
+const GROK_ALLOWED_MODELS = ["grok-beta", "grok-2", "grok-2-1212"];
 
 const MAX_MESSAGES = 30;
 const MAX_MESSAGE_CHARS = 8000;
@@ -106,6 +110,11 @@ const GEMINI_MODEL_TOKEN_COSTS = {
   "gemini-1.5-pro-001": 2,
   "gemini-pro": 2,
   "gemini-1.0-pro": 2,
+};
+const GROK_MODEL_TOKEN_COSTS = {
+  "grok-beta": 3,
+  "grok-2": 3,
+  "grok-2-1212": 3,
 };
 
 function getTokensPerEur() {
@@ -358,6 +367,27 @@ function resolveGeminiModel(requested) {
   return normalized;
 }
 
+function resolveGrokModel(requested) {
+  if (typeof requested !== "string" || !requested.trim()) {
+    return GROK_DEFAULT_MODEL;
+  }
+  const normalized = requested.trim();
+  // Map UI labels to actual Grok model IDs
+  const modelMap = {
+    "grok-4": "grok-beta",
+    "grok-4-latest": "grok-beta",
+    "grok-beta": "grok-beta",
+    "grok-2": "grok-2",
+  };
+  const mapped = modelMap[normalized] || normalized;
+
+  if (!GROK_ALLOWED_MODELS.includes(mapped)) {
+    console.warn(`Niet toegestane/ongekende Grok model requested: ${normalized} (→ ${mapped}). Valt terug op ${GROK_DEFAULT_MODEL}`);
+    return GROK_DEFAULT_MODEL;
+  }
+  return mapped;
+}
+
 function normalizeModelKey(value) {
   if (typeof value !== "string") return "";
   return value.trim().toLowerCase();
@@ -391,6 +421,11 @@ function resolveTokensRequired({ modelKey, modelLabel, provider, requestedModel,
   if (provider === "gemini") {
     const geminiModel = resolvedModel || resolveGeminiModel(requestedModel);
     if (GEMINI_MODEL_TOKEN_COSTS[geminiModel]) return GEMINI_MODEL_TOKEN_COSTS[geminiModel];
+  }
+
+  if (provider === "grok") {
+    const grokModel = resolvedModel || resolveGrokModel(requestedModel);
+    if (GROK_MODEL_TOKEN_COSTS[grokModel]) return GROK_MODEL_TOKEN_COSTS[grokModel];
   }
 
   return TOKENS_PER_CHAT_DEFAULT;
@@ -555,7 +590,8 @@ function sanitizeProviderErrorMessage(message) {
   return String(message)
     .replace(/\bsk-[A-Za-z0-9_-]{10,}\b/g, "***REDACTED***")
     .replace(/\b(?:sk_live|rk_live|whsec)_[A-Za-z0-9]{10,}\b/g, "***REDACTED***")
-    .replace(/\bAIza[0-9A-Za-z_-]{20,}\b/g, "***REDACTED***");
+    .replace(/\bAIza[0-9A-Za-z_-]{20,}\b/g, "***REDACTED***")
+    .replace(/\bxai-[A-Za-z0-9_-]{20,}\b/g, "***REDACTED***");
 }
 
 function extractGeminiText(payload) {
@@ -689,6 +725,86 @@ async function runGeminiChat({ apiKey, model, messages }) {
   }
 }
 
+function extractGrokText(payload) {
+  const choices = Array.isArray(payload?.choices) ? payload.choices : [];
+  if (choices.length === 0) return "";
+  const message = choices[0]?.message;
+  if (!message) return "";
+  return typeof message.content === "string" ? message.content : "";
+}
+
+function extractGrokUsage(payload) {
+  const usage = payload?.usage || {};
+  const inputTokens = Number(usage?.prompt_tokens ?? usage?.promptTokens ?? 0);
+  const outputTokens = Number(usage?.completion_tokens ?? usage?.completionTokens ?? 0);
+  let totalTokens = Number(usage?.total_tokens ?? usage?.totalTokens ?? 0);
+  if (!Number.isFinite(totalTokens) || totalTokens <= 0) {
+    const summed = (Number.isFinite(inputTokens) ? inputTokens : 0) + (Number.isFinite(outputTokens) ? outputTokens : 0);
+    if (summed > 0) totalTokens = summed;
+  }
+  return {
+    inputTokens: Number.isFinite(inputTokens) ? inputTokens : 0,
+    outputTokens: Number.isFinite(outputTokens) ? outputTokens : 0,
+    totalTokens: Number.isFinite(totalTokens) ? totalTokens : 0,
+  };
+}
+
+async function runGrokChat({ apiKey, model, messages }) {
+  try {
+    // Grok API uses standard chat completions format (similar to OpenAI)
+    const url = "https://api.x.ai/v1/chat/completions";
+    
+    // Convert messages to Grok format (developer role becomes system)
+    const grokMessages = messages.map((msg) => {
+      if (msg.role === "developer") {
+        return { role: "system", content: msg.content };
+      }
+      return { role: msg.role, content: msg.content };
+    });
+
+    const body = {
+      model: model,
+      messages: grokMessages,
+    };
+
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const payload = await resp.json().catch(() => ({}));
+    
+    if (!resp.ok) {
+      const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+      console.error(`[grok] API error (model: ${model}, status: ${resp.status}):`, msg);
+      if (payload?.error) {
+        console.error(`[grok] Error details:`, JSON.stringify(payload.error, null, 2));
+      }
+      const err = new Error(msg);
+      err.status = resp.status;
+      err.payload = payload;
+      throw err;
+    }
+
+    return {
+      text: extractGrokText(payload),
+      usage: extractGrokUsage(payload),
+      modelUsed: model,
+    };
+  } catch (err) {
+    const safe = sanitizeProviderErrorMessage(err?.message || "");
+    const wrapped = new Error("grok_failed");
+    wrapped.statusCode = 502;
+    wrapped.publicMessage = safe ? `Grok request mislukte: ${safe}` : "Grok request mislukte.";
+    wrapped.cause = err;
+    throw wrapped;
+  }
+}
+
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== "POST") {
@@ -738,17 +854,22 @@ module.exports = async function handler(req, res) {
     const requestedProvider = typeof provider === "string" ? provider.trim().toLowerCase() : "";
     const inferredProvider =
       requestedProvider ||
-      (typeof model === "string" && model.trim().startsWith("gemini-") ? "gemini" : "openai");
+      (typeof model === "string" && model.trim().startsWith("gemini-")
+        ? "gemini"
+        : typeof model === "string" && model.trim().startsWith("grok")
+          ? "grok"
+          : "openai");
 
     const requestedModel = typeof model === "string" ? model : "";
     const resolvedOpenAIModel = inferredProvider === "openai" ? resolveOpenAIModel(requestedModel) : null;
     const resolvedGeminiModel = inferredProvider === "gemini" ? resolveGeminiModel(requestedModel) : null;
+    const resolvedGrokModel = inferredProvider === "grok" ? resolveGrokModel(requestedModel) : null;
     const tokensRequiredRaw = resolveTokensRequired({
       modelKey,
       modelLabel,
       provider: inferredProvider,
       requestedModel,
-      resolvedModel: resolvedOpenAIModel || resolvedGeminiModel,
+      resolvedModel: resolvedOpenAIModel || resolvedGeminiModel || resolvedGrokModel,
     });
     const tokensRequired = Math.max(
       1,
@@ -909,6 +1030,31 @@ module.exports = async function handler(req, res) {
         return json(res, 200, { text: result?.text || "" });
       }
 
+      if (inferredProvider === "grok") {
+        const grokModel = resolvedGrokModel || resolveGrokModel(requestedModel);
+        const apiKey = getGrokApiKey();
+        console.log(`[grok] key ${apiKey ? "present" : "missing"}`);
+        if (!apiKey) {
+          await refundTokensBestEffort();
+          return json(res, 500, { error: "Missing GROK_API_KEY" });
+        }
+        console.log(`[grok] Using model: ${grokModel}, messages: ${normalizedMessages.length}`);
+        const result = await runGrokChat({ apiKey, model: grokModel, messages: normalizedMessages });
+        const usageTokens = Number(result?.usage?.totalTokens || 0);
+        const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
+        const usedModel = result?.modelUsed || grokModel;
+        void recordUsageEvent({
+          userId: user.id,
+          provider: "grok",
+          model: usedModel,
+          modelLabel: modelLabel || modelKey || requestedModel || usedModel,
+          tokens: actualTokens,
+          tokensPerEur,
+          costEur: requestCostEur,
+        });
+        return json(res, 200, { text: result?.text || "" });
+      }
+
       const openaiModel = resolvedOpenAIModel || resolveOpenAIModel(requestedModel);
       const apiKey = getOpenAIApiKey();
       console.log(`[openai] key ${apiKey ? "present" : "missing"}`);
@@ -963,6 +1109,7 @@ module.exports = async function handler(req, res) {
       message_too_large: "Bericht is te lang.",
       messages_too_large: "Te veel tekst/context meegestuurd.",
       gemini_failed: "Gemini kon geen antwoord geven. Probeer opnieuw.",
+      grok_failed: "Grok kon geen antwoord geven. Probeer opnieuw.",
       openai_failed: "OpenAI kon geen antwoord geven. Probeer opnieuw.",
       supabase_auth_admin_failed: "Tokenbeheer faalde door Supabase. Controleer SUPABASE_SERVICE_ROLE_KEY.",
       token_init_failed: "Tokens konden niet worden geïnitialiseerd. Controleer SUPABASE_SERVICE_ROLE_KEY.",

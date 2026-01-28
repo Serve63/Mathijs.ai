@@ -31,6 +31,10 @@ function getGeminiApiKey() {
   return pickEnv(["GEMINI_API_KEY", "GOOGLE_API_KEY", "google_api_key"]);
 }
 
+function getGrokApiKey() {
+  return pickEnv(["GROK_API_KEY", "grok_api_key"]);
+}
+
 function getSupabaseServiceRoleKey() {
   return pickEnv([
     "SUPABASE_SERVICE_ROLE_KEY",
@@ -73,6 +77,7 @@ module.exports = {
   getOpenAIApiKey,
   getOpenAICostsKey,
   getGeminiApiKey,
+  getGrokApiKey,
   getSupabaseServiceRoleKey,
   getSupabaseUrl,
   getSupabaseAnonKey,
