@@ -325,9 +325,8 @@
 
           const insights = { openai: null, gemini: null };
           const tasks = [];
-          if (openaiOk) {
-            const openaiItem = createPendingItem("OpenAI bezig", "Model analyseert je opdracht.");
-            setModelState("openai", "active");
+        if (openaiOk) {
+          setModelState("openai", "active");
           tasks.push(
             runModel({
               provider: "openai",
@@ -337,17 +336,15 @@
             })
               .then((text) => {
                 insights.openai = text;
-                resolveItem(openaiItem, "OpenAI afgerond", "Inzichten ontvangen.");
                 setModelState("openai", "done");
               })
               .catch((err) => {
-                resolveItem(openaiItem, "OpenAI fout", err.message || "OpenAI is niet beschikbaar.");
+                insertInboxItem("OpenAI fout", err.message || "OpenAI is niet beschikbaar.");
                 setModelState("openai", "done");
               })
           );
         }
         if (geminiOk) {
-          const geminiItem = createPendingItem("Gemini bezig", "Model analyseert je opdracht.");
           setModelState("gemini", "active");
           tasks.push(
             runModel({
@@ -358,11 +355,10 @@
             })
               .then((text) => {
                 insights.gemini = text;
-                resolveItem(geminiItem, "Gemini afgerond", "Inzichten ontvangen.");
                 setModelState("gemini", "done");
               })
               .catch((err) => {
-                resolveItem(geminiItem, "Gemini fout", err.message || "Gemini is niet beschikbaar.");
+                insertInboxItem("Gemini fout", err.message || "Gemini is niet beschikbaar.");
                 setModelState("gemini", "done");
               })
           );
