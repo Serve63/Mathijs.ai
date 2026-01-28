@@ -277,7 +277,7 @@
         "Gemini 3": "gemini-1.5-flash",
       };
       const GROK_MODEL_LABEL_MAP = {
-        "Grok 4": "grok-beta",
+        "Grok 4": "grok-4",
       };
       const MODEL_PROVIDER_MAP = {
         chatgpt52: "openai",
@@ -3309,7 +3309,8 @@
             errorMessage = String(errorMessage)
               .replace(/\bsk-[A-Za-z0-9_-]{10,}\b/g, "***REDACTED***")
               .replace(/\b(?:sk_live|rk_live|whsec)_[A-Za-z0-9]{10,}\b/g, "***REDACTED***")
-              .replace(/\bAIza[0-9A-Za-z_-]{20,}\b/g, "***REDACTED***");
+              .replace(/\bAIza[0-9A-Za-z_-]{20,}\b/g, "***REDACTED***")
+              .replace(/\bxai-[A-Za-z0-9_-]{20,}\b/g, "***REDACTED***");
             if (response.status === 401) {
               window.location.href = "/login";
             }

@@ -24,8 +24,8 @@ const GEMINI_ALLOWED_MODELS = [
 ];
 
 // Grok model IDs - xAI uses standard model names
-const GROK_DEFAULT_MODEL = "grok-beta";
-const GROK_ALLOWED_MODELS = ["grok-beta", "grok-2", "grok-2-1212"];
+const GROK_DEFAULT_MODEL = "grok-4";
+const GROK_ALLOWED_MODELS = ["grok-4", "grok-4-0709", "grok-4-code", "grok-beta", "grok-2"];
 
 const MAX_MESSAGES = 30;
 const MAX_MESSAGE_CHARS = 8000;
@@ -112,9 +112,11 @@ const GEMINI_MODEL_TOKEN_COSTS = {
   "gemini-1.0-pro": 2,
 };
 const GROK_MODEL_TOKEN_COSTS = {
+  "grok-4": 3,
+  "grok-4-0709": 3,
+  "grok-4-code": 3,
   "grok-beta": 3,
   "grok-2": 3,
-  "grok-2-1212": 3,
 };
 
 function getTokensPerEur() {
@@ -374,9 +376,9 @@ function resolveGrokModel(requested) {
   const normalized = requested.trim();
   // Map UI labels to actual Grok model IDs
   const modelMap = {
-    "grok-4": "grok-beta",
-    "grok-4-latest": "grok-beta",
-    "grok-beta": "grok-beta",
+    "grok-4": "grok-4",
+    "grok-4-latest": "grok-4",
+    "grok-beta": "grok-4",
     "grok-2": "grok-2",
   };
   const mapped = modelMap[normalized] || normalized;
@@ -784,7 +786,18 @@ async function runGrokChat({ apiKey, model, messages }) {
       if (payload?.error) {
         console.error(`[grok] Error details:`, JSON.stringify(payload.error, null, 2));
       }
-      const err = new Error(msg);
+      
+      // Provide more specific error messages for common issues
+      let errorMessage = msg;
+      if (resp.status === 403) {
+        errorMessage = "403 Forbidden: API key is ongeldig of heeft geen toegang. Controleer of GROK_API_KEY correct is ingesteld en toegang heeft tot de Grok API.";
+      } else if (resp.status === 401) {
+        errorMessage = "401 Unauthorized: API key ontbreekt of is ongeldig. Controleer GROK_API_KEY.";
+      } else if (resp.status === 400) {
+        errorMessage = `400 Bad Request: ${msg}. Controleer of het model '${model}' beschikbaar is.`;
+      }
+      
+      const err = new Error(errorMessage);
       err.status = resp.status;
       err.payload = payload;
       throw err;
@@ -1033,10 +1046,14 @@ module.exports = async function handler(req, res) {
       if (inferredProvider === "grok") {
         const grokModel = resolvedGrokModel || resolveGrokModel(requestedModel);
         const apiKey = getGrokApiKey();
-        console.log(`[grok] key ${apiKey ? "present" : "missing"}`);
+        console.log(`[grok] key ${apiKey ? "present" : "missing"}, model: ${grokModel}`);
         if (!apiKey) {
           await refundTokensBestEffort();
           return json(res, 500, { error: "Missing GROK_API_KEY" });
+        }
+        // Validate API key format (should start with xai-)
+        if (!apiKey.startsWith("xai-")) {
+          console.warn(`[grok] API key format may be incorrect (expected to start with 'xai-')`);
         }
         console.log(`[grok] Using model: ${grokModel}, messages: ${normalizedMessages.length}`);
         const result = await runGrokChat({ apiKey, model: grokModel, messages: normalizedMessages });
