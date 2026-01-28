@@ -41,17 +41,16 @@
       return data?.session?.access_token || null;
     };
 
-    const apiFetchJson = async (url, { method = "POST", body } = {}) => {
-      const token = await getAccessToken();
-      if (!token) {
-        window.location.href = "/login";
-        return { ok: false, status: 401, payload: { error: "Unauthorized" } };
+    const apiFetchJson = async (url, { method = "POST", body, token } = {}) => {
+      const accessToken = token || (await getAccessToken());
+      if (!accessToken) {
+        return { ok: false, status: 401, payload: { error: "Login vereist" } };
       }
       const resp = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: body ? JSON.stringify(body) : undefined,
       });
@@ -59,7 +58,7 @@
       return { ok: resp.ok, status: resp.status, payload };
     };
 
-    const runModel = async ({ provider, model, task, roleLabel }) => {
+    const runModel = async ({ provider, model, task, roleLabel, token }) => {
       const messages = [
         {
           role: "developer",
@@ -78,6 +77,7 @@
           model_label: provider === "openai" ? "GPT-5 mini" : "Gemini 3",
           messages,
         },
+        token,
       });
       if (!resp.ok) {
         const error = resp.payload?.error || "Model call mislukt.";
@@ -86,7 +86,7 @@
       return resp.payload?.text || "";
     };
 
-    const buildFinalDocument = async ({ task, insights }) => {
+    const buildFinalDocument = async ({ task, insights, token }) => {
       const provider = insights.openai ? "openai" : "gemini";
       const model = provider === "openai" ? "gpt-4o-mini" : "gemini-1.5-flash";
       const content = [
@@ -117,6 +117,7 @@
           model_label: provider === "openai" ? "GPT-5 mini" : "Gemini 3",
           messages,
         },
+        token,
       });
       if (!resp.ok) {
         const error = resp.payload?.error || "Document genereren mislukt.";
@@ -306,6 +307,15 @@
         setLoading(true);
         resetModelStates();
 
+        insertInboxItem("Opdracht ontvangen", task);
+
+        const token = await getAccessToken();
+        if (!token) {
+          insertInboxHtml("Inloggen vereist", '<a href="/login">Log in om te starten</a>');
+          setLoading(false);
+          return;
+        }
+
         const masterItem = createPendingItem(
           "Mathijs is gestart",
           "Opdracht ontvangen. Modellen worden aangestuurd..."
@@ -314,7 +324,7 @@
         let openaiOk = false;
         let geminiOk = false;
         try {
-          const status = await apiFetchJson("/api/provider-status", { method: "GET" });
+          const status = await apiFetchJson("/api/provider-status", { method: "GET", token });
           if (status.ok) {
             openaiOk = status.payload?.openai === true;
             geminiOk = status.payload?.gemini === true;
@@ -333,6 +343,7 @@
               model: "gpt-4o-mini",
               task,
               roleLabel: "OpenAI specialist",
+              token,
             })
               .then((text) => {
                 insights.openai = text;
@@ -352,6 +363,7 @@
               model: "gemini-1.5-flash",
               task,
               roleLabel: "Gemini specialist",
+              token,
             })
               .then((text) => {
                 insights.gemini = text;
@@ -381,7 +393,7 @@
 
           try {
             resolveItem(masterItem, "Mathijs verwerkt", "Inzichten worden samengevoegd tot document...");
-            const doc = await buildFinalDocument({ task, insights });
+            const doc = await buildFinalDocument({ task, insights, token });
             if (!doc) {
               insertInboxItem("Einddocument", "Geen resultaat ontvangen.");
             } else {
