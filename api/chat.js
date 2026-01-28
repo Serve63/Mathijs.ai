@@ -782,15 +782,23 @@ async function runGrokChat({ apiKey, model, messages }) {
     
     if (!resp.ok) {
       const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+      const errorType = payload?.error?.type || payload?.type || "";
       console.error(`[grok] API error (model: ${model}, status: ${resp.status}):`, msg);
+      console.error(`[grok] Error type: ${errorType}`);
       if (payload?.error) {
-        console.error(`[grok] Error details:`, JSON.stringify(payload.error, null, 2));
+        console.error(`[grok] Full error payload:`, JSON.stringify(payload.error, null, 2));
       }
       
       // Provide more specific error messages for common issues
       let errorMessage = msg;
       if (resp.status === 403) {
-        errorMessage = "403 Forbidden: API key is ongeldig of heeft geen toegang. Controleer of GROK_API_KEY correct is ingesteld en toegang heeft tot de Grok API.";
+        if (errorType === "insufficient_quota" || msg.includes("quota")) {
+          errorMessage = "403 Forbidden: API quota is opgebruikt of facturering is niet geactiveerd. Activeer facturering op docs.x.ai.";
+        } else if (errorType === "invalid_api_key" || msg.includes("invalid") || msg.includes("key")) {
+          errorMessage = "403 Forbidden: API key is ongeldig. Controleer of GROK_API_KEY correct is ingesteld.";
+        } else {
+          errorMessage = "403 Forbidden: API key heeft geen toegang tot de Grok API. Controleer of GROK_API_KEY correct is ingesteld en toegang heeft tot Grok-4.";
+        }
       } else if (resp.status === 401) {
         errorMessage = "401 Unauthorized: API key ontbreekt of is ongeldig. Controleer GROK_API_KEY.";
       } else if (resp.status === 400) {
@@ -1052,10 +1060,12 @@ module.exports = async function handler(req, res) {
           return json(res, 500, { error: "Missing GROK_API_KEY" });
         }
         // Validate API key format (should start with xai-)
-        if (!apiKey.startsWith("xai-")) {
-          console.warn(`[grok] API key format may be incorrect (expected to start with 'xai-')`);
+        const keyPrefix = apiKey.substring(0, 4);
+        if (keyPrefix !== "xai-") {
+          console.warn(`[grok] API key format may be incorrect (starts with '${keyPrefix}', expected 'xai-')`);
+          console.warn(`[grok] Key length: ${apiKey.length}, first 10 chars: ${apiKey.substring(0, 10)}...`);
         }
-        console.log(`[grok] Using model: ${grokModel}, messages: ${normalizedMessages.length}`);
+        console.log(`[grok] Using model: ${grokModel}, messages: ${normalizedMessages.length}, key length: ${apiKey.length}`);
         const result = await runGrokChat({ apiKey, model: grokModel, messages: normalizedMessages });
         const usageTokens = Number(result?.usage?.totalTokens || 0);
         const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
