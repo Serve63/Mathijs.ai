@@ -52,10 +52,19 @@
         width: min(1200px, 96vw);
         height: min(720px, 86vh);
         display: grid;
-        grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+        grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
         gap: 20px;
         align-items: center;
         position: relative;
+      }
+
+      .agent-side {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-self: start;
+        width: 100%;
+        margin-left: -72px;
       }
 
       .agent-panel {
@@ -67,11 +76,6 @@
         display: flex;
         flex-direction: column;
         gap: 14px;
-      }
-
-      .agent-panel--task {
-        align-self: start;
-        margin-left: -72px;
       }
 
       .agent-panel__title {
@@ -334,11 +338,7 @@
       }
 
       .agent-panel--inbox {
-        position: absolute;
-        top: 0;
-        right: -80px;
-        width: min(320px, 28vw);
-        max-width: 340px;
+        width: 100%;
       }
 
       @media (max-width: 980px) {
@@ -352,6 +352,11 @@
           height: auto;
         }
 
+        .agent-side {
+          margin-left: 0;
+          order: 1;
+        }
+
         .agent-map {
           width: 100%;
           height: 340px;
@@ -363,28 +368,28 @@
         }
 
         .agent-panel--inbox {
-          position: static;
           width: 100%;
-          max-width: none;
-          order: 3;
-        }
-
-        .agent-panel--task {
-          margin-left: 0;
         }
       }
     </style>
   </head>
   <body>
     <div class="agent-stage">
-      <div class="agent-panel agent-panel--task">
-        <div class="agent-panel__title">Chat</div>
-        <div class="agent-chat" id="agent-chat" aria-live="polite"></div>
-        <form class="agent-form agent-form--chat" id="agent-form">
-          <label for="agent-input" class="visually-hidden">Chatbericht</label>
-          <textarea id="agent-input" placeholder="Typ je bericht aan Mathijs..."></textarea>
-          <button type="submit" id="agent-submit">Verstuur</button>
-        </form>
+      <div class="agent-side">
+        <div class="agent-panel agent-panel--task">
+          <div class="agent-panel__title">Chat</div>
+          <div class="agent-chat" id="agent-chat" aria-live="polite"></div>
+          <form class="agent-form agent-form--chat" id="agent-form">
+            <label for="agent-input" class="visually-hidden">Chatbericht</label>
+            <textarea id="agent-input" placeholder="Typ je bericht aan Mathijs..."></textarea>
+            <button type="submit" id="agent-submit">Verstuur</button>
+          </form>
+        </div>
+
+        <div class="agent-panel agent-panel--inbox">
+          <div class="agent-panel__title">Postvak</div>
+          <div class="agent-inbox" id="agent-inbox"></div>
+        </div>
       </div>
 
       <div class="agent-map" aria-hidden="true">
@@ -420,12 +425,6 @@
         <div class="agent-node" style="--x: -210px; --y: 150px;">Sonnet 4.5</div>
         <div class="agent-node" style="--x: -260px; --y: 0px;">Llama 4</div>
         <div class="agent-node" style="--x: -210px; --y: -150px;">Qwen3-MAX</div>
-      </div>
-
-      <div class="agent-panel agent-panel--inbox">
-        <div class="agent-panel__title">Postvak</div>
-        <div class="agent-inbox" id="agent-inbox">
-        </div>
       </div>
     </div>
     <script src="assets/vendor/supabase.min.js"></script>
