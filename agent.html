@@ -21,6 +21,17 @@
         box-sizing: border-box;
       }
 
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+      }
+
       body {
         margin: 0;
         min-height: 100vh;
@@ -77,6 +88,10 @@
         gap: 12px;
       }
 
+      .agent-form--chat {
+        margin-top: auto;
+      }
+
       .agent-form label {
         font-size: 0.82rem;
         color: rgba(226, 232, 240, 0.7);
@@ -93,6 +108,10 @@
         resize: none;
         outline: none;
         min-height: 120px;
+      }
+
+      .agent-form--chat textarea {
+        min-height: 96px;
       }
 
       .agent-form textarea:focus {
@@ -115,6 +134,55 @@
 
       .agent-form button:active {
         transform: translateY(1px);
+      }
+
+      .agent-chat {
+        flex: 1;
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding-right: 4px;
+        overflow: auto;
+      }
+
+      .agent-chat::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .agent-chat::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.4);
+        border-radius: 999px;
+      }
+
+      .agent-chat__item {
+        display: flex;
+      }
+
+      .agent-chat__item--user {
+        justify-content: flex-end;
+      }
+
+      .agent-chat__bubble {
+        max-width: 100%;
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(15, 23, 42, 0.6);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: #e2e8f0;
+        white-space: pre-wrap;
+      }
+
+      .agent-chat__item--user .agent-chat__bubble {
+        background: rgba(230, 194, 0, 0.18);
+        border-color: rgba(230, 194, 0, 0.5);
+        color: #fef3c7;
+      }
+
+      .agent-chat__bubble--pending {
+        opacity: 0.85;
       }
 
       .agent-map {
@@ -310,11 +378,12 @@
   <body>
     <div class="agent-stage">
       <div class="agent-panel agent-panel--task">
-        <div class="agent-panel__title">Opdracht</div>
-        <form class="agent-form" id="agent-form">
-          <label for="agent-input">Zet Mathijs aan het werk</label>
-          <textarea id="agent-input" placeholder="Zet Mathijs aan het werk..."></textarea>
-          <button type="submit" id="agent-submit">Start</button>
+        <div class="agent-panel__title">Chat</div>
+        <div class="agent-chat" id="agent-chat" aria-live="polite"></div>
+        <form class="agent-form agent-form--chat" id="agent-form">
+          <label for="agent-input" class="visually-hidden">Chatbericht</label>
+          <textarea id="agent-input" placeholder="Typ je bericht aan Mathijs..."></textarea>
+          <button type="submit" id="agent-submit">Verstuur</button>
         </form>
       </div>
 

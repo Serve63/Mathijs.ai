@@ -12,6 +12,7 @@
     const input = document.getElementById("agent-input");
     const inbox = document.getElementById("agent-inbox");
     const submitBtn = document.getElementById("agent-submit");
+    const chat = document.getElementById("agent-chat");
     const modelNodes = Array.from(document.querySelectorAll(".agent-node[data-model]"));
 
     const escapeHtml = (value) =>
@@ -139,17 +140,38 @@
     return item;
   };
 
-  const insertInboxHtml = (title, htmlBody) => {
-    if (!inbox) return null;
-    const item = document.createElement("div");
-    item.className = "agent-inbox__item";
-    item.innerHTML = `
-      <div class="agent-inbox__title">${escapeHtml(title)}</div>
-      <div class="agent-inbox__body">${htmlBody}</div>
-    `;
-    inbox.prepend(item);
-    return item;
-  };
+    const insertInboxHtml = (title, htmlBody) => {
+      if (!inbox) return null;
+      const item = document.createElement("div");
+      item.className = "agent-inbox__item";
+      item.innerHTML = `
+        <div class="agent-inbox__title">${escapeHtml(title)}</div>
+        <div class="agent-inbox__body">${htmlBody}</div>
+      `;
+      inbox.prepend(item);
+      return item;
+    };
+
+    const formatChatBody = (body) => escapeHtml(body).replace(/\n/g, "<br>");
+
+    const createChatMessage = (role, body, { pending = false } = {}) => {
+      if (!chat) return null;
+      const item = document.createElement("div");
+      item.className = `agent-chat__item agent-chat__item--${role}`;
+      const bubble = document.createElement("div");
+      bubble.className = `agent-chat__bubble${pending ? " agent-chat__bubble--pending" : ""}`;
+      bubble.innerHTML = formatChatBody(body);
+      item.appendChild(bubble);
+      chat.appendChild(item);
+      chat.scrollTop = chat.scrollHeight;
+      return bubble;
+    };
+
+    const updateChatMessage = (bubble, body) => {
+      if (!bubble) return;
+      bubble.classList.remove("agent-chat__bubble--pending");
+      bubble.innerHTML = formatChatBody(body);
+    };
 
   const wrapText = (text, maxChars) => {
     const lines = [];
@@ -281,7 +303,7 @@
     const setLoading = (isLoading) => {
       if (!submitBtn) return;
       submitBtn.disabled = isLoading;
-      submitBtn.textContent = isLoading ? "Bezig..." : "Start";
+      submitBtn.textContent = isLoading ? "Bezig..." : "Verstuur";
     };
 
     const setModelState = (model, state) => {
@@ -307,11 +329,15 @@
         setLoading(true);
         resetModelStates();
 
+        createChatMessage("user", task);
+        const assistantBubble = createChatMessage("assistant", "Ik ga dit nu regelen...", { pending: true });
+
         insertInboxItem("Opdracht ontvangen", task);
 
         const token = await getAccessToken();
         if (!token) {
           insertInboxHtml("Inloggen vereist", '<a href="/login">Log in om te starten</a>');
+          updateChatMessage(assistantBubble, "Log in om te starten.");
           setLoading(false);
           return;
         }
@@ -387,6 +413,7 @@
 
         if (!insights.openai && !insights.gemini) {
           resolveItem(masterItem, "Geen modellen beschikbaar", "Koppel OpenAI of Gemini om te starten.");
+          updateChatMessage(assistantBubble, "Geen modellen beschikbaar. Koppel OpenAI of Gemini om te starten.");
           setLoading(false);
           return;
         }
@@ -396,15 +423,18 @@
             const doc = await buildFinalDocument({ task, insights, token });
             if (!doc) {
               insertInboxItem("Einddocument", "Geen resultaat ontvangen.");
+              updateChatMessage(assistantBubble, "Ik kon geen einddocument maken. Probeer het opnieuw.");
             } else {
-            const pdfBlob = buildPdfBlob(doc);
-            const url = URL.createObjectURL(pdfBlob);
-            const fileName = `Mathijs-document-${Date.now()}.pdf`;
-            const linkHtml = `<a href="${url}" download="${fileName}">Download PDF</a>`;
-            insertInboxHtml("Einddocument", linkHtml);
-          }
+              const pdfBlob = buildPdfBlob(doc);
+              const url = URL.createObjectURL(pdfBlob);
+              const fileName = `Mathijs-document-${Date.now()}.pdf`;
+              const linkHtml = `<a href="${url}" download="${fileName}">Download PDF</a>`;
+              insertInboxHtml("Einddocument", linkHtml);
+              updateChatMessage(assistantBubble, "Klaar! Download het PDF-document in het postvak.");
+            }
         } catch (err) {
           resolveItem(masterItem, "Document fout", err.message || "Kon einddocument niet maken.");
+          updateChatMessage(assistantBubble, "Er ging iets mis bij het maken van het document.");
         } finally {
           setLoading(false);
         }
