@@ -277,7 +277,7 @@
         "Gemini 3": "gemini-1.5-flash",
       };
       const GROK_MODEL_LABEL_MAP = {
-        "Grok 4": "grok-4",
+        "Grok 4": "grok-4-0709",
       };
       const CLAUDE_MODEL_LABEL_MAP = {
         "Opus 4.5": "claude-opus-4-5",

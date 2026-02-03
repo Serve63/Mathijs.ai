@@ -23,9 +23,9 @@ const GEMINI_ALLOWED_MODELS = [
   "gemini-1.5-pro-001",
 ];
 
-// Grok model IDs - xAI uses standard model names
-const GROK_DEFAULT_MODEL = "grok-4";
-const GROK_ALLOWED_MODELS = ["grok-4", "grok-4-0709", "grok-4-code", "grok-beta", "grok-2"];
+// Grok model IDs - xAI API expects grok-4-0709 for Grok 4 (grok-4 is invalid/400)
+const GROK_DEFAULT_MODEL = "grok-4-0709";
+const GROK_ALLOWED_MODELS = ["grok-4-0709", "grok-4", "grok-4-code", "grok-beta", "grok-2", "grok-3", "grok-3-mini"];
 
 // Claude (Anthropic) model IDs - Opus 4.5, Sonnet 4.5, Haiku 4.5
 const CLAUDE_DEFAULT_MODEL = "claude-sonnet-4-5";
@@ -128,6 +128,8 @@ const GROK_MODEL_TOKEN_COSTS = {
   "grok-4-code": 3,
   "grok-beta": 3,
   "grok-2": 3,
+  "grok-3": 3,
+  "grok-3-mini": 1,
 };
 const CLAUDE_MODEL_TOKEN_COSTS = {
   "claude-opus-4-5": 5,
@@ -393,12 +395,14 @@ function resolveGrokModel(requested) {
     return GROK_DEFAULT_MODEL;
   }
   const normalized = requested.trim();
-  // Map UI labels to actual Grok model IDs
+  // Map UI/legacy names to xAI API model IDs (Grok 4 = grok-4-0709)
   const modelMap = {
-    "grok-4": "grok-4",
-    "grok-4-latest": "grok-4",
-    "grok-beta": "grok-4",
+    "grok-4": "grok-4-0709",
+    "grok-4-latest": "grok-4-0709",
+    "grok-beta": "grok-4-0709",
     "grok-2": "grok-2",
+    "grok-3": "grok-3",
+    "grok-3-mini": "grok-3-mini",
   };
   const mapped = modelMap[normalized] || normalized;
 
