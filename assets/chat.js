@@ -3250,7 +3250,14 @@
 	        if (!value) return;
 
         const provider = getSelectedProvider();
-        const status = await refreshProviderStatus();
+        let status = await refreshProviderStatus();
+        // Als de gekozen provider nog niet als verbonden staat, één keer verse status ophalen
+        // (eerste ophaal kan zijn mislukt of vóór login gedaan)
+        const providerKey = provider === "openai" ? "openai" : provider === "gemini" ? "gemini" : provider === "grok" ? "grok" : provider === "anthropic" ? "claude" : null;
+        if (providerKey && status[providerKey] !== true) {
+          const freshStatus = await refreshProviderStatus({ force: true });
+          if (freshStatus && typeof freshStatus === "object") status = freshStatus;
+        }
 
         if (provider === "openai" && status.openai !== true) {
           appendMessage("OpenAI is niet gekoppeld. Voeg OPEN_AI_KEY toe om te chatten.", "assistant", { persist: false });

@@ -32,7 +32,7 @@ function getGeminiApiKey() {
 }
 
 function getGrokApiKey() {
-  return pickEnv(["GROK_API_KEY", "grok_api_key"]);
+  return pickEnv(["GROK_API_KEY", "XAI_API_KEY", "grok_api_key", "xai_api_key"]);
 }
 
 function getClaudeApiKey() {
