@@ -290,7 +290,6 @@
         sonnet45: "anthropic",
         haiku45: "anthropic",
         gemini3: "gemini",
-        llama4: "meta",
         qwen: "qwen",
         deepseekv2: "deepseek",
         grok4: "grok",
@@ -324,8 +323,6 @@
           selectedModel = "haiku45";
         } else if (label && label.startsWith("Gemini 3")) {
           selectedModel = "gemini3";
-        } else if (label && label.startsWith("Llama 4")) {
-          selectedModel = "llama4";
         } else if (label && label.startsWith("Qwen3-MAX")) {
           selectedModel = "qwen";
         } else if (label && label.startsWith("DeepSeek V2")) {
@@ -512,7 +509,8 @@
 	        if (!activeOption) activeOption = options[0] || null;
 	        if (activeOption) setActiveOption(activeOption);
 
-	        trigger.addEventListener("click", () => {
+	        trigger.addEventListener("click", (event) => {
+	          event.stopPropagation();
 	          const willOpen = !dropdown.classList.contains("active");
 	          closeAllDropdowns(willOpen ? dropdown : null);
 	          dropdown.classList.toggle("active");
@@ -521,6 +519,8 @@
 
 	        options.forEach((option) => {
 	          option.addEventListener("click", (event) => {
+	            event.preventDefault();
+	            event.stopPropagation();
 	            const value = option.getAttribute("data-model");
 	            if (selectionState[categoryKey] === value) {
 	              closeAllDropdowns();

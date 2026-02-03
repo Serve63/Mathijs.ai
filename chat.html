@@ -1579,7 +1579,7 @@
         margin: 0;
         width: 100%;
         flex-shrink: 0;
-        z-index: 1;
+        z-index: 50;
         border: none;
         box-shadow: none;
       }
@@ -1714,7 +1714,7 @@
 
       .chat-model-selector {
         position: relative;
-        z-index: 2;
+        z-index: 100;
         padding: 0;
         margin: 0;
         width: auto;
@@ -1924,9 +1924,11 @@
         display: none;
         flex-direction: column;
         overflow: visible;
-        z-index: 20;
+        z-index: 200;
         padding: 6px;
         box-sizing: border-box;
+        pointer-events: auto;
+        isolation: isolate;
       }
 
       .model-dropdown.active {
@@ -1972,6 +1974,8 @@
         max-width: 100%;
         /* Important: keep submenu visible when it overflows to the right */
         overflow: visible;
+        pointer-events: auto;
+        user-select: none;
       }
 
       .model-option:hover {
@@ -3504,9 +3508,6 @@
                       </div>
                       <div class="model-option" data-model="Haiku 4.5" role="option" aria-selected="false">
                         <span class="model-option__label">Haiku 4.5</span>
-                      </div>
-                      <div class="model-option" data-model="Llama 4" role="option" aria-selected="false">
-                        <span class="model-option__label">Llama 4</span>
                       </div>
                       <div class="model-option" data-model="Qwen3-MAX" role="option" aria-selected="false">
                         <span class="model-option__label">Qwen3-MAX</span>
