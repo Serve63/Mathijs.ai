@@ -96,7 +96,7 @@ module.exports = async (req, res) => {
       };
       
       // Add provider if provided and valid (only if column exists in DB)
-      if (provider === "gemini" || provider === "openai" || provider === "grok") {
+      if (provider === "gemini" || provider === "openai" || provider === "grok" || provider === "anthropic") {
         payload.provider = provider;
       }
 

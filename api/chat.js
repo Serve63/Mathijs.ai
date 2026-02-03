@@ -3,7 +3,7 @@ const OpenAI = require("openai");
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, readJson } = require("./_lib/security");
 const { getUserFromAccessToken } = require("./_lib/supabase");
 const { SUPABASE_URL } = require("./_lib/supabase");
-const { getOpenAIApiKey, getGeminiApiKey, getGrokApiKey, getSupabaseServiceRoleKey } = require("./_lib/env");
+const { getOpenAIApiKey, getGeminiApiKey, getGrokApiKey, getClaudeApiKey, getSupabaseServiceRoleKey } = require("./_lib/env");
 const { adminRestFetch } = require("./_lib/supabaseAdmin");
 
 // NOTE: UI labels may map to marketing names; server maps them to real OpenAI model IDs.
@@ -26,6 +26,17 @@ const GEMINI_ALLOWED_MODELS = [
 // Grok model IDs - xAI uses standard model names
 const GROK_DEFAULT_MODEL = "grok-4";
 const GROK_ALLOWED_MODELS = ["grok-4", "grok-4-0709", "grok-4-code", "grok-beta", "grok-2"];
+
+// Claude (Anthropic) model IDs - Opus 4.5, Sonnet 4.5, Haiku 4.5
+const CLAUDE_DEFAULT_MODEL = "claude-sonnet-4-5";
+const CLAUDE_ALLOWED_MODELS = [
+  "claude-opus-4-5",
+  "claude-opus-4-5-20251101",
+  "claude-sonnet-4-5",
+  "claude-sonnet-4-5-20250929",
+  "claude-haiku-4-5",
+  "claude-haiku-4-5-20251001",
+];
 
 const MAX_MESSAGES = 30;
 const MAX_MESSAGE_CHARS = 8000;
@@ -117,6 +128,14 @@ const GROK_MODEL_TOKEN_COSTS = {
   "grok-4-code": 3,
   "grok-beta": 3,
   "grok-2": 3,
+};
+const CLAUDE_MODEL_TOKEN_COSTS = {
+  "claude-opus-4-5": 5,
+  "claude-opus-4-5-20251101": 5,
+  "claude-sonnet-4-5": 3,
+  "claude-sonnet-4-5-20250929": 3,
+  "claude-haiku-4-5": 1,
+  "claude-haiku-4-5-20251001": 1,
 };
 
 function getTokensPerEur() {
@@ -390,6 +409,28 @@ function resolveGrokModel(requested) {
   return mapped;
 }
 
+function resolveClaudeModel(requested) {
+  if (typeof requested !== "string" || !requested.trim()) {
+    return CLAUDE_DEFAULT_MODEL;
+  }
+  const normalized = requested.trim();
+  if (CLAUDE_ALLOWED_MODELS.includes(normalized)) return normalized;
+  // Map UI labels / aliases to Anthropic API model IDs
+  const modelMap = {
+    "opus 4.5": "claude-opus-4-5",
+    "claude-opus-4-5-20251101": "claude-opus-4-5",
+    "sonnet 4.5": "claude-sonnet-4-5",
+    "claude-sonnet-4-5-20250929": "claude-sonnet-4-5",
+    "haiku 4.5": "claude-haiku-4-5",
+    "claude-haiku-4-5-20251001": "claude-haiku-4-5",
+  };
+  const lower = normalized.toLowerCase();
+  const mapped = modelMap[lower] || modelMap[normalized] || normalized;
+  if (CLAUDE_ALLOWED_MODELS.includes(mapped)) return mapped;
+  console.warn(`Niet toegestane/ongekende Claude model requested: ${normalized}. Valt terug op ${CLAUDE_DEFAULT_MODEL}`);
+  return CLAUDE_DEFAULT_MODEL;
+}
+
 function normalizeModelKey(value) {
   if (typeof value !== "string") return "";
   return value.trim().toLowerCase();
@@ -428,6 +469,11 @@ function resolveTokensRequired({ modelKey, modelLabel, provider, requestedModel,
   if (provider === "grok") {
     const grokModel = resolvedModel || resolveGrokModel(requestedModel);
     if (GROK_MODEL_TOKEN_COSTS[grokModel]) return GROK_MODEL_TOKEN_COSTS[grokModel];
+  }
+
+  if (provider === "anthropic" || provider === "claude") {
+    const claudeModel = resolvedModel || resolveClaudeModel(requestedModel);
+    if (CLAUDE_MODEL_TOKEN_COSTS[claudeModel]) return CLAUDE_MODEL_TOKEN_COSTS[claudeModel];
   }
 
   return TOKENS_PER_CHAT_DEFAULT;
@@ -591,6 +637,7 @@ function sanitizeProviderErrorMessage(message) {
   if (!message) return "";
   return String(message)
     .replace(/\bsk-[A-Za-z0-9_-]{10,}\b/g, "***REDACTED***")
+    .replace(/\bsk-ant-[A-Za-z0-9_-]{10,}\b/g, "***REDACTED***")
     .replace(/\b(?:sk_live|rk_live|whsec)_[A-Za-z0-9]{10,}\b/g, "***REDACTED***")
     .replace(/\bAIza[0-9A-Za-z_-]{20,}\b/g, "***REDACTED***")
     .replace(/\bxai-[A-Za-z0-9_-]{20,}\b/g, "***REDACTED***");
@@ -826,6 +873,97 @@ async function runGrokChat({ apiKey, model, messages }) {
   }
 }
 
+function buildClaudeRequest(normalizedMessages) {
+  const systemParts = [];
+  const messages = [];
+  for (const msg of normalizedMessages) {
+    if (!msg || typeof msg.content !== "string") continue;
+    if (msg.role === "developer") {
+      systemParts.push(msg.content);
+      continue;
+    }
+    if (msg.role === "user" || msg.role === "assistant") {
+      messages.push({ role: msg.role, content: msg.content });
+    }
+  }
+  return {
+    system: systemParts.filter(Boolean).join("\n\n").trim() || undefined,
+    messages,
+  };
+}
+
+function extractClaudeText(payload) {
+  const content = Array.isArray(payload?.content) ? payload.content : [];
+  return content
+    .filter((block) => block?.type === "text" && typeof block.text === "string")
+    .map((block) => block.text)
+    .join("\n");
+}
+
+function extractClaudeUsage(payload) {
+  const usage = payload?.usage || {};
+  const inputTokens = Number(usage?.input_tokens ?? usage?.inputTokens ?? 0);
+  const outputTokens = Number(usage?.output_tokens ?? usage?.output_tokens ?? 0);
+  let totalTokens = Number(usage?.total_tokens ?? usage?.totalTokens ?? 0);
+  if (!Number.isFinite(totalTokens) || totalTokens <= 0) {
+    const summed = (Number.isFinite(inputTokens) ? inputTokens : 0) + (Number.isFinite(outputTokens) ? outputTokens : 0);
+    if (summed > 0) totalTokens = summed;
+  }
+  return {
+    inputTokens: Number.isFinite(inputTokens) ? inputTokens : 0,
+    outputTokens: Number.isFinite(outputTokens) ? outputTokens : 0,
+    totalTokens: Number.isFinite(totalTokens) ? totalTokens : 0,
+  };
+}
+
+async function runClaudeChat({ apiKey, model, messages }) {
+  try {
+    const { system, messages: claudeMessages } = buildClaudeRequest(messages);
+    if (!claudeMessages.length) {
+      throw new Error("Claude: geen geldige berichten.");
+    }
+    const url = "https://api.anthropic.com/v1/messages";
+    const body = {
+      model,
+      max_tokens: 4096,
+      messages: claudeMessages,
+    };
+    if (system) body.system = system;
+
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const payload = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+      const err = new Error(sanitizeProviderErrorMessage(msg));
+      err.status = resp.status;
+      err.payload = payload;
+      throw err;
+    }
+
+    return {
+      text: extractClaudeText(payload),
+      usage: extractClaudeUsage(payload),
+      modelUsed: model,
+    };
+  } catch (err) {
+    const safe = sanitizeProviderErrorMessage(err?.message || "");
+    const wrapped = new Error("claude_failed");
+    wrapped.statusCode = 502;
+    wrapped.publicMessage = safe ? `Claude request mislukte: ${safe}` : "Claude request mislukte.";
+    wrapped.cause = err;
+    throw wrapped;
+  }
+}
+
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== "POST") {
@@ -879,18 +1017,21 @@ module.exports = async function handler(req, res) {
         ? "gemini"
         : typeof model === "string" && model.trim().startsWith("grok")
           ? "grok"
-          : "openai");
+          : typeof model === "string" && model.trim().startsWith("claude-")
+            ? "anthropic"
+            : "openai");
 
     const requestedModel = typeof model === "string" ? model : "";
     const resolvedOpenAIModel = inferredProvider === "openai" ? resolveOpenAIModel(requestedModel) : null;
     const resolvedGeminiModel = inferredProvider === "gemini" ? resolveGeminiModel(requestedModel) : null;
     const resolvedGrokModel = inferredProvider === "grok" ? resolveGrokModel(requestedModel) : null;
+    const resolvedClaudeModel = inferredProvider === "anthropic" ? resolveClaudeModel(requestedModel) : null;
     const tokensRequiredRaw = resolveTokensRequired({
       modelKey,
       modelLabel,
       provider: inferredProvider,
       requestedModel,
-      resolvedModel: resolvedOpenAIModel || resolvedGeminiModel || resolvedGrokModel,
+      resolvedModel: resolvedOpenAIModel || resolvedGeminiModel || resolvedGrokModel || resolvedClaudeModel,
     });
     const tokensRequired = Math.max(
       1,
@@ -1082,6 +1223,30 @@ module.exports = async function handler(req, res) {
         return json(res, 200, { text: result?.text || "" });
       }
 
+      if (inferredProvider === "anthropic") {
+        const claudeModel = resolvedClaudeModel || resolveClaudeModel(requestedModel);
+        const apiKey = getClaudeApiKey();
+        console.log(`[claude] key ${apiKey ? "present" : "missing"}, model: ${claudeModel}`);
+        if (!apiKey) {
+          await refundTokensBestEffort();
+          return json(res, 500, { error: "Missing CLAUDE_API_KEY" });
+        }
+        const result = await runClaudeChat({ apiKey, model: claudeModel, messages: normalizedMessages });
+        const usageTokens = Number(result?.usage?.totalTokens || 0);
+        const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
+        const usedModel = result?.modelUsed || claudeModel;
+        void recordUsageEvent({
+          userId: user.id,
+          provider: "claude",
+          model: usedModel,
+          modelLabel: modelLabel || modelKey || requestedModel || usedModel,
+          tokens: actualTokens,
+          tokensPerEur,
+          costEur: requestCostEur,
+        });
+        return json(res, 200, { text: result?.text || "" });
+      }
+
       const openaiModel = resolvedOpenAIModel || resolveOpenAIModel(requestedModel);
       const apiKey = getOpenAIApiKey();
       console.log(`[openai] key ${apiKey ? "present" : "missing"}`);
@@ -1138,6 +1303,7 @@ module.exports = async function handler(req, res) {
       gemini_failed: "Gemini kon geen antwoord geven. Probeer opnieuw.",
       grok_failed: "Grok kon geen antwoord geven. Probeer opnieuw.",
       openai_failed: "OpenAI kon geen antwoord geven. Probeer opnieuw.",
+      claude_failed: "Claude kon geen antwoord geven. Probeer opnieuw.",
       supabase_auth_admin_failed: "Tokenbeheer faalde door Supabase. Controleer SUPABASE_SERVICE_ROLE_KEY.",
       token_init_failed: "Tokens konden niet worden geïnitialiseerd. Controleer SUPABASE_SERVICE_ROLE_KEY.",
       token_deduct_failed: "Tokens konden niet worden bijgewerkt. Controleer SUPABASE_SERVICE_ROLE_KEY.",

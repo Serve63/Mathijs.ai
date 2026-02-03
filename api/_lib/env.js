@@ -35,6 +35,10 @@ function getGrokApiKey() {
   return pickEnv(["GROK_API_KEY", "grok_api_key"]);
 }
 
+function getClaudeApiKey() {
+  return pickEnv(["CLAUDE_API_KEY", "ANTHROPIC_API_KEY", "claude_api_key"]);
+}
+
 function getSupabaseServiceRoleKey() {
   return pickEnv([
     "SUPABASE_SERVICE_ROLE_KEY",
@@ -78,6 +82,7 @@ module.exports = {
   getOpenAICostsKey,
   getGeminiApiKey,
   getGrokApiKey,
+  getClaudeApiKey,
   getSupabaseServiceRoleKey,
   getSupabaseUrl,
   getSupabaseAnonKey,
