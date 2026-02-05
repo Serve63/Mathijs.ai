@@ -1290,8 +1290,8 @@ module.exports = async function handler(req, res) {
       });
       return json(res, 200, { text: text || "" });
     } catch (err) {
-      // Refund tokens for provider errors (best effort). If this throws, the outer catch handles it.
-      // Note: for successful responses we never enter here.
+      // Refund tokens on any provider/runtime error after deduction.
+      await refundTokensBestEffort();
       throw err;
     }
   } catch (error) {

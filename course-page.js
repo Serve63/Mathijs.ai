@@ -274,7 +274,7 @@
 
     const initBackGuard = () => {
       try {
-        const HOME_URL = "/staff-dashboard";
+        const HOME_URL = "/chat";
         history.pushState({ courseBackGuard: true }, "", location.href);
         window.addEventListener("popstate", () => {
           window.location.replace(HOME_URL);

@@ -95,7 +95,7 @@ module.exports = async (req, res) => {
     const payment = await mollieRequest("payments", mollieKey, {
       amount: { currency: "EUR", value: amount },
       description: String(process.env.MOLLIE_DESCRIPTION || "Mathijs.ai abonnement").trim() || "Mathijs.ai abonnement",
-      redirectUrl: `${baseUrl}//billing-success`,
+      redirectUrl: `${baseUrl}/billing-success`,
       webhookUrl: String(process.env.MOLLIE_WEBHOOK_URL || "").trim() || undefined,
       method: method || undefined,
       metadata: { supabase_user_id: userId, full_name: fullName, email },

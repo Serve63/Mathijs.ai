@@ -28,6 +28,7 @@
     <!-- Preconnect voor performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://mengrlsqgshxqcxhirjn.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://nl.trustpilot.com" />
     
     <!-- Font loading met font-display swap voor betere performance -->
@@ -37,8 +38,7 @@
     />
     
     <!-- Preload kritieke afbeeldingen -->
-    <link rel="preload" as="image" href="assets/logo.png" />
-    <link rel="preload" as="image" href="assets/team-duo.svg" />
+    <link rel="preload" as="image" href="assets/logo-ui.webp" type="image/webp" />
     
     <!-- Structured Data voor SEO -->
     <script type="application/ld+json">
@@ -739,6 +739,11 @@
       /* Sections */
       .section {
         padding: 100px 40px;
+      }
+
+      .defer-render {
+        content-visibility: auto;
+        contain-intrinsic-size: 800px;
       }
 
       .section-inner {
@@ -1487,7 +1492,7 @@
       <div class="header-inner">
         <a href="/" class="brand" aria-label="Mathijs.ai homepage">
           <img
-            src="assets/logo.png"
+            src="assets/logo-ui.webp"
             alt="Mathijs.ai logo"
             class="brand-logo"
             width="40"
@@ -1539,7 +1544,7 @@
             <div class="hero-panel">
               <div class="hero-card__header">
                 <img
-                  src="assets/logo.png"
+                  src="assets/logo-ui.webp"
                   alt="Mathijs.ai avatar"
                   class="hero-card__avatar"
                   width="46"
@@ -1608,7 +1613,7 @@
         </div>
       </section>
 
-      <section class="section" id="features">
+      <section class="section defer-render" id="features">
         <div class="section-inner">
           <div class="section-header">
             <span class="section-eyebrow">Waarom Mathijs.ai</span>
@@ -1653,7 +1658,7 @@
         </div>
       </section>
 
-      <section class="section dark" id="how">
+      <section class="section dark defer-render" id="how">
         <div class="section-inner">
           <div class="section-header">
             <span class="section-eyebrow">Dit is wat je wilt</span>
@@ -1682,7 +1687,7 @@
         </div>
       </section>
 
-      <section class="section" id="reviews">
+      <section class="section defer-render" id="reviews">
         <div class="section-inner">
           <div class="section-header">
             <span class="section-eyebrow">Ervaringen</span>
@@ -1732,7 +1737,7 @@
         </div>
       </section>
 
-      <section class="pricing-section" id="pricing">
+      <section class="pricing-section defer-render" id="pricing">
         <div class="section-inner">
           <div class="section-header">
             <span class="section-eyebrow">Prijzen</span>
@@ -1821,7 +1826,7 @@
         </div>
       </section>
 
-      <section class="team-section" id="team">
+      <section class="team-section defer-render" id="team">
         <div class="section-inner team-shell">
           <div class="team-copy">
             <span class="team-label">Over ons</span>
@@ -1866,7 +1871,7 @@
                 alt="Twee jongens van het Mathijs.ai team"
                 width="900"
                 height="640"
-                loading="eager"
+                loading="lazy"
                 decoding="async"
                 fetchpriority="low"
               />

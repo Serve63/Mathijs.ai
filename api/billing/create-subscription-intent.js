@@ -111,10 +111,9 @@ module.exports = async (req, res) => {
     return json(res, 200, {
       clientSecret,
       subscriptionId: subscription.id,
-      returnUrl: `${baseUrl}//billing-success?subscription_id=${encodeURIComponent(subscription.id)}`,
+      returnUrl: `${baseUrl}/billing-success?subscription_id=${encodeURIComponent(subscription.id)}`,
     });
   } catch (e) {
     return publicError(res, 500, "Betaling kon niet worden gestart. Probeer later opnieuw.", e);
   }
 };
-

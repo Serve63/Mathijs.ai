@@ -103,8 +103,8 @@ module.exports = async (req, res) => {
     sessionParams.set("mode", "subscription");
     sessionParams.set("customer", customer.id);
     sessionParams.set("client_reference_id", userId);
-    sessionParams.set("success_url", `${baseUrl}//billing-success?session_id={CHECKOUT_SESSION_ID}`);
-    sessionParams.set("cancel_url", `${baseUrl}//billing-cancelled`);
+    sessionParams.set("success_url", `${baseUrl}/billing-success?session_id={CHECKOUT_SESSION_ID}`);
+    sessionParams.set("cancel_url", `${baseUrl}/billing-cancelled`);
     sessionParams.set("allow_promotion_codes", "true");
     sessionParams.set("billing_address_collection", "required");
     sessionParams.set("tax_id_collection[enabled]", "true");

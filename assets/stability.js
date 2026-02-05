@@ -1,5 +1,17 @@
 (() => {
   try {
+    const ensurePreconnect = (href, withCrossOrigin = false) => {
+      if (!href) return;
+      if (document.querySelector(`link[rel="preconnect"][href="${href}"]`)) return;
+      const link = document.createElement("link");
+      link.rel = "preconnect";
+      link.href = href;
+      if (withCrossOrigin) link.crossOrigin = "anonymous";
+      document.head.appendChild(link);
+    };
+
+    ensurePreconnect("https://mengrlsqgshxqcxhirjn.supabase.co", true);
+
     const params = new URLSearchParams(window.location.search);
     const force =
       params.has("stable") ||
