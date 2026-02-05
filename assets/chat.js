@@ -574,6 +574,18 @@
         }, {});
       };
 
+      const getModelSessionKeyByLabel = (label) => {
+        const normalized = String(label || "").trim();
+        return normalized || null;
+      };
+
+      const getCurrentModelSessionKey = () => getModelSessionKeyByLabel(selectedModelLabel);
+
+      const getLegacyModelSessionKey = () => {
+        const normalized = String(selectedModel || "").trim();
+        return normalized || null;
+      };
+
       const hydrateModelStateForUser = async (userId) => {
         if (!userId || modelStateHydratedForUserId === userId) return;
         modelSessionMap = sanitizeModelSessionMap(loadModelSessionMap(userId));
@@ -596,14 +608,28 @@
 
       const bindCurrentModelToSession = (sessionId) => {
         const userId = currentUser?.id;
-        if (!userId || !sessionId || !selectedModel) return;
-        modelSessionMap[selectedModel] = sessionId;
+        if (!userId || !sessionId) return;
+        const key = getCurrentModelSessionKey();
+        if (!key) return;
+        modelSessionMap[key] = sessionId;
         saveModelSessionMap(userId, modelSessionMap);
       };
 
       const ensureModelSessionForSelectedModel = async ({ createIfMissing = true, bindActiveFallback = false } = {}) => {
-        if (!selectedModel) return null;
-        const mappedSessionId = modelSessionMap[selectedModel];
+        const userId = currentUser?.id;
+        const modelSessionKey = getCurrentModelSessionKey();
+        if (!modelSessionKey) return null;
+        let mappedSessionId = modelSessionMap[modelSessionKey];
+        if (!mappedSessionId) {
+          const legacyKey = getLegacyModelSessionKey();
+          if (legacyKey && modelSessionMap[legacyKey]) {
+            mappedSessionId = modelSessionMap[legacyKey];
+            modelSessionMap[modelSessionKey] = mappedSessionId;
+            if (userId) {
+              saveModelSessionMap(userId, modelSessionMap);
+            }
+          }
+        }
         const mappedSessionExists =
           typeof mappedSessionId === "string" && sessionState.list.some((session) => session.id === mappedSessionId);
         if (mappedSessionExists) {
