@@ -594,11 +594,50 @@
         return uniqueLabels.filter((label) => getModelKeyForLabel(label) === modelKey);
       };
 
+      const normalizeLabelScopedModelSessionMap = (rawMap, preferredLabel = null) => {
+        const nextMap = { ...(rawMap || {}) };
+        const labels = modelSwipeItems
+          .map((item) => (item.getAttribute("data-model") || "").trim())
+          .filter(Boolean);
+        const uniqueLabels = Array.from(new Set(labels));
+        const modelKeys = Array.from(new Set(uniqueLabels.map((label) => getModelKeyForLabel(label))));
+        const preferredLabelKey = getModelSessionKeyByLabel(preferredLabel);
+
+        modelKeys.forEach((modelKey) => {
+          const labelsForModel = uniqueLabels.filter((label) => getModelKeyForLabel(label) === modelKey);
+          if (labelsForModel.length <= 1) return;
+          const mapped = labelsForModel
+            .map((label) => {
+              const key = getModelSessionKeyByLabel(label);
+              const sessionId = key ? nextMap[key] : null;
+              return { key, sessionId: typeof sessionId === "string" ? sessionId.trim() : "" };
+            })
+            .filter((entry) => entry.key && entry.sessionId);
+
+          if (mapped.length <= 1) return;
+          const uniqueSessionIds = Array.from(new Set(mapped.map((entry) => entry.sessionId)));
+          if (uniqueSessionIds.length !== 1) return;
+
+          const keepKey = mapped.some((entry) => entry.key === preferredLabelKey) ? preferredLabelKey : mapped[0].key;
+          mapped.forEach((entry) => {
+            if (entry.key !== keepKey) {
+              delete nextMap[entry.key];
+            }
+          });
+        });
+
+        return nextMap;
+      };
+
       const hydrateModelStateForUser = async (userId) => {
         if (!userId || modelStateHydratedForUserId === userId) return;
-        modelSessionMap = sanitizeModelSessionMap(loadModelSessionMap(userId));
+        const sanitizedMap = sanitizeModelSessionMap(loadModelSessionMap(userId));
         const savedLabel = loadSavedModelLabel(userId);
         hydratedPreferredModelLabel = typeof savedLabel === "string" && savedLabel.trim() ? savedLabel.trim() : null;
+        modelSessionMap = normalizeLabelScopedModelSessionMap(sanitizedMap, hydratedPreferredModelLabel);
+        if (JSON.stringify(modelSessionMap) !== JSON.stringify(sanitizedMap)) {
+          saveModelSessionMap(userId, modelSessionMap);
+        }
 
         if (modelSwipeItems.length) {
           const preferredIndex = getModelIndexByLabel(savedLabel || selectedModelLabel);
