@@ -1731,23 +1731,23 @@
       .model-swipe {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         max-width: 100%;
       }
 
       .model-swipe__arrow {
-        width: 34px;
-        height: 34px;
+        width: 30px;
+        height: 30px;
         border-radius: 999px;
-        border: 1px solid rgba(15, 23, 42, 0.12);
-        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(15, 23, 42, 0.1);
+        background: rgba(255, 255, 255, 0.88);
         color: rgba(15, 23, 42, 0.86);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-        box-shadow: 0 10px 24px -20px rgba(15, 23, 42, 0.35);
+        box-shadow: 0 8px 18px -16px rgba(15, 23, 42, 0.28);
       }
 
       .model-swipe__arrow:hover {
@@ -1758,22 +1758,22 @@
 
       .model-swipe__arrow:focus-visible {
         outline: none;
-        box-shadow: 0 0 0 3px rgba(230, 194, 0, 0.22), 0 10px 24px -20px rgba(15, 23, 42, 0.35);
+        box-shadow: 0 0 0 2px rgba(230, 194, 0, 0.24), 0 8px 18px -16px rgba(15, 23, 42, 0.28);
       }
 
       .model-swipe__arrow svg {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
       }
 
       .model-swipe__viewport {
-        width: clamp(180px, 28vw, 260px);
-        max-width: min(100vw - 180px, 260px);
+        width: clamp(152px, 24vw, 212px);
+        max-width: min(100vw - 210px, 212px);
         overflow: hidden;
         border-radius: 999px;
-        border: 1px solid rgba(0, 0, 0, 0.10);
+        border: 1px solid rgba(0, 0, 0, 0.09);
         background: var(--chat-accent);
-        box-shadow: 0 14px 34px -24px rgba(15, 23, 42, 0.32);
+        box-shadow: 0 10px 22px -20px rgba(15, 23, 42, 0.26);
         touch-action: pan-y;
       }
 
@@ -1786,18 +1786,18 @@
 
       .model-swipe__item {
         flex: 0 0 100%;
-        height: 52px;
+        height: 44px;
         border: none;
         background: transparent;
         color: #0b1020;
-        font-size: 1.05rem;
-        font-weight: 800;
+        font-size: 0.95rem;
+        font-weight: 700;
         letter-spacing: -0.01em;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        padding: 0 16px;
+        padding: 0 12px;
         white-space: nowrap;
       }
 
@@ -1807,7 +1807,7 @@
       }
 
       .model-swipe__item:not(.is-selected) {
-        opacity: 0.72;
+        opacity: 0.68;
       }
 
       .status-info {
