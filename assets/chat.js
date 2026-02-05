@@ -31,9 +31,14 @@
       };
 
       const modelSelects = Array.from(document.querySelectorAll(".model-select"));
+      const modelSwipe = document.getElementById("model-swipe");
+      const modelSwipeTrack = document.getElementById("model-swipe-track");
+      const modelSwipeViewport = document.getElementById("model-swipe-viewport");
+      const modelSwipePrev = document.getElementById("model-swipe-prev");
+      const modelSwipeNext = document.getElementById("model-swipe-next");
+      const modelSwipeItems = modelSwipeTrack ? Array.from(modelSwipeTrack.querySelectorAll(".model-swipe__item")) : [];
       const statusIndicator = null;
       const sidebarTop = document.querySelector(".sidebar-top");
-      const modelTrigger = document.querySelector(".model-select__trigger");
       const newChatButton = document.querySelector(".new-chat");
 
       let sidebarOffsetRevealed = false;
@@ -111,6 +116,12 @@
       document.body.appendChild(hiddenFileInput);
       let connectTimeout;
       const selectionState = {};
+      let activeModelIndex = 0;
+      let workspaceBooted = false;
+      let modelSessionMap = {};
+      let modelStateHydratedForUserId = null;
+      let touchStartX = 0;
+      let touchEndX = 0;
       const createSystemMessage = () => ({
         role: "developer",
         content: "Je bent een behulpzame AI-assistent in de AI-leeromgeving van Mathijs.ai. Je helpt ondernemers kiezen en toepassen wanneer ze welk model gebruiken.",
@@ -443,7 +454,8 @@
 
       updateActiveSelectStyles();
 
-      const handleModelChange = async (categoryLabel, value) => {
+      const handleModelChange = async (categoryLabel, value, options = {}) => {
+        const { silent = false } = options;
         if (connectTimeout) clearTimeout(connectTimeout);
         const provider = categoryLabel.toLowerCase() === "model" ? getSelectedProvider() : "unknown";
         const status = await refreshProviderStatus();
@@ -475,8 +487,243 @@
           message = `${categoryLabel} ${value} is nog niet gekoppeld. Voeg CLAUDE_API_KEY toe om Claude te gebruiken.`;
         }
 
-        appendMessage(message, "system", { persist: false });
+        if (!silent) {
+          appendMessage(message, "system", { persist: false });
+        }
       };
+
+      const normalizeModelIndex = (index) => {
+        if (!modelSwipeItems.length) return 0;
+        const total = modelSwipeItems.length;
+        return ((index % total) + total) % total;
+      };
+
+      const getModelIndexByLabel = (label) =>
+        modelSwipeItems.findIndex((item) => (item.getAttribute("data-model") || "").trim() === String(label || "").trim());
+
+      const syncModelSwipeUI = () => {
+        if (!modelSwipeTrack || !modelSwipeItems.length) return;
+        const index = normalizeModelIndex(activeModelIndex);
+        activeModelIndex = index;
+        modelSwipeTrack.style.transform = `translateX(-${index * 100}%)`;
+        modelSwipeItems.forEach((item, idx) => {
+          const isSelected = idx === index;
+          item.classList.toggle("is-selected", isSelected);
+          item.setAttribute("aria-selected", isSelected ? "true" : "false");
+        });
+      };
+
+      const MODEL_SELECTION_KEY = "mathijs_selected_model_v1";
+      const loadSavedModelLabel = (userId) => {
+        if (!userId) return null;
+        try {
+          const raw = localStorage.getItem(MODEL_SELECTION_KEY);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          const value = parsed[userId];
+          return typeof value === "string" && value.trim() ? value : null;
+        } catch {
+          return null;
+        }
+      };
+
+      const saveModelLabel = (userId, label) => {
+        if (!userId || !label) return;
+        try {
+          const raw = localStorage.getItem(MODEL_SELECTION_KEY);
+          const parsed = raw ? JSON.parse(raw) : {};
+          parsed[userId] = label;
+          localStorage.setItem(MODEL_SELECTION_KEY, JSON.stringify(parsed));
+        } catch {
+          // ignore
+        }
+      };
+
+      const MODEL_SESSION_KEY = "mathijs_model_session_map_v1";
+      const loadModelSessionMap = (userId) => {
+        if (!userId) return {};
+        try {
+          const raw = localStorage.getItem(MODEL_SESSION_KEY);
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          return parsed[userId] && typeof parsed[userId] === "object" ? parsed[userId] : {};
+        } catch {
+          return {};
+        }
+      };
+
+      const saveModelSessionMap = (userId, map) => {
+        if (!userId || !map || typeof map !== "object") return;
+        try {
+          const raw = localStorage.getItem(MODEL_SESSION_KEY);
+          const parsed = raw ? JSON.parse(raw) : {};
+          parsed[userId] = map;
+          localStorage.setItem(MODEL_SESSION_KEY, JSON.stringify(parsed));
+        } catch {
+          // ignore
+        }
+      };
+
+      const sanitizeModelSessionMap = (rawMap) => {
+        if (!rawMap || typeof rawMap !== "object") return {};
+        return Object.entries(rawMap).reduce((acc, [modelKey, sessionId]) => {
+          if (typeof modelKey !== "string") return acc;
+          if (typeof sessionId !== "string" || !sessionId.trim()) return acc;
+          acc[modelKey] = sessionId.trim();
+          return acc;
+        }, {});
+      };
+
+      const hydrateModelStateForUser = async (userId) => {
+        if (!userId || modelStateHydratedForUserId === userId) return;
+        modelSessionMap = sanitizeModelSessionMap(loadModelSessionMap(userId));
+        const savedLabel = loadSavedModelLabel(userId);
+
+        if (modelSwipeItems.length) {
+          const preferredIndex = getModelIndexByLabel(savedLabel || selectedModelLabel);
+          activeModelIndex = preferredIndex >= 0 ? preferredIndex : normalizeModelIndex(activeModelIndex);
+          syncModelSwipeUI();
+          const label = modelSwipeItems[activeModelIndex]?.getAttribute("data-model") || selectedModelLabel;
+          updateSelectedModel(label);
+          saveModelLabel(userId, label);
+        } else if (savedLabel) {
+          updateSelectedModel(savedLabel);
+          saveModelLabel(userId, savedLabel);
+        }
+
+        modelStateHydratedForUserId = userId;
+      };
+
+      const bindCurrentModelToSession = (sessionId) => {
+        const userId = currentUser?.id;
+        if (!userId || !sessionId || !selectedModel) return;
+        modelSessionMap[selectedModel] = sessionId;
+        saveModelSessionMap(userId, modelSessionMap);
+      };
+
+      const ensureModelSessionForSelectedModel = async ({ createIfMissing = true, bindActiveFallback = false } = {}) => {
+        if (!selectedModel) return null;
+        const mappedSessionId = modelSessionMap[selectedModel];
+        const mappedSessionExists =
+          typeof mappedSessionId === "string" && sessionState.list.some((session) => session.id === mappedSessionId);
+        if (mappedSessionExists) {
+          if (sessionState.activeId !== mappedSessionId) {
+            await setActiveSession(mappedSessionId);
+          }
+          return mappedSessionId;
+        }
+
+        if (bindActiveFallback && sessionState.activeId) {
+          bindCurrentModelToSession(sessionState.activeId);
+          return sessionState.activeId;
+        }
+
+        if (createIfMissing) {
+          const session = createLocalSession();
+          bindCurrentModelToSession(session.id);
+          return session.id;
+        }
+        return null;
+      };
+
+      const selectModelByIndex = async (index, options = {}) => {
+        const { silent = true, switchSession = true } = options;
+        if (!modelSwipeItems.length) return;
+        const normalizedIndex = normalizeModelIndex(index);
+        const targetItem = modelSwipeItems[normalizedIndex];
+        if (!targetItem) return;
+        const nextLabel = targetItem.getAttribute("data-model") || "";
+        if (!nextLabel) return;
+
+        const isSameSelection = nextLabel === selectedModelLabel;
+        activeModelIndex = normalizedIndex;
+        syncModelSwipeUI();
+        updateSelectedModel(nextLabel);
+        saveModelLabel(currentUser?.id, nextLabel);
+
+        if (!isSameSelection) {
+          await handleModelChange("Model", nextLabel, { silent });
+          if (switchSession && workspaceBooted) {
+            await ensureModelSessionForSelectedModel({ createIfMissing: true, bindActiveFallback: false });
+          }
+        }
+      };
+
+      const moveModelBy = async (delta) => {
+        if (!modelSwipeItems.length) return;
+        const nextIndex = normalizeModelIndex(activeModelIndex + delta);
+        await selectModelByIndex(nextIndex, { silent: true, switchSession: true });
+      };
+
+      if (modelSwipeItems.length) {
+        const initialIndex = getModelIndexByLabel(selectedModelLabel);
+        activeModelIndex = initialIndex >= 0 ? initialIndex : 0;
+        syncModelSwipeUI();
+        updateSelectedModel(modelSwipeItems[activeModelIndex].getAttribute("data-model") || selectedModelLabel);
+
+        modelSwipePrev?.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          moveModelBy(-1);
+        });
+
+        modelSwipeNext?.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          moveModelBy(1);
+        });
+
+        modelSwipeItems.forEach((item, idx) => {
+          item.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            selectModelByIndex(idx, { silent: true, switchSession: true });
+          });
+        });
+
+        if (modelSwipe) {
+          modelSwipe.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowLeft") {
+              event.preventDefault();
+              moveModelBy(-1);
+            } else if (event.key === "ArrowRight") {
+              event.preventDefault();
+              moveModelBy(1);
+            }
+          });
+        }
+
+        if (modelSwipeViewport) {
+          modelSwipeViewport.addEventListener(
+            "touchstart",
+            (event) => {
+              touchStartX = event.changedTouches[0]?.clientX || 0;
+              touchEndX = touchStartX;
+            },
+            { passive: true }
+          );
+          modelSwipeViewport.addEventListener(
+            "touchmove",
+            (event) => {
+              touchEndX = event.changedTouches[0]?.clientX || touchEndX;
+            },
+            { passive: true }
+          );
+          modelSwipeViewport.addEventListener(
+            "touchend",
+            () => {
+              const delta = touchEndX - touchStartX;
+              if (Math.abs(delta) < 38) return;
+              if (delta < 0) {
+                moveModelBy(1);
+              } else {
+                moveModelBy(-1);
+              }
+            },
+            { passive: true }
+          );
+        }
+      }
 
 	      modelSelects.forEach((select) => {
 	        const trigger = select.querySelector(".model-select__trigger");
@@ -551,7 +798,7 @@
       setActiveCategory(activeCategory);
 
       document.addEventListener("click", (event) => {
-        const insideControl = event.target.closest(".model-select, .chat-plus, .chat-mode-select");
+        const insideControl = event.target.closest(".model-select, .model-swipe, .chat-plus, .chat-mode-select");
         if (!insideControl) {
           closeAllDropdowns();
         }
@@ -1517,7 +1764,7 @@
           actions.querySelector(".share-session").addEventListener("click", async (event) => {
             event.stopPropagation();
             actions.classList.remove("is-open");
-            const shareText = `${window.location.origin}//chat?session=${session.id}`;
+            const shareText = `${window.location.origin}/chat?session=${session.id}`;
             try {
               await navigator.clipboard.writeText(shareText);
               if (window.siteUI?.toast) {
@@ -1725,7 +1972,7 @@
       const createLocalSession = () => {
         const session = {
           id: generateSessionId(),
-          title: generateDefaultSessionTitle(),
+          title: selectedModelLabel || generateDefaultSessionTitle(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           firstUserMessage: "",
@@ -1733,6 +1980,7 @@
         };
         upsertSessionEntry(session);
         sessionState.activeId = session.id;
+        bindCurrentModelToSession(session.id);
         saveLastActiveSessionId(currentUser?.id, session.id);
         renderSessionList();
 	        if (chatInput) {
@@ -2615,17 +2863,18 @@
 	        }
 	      };
 
-	      const setActiveSession = async (sessionId) => {
-	        if (!sessionId) {
-	          return;
-	        }
-	        if (sessionId !== sessionState.activeId) {
-	          sessionState.activeId = sessionId;
-	        }
-	        renderSessionList();
-	        await loadMessagesForSession(sessionId);
-	        updateNewChatButtonState();
-	      };
+      const setActiveSession = async (sessionId) => {
+        if (!sessionId) {
+          return;
+        }
+        if (sessionId !== sessionState.activeId) {
+          sessionState.activeId = sessionId;
+        }
+        bindCurrentModelToSession(sessionId);
+        renderSessionList();
+        await loadMessagesForSession(sessionId);
+        updateNewChatButtonState();
+      };
 
       const updateProfileSidebar = (user) => {
         if (!user) return;
@@ -2747,6 +2996,7 @@
             window.location.href = "/subscribe";
             return null;
           }
+          await hydrateModelStateForUser(currentUser.id);
           console.log("requireAuthenticatedUser: gebruiker al bekend", currentUser.id, currentUser.email);
           return currentUser;
         }
@@ -2783,6 +3033,7 @@
 	          return null;
 	        }
 	        titleOverrides = loadTitleOverrides(currentUser.id);
+	        await hydrateModelStateForUser(currentUser.id);
 	        updateProfileSidebar(currentUser);
 	        initProfileEnhancements();
 	        initLogoutButton();
@@ -3173,6 +3424,8 @@
 		              } else if (!hasMessages && !sessionState.activeId) {
 		                createLocalSession();
 		              }
+                  workspaceBooted = true;
+                  await ensureModelSessionForSelectedModel({ createIfMissing: true, bindActiveFallback: true });
 		              updateNewChatButtonState();
 		            })
 		            .catch((error) => {
@@ -3296,6 +3549,7 @@
           return;
         }
         const sessionId = ensureActiveSessionId();
+        bindCurrentModelToSession(sessionId);
         appendMessage(value, "user");
         chatInput.value = "";
         chatInput.focus();
