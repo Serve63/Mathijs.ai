@@ -120,6 +120,7 @@
       let workspaceBooted = false;
       let modelSessionMap = {};
       let modelStateHydratedForUserId = null;
+      let hydratedPreferredModelLabel = null;
       let touchStartX = 0;
       let touchEndX = 0;
       const createSystemMessage = () => ({
@@ -324,25 +325,21 @@
 	        });
 	      }
 
+      const getModelKeyForLabel = (label) => {
+        const safeLabel = String(label || "").trim();
+        if (safeLabel.startsWith("Opus 4.5")) return "opus45";
+        if (safeLabel.startsWith("Sonnet 4.5")) return "sonnet45";
+        if (safeLabel.startsWith("Haiku 4.5")) return "haiku45";
+        if (safeLabel.startsWith("Gemini 3")) return "gemini3";
+        if (safeLabel.startsWith("Qwen3-MAX")) return "qwen";
+        if (safeLabel.startsWith("DeepSeek V2")) return "deepseekv2";
+        if (safeLabel.startsWith("Grok 4")) return "grok4";
+        return "chatgpt52";
+      };
+
       const updateSelectedModel = (label) => {
         selectedModelLabel = label || "GPT-5 mini";
-        if (label && label.startsWith("Opus 4.5")) {
-          selectedModel = "opus45";
-        } else if (label && label.startsWith("Sonnet 4.5")) {
-          selectedModel = "sonnet45";
-        } else if (label && label.startsWith("Haiku 4.5")) {
-          selectedModel = "haiku45";
-        } else if (label && label.startsWith("Gemini 3")) {
-          selectedModel = "gemini3";
-        } else if (label && label.startsWith("Qwen3-MAX")) {
-          selectedModel = "qwen";
-        } else if (label && label.startsWith("DeepSeek V2")) {
-          selectedModel = "deepseekv2";
-        } else if (label && label.startsWith("Grok 4")) {
-          selectedModel = "grok4";
-        } else {
-          selectedModel = "chatgpt52";
-        }
+        selectedModel = getModelKeyForLabel(selectedModelLabel);
         syncThinkingModeOptions();
         updateToolMenuLabels();
         updateToolMenuVisibility();
@@ -586,10 +583,22 @@
         return normalized || null;
       };
 
+      const getModelLabelsForModelKey = (modelKey) => {
+        if (!modelKey) return [];
+        const labels = modelSwipeItems.length
+          ? modelSwipeItems
+              .map((item) => (item.getAttribute("data-model") || "").trim())
+              .filter(Boolean)
+          : [String(selectedModelLabel || "").trim()].filter(Boolean);
+        const uniqueLabels = Array.from(new Set(labels));
+        return uniqueLabels.filter((label) => getModelKeyForLabel(label) === modelKey);
+      };
+
       const hydrateModelStateForUser = async (userId) => {
         if (!userId || modelStateHydratedForUserId === userId) return;
         modelSessionMap = sanitizeModelSessionMap(loadModelSessionMap(userId));
         const savedLabel = loadSavedModelLabel(userId);
+        hydratedPreferredModelLabel = typeof savedLabel === "string" && savedLabel.trim() ? savedLabel.trim() : null;
 
         if (modelSwipeItems.length) {
           const preferredIndex = getModelIndexByLabel(savedLabel || selectedModelLabel);
@@ -622,8 +631,23 @@
         let mappedSessionId = modelSessionMap[modelSessionKey];
         if (!mappedSessionId) {
           const legacyKey = getLegacyModelSessionKey();
-          if (legacyKey && modelSessionMap[legacyKey]) {
-            mappedSessionId = modelSessionMap[legacyKey];
+          const legacyMappedSessionId = legacyKey ? modelSessionMap[legacyKey] : null;
+          if (legacyKey && legacyMappedSessionId) {
+            const labelsForLegacyModel = getModelLabelsForModelKey(legacyKey);
+            const modelHasMultipleLabels = labelsForLegacyModel.length > 1;
+            const hasAnyLabelScopedMapping = labelsForLegacyModel.some((label) => {
+              const key = getModelSessionKeyByLabel(label);
+              return key && typeof modelSessionMap[key] === "string" && modelSessionMap[key].trim();
+            });
+            const preferredLabelKey = getModelSessionKeyByLabel(hydratedPreferredModelLabel);
+            const shouldMigrateFromLegacy =
+              !modelHasMultipleLabels ||
+              (!hasAnyLabelScopedMapping && (!preferredLabelKey || preferredLabelKey === modelSessionKey));
+            if (shouldMigrateFromLegacy) {
+              mappedSessionId = legacyMappedSessionId;
+            }
+          }
+          if (mappedSessionId) {
             modelSessionMap[modelSessionKey] = mappedSessionId;
             if (userId) {
               saveModelSessionMap(userId, modelSessionMap);
@@ -2821,6 +2845,7 @@
 	    };
 
       let sessionsRefreshTimer = null;
+      let activeSessionLoadToken = 0;
       const scheduleSessionsRefresh = (options = {}) => {
         if (sessionsRefreshTimer) return;
         sessionsRefreshTimer = setTimeout(async () => {
@@ -2834,17 +2859,23 @@
       };
 
       const loadMessagesForSession = async (sessionId) => {
+        const loadToken = ++activeSessionLoadToken;
+        const isStaleLoad = () => loadToken !== activeSessionLoadToken || sessionId !== sessionState.activeId;
         const user = await requireAuthenticatedUser();
         const activeSession = sessionState.list.find((session) => session.id === sessionId);
         if (!user || !sessionId || !chatLog || !activeSession) {
-          renderEmptyState();
-          updateNewChatButtonState();
+          if (!isStaleLoad()) {
+            renderEmptyState();
+            updateNewChatButtonState();
+          }
           return;
         }
+        if (isStaleLoad()) return;
         saveLastActiveSessionId(user.id, sessionId);
         chatLog.innerHTML = "";
         messages = [createSystemMessage()];
 	        const applyMessages = (data) => {
+            if (isStaleLoad()) return;
 	          const history = [];
 	          data.forEach((entry) => {
 	            const normalizedRole = entry.role === "user" ? "user" : "assistant";
@@ -2858,22 +2889,29 @@
 	          const qs = new URLSearchParams({ session_id: sessionId });
 	          const { ok, payload } = await apiFetchJson(`/api/messages?action=session&${qs.toString()}`);
 	          if (!ok) throw new Error(payload?.error || "Kon berichten niet laden");
+            if (isStaleLoad()) return;
 	          let data = payload?.messages || [];
 
 	          if (!Array.isArray(data) || !data.length) {
 	            const direct = await fetchMessagesDirect(user.id, sessionId);
+              if (isStaleLoad()) return;
 	            if (direct.ok && direct.messages.length) {
 	              data = direct.messages;
 	            } else {
-	              renderEmptyState();
+	              if (!isStaleLoad()) {
+                  renderEmptyState();
+                }
 	              return;
 	            }
 	          }
 
+            if (isStaleLoad()) return;
 	          applyMessages(data);
 	        } catch (error) {
+            if (isStaleLoad()) return;
 	          console.error("Berichten ophalen mislukt", error);
 	          const direct = await fetchMessagesDirect(user.id, sessionId);
+            if (isStaleLoad()) return;
 	          if (direct.ok && direct.messages.length) {
 	            applyMessages(direct.messages);
 	            return;
