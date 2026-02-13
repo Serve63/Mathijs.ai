@@ -1036,32 +1036,37 @@
       .team-section {
         padding: 120px 40px;
         position: relative;
-        background: linear-gradient(125deg, var(--hero-1) 0%, var(--hero-2) 48%, var(--hero-3) 100%);
+        background: #0D1840;
         color: #fff;
-        overflow: visible;
+        overflow: hidden;
         margin-top: 40px;
       }
 
       .team-section::before {
         content: "";
         position: absolute;
-        inset: 0;
-        background:
-          radial-gradient(circle at 18% 22%, rgba(245, 197, 24, 0.22), transparent 42%),
-          radial-gradient(circle at 85% 78%, rgba(245, 197, 24, 0.12), transparent 45%);
+        top: 0;
+        right: 0;
+        width: 48%;
+        height: 100%;
+        background: linear-gradient(135deg, #F5C518 0%, #FFE066 100%);
+        clip-path: polygon(18% 0, 100% 0, 100% 100%, 0 100%);
         pointer-events: none;
+        z-index: 0;
       }
 
       .team-section::after {
         content: "";
         position: absolute;
-        right: -10%;
         top: -15%;
-        width: 55%;
+        left: 55%;
+        width: 2px;
         height: 130%;
-        background: linear-gradient(120deg, rgba(255, 255, 255, 0.12), transparent 70%);
-        transform: rotate(8deg);
+        background: linear-gradient(180deg, rgba(245, 197, 24, 0) 0%, rgba(255, 224, 102, 0.95) 30%, rgba(245, 197, 24, 0.95) 70%, rgba(245, 197, 24, 0) 100%);
+        transform: rotate(10deg);
+        box-shadow: 0 0 32px rgba(245, 197, 24, 0.55);
         pointer-events: none;
+        z-index: 0;
       }
 
       .team-shell {
@@ -1177,7 +1182,7 @@
         position: absolute;
         inset: -12px;
         border-radius: 36px;
-        border: 1px solid rgba(245, 197, 24, 0.35);
+        border: 1px solid rgba(13, 24, 64, 0.28);
         pointer-events: none;
       }
 
@@ -1205,7 +1210,8 @@
       .team-caption {
         margin-top: 14px;
         font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(13, 24, 64, 0.84);
+        font-weight: 500;
         text-align: left;
       }
 
