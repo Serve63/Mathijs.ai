@@ -19,6 +19,7 @@
         --chat-bg: #ffffff;
         --chat-panel: #ffffff;
         --chat-panel-solid: #ffffff;
+        --sidebar-width: 240px;
         --chat-accent: #e6c200;
         --chat-accent-soft: rgba(230, 194, 0, 0.12);
         --chat-muted: #64748b;
@@ -253,7 +254,7 @@
 
       .chat-layout {
         display: grid;
-        grid-template-columns: 240px minmax(0, 1fr);
+        grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
         width: 100vw;
         height: 100vh;
         overflow: hidden;
@@ -267,6 +268,7 @@
           radial-gradient(1100px 720px at 14% 10%, rgba(230, 194, 0, 0.10) 0%, transparent 62%),
           radial-gradient(1040px 720px at 92% 12%, rgba(255, 226, 102, 0.14) 0%, transparent 66%),
           radial-gradient(1000px 760px at 30% 92%, rgba(230, 194, 0, 0.08) 0%, transparent 68%);
+        transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .sidebar {
@@ -288,6 +290,7 @@
         overflow: hidden;
         border-radius: 0;
         box-shadow: none;
+        transition: opacity 0.24s ease, transform 0.3s ease, border-color 0.2s ease;
       }
 
       .sidebar::before {
@@ -303,6 +306,71 @@
       .sidebar > * {
         position: relative;
         z-index: 1;
+      }
+
+      .sidebar-collapse-toggle,
+      .sidebar-expand-toggle {
+        appearance: none;
+        border: 1px solid rgba(166, 186, 255, 0.34);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(234, 241, 255, 0.92);
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 10px 20px -16px rgba(1, 6, 30, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .sidebar-collapse-toggle:hover,
+      .sidebar-expand-toggle:hover {
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 210, 24, 0.5);
+        transform: translateY(-1px);
+      }
+
+      .sidebar-collapse-toggle svg,
+      .sidebar-expand-toggle svg {
+        width: 15px;
+        height: 15px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .sidebar-collapse-toggle {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 10;
+      }
+
+      .sidebar-expand-toggle {
+        position: absolute;
+        top: 16px;
+        left: 14px;
+        z-index: 30;
+        display: none;
+      }
+
+      body.sidebar-collapsed {
+        --sidebar-width: 0px;
+      }
+
+      body.sidebar-collapsed .sidebar {
+        opacity: 0;
+        transform: translateX(-14px);
+        pointer-events: none;
+        border-color: transparent;
+      }
+
+      body.sidebar-collapsed .sidebar-expand-toggle {
+        display: inline-flex;
       }
 
       .sidebar-brand {
@@ -372,6 +440,10 @@
       .chat-fullscreen .sidebar,
       .chat-fullscreen .profile-modal {
         display: none;
+      }
+
+      .chat-fullscreen .sidebar-expand-toggle {
+        display: none !important;
       }
 
       .chat-fullscreen .chat-header {
@@ -3433,6 +3505,11 @@
           display: none;
         }
 
+        .sidebar-collapse-toggle,
+        .sidebar-expand-toggle {
+          display: none !important;
+        }
+
         .chat-content-wrapper {
           padding-right: 0;
           padding-bottom: 190px;
@@ -3607,6 +3684,11 @@
     </div>
     <div class="chat-layout">
 		      <aside class="sidebar">
+            <button class="sidebar-collapse-toggle" id="sidebar-collapse-toggle" type="button" aria-label="Sidebar inklappen" title="Sidebar inklappen">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
             <div class="sidebar-hero">
               <img
                 class="sidebar-hero-image"
@@ -3676,6 +3758,11 @@
           </div>
         </div>
       </aside>
+      <button class="sidebar-expand-toggle" id="sidebar-expand-toggle" type="button" aria-label="Sidebar uitklappen" title="Sidebar uitklappen">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </button>
       <div class="profile-modal" id="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
         <div class="profile-modal__dialog">
           <header class="profile-modal__header">

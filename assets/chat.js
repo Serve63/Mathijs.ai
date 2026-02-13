@@ -38,8 +38,80 @@
       const modelSwipeNext = document.getElementById("model-swipe-next");
       const modelSwipeItems = modelSwipeTrack ? Array.from(modelSwipeTrack.querySelectorAll(".model-swipe__item")) : [];
       const statusIndicator = null;
+      const chatLayout = document.querySelector(".chat-layout");
+      const sidebar = document.querySelector(".sidebar");
       const sidebarTop = document.querySelector(".sidebar-top");
+      const sidebarCollapseToggle = document.getElementById("sidebar-collapse-toggle");
+      const sidebarExpandToggle = document.getElementById("sidebar-expand-toggle");
       const newChatButton = document.querySelector(".new-chat");
+      const SIDEBAR_COLLAPSE_KEY = "mathijs_sidebar_collapsed_v1";
+      const SIDEBAR_COLLAPSE_BREAKPOINT = 960;
+
+      const readSidebarCollapsedPreference = () => {
+        try {
+          return localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "1";
+        } catch {
+          return false;
+        }
+      };
+
+      const writeSidebarCollapsedPreference = (collapsed) => {
+        try {
+          localStorage.setItem(SIDEBAR_COLLAPSE_KEY, collapsed ? "1" : "0");
+        } catch {
+          // ignore persistence errors
+        }
+      };
+
+      const syncSidebarToggleLabels = () => {
+        const collapsed = document.body.classList.contains("sidebar-collapsed");
+        const nextAction = collapsed ? "Sidebar uitklappen" : "Sidebar inklappen";
+
+        if (sidebarCollapseToggle) {
+          sidebarCollapseToggle.setAttribute("aria-label", nextAction);
+          sidebarCollapseToggle.setAttribute("title", nextAction);
+          sidebarCollapseToggle.setAttribute("aria-expanded", String(!collapsed));
+        }
+        if (sidebarExpandToggle) {
+          sidebarExpandToggle.setAttribute("aria-label", nextAction);
+          sidebarExpandToggle.setAttribute("title", nextAction);
+          sidebarExpandToggle.setAttribute("aria-expanded", String(!collapsed));
+        }
+      };
+
+      const applySidebarCollapsedState = (collapsed, { persist = true } = {}) => {
+        if (!chatLayout || !sidebar) return;
+        const canCollapse = window.innerWidth > SIDEBAR_COLLAPSE_BREAKPOINT;
+        const nextCollapsed = Boolean(collapsed) && canCollapse;
+        document.body.classList.toggle("sidebar-collapsed", nextCollapsed);
+        if (persist) {
+          writeSidebarCollapsedPreference(Boolean(collapsed));
+        }
+        syncSidebarToggleLabels();
+      };
+
+      const restoreSidebarCollapsedState = () => {
+        if (window.innerWidth <= SIDEBAR_COLLAPSE_BREAKPOINT) {
+          document.body.classList.remove("sidebar-collapsed");
+          syncSidebarToggleLabels();
+          return;
+        }
+        applySidebarCollapsedState(readSidebarCollapsedPreference(), { persist: false });
+      };
+
+      if (sidebarCollapseToggle) {
+        sidebarCollapseToggle.addEventListener("click", () => {
+          applySidebarCollapsedState(true);
+        });
+      }
+
+      if (sidebarExpandToggle) {
+        sidebarExpandToggle.addEventListener("click", () => {
+          applySidebarCollapsedState(false);
+        });
+      }
+
+      restoreSidebarCollapsedState();
 
       let sidebarOffsetRevealed = false;
       const revealSidebarOffset = () => {
@@ -74,6 +146,7 @@
         }
       }, 1200);
 	      window.addEventListener("resize", scheduleSidebarTopOffsetSync, { passive: true });
+	      window.addEventListener("resize", restoreSidebarCollapsedState, { passive: true });
 	      window.addEventListener("load", scheduleSidebarTopOffsetSync, { passive: true });
       const profileAvatar = document.querySelector(".profile-avatar");
       const profileAvatarImage = profileAvatar ? profileAvatar.querySelector(".profile-avatar__image") : null;
