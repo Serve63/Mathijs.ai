@@ -2410,10 +2410,43 @@
 
 		      const creditsBalanceEl = document.getElementById("credits-balance");
 		      const creditsBalanceValueEl = document.getElementById("credits-balance-value");
+      const tokenUsageCardEl = document.getElementById("token-usage-card");
+      const tokenUsageFillEl = document.getElementById("token-usage-fill");
+      const tokenUsageCurrentEl = document.getElementById("token-usage-current");
+      const tokenUsageTotalEl = document.getElementById("token-usage-total");
 
       const CREDITS_BALANCE_TTL_MS = 30000;
+      const TOKEN_USAGE_LIMIT = 100000;
       let creditsBalanceCache = { value: null, fetchedAt: 0 };
       let creditsBalanceInFlight = null;
+      const formatCompactTokens = (value) => {
+        if (!Number.isFinite(value)) return "--";
+        const absolute = Math.abs(value);
+        if (absolute >= 1000) {
+          const shortValue = value / 1000;
+          const decimals = Math.abs(shortValue) >= 100 ? 0 : 1;
+          return `${shortValue.toFixed(decimals)}K`;
+        }
+        return String(Math.round(value));
+      };
+      const updateTokenUsageCard = (tokensAvailable) => {
+        if (!tokenUsageCardEl || !tokenUsageFillEl || !tokenUsageCurrentEl || !tokenUsageTotalEl) return;
+        tokenUsageTotalEl.textContent = formatCompactTokens(TOKEN_USAGE_LIMIT);
+        if (!Number.isFinite(tokensAvailable)) {
+          tokenUsageCardEl.classList.add("is-unavailable");
+          tokenUsageFillEl.style.width = "0%";
+          tokenUsageCurrentEl.textContent = "--";
+          tokenUsageCardEl.title = "Kan tokenverbruik niet laden";
+          return;
+        }
+
+        tokenUsageCardEl.classList.remove("is-unavailable");
+        const safeTokens = Math.max(0, Math.floor(tokensAvailable));
+        const percent = Math.max(0, Math.min(100, (safeTokens / TOKEN_USAGE_LIMIT) * 100));
+        tokenUsageFillEl.style.width = `${percent}%`;
+        tokenUsageCurrentEl.textContent = formatCompactTokens(safeTokens);
+        tokenUsageCardEl.title = `${safeTokens} / ${TOKEN_USAGE_LIMIT} tokens`;
+      };
       const refreshCreditsBalance = async ({ force = false } = {}) => {
         if (!creditsBalanceEl || !creditsBalanceValueEl) return;
         const now = Date.now();
@@ -2422,6 +2455,7 @@
         if (!force && isFresh) {
           creditsBalanceValueEl.textContent = String(creditsBalanceCache.value);
           creditsBalanceEl.title = "Je tokensaldo.";
+          updateTokenUsageCard(creditsBalanceCache.value);
           return;
         }
         if (creditsBalanceInFlight) {
@@ -2433,6 +2467,7 @@
             if (!ok) {
               creditsBalanceValueEl.textContent = "--";
               creditsBalanceEl.title = "Kan tokensaldo niet laden";
+              updateTokenUsageCard(null);
               return;
             }
             const tokens = typeof payload?.tokens_available === "number" ? payload.tokens_available : null;
@@ -2441,11 +2476,13 @@
             }
             creditsBalanceValueEl.textContent = tokens !== null ? String(tokens) : "--";
             creditsBalanceEl.title = "Je tokensaldo.";
+            updateTokenUsageCard(tokens);
           })();
           await creditsBalanceInFlight;
         } catch (e) {
           creditsBalanceValueEl.textContent = "--";
           creditsBalanceEl.title = "Kan tokensaldo niet laden";
+          updateTokenUsageCard(null);
         } finally {
           creditsBalanceInFlight = null;
         }

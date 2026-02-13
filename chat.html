@@ -328,6 +328,72 @@
         border-top: 1px solid rgba(255, 255, 255, 0.14);
       }
 
+      .token-usage-card {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px 14px 12px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: linear-gradient(125deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+
+      .token-usage-card__label {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--sidebar-text-faint);
+      }
+
+      .token-usage-card__bar {
+        position: relative;
+        width: 100%;
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+        overflow: hidden;
+      }
+
+      .token-usage-card__fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba(230, 194, 0, 0.95) 0%, rgba(255, 214, 46, 0.95) 100%);
+        box-shadow: 0 0 16px rgba(230, 194, 0, 0.34);
+        transition: width 0.35s ease;
+      }
+
+      .token-usage-card__meta {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--sidebar-text-muted);
+      }
+
+      .token-usage-card__current {
+        color: var(--sidebar-text);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .token-usage-card__total {
+        color: var(--sidebar-text-muted);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .token-usage-card.is-unavailable .token-usage-card__fill {
+        width: 0 !important;
+        box-shadow: none;
+      }
+
       .sidebar .logo {
         font-size: 1.08rem;
         color: var(--chat-accent);
@@ -3458,6 +3524,16 @@
 	          <div class="session-list" id="session-list"></div>
 	        </div>
         <div class="sidebar-bottom">
+          <section class="token-usage-card" id="token-usage-card" aria-label="Tokenverbruik">
+            <p class="token-usage-card__label">Tokenverbruik</p>
+            <div class="token-usage-card__bar" aria-hidden="true">
+              <span class="token-usage-card__fill" id="token-usage-fill"></span>
+            </div>
+            <div class="token-usage-card__meta">
+              <span class="token-usage-card__current" id="token-usage-current">--</span>
+              <span class="token-usage-card__total">/ <span id="token-usage-total">100K</span> tokens</span>
+            </div>
+          </section>
           <div class="profile">
             <div class="profile-avatar" aria-label="Upload profielfoto" title="Upload profielfoto">
               <img class="profile-avatar__image" alt="" />
