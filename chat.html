@@ -25,8 +25,8 @@
         --chat-border: rgba(15, 23, 42, 0.08);
         --chat-text: #0b1220;
         --chat-text-secondary: rgba(15, 23, 42, 0.62);
-        --sidebar-bg: #0a1034;
-        --sidebar-bg-2: #141c4f;
+        --sidebar-bg: #121b4a;
+        --sidebar-bg-2: #121b4a;
         --sidebar-surface: rgba(255, 255, 255, 0.08);
         --sidebar-surface-strong: rgba(85, 92, 163, 0.48);
         --sidebar-border: rgba(255, 255, 255, 0.13);
@@ -176,7 +176,7 @@
       }
 
       .sidebar {
-        background: linear-gradient(180deg, var(--sidebar-bg-2) 0%, var(--sidebar-bg) 100%);
+        background: var(--sidebar-bg);
         border: 1px solid var(--sidebar-border);
         border-right: 1px solid var(--sidebar-border);
         backdrop-filter: blur(18px);
@@ -201,10 +201,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background:
-          radial-gradient(150% 85% at 14% -10%, rgba(58, 96, 220, 0.35) 0%, transparent 58%),
-          radial-gradient(120% 90% at 90% 12%, rgba(255, 255, 255, 0.10) 0%, transparent 55%),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 28%, transparent 70%);
+        background: transparent;
         pointer-events: none;
       }
 
