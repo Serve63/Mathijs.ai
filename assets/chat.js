@@ -1,3 +1,6 @@
+      // Hard reset of legacy layout states to prevent a stuck "only input bar" screen.
+      document.body.classList.remove("chat-fullscreen", "sidebar-collapsed");
+
 	      const inlineScripts = Array.from(document.querySelectorAll("script:not([src])"))
 	        .filter((script) => script.textContent && script.textContent.trim().length);
 	      if (inlineScripts.length) {
@@ -48,13 +51,7 @@
       const SIDEBAR_COLLAPSE_KEY = "mathijs_sidebar_collapsed_v1";
       const SIDEBAR_COLLAPSE_BREAKPOINT = 960;
 
-      const readSidebarCollapsedPreference = () => {
-        try {
-          return localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "1";
-        } catch {
-          return false;
-        }
-      };
+      const readSidebarCollapsedPreference = () => false;
 
       const writeSidebarCollapsedPreference = (collapsed) => {
         try {
@@ -102,7 +99,7 @@
           syncSidebarToggleLabels();
           return;
         }
-        applySidebarCollapsedState(readSidebarCollapsedPreference(), { persist: false });
+        applySidebarCollapsedState(false, { persist: false });
       };
 
       if (sidebarCollapseToggle) {

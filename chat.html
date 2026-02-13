@@ -3701,6 +3701,47 @@
           border-width: 2px;
         }
       }
+
+      /* Emergency desktop fallback: keep full chat layout visible even with stale classes/state. */
+      @media (min-width: 961px) {
+        body.chat-fullscreen .chat-layout,
+        body.sidebar-collapsed .chat-layout {
+          grid-template-columns: var(--sidebar-width, 280px) minmax(0, 1fr) !important;
+          grid-template-rows: minmax(0, 1fr) !important;
+        }
+
+        body.chat-fullscreen .sidebar,
+        body.sidebar-collapsed .sidebar {
+          display: flex !important;
+          opacity: 1 !important;
+          transform: none !important;
+          pointer-events: auto !important;
+        }
+
+        body.chat-fullscreen .chat-header,
+        body.sidebar-collapsed .chat-header {
+          display: flex !important;
+        }
+
+        body.chat-fullscreen .chat-main,
+        body.sidebar-collapsed .chat-main {
+          display: flex !important;
+          flex-direction: column !important;
+          min-height: 0 !important;
+          height: 100% !important;
+        }
+
+        body.chat-fullscreen .chat-content-wrapper,
+        body.sidebar-collapsed .chat-content-wrapper {
+          flex: 1 1 auto !important;
+          min-height: 0 !important;
+        }
+
+        body.chat-fullscreen .chat-footer,
+        body.sidebar-collapsed .chat-footer {
+          margin-top: auto !important;
+        }
+      }
     </style>
 	      <link rel="stylesheet" href="assets/stability.css" />
 	      <link rel="stylesheet" href="assets/ui.css" />
