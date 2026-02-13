@@ -852,9 +852,14 @@
       }
 
       .session-row.is-active {
-        background: linear-gradient(135deg, var(--sidebar-surface-strong) 0%, rgba(54, 60, 112, 0.74) 100%);
-        border-color: rgba(154, 173, 243, 0.34);
-        box-shadow: 0 16px 30px -24px rgba(4, 8, 30, 0.95);
+        background: transparent;
+        border-color: transparent;
+        box-shadow: none;
+      }
+
+      .session-row.is-active:hover {
+        background: transparent;
+        border-color: transparent;
       }
 
       .session-row.is-active::before {
