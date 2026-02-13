@@ -427,6 +427,7 @@ body {
   gap: 0;
   background: var(--premium-bg);
   grid-template-columns: var(--sidebar-width, 280px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .sidebar {
@@ -870,6 +871,25 @@ body {
 
 body.sidebar-collapsed .sidebar-expand-toggle {
   display: inline-flex;
+}
+
+@media (min-width: 961px) {
+  body.chat-fullscreen .chat-layout {
+    grid-template-columns: var(--sidebar-width, 280px) minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+  }
+
+  body.chat-fullscreen .sidebar {
+    display: flex !important;
+  }
+
+  body.chat-fullscreen .chat-header {
+    display: flex !important;
+  }
+
+  body.chat-fullscreen .sidebar-expand-toggle {
+    display: none !important;
+  }
 }
 
 .model-swipe {

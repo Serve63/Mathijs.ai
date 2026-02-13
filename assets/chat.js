@@ -401,15 +401,12 @@
 		      let selectedModelLabel = "GPT-5 mini";
 		      let thinkingIndicator = null;
 
-	      // Toggle fullscreen chat (hide header + sidebar)
-	      if (layoutToggleBtn) {
-	        layoutToggleBtn.addEventListener("click", () => {
-	          const isFullscreen = document.body.classList.toggle("chat-fullscreen");
-	          const label = isFullscreen ? "Verlaat fullscreen" : "Vergroot chat";
-	          layoutToggleBtn.setAttribute("aria-label", label);
-	          layoutToggleBtn.setAttribute("title", label);
-	        });
-	      }
+      // Legacy fullscreen mode caused layout breakage in the new UI. Keep it off.
+      document.body.classList.remove("chat-fullscreen");
+      if (layoutToggleBtn) {
+        layoutToggleBtn.setAttribute("aria-label", "Fullscreen uitgeschakeld");
+        layoutToggleBtn.setAttribute("title", "Fullscreen uitgeschakeld");
+      }
 
       const getModelKeyForLabel = (label) => {
         const safeLabel = String(label || "").trim();
