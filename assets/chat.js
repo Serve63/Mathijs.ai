@@ -578,6 +578,45 @@
       const getModelIndexByLabel = (label) =>
         modelSwipeItems.findIndex((item) => (item.getAttribute("data-model") || "").trim() === String(label || "").trim());
 
+      const MODEL_SWITCH_LOCK_MESSAGE = "Model wisselen kan alleen voordat je eerste bericht is verstuurd.";
+      let lastModelSwitchLockNoticeAt = 0;
+
+      function isModelSwitchLocked() {
+        return !isActiveSessionEmpty();
+      }
+
+      const notifyModelSwitchLocked = () => {
+        const now = Date.now();
+        if (now - lastModelSwitchLockNoticeAt < 1200) return;
+        lastModelSwitchLockNoticeAt = now;
+        if (window.siteUI?.toast) {
+          window.siteUI.toast(MODEL_SWITCH_LOCK_MESSAGE, { type: "info" });
+          return;
+        }
+        console.info(MODEL_SWITCH_LOCK_MESSAGE);
+      };
+
+      const getMappedModelLabelForSession = (sessionId) => {
+        if (!sessionId || !modelSessionMap || typeof modelSessionMap !== "object") return null;
+        const labels = Object.entries(modelSessionMap)
+          .filter(([label, mappedSessionId]) => label && mappedSessionId === sessionId)
+          .map(([label]) => String(label).trim())
+          .filter(Boolean);
+        if (!labels.length) return null;
+
+        const uniqueLabels = Array.from(new Set(labels));
+        if (uniqueLabels.includes(selectedModelLabel)) return selectedModelLabel;
+        if (hydratedPreferredModelLabel && uniqueLabels.includes(hydratedPreferredModelLabel)) {
+          return hydratedPreferredModelLabel;
+        }
+
+        const ordered = uniqueLabels
+          .map((label) => ({ label, index: getModelIndexByLabel(label) }))
+          .filter((entry) => entry.index >= 0)
+          .sort((a, b) => a.index - b.index);
+        return ordered[0]?.label || uniqueLabels[0] || null;
+      };
+
       const getModelLabelByIndex = (index) => {
         if (index < 0 || index >= modelSwipeItems.length) return "";
         return (modelSwipeItems[index]?.getAttribute("data-model") || "").trim();
@@ -600,6 +639,7 @@
       const syncModelSwipeUI = () => {
         if (!modelSwipeTrack || !modelSwipeItems.length) return;
         const index = normalizeModelIndex(activeModelIndex);
+        const modelLocked = isModelSwitchLocked();
         activeModelIndex = index;
         const metrics = getSwipeLayoutMetrics();
         if (metrics) {
@@ -630,20 +670,35 @@
         const nextLabel = getModelLabelByIndex(nextIndex);
         if (modelSwipePrev) {
           const hasPrev = Boolean(prevLabel);
-          modelSwipePrev.disabled = !hasPrev;
-          modelSwipePrev.setAttribute("aria-disabled", hasPrev ? "false" : "true");
+          const canUsePrev = hasPrev && !modelLocked;
+          modelSwipePrev.disabled = !canUsePrev;
+          modelSwipePrev.setAttribute("aria-disabled", canUsePrev ? "false" : "true");
           modelSwipePrev.setAttribute("data-preview", prevLabel);
-          modelSwipePrev.setAttribute("aria-label", hasPrev ? `Vorig model: ${prevLabel}` : "Geen vorig model");
-          modelSwipePrev.setAttribute("title", hasPrev ? `Naar ${prevLabel}` : "Geen vorig model");
+          modelSwipePrev.setAttribute(
+            "aria-label",
+            modelLocked ? "Model vergrendeld voor dit gesprek" : hasPrev ? `Vorig model: ${prevLabel}` : "Geen vorig model"
+          );
+          modelSwipePrev.setAttribute(
+            "title",
+            modelLocked ? MODEL_SWITCH_LOCK_MESSAGE : hasPrev ? `Naar ${prevLabel}` : "Geen vorig model"
+          );
         }
         if (modelSwipeNext) {
           const hasNext = Boolean(nextLabel);
-          modelSwipeNext.disabled = !hasNext;
-          modelSwipeNext.setAttribute("aria-disabled", hasNext ? "false" : "true");
+          const canUseNext = hasNext && !modelLocked;
+          modelSwipeNext.disabled = !canUseNext;
+          modelSwipeNext.setAttribute("aria-disabled", canUseNext ? "false" : "true");
           modelSwipeNext.setAttribute("data-preview", nextLabel);
-          modelSwipeNext.setAttribute("aria-label", hasNext ? `Volgend model: ${nextLabel}` : "Geen volgend model");
-          modelSwipeNext.setAttribute("title", hasNext ? `Naar ${nextLabel}` : "Geen volgend model");
+          modelSwipeNext.setAttribute(
+            "aria-label",
+            modelLocked ? "Model vergrendeld voor dit gesprek" : hasNext ? `Volgend model: ${nextLabel}` : "Geen volgend model"
+          );
+          modelSwipeNext.setAttribute(
+            "title",
+            modelLocked ? MODEL_SWITCH_LOCK_MESSAGE : hasNext ? `Naar ${nextLabel}` : "Geen volgend model"
+          );
         }
+        updateModelSwitcherState();
       };
 
       const MODEL_SELECTION_KEY = "mathijs_selected_model_v1";
@@ -852,7 +907,7 @@
       };
 
       const selectModelByIndex = async (index, options = {}) => {
-        const { silent = true, switchSession = true } = options;
+        const { silent = true, switchSession = true, force = false } = options;
         if (!modelSwipeItems.length) return;
         const normalizedIndex = normalizeModelIndex(index);
         const targetItem = modelSwipeItems[normalizedIndex];
@@ -861,6 +916,11 @@
         if (!nextLabel) return;
 
         const isSameSelection = nextLabel === selectedModelLabel;
+        if (!isSameSelection && !force && isModelSwitchLocked()) {
+          notifyModelSwitchLocked();
+          syncModelSwipeUI();
+          return false;
+        }
         activeModelIndex = normalizedIndex;
         syncModelSwipeUI();
         updateSelectedModel(nextLabel);
@@ -872,13 +932,17 @@
             await ensureModelSessionForSelectedModel({ createIfMissing: true, bindActiveFallback: false });
           }
         }
+        return true;
       };
 
       const moveModelBy = async (delta) => {
         if (!modelSwipeItems.length) return;
         const nextIndex = normalizeModelIndex(activeModelIndex + delta);
         if (nextIndex === activeModelIndex) return;
-        await selectModelByIndex(nextIndex, { silent: true, switchSession: true });
+        const changed = await selectModelByIndex(nextIndex, { silent: true, switchSession: true });
+        if (changed === false) {
+          notifyModelSwitchLocked();
+        }
       };
 
       if (modelSwipeItems.length) {
@@ -999,14 +1063,19 @@
 	          trigger.setAttribute("aria-expanded", dropdown.classList.contains("active") ? "true" : "false");
 	        });
 
-	        options.forEach((option) => {
-	          option.addEventListener("click", (event) => {
-	            event.preventDefault();
-	            event.stopPropagation();
-	            const value = option.getAttribute("data-model");
-	            if (selectionState[categoryKey] === value) {
-	              closeAllDropdowns();
-	              return;
+		        options.forEach((option) => {
+		          option.addEventListener("click", (event) => {
+		            event.preventDefault();
+		            event.stopPropagation();
+		            const value = option.getAttribute("data-model");
+		            if (categoryKey === "chat" && value && value !== selectedModelLabel && isModelSwitchLocked()) {
+		              closeAllDropdowns();
+		              notifyModelSwitchLocked();
+		              return;
+		            }
+		            if (selectionState[categoryKey] === value) {
+		              closeAllDropdowns();
+		              return;
             }
             setActiveOption(option);
             setActiveCategory(categoryKey);
@@ -2226,14 +2295,40 @@
 	        return countConversationMessages() === 0;
 	      }
 
+	      function updateModelSwitcherState() {
+	        if (!modelSwipe) return;
+	        const locked = isModelSwitchLocked();
+	        modelSwipe.classList.toggle("is-locked", locked);
+	        modelSwipe.setAttribute("data-locked", locked ? "true" : "false");
+	        modelSwipe.setAttribute(
+	          "title",
+	          locked
+	            ? "Model staat vast voor dit gesprek. Start een nieuwe chat om van model te wisselen."
+	            : "Kies het model voor dit gesprek."
+	        );
+	        modelSwipeItems.forEach((item, idx) => {
+	          const isSelected = idx === activeModelIndex;
+	          const disabled = locked && !isSelected;
+	          item.disabled = disabled;
+	          item.setAttribute("aria-disabled", disabled ? "true" : "false");
+	          if (disabled) {
+	            item.setAttribute("title", MODEL_SWITCH_LOCK_MESSAGE);
+	          } else {
+	            item.removeAttribute("title");
+	          }
+	        });
+	      }
+
 	      function updateNewChatButtonState() {
-	        if (!newChatButton) return;
 	        const disabled = isActiveSessionEmpty();
-	        newChatButton.disabled = disabled;
-	        newChatButton.setAttribute("aria-disabled", disabled ? "true" : "false");
-	        newChatButton.title = disabled
-	          ? "Je zit al in een leeg gesprek. Stuur eerst een bericht of kies een bestaande chat."
-	          : "Start nieuw gesprek";
+	        if (newChatButton) {
+	          newChatButton.disabled = disabled;
+	          newChatButton.setAttribute("aria-disabled", disabled ? "true" : "false");
+	          newChatButton.title = disabled
+	            ? "Je zit al in een leeg gesprek. Stuur eerst een bericht of kies een bestaande chat."
+	            : "Start nieuw gesprek";
+	        }
+	        updateModelSwitcherState();
 	      }
 
       const getDisplayTitle = (session) => {
@@ -3196,9 +3291,18 @@
         if (sessionId !== sessionState.activeId) {
           sessionState.activeId = sessionId;
         }
-        bindCurrentModelToSession(sessionId);
         renderSessionList();
         await loadMessagesForSession(sessionId);
+        const mappedModelLabel = getMappedModelLabelForSession(sessionId);
+        if (mappedModelLabel && mappedModelLabel !== selectedModelLabel) {
+          const mappedIndex = getModelIndexByLabel(mappedModelLabel);
+          if (mappedIndex >= 0) {
+            await selectModelByIndex(mappedIndex, { silent: true, switchSession: false, force: true });
+          } else {
+            updateSelectedModel(mappedModelLabel);
+            syncModelSwipeUI();
+          }
+        }
         updateNewChatButtonState();
       };
 

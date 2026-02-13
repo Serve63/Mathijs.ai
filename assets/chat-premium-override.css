@@ -917,6 +917,15 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   z-index: -1;
 }
 
+.model-swipe.is-locked {
+  border-color: rgba(13, 24, 64, 0.14);
+  box-shadow: 0 14px 26px -24px rgba(13, 24, 64, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.model-swipe.is-locked .model-swipe__viewport {
+  border-color: rgba(255, 224, 102, 0.24);
+}
+
 .model-swipe__arrow {
   width: 34px;
   height: 34px;
@@ -938,7 +947,7 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 
 .model-swipe__arrow:disabled {
   opacity: 0.45;
-  cursor: default;
+  cursor: not-allowed;
   transform: none;
   border-color: rgba(13, 24, 64, 0.08);
   box-shadow: none;
@@ -1115,6 +1124,16 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 .model-swipe__item:not(.is-selected) {
   opacity: 0.72;
   transform: scale(0.91);
+}
+
+.model-swipe__item:disabled {
+  cursor: not-allowed;
+}
+
+.model-swipe.is-locked .model-swipe__item:not(.is-selected) {
+  opacity: 0.52;
+  transform: scale(0.9);
+  filter: saturate(0.8);
 }
 
 .chat-content-wrapper {
