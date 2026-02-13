@@ -15,25 +15,25 @@
     <link rel="stylesheet" href="styles.css" />
     <style>
       :root {
-        /* Apple-clean palette */
-        --chat-bg: #ffffff;
+        /* Serve premium palette */
+        --chat-bg: #f8f7f3;
         --chat-panel: #ffffff;
         --chat-panel-solid: #ffffff;
-        --sidebar-width: 240px;
-        --chat-accent: #e6c200;
+        --sidebar-width: 280px;
+        --chat-accent: #b8960c;
         --chat-accent-soft: rgba(230, 194, 0, 0.12);
-        --chat-muted: #64748b;
+        --chat-muted: #5a5a72;
         --chat-border: rgba(15, 23, 42, 0.08);
-        --chat-text: #0b1220;
-        --chat-text-secondary: rgba(15, 23, 42, 0.62);
-        --sidebar-bg: #10143a;
-        --sidebar-bg-2: #10143a;
-        --sidebar-surface: rgba(255, 255, 255, 0.06);
-        --sidebar-surface-strong: rgba(66, 72, 130, 0.74);
-        --sidebar-border: rgba(154, 173, 243, 0.16);
-        --sidebar-text: rgba(236, 242, 255, 0.96);
-        --sidebar-text-muted: rgba(168, 182, 224, 0.78);
-        --sidebar-text-faint: rgba(129, 144, 191, 0.72);
+        --chat-text: #1a1a2e;
+        --chat-text-secondary: #5a5a72;
+        --sidebar-bg: #1a1a2e;
+        --sidebar-bg-2: #12122a;
+        --sidebar-surface: #252542;
+        --sidebar-surface-strong: #2d2d50;
+        --sidebar-border: rgba(255, 255, 255, 0.08);
+        --sidebar-text: #e8e6f0;
+        --sidebar-text-muted: rgba(255, 255, 255, 0.6);
+        --sidebar-text-faint: rgba(255, 255, 255, 0.35);
         --glass-bg: #ffffff;
         --glass-border: rgba(15, 23, 42, 0.08);
         --premium-shadow: 0 20px 55px -35px rgba(15, 23, 42, 0.25);
@@ -53,12 +53,7 @@
         height: 100vh;
         overflow: hidden;
         padding: 0;
-        /* brand background (white + yellow) */
-        background:
-          radial-gradient(980px 620px at 18% 18%, rgba(230, 194, 0, 0.16) 0%, transparent 64%),
-          radial-gradient(940px 650px at 86% 18%, rgba(255, 226, 102, 0.18) 0%, transparent 66%),
-          radial-gradient(900px 680px at 24% 78%, rgba(230, 194, 0, 0.10) 0%, transparent 68%),
-          linear-gradient(180deg, #ffffff 0%, #fffdf5 100%);
+        background: #f8f7f3;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         position: relative;
@@ -70,14 +65,8 @@
       }
 
       body::after {
-        content: "";
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        /* ultra-subtle dot texture like homepage */
-        background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230f172a' fill-opacity='0.06'%3E%3Ccircle cx='60' cy='60' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        opacity: 0.12;
-        z-index: 0;
+        content: none;
+        display: none;
       }
 
       .app-loader {
@@ -312,25 +301,22 @@
         margin: 0;
         position: relative;
         z-index: 1;
-        /* keeps a subtle white/yellow glow behind the panes */
-        background:
-          radial-gradient(1100px 720px at 14% 10%, rgba(230, 194, 0, 0.10) 0%, transparent 62%),
-          radial-gradient(1040px 720px at 92% 12%, rgba(255, 226, 102, 0.14) 0%, transparent 66%),
-          radial-gradient(1000px 760px at 30% 92%, rgba(230, 194, 0, 0.08) 0%, transparent 68%);
+        background: #f8f7f3;
         transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .sidebar {
-        background: var(--sidebar-bg) !important;
-        background-image: none !important;
+        background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-2) 100%) !important;
+        background-image: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-2) 100%) !important;
         background-color: var(--sidebar-bg) !important;
         border: none !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
         display: flex;
         flex-direction: column;
-        padding: 18px;
-        gap: 20px;
+        padding: 0;
+        gap: 0;
         position: relative;
         z-index: 2;
         height: 100%;
@@ -3716,8 +3702,9 @@
         }
       }
     </style>
-      <link rel="stylesheet" href="assets/stability.css" />
-      <link rel="stylesheet" href="assets/ui.css" />
+	      <link rel="stylesheet" href="assets/stability.css" />
+	      <link rel="stylesheet" href="assets/ui.css" />
+	      <link rel="stylesheet" href="assets/chat-premium-override.css" />
     <script src="assets/stability.js" defer></script>
 </head>
   <body>
@@ -3744,43 +3731,29 @@
       </div>
     </div>
     <div class="chat-layout">
-		      <aside class="sidebar">
-            <button class="sidebar-collapse-toggle" id="sidebar-collapse-toggle" type="button" aria-label="Sidebar inklappen" title="Sidebar inklappen">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-            <div class="sidebar-hero">
-              <img
-                class="sidebar-hero-image"
-                src="assets/chat-hero.webp"
-                alt="Mathijs.ai illustratie"
-                width="547"
-                height="456"
-                loading="eager"
-                decoding="async"
-                fetchpriority="high"
-              />
+			      <aside class="sidebar">
+            <div class="sidebar-header-shell">
+              <div class="sidebar-logo" aria-hidden="true">S</div>
+              <div class="sidebar-brandtext"><span>Servé</span> AI</div>
+              <button class="sidebar-collapse-toggle" id="sidebar-collapse-toggle" type="button" aria-label="Sidebar inklappen" title="Sidebar inklappen">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
             </div>
-		        <div class="sidebar-top">
-              <div class="new-chat-split" role="group" aria-label="Cursus en nieuw gesprek">
-                <a class="new-chat-split__btn new-chat-split__btn--course" href="/course" aria-label="Terug naar cursus">
-                  <span class="new-chat-split__icon">←</span>
-                  <span class="new-chat-split__text">Cursus</span>
-                </a>
-                <button class="new-chat-split__btn new-chat-split__btn--new new-chat" type="button" aria-label="Start nieuwe chat">
+			        <div class="sidebar-top">
+                <button class="new-chat" type="button" aria-label="Start nieuwe chat">
                   <span class="new-chat__label">
                     <span class="new-chat__plus">+</span>
-                    <span class="new-chat__text">Chat</span>
+                    <span class="new-chat__text">Nieuw gesprek</span>
                   </span>
                 </button>
-              </div>
-		          <div class="sessions-heading">
-		            <h2>sessies</h2>
-		            <span class="tokens-inline" id="credits-balance" title="Je tokensaldo.">| Tokens:
-		              <span class="tokens-inline__value" id="credits-balance-value">--</span>
-		            </span>
-		          </div>
+			          <div class="sessions-heading">
+			            <h2>Recente sessies</h2>
+			            <span class="tokens-inline" id="credits-balance" title="Je tokensaldo.">
+			              <span class="tokens-inline__value" id="credits-balance-value">--</span>
+			            </span>
+			          </div>
 	          <p class="session-empty" id="session-empty">Chats laden...</p>
 	          <div class="session-list" id="session-list"></div>
 	        </div>
@@ -3916,10 +3889,17 @@
         </div>
       </div>
       <main class="chat-main">
-	        <header class="chat-header">
-	          <div class="status">
-            <div class="status-actions">
-              <div class="chat-model-selector">
+		        <header class="chat-header">
+		          <div class="status">
+                <button class="main-sidebar-toggle" id="main-sidebar-toggle" type="button" aria-label="Sidebar inklappen" title="Sidebar inklappen">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="16" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                  </svg>
+                </button>
+                <div class="status-actions">
+                  <div class="chat-model-selector">
                 <div class="model-swipe" id="model-swipe" data-category="chat" data-label="Model" aria-label="Model swipe balk" tabindex="0">
                   <button type="button" class="model-swipe__arrow model-swipe__arrow--left" id="model-swipe-prev" aria-label="Vorig model">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -3945,9 +3925,16 @@
                     </svg>
                   </button>
                 </div>
-              </div>
-            </div>
-          </div>
+                    </div>
+                  </div>
+                </div>
+                <button class="topbar-action" type="button" aria-label="Instellingen" title="Instellingen">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+                  </svg>
+                </button>
+	          </div>
 	        </header>
         <div class="chat-content-wrapper">
           <section class="chat-log"></section>

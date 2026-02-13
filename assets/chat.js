@@ -43,6 +43,7 @@
       const sidebarTop = document.querySelector(".sidebar-top");
       const sidebarCollapseToggle = document.getElementById("sidebar-collapse-toggle");
       const sidebarExpandToggle = document.getElementById("sidebar-expand-toggle");
+      const mainSidebarToggle = document.getElementById("main-sidebar-toggle");
       const newChatButton = document.querySelector(".new-chat");
       const SIDEBAR_COLLAPSE_KEY = "mathijs_sidebar_collapsed_v1";
       const SIDEBAR_COLLAPSE_BREAKPOINT = 960;
@@ -77,6 +78,11 @@
           sidebarExpandToggle.setAttribute("title", nextAction);
           sidebarExpandToggle.setAttribute("aria-expanded", String(!collapsed));
         }
+        if (mainSidebarToggle) {
+          mainSidebarToggle.setAttribute("aria-label", nextAction);
+          mainSidebarToggle.setAttribute("title", nextAction);
+          mainSidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+        }
       };
 
       const applySidebarCollapsedState = (collapsed, { persist = true } = {}) => {
@@ -108,6 +114,13 @@
       if (sidebarExpandToggle) {
         sidebarExpandToggle.addEventListener("click", () => {
           applySidebarCollapsedState(false);
+        });
+      }
+
+      if (mainSidebarToggle) {
+        mainSidebarToggle.addEventListener("click", () => {
+          const collapsed = document.body.classList.contains("sidebar-collapsed");
+          applySidebarCollapsedState(!collapsed);
         });
       }
 
@@ -1839,6 +1852,26 @@
         if (actionsEl) actionsEl.remove();
       };
 
+      const formatSessionTimeLabel = (value) => {
+        if (!value) return "Zojuist";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "Zojuist";
+        const now = new Date();
+        const sameDay =
+          date.getFullYear() === now.getFullYear() &&
+          date.getMonth() === now.getMonth() &&
+          date.getDate() === now.getDate();
+        if (sameDay) return "Zojuist";
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+        const isYesterday =
+          date.getFullYear() === yesterday.getFullYear() &&
+          date.getMonth() === yesterday.getMonth() &&
+          date.getDate() === yesterday.getDate();
+        if (isYesterday) return "Gisteren";
+        return date.toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
+      };
+
       const renderSessionList = () => {
         if (!sessionListEl) return;
         sessionListEl.innerHTML = "";
@@ -1863,7 +1896,27 @@
           const selectBtn = document.createElement("button");
           selectBtn.type = "button";
           selectBtn.className = "session-select";
-          selectBtn.textContent = getDisplayTitle(session);
+
+          const icon = document.createElement("span");
+          icon.className = "session-select__icon";
+          icon.innerHTML =
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+
+          const textWrap = document.createElement("span");
+          textWrap.className = "session-select__text";
+
+          const titleEl = document.createElement("span");
+          titleEl.className = "session-select__title";
+          titleEl.textContent = getDisplayTitle(session);
+
+          const metaEl = document.createElement("span");
+          metaEl.className = "session-select__meta";
+          metaEl.textContent = formatSessionTimeLabel(session.updatedAt || session.createdAt);
+
+          textWrap.appendChild(titleEl);
+          textWrap.appendChild(metaEl);
+          selectBtn.appendChild(icon);
+          selectBtn.appendChild(textWrap);
 
           const menuButton = document.createElement("button");
           menuButton.type = "button";
@@ -3178,8 +3231,12 @@
         emptyState.className = "empty-state";
         const greeting = document.createElement("h2");
         greeting.className = "empty-hero__title";
-        greeting.textContent = `${getTimeGreeting()}, ${getGreetingName()}.`;
+        greeting.textContent = "Waar kan ik mee helpen?";
+        const subtitle = document.createElement("p");
+        subtitle.className = "empty-hero__subtitle";
+        subtitle.textContent = `${getTimeGreeting()}, ${getGreetingName()}. Kies een model bovenaan en start je gesprek.`;
         emptyState.appendChild(greeting);
+        emptyState.appendChild(subtitle);
         chatLog.appendChild(emptyState);
       };
 
