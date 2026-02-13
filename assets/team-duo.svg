@@ -2,7 +2,7 @@
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="900" y2="640" gradientUnits="userSpaceOnUse">
       <stop stop-color="#0D1840"/>
-      <stop offset="1" stop-color="#1A2B6D"/>
+      <stop offset="1" stop-color="#12122A"/>
     </linearGradient>
     <linearGradient id="card" x1="120" y1="140" x2="780" y2="520" gradientUnits="userSpaceOnUse">
       <stop stop-color="#f4f6ff"/>
@@ -20,8 +20,8 @@
   <path d="M300 280c20 30 60 48 120 48" stroke="#F5C518" stroke-width="10" stroke-linecap="round"/>
   <path d="M450 300c26 26 74 38 120 34" stroke="#F5C518" stroke-width="10" stroke-linecap="round"/>
 
-  <path d="M230 520c20-100 130-170 220-170 90 0 180 70 200 170" fill="#243B8F"/>
-  <path d="M260 520c20-70 96-120 170-120 80 0 150 50 170 120" fill="#1A2B6D"/>
+  <path d="M230 520c20-100 130-170 220-170 90 0 180 70 200 170" fill="#2D2D50"/>
+  <path d="M260 520c20-70 96-120 170-120 80 0 150 50 170 120" fill="#12122A"/>
 
   <circle cx="360" cy="305" r="8" fill="#0D1840"/>
   <circle cx="540" cy="320" r="8" fill="#0D1840"/>
