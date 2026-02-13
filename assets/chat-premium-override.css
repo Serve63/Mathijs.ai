@@ -4,20 +4,20 @@
   --premium-white: #ffffff;
   --premium-border: #e2e0d8;
   --premium-border-soft: #edecea;
-  --premium-text: #1a1a2e;
+  --premium-text: #0D1840;
   --premium-text-muted: #5a5a72;
   --premium-text-faint: #8a8a9e;
-  --premium-gold: #b8960c;
-  --premium-gold-light: #d4af37;
-  --premium-blue: #1e3a5f;
-  --premium-blue-deep: #152c4a;
-  --premium-sidebar: #1a1a2e;
+  --premium-gold: #F5C518;
+  --premium-gold-light: #FFE066;
+  --premium-blue: #1A2B6D;
+  --premium-blue-deep: #0D1840;
+  --premium-sidebar: #0D1840;
   --premium-sidebar-2: #12122a;
   --premium-sidebar-hover: #252542;
   --premium-sidebar-active: #2d2d50;
-  --premium-shadow-sm: 0 1px 3px rgba(30, 58, 95, 0.06);
-  --premium-shadow-md: 0 4px 16px rgba(30, 58, 95, 0.08);
-  --premium-shadow-lg: 0 8px 32px rgba(30, 58, 95, 0.12);
+  --premium-shadow-sm: 0 1px 3px rgba(26, 43, 109, 0.06);
+  --premium-shadow-md: 0 4px 16px rgba(26, 43, 109, 0.08);
+  --premium-shadow-lg: 0 8px 32px rgba(26, 43, 109, 0.12);
 }
 
 html,
@@ -1005,14 +1005,14 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   margin-left: auto;
   padding: 12px 14px;
   border-radius: 14px;
-  border: 1px solid rgba(30, 58, 95, 0.18);
-  background: linear-gradient(135deg, rgba(30, 58, 95, 0.97) 0%, rgba(21, 44, 74, 0.97) 100%);
+  border: 1px solid rgba(26, 43, 109, 0.18);
+  background: linear-gradient(135deg, rgba(26, 43, 109, 0.97) 0%, rgba(21, 44, 74, 0.97) 100%);
   color: rgba(255, 255, 255, 0.96);
 }
 
 .chat-log .message.user .bubble:hover {
-  border-color: rgba(30, 58, 95, 0.24);
-  background: linear-gradient(135deg, rgba(30, 58, 95, 1) 0%, rgba(21, 44, 74, 1) 100%);
+  border-color: rgba(26, 43, 109, 0.24);
+  background: linear-gradient(135deg, rgba(26, 43, 109, 1) 0%, rgba(21, 44, 74, 1) 100%);
 }
 
 .message.user .bubble code {
@@ -1132,7 +1132,7 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 }
 
 .chat-plus__info::after {
-  background: #1a1a2e;
+  background: #0D1840;
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.9);
 }
@@ -1205,7 +1205,7 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   border: none;
   background: linear-gradient(135deg, var(--premium-blue) 0%, var(--premium-blue-deep) 100%);
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.28);
+  box-shadow: 0 2px 8px rgba(26, 43, 109, 0.28);
 }
 
 .chat-input__inner > button[aria-label="Stuur bericht"]::before {
@@ -1218,7 +1218,7 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 
 .chat-input__inner > button[aria-label="Stuur bericht"]:hover {
   transform: scale(1.03);
-  box-shadow: 0 4px 16px rgba(30, 58, 95, 0.34);
+  box-shadow: 0 4px 16px rgba(26, 43, 109, 0.34);
 }
 
 .chat-search-pill {

@@ -3,8 +3,8 @@
 :root {
   --sand: #fff6d6;
   --text: #1f1c18;
-  --accent: #1f6feb;
-  --accent-dark: #174ea6;
+  --accent: #1A2B6D;
+  --accent-dark: #243B8F;
   --amber: #ffe172;
   --muted: #5f574f;
   --card: #ffffff;
@@ -555,7 +555,7 @@ section {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1f6feb, #ffd54f);
+  background: linear-gradient(135deg, #1A2B6D, #ffd54f);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -624,7 +624,7 @@ summary::-webkit-details-marker {
 }
 
 .cta-banner {
-  background: linear-gradient(120deg, #1f6feb, #ffd54f);
+  background: linear-gradient(120deg, #1A2B6D, #ffd54f);
   color: #1b1005;
 }
 

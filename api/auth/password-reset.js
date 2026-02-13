@@ -128,7 +128,7 @@ function buildResetEmailHtml({ actionLink, baseUrl }) {
             <tr>
               <td style="padding:32px 32px 16px;">
                 <img src="${logoUrl}" alt="Mathijs.ai" width="40" height="40" style="display:block;margin-bottom:16px;" />
-                <p style="margin:0;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#e6c200;font-weight:700;">Wachtwoord reset</p>
+                <p style="margin:0;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#F5C518;font-weight:700;">Wachtwoord reset</p>
                 <h1 style="margin:12px 0 12px;font-size:24px;line-height:1.3;">Reset je wachtwoord</h1>
                 <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#4b5563;">
                   Je vroeg om een nieuw wachtwoord voor je Mathijs.ai account. Klik op de knop hieronder om een nieuw wachtwoord in te stellen.
@@ -136,7 +136,7 @@ function buildResetEmailHtml({ actionLink, baseUrl }) {
                 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0 20px;">
                   <tr>
                     <td>
-                      <a href="${actionLink}" style="background:#e6c200;color:#1a1600;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:700;display:inline-block;">Wachtwoord resetten</a>
+                      <a href="${actionLink}" style="background:#F5C518;color:#1a1600;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:700;display:inline-block;">Wachtwoord resetten</a>
                     </td>
                   </tr>
                 </table>
