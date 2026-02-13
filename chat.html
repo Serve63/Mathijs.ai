@@ -26,14 +26,14 @@
         --chat-border: rgba(15, 23, 42, 0.08);
         --chat-text: #0b1220;
         --chat-text-secondary: rgba(15, 23, 42, 0.62);
-        --sidebar-bg: #121b4a;
-        --sidebar-bg-2: #121b4a;
-        --sidebar-surface: rgba(255, 255, 255, 0.08);
-        --sidebar-surface-strong: rgba(85, 92, 163, 0.48);
-        --sidebar-border: rgba(255, 255, 255, 0.13);
-        --sidebar-text: rgba(243, 247, 255, 0.96);
-        --sidebar-text-muted: rgba(194, 204, 236, 0.72);
-        --sidebar-text-faint: rgba(176, 187, 220, 0.52);
+        --sidebar-bg: #10143a;
+        --sidebar-bg-2: #10143a;
+        --sidebar-surface: rgba(255, 255, 255, 0.06);
+        --sidebar-surface-strong: rgba(66, 72, 130, 0.74);
+        --sidebar-border: rgba(154, 173, 243, 0.16);
+        --sidebar-text: rgba(236, 242, 255, 0.96);
+        --sidebar-text-muted: rgba(168, 182, 224, 0.78);
+        --sidebar-text-faint: rgba(129, 144, 191, 0.72);
         --glass-bg: #ffffff;
         --glass-border: rgba(15, 23, 42, 0.08);
         --premium-shadow: 0 20px 55px -35px rgba(15, 23, 42, 0.25);
@@ -359,9 +359,9 @@
       .sidebar-collapse-toggle,
       .sidebar-expand-toggle {
         appearance: none;
-        border: 1px solid rgba(166, 186, 255, 0.34);
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(234, 241, 255, 0.92);
+        border: 1px solid rgba(166, 186, 255, 0.26);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(228, 236, 255, 0.9);
         width: 32px;
         height: 32px;
         border-radius: 10px;
@@ -375,7 +375,7 @@
 
       .sidebar-collapse-toggle:hover,
       .sidebar-expand-toggle:hover {
-        background: rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.10);
         border-color: rgba(255, 210, 24, 0.5);
         transform: translateY(-1px);
       }
@@ -848,13 +848,13 @@
 
       .session-row:hover {
         background: var(--sidebar-surface);
-        border-color: rgba(255, 255, 255, 0.14);
+        border-color: rgba(166, 186, 255, 0.20);
       }
 
       .session-row.is-active {
-        background: linear-gradient(135deg, var(--sidebar-surface-strong) 0%, rgba(70, 78, 144, 0.36) 100%);
-        border-color: rgba(255, 255, 255, 0.19);
-        box-shadow: 0 14px 30px -24px rgba(4, 8, 30, 0.9);
+        background: linear-gradient(135deg, var(--sidebar-surface-strong) 0%, rgba(54, 60, 112, 0.74) 100%);
+        border-color: rgba(154, 173, 243, 0.34);
+        box-shadow: 0 16px 30px -24px rgba(4, 8, 30, 0.95);
       }
 
       .session-row.is-active::before {
