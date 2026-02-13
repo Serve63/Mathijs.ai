@@ -20,3 +20,77 @@ html.stability-mode *::after {
   transition: none !important;
   scroll-behavior: auto !important;
 }
+
+/* Keep the app loading screen animated, even in stability mode. */
+html.stability-mode .app-loader {
+  transition: opacity 0.3s ease, visibility 0.3s ease !important;
+}
+
+html.stability-mode .loader-orb {
+  animation: loaderFloat 8s ease-in-out infinite !important;
+}
+
+html.stability-mode .loader-container {
+  animation: loaderFadeIn 1s ease-out !important;
+}
+
+html.stability-mode .loader-logo-name {
+  animation: loaderLogoReveal 0.8s ease-out 0.3s both !important;
+}
+
+html.stability-mode .loader-logo-dot {
+  animation: loaderLogoReveal 0.8s ease-out 0.5s both !important;
+}
+
+html.stability-mode .loader-logo-ai {
+  animation: loaderLogoReveal 0.8s ease-out 0.6s both !important;
+}
+
+html.stability-mode .loader-spinner-wrap {
+  animation: loaderFadeIn 0.6s ease-out 0.8s both !important;
+}
+
+html.stability-mode .loader-spinner {
+  animation: loaderSpin 1.2s cubic-bezier(0.5, 0.15, 0.35, 0.85) infinite !important;
+}
+
+html.stability-mode .loader-spinner-inner {
+  animation: loaderSpin 1.8s cubic-bezier(0.5, 0.15, 0.35, 0.85) infinite reverse !important;
+}
+
+html.stability-mode .loader-spinner-dot {
+  animation: loaderPulse 1.2s ease-in-out infinite !important;
+}
+
+html.stability-mode .loader-status {
+  animation: loaderFadeIn 0.6s ease-out 1s both !important;
+}
+
+html.stability-mode .loader-status-dots span {
+  animation: loaderDotBounce 1.4s ease-in-out infinite !important;
+}
+
+html.stability-mode .loader-progress {
+  animation: loaderFadeIn 0.6s ease-out 1.1s both !important;
+}
+
+html.stability-mode .loader-progress-fill {
+  animation: loaderProgressSlide 2s ease-in-out infinite !important;
+}
+
+html.stability-mode .loader-corner {
+  animation: loaderCornerFade 0.6s ease-out 1.2s forwards !important;
+}
+
+/* Fallback loader classes from inline chat stylesheet. */
+html.stability-mode .app-loader__spinner {
+  animation: loaderSpin 0.85s linear infinite !important;
+}
+
+html.stability-mode .app-loader__spinner::after {
+  animation: loaderPulse 1.1s ease-in-out infinite !important;
+}
+
+html.stability-mode .app-loader__dots span {
+  animation: loaderDotPulse 1s ease-in-out infinite !important;
+}

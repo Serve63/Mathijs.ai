@@ -42,7 +42,7 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: #0d1840;
+  background: linear-gradient(180deg, #0D1840 0%, #12122A 100%);
   font-family: "Plus Jakarta Sans", "Space Grotesk", system-ui, sans-serif;
   transition: opacity 0.3s ease, visibility 0.3s ease;
 }
@@ -84,7 +84,7 @@ body {
 .loader-orb-2 {
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, rgba(58, 86, 184, 0.2), transparent 70%);
+  background: radial-gradient(circle, rgba(45, 45, 80, 0.26), transparent 70%);
   bottom: -5%;
   left: -5%;
   animation-delay: -3s;
@@ -173,8 +173,8 @@ body {
   inset: 10px;
   border-radius: 50%;
   border: 2px solid transparent;
-  border-bottom-color: #3a56b8;
-  border-left-color: #3a56b8;
+  border-bottom-color: #2d2d50;
+  border-left-color: #2d2d50;
   animation: loaderSpin 1.8s cubic-bezier(0.5, 0.15, 0.35, 0.85) infinite reverse;
 }
 
