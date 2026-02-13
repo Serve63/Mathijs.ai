@@ -572,22 +572,78 @@
       const normalizeModelIndex = (index) => {
         if (!modelSwipeItems.length) return 0;
         const total = modelSwipeItems.length;
-        return ((index % total) + total) % total;
+        return Math.min(Math.max(index, 0), total - 1);
       };
 
       const getModelIndexByLabel = (label) =>
         modelSwipeItems.findIndex((item) => (item.getAttribute("data-model") || "").trim() === String(label || "").trim());
 
+      const getModelLabelByIndex = (index) => {
+        if (index < 0 || index >= modelSwipeItems.length) return "";
+        return (modelSwipeItems[index]?.getAttribute("data-model") || "").trim();
+      };
+
+      const getSwipeLayoutMetrics = () => {
+        if (!modelSwipeTrack || !modelSwipeViewport || !modelSwipeItems.length) return null;
+        const firstItem = modelSwipeItems[0];
+        const viewportWidth = modelSwipeViewport.getBoundingClientRect().width;
+        const itemWidth =
+          firstItem.getBoundingClientRect().width || Number.parseFloat(window.getComputedStyle(firstItem).width) || 0;
+        const trackStyle = window.getComputedStyle(modelSwipeTrack);
+        const gapRaw = trackStyle.columnGap || trackStyle.gap || "0";
+        const gap = Number.parseFloat(gapRaw) || 0;
+        const step = itemWidth + gap;
+        const contentWidth = modelSwipeItems.length * itemWidth + Math.max(0, modelSwipeItems.length - 1) * gap;
+        return { viewportWidth, itemWidth, gap, step, contentWidth };
+      };
+
       const syncModelSwipeUI = () => {
         if (!modelSwipeTrack || !modelSwipeItems.length) return;
         const index = normalizeModelIndex(activeModelIndex);
         activeModelIndex = index;
-        modelSwipeTrack.style.transform = `translateX(-${index * 100}%)`;
+        const metrics = getSwipeLayoutMetrics();
+        if (metrics) {
+          const { viewportWidth, itemWidth, step, contentWidth } = metrics;
+          const idealTranslate = (viewportWidth - itemWidth) / 2 - index * step;
+          const minTranslate = Math.min(0, viewportWidth - contentWidth);
+          const maxTranslate = 0;
+          const translate = Math.min(maxTranslate, Math.max(minTranslate, idealTranslate));
+          modelSwipeTrack.style.transform = `translateX(${translate}px)`;
+        } else {
+          modelSwipeTrack.style.transform = `translateX(-${index * 100}%)`;
+        }
+        const prevIndex = index - 1;
+        const nextIndex = index + 1;
         modelSwipeItems.forEach((item, idx) => {
           const isSelected = idx === index;
+          item.classList.toggle("is-prev", idx === prevIndex);
+          item.classList.toggle("is-next", idx === nextIndex);
+          item.classList.toggle("is-far", Math.abs(idx - index) > 1);
           item.classList.toggle("is-selected", isSelected);
           item.setAttribute("aria-selected", isSelected ? "true" : "false");
+          const modelLabel = (item.getAttribute("data-model") || "").trim();
+          if (modelLabel) {
+            item.setAttribute("data-provider", getModelKeyForLabel(modelLabel));
+          }
         });
+        const prevLabel = getModelLabelByIndex(prevIndex);
+        const nextLabel = getModelLabelByIndex(nextIndex);
+        if (modelSwipePrev) {
+          const hasPrev = Boolean(prevLabel);
+          modelSwipePrev.disabled = !hasPrev;
+          modelSwipePrev.setAttribute("aria-disabled", hasPrev ? "false" : "true");
+          modelSwipePrev.setAttribute("data-preview", prevLabel);
+          modelSwipePrev.setAttribute("aria-label", hasPrev ? `Vorig model: ${prevLabel}` : "Geen vorig model");
+          modelSwipePrev.setAttribute("title", hasPrev ? `Naar ${prevLabel}` : "Geen vorig model");
+        }
+        if (modelSwipeNext) {
+          const hasNext = Boolean(nextLabel);
+          modelSwipeNext.disabled = !hasNext;
+          modelSwipeNext.setAttribute("aria-disabled", hasNext ? "false" : "true");
+          modelSwipeNext.setAttribute("data-preview", nextLabel);
+          modelSwipeNext.setAttribute("aria-label", hasNext ? `Volgend model: ${nextLabel}` : "Geen volgend model");
+          modelSwipeNext.setAttribute("title", hasNext ? `Naar ${nextLabel}` : "Geen volgend model");
+        }
       };
 
       const MODEL_SELECTION_KEY = "mathijs_selected_model_v1";
@@ -821,6 +877,7 @@
       const moveModelBy = async (delta) => {
         if (!modelSwipeItems.length) return;
         const nextIndex = normalizeModelIndex(activeModelIndex + delta);
+        if (nextIndex === activeModelIndex) return;
         await selectModelByIndex(nextIndex, { silent: true, switchSession: true });
       };
 
@@ -891,6 +948,15 @@
             },
             { passive: true }
           );
+        }
+
+        const syncSwipeOnResize = () => syncModelSwipeUI();
+        window.addEventListener("resize", syncSwipeOnResize, { passive: true });
+        if (window.ResizeObserver && modelSwipeViewport) {
+          const swipeViewportResizeObserver = new ResizeObserver(() => {
+            syncModelSwipeUI();
+          });
+          swipeViewportResizeObserver.observe(modelSwipeViewport);
         }
       }
 
