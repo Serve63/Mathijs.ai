@@ -534,18 +534,19 @@
       .token-usage-card {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
         padding: 0;
         border: 0;
         background: transparent;
         box-shadow: none;
+        opacity: 0.88;
       }
 
       .token-usage-card__label {
         margin: 0;
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: 0.12em;
+        font-size: 0.64rem;
+        font-weight: 650;
+        letter-spacing: 0.10em;
         text-transform: uppercase;
         color: var(--sidebar-text-faint);
       }
@@ -553,9 +554,9 @@
       .token-usage-card__bar {
         position: relative;
         width: 100%;
-        height: 12px;
+        height: 8px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.11);
         overflow: hidden;
       }
 
@@ -565,7 +566,7 @@
         width: 0%;
         border-radius: inherit;
         background: linear-gradient(90deg, rgba(230, 194, 0, 0.95) 0%, rgba(255, 214, 46, 0.95) 100%);
-        box-shadow: 0 0 16px rgba(230, 194, 0, 0.34);
+        box-shadow: 0 0 10px rgba(230, 194, 0, 0.28);
         transition: width 0.35s ease;
       }
 
@@ -574,20 +575,20 @@
         align-items: baseline;
         justify-content: space-between;
         gap: 10px;
-        font-size: 0.72rem;
-        font-weight: 600;
+        font-size: 0.64rem;
+        font-weight: 550;
         color: var(--sidebar-text-muted);
       }
 
       .token-usage-card__current {
         color: var(--sidebar-text);
-        font-weight: 700;
+        font-weight: 650;
         font-variant-numeric: tabular-nums;
       }
 
       .token-usage-card__total {
         color: var(--sidebar-text-muted);
-        font-weight: 600;
+        font-weight: 550;
         font-variant-numeric: tabular-nums;
       }
 
