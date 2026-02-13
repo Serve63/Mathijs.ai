@@ -1258,6 +1258,21 @@
         padding: 50px 40px 60px;
         background: var(--dark);
         color: rgba(255, 255, 255, 0.65);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .site-footer::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 48%;
+        height: 100%;
+        background: linear-gradient(135deg, #F5C518 0%, #FFE066 100%);
+        clip-path: polygon(0 0, 100% 0, 100% 100%, -18% 100%);
+        pointer-events: none;
+        z-index: 0;
       }
 
       .footer-inner {
@@ -1268,6 +1283,8 @@
         align-items: flex-start;
         gap: 24px;
         flex-wrap: wrap;
+        position: relative;
+        z-index: 1;
       }
 
       .footer-brand .brand-text {
@@ -1305,6 +1322,16 @@
 
       .footer-links a:hover {
         color: var(--accent-sun);
+      }
+
+      @media (min-width: 1025px) {
+        .footer-links a {
+          color: rgba(13, 24, 64, 0.82);
+        }
+
+        .footer-links a:hover {
+          color: #0D1840;
+        }
       }
 
       .footer-copy {
@@ -1412,6 +1439,10 @@
         .header-inner {
           flex-wrap: wrap;
           justify-content: space-between;
+        }
+
+        .site-footer::before {
+          display: none;
         }
       }
 
