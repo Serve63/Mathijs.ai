@@ -3709,24 +3709,40 @@
 </head>
   <body>
     <div class="app-loader" id="app-loader" aria-hidden="true">
-      <div class="app-loader__card">
-        <div class="app-loader__brand">
-          <div class="app-loader__logo">MA</div>
-          <div class="app-loader__title-wrap">
-            <div class="app-loader__title">MATHIJS&gt;AI</div>
-            <div class="app-loader__subtitle">AI Console laden...</div>
+      <div class="loader-orb loader-orb-1" aria-hidden="true"></div>
+      <div class="loader-orb loader-orb-2" aria-hidden="true"></div>
+      <div class="loader-orb loader-orb-3" aria-hidden="true"></div>
+
+      <div class="loader-corner loader-corner-tl" aria-hidden="true"></div>
+      <div class="loader-corner loader-corner-tr" aria-hidden="true"></div>
+      <div class="loader-corner loader-corner-bl" aria-hidden="true"></div>
+      <div class="loader-corner loader-corner-br" aria-hidden="true"></div>
+
+      <div class="loader-container">
+        <div class="loader-logo">
+          <span class="loader-logo-name">MATHIJS</span>
+          <span class="loader-logo-dot">.</span>
+          <span class="loader-logo-ai">AI</span>
+        </div>
+
+        <div class="loader-spinner-wrap" aria-hidden="true">
+          <div class="loader-spinner-track"></div>
+          <div class="loader-spinner"></div>
+          <div class="loader-spinner-inner"></div>
+          <div class="loader-spinner-dot"></div>
+        </div>
+
+        <div class="loader-status" role="status" aria-live="polite">
+          <span class="loader-status-text">Laden</span>
+          <div class="loader-status-dots" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
         </div>
-        <div class="app-loader__status" role="status" aria-live="polite">
-          <div class="app-loader__spinner" aria-hidden="true"></div>
-          <div class="app-loader__loading">
-            Laden
-            <span class="app-loader__dots" aria-hidden="true">
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-          </div>
+
+        <div class="loader-progress" aria-hidden="true">
+          <div class="loader-progress-fill"></div>
         </div>
       </div>
     </div>
