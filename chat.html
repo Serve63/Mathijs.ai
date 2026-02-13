@@ -114,6 +114,7 @@
       .app-loader__card {
         display: flex;
         flex-direction: column;
+        align-items: center;
         gap: 22px;
         width: min(520px, calc(100% - 48px));
         padding: 34px 34px 30px;
@@ -126,11 +127,13 @@
           0 0 60px -28px rgba(255, 211, 37, 0.42);
         position: relative;
         z-index: 1;
+        text-align: center;
       }
 
       .app-loader__brand {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 16px;
         min-width: 0;
       }
@@ -206,7 +209,42 @@
       .app-loader__status {
         display: flex;
         align-items: center;
-        gap: 12px;
+        justify-content: center;
+        gap: 14px;
+        min-height: 40px;
+      }
+
+      .app-loader__loading {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: rgba(233, 240, 255, 0.9);
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .app-loader__dots {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .app-loader__dots span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #ffd423;
+        opacity: 0.28;
+        animation: loaderDotPulse 1s ease-in-out infinite;
+      }
+
+      .app-loader__dots span:nth-child(2) {
+        animation-delay: 0.16s;
+      }
+
+      .app-loader__dots span:nth-child(3) {
+        animation-delay: 0.32s;
       }
 
       @keyframes loaderSpin {
@@ -226,6 +264,17 @@
         50% {
           opacity: 1;
           transform: translate(-50%, -50%) scale(1.1);
+        }
+      }
+
+      @keyframes loaderDotPulse {
+        0%, 100% {
+          opacity: 0.25;
+          transform: translateY(0);
+        }
+        50% {
+          opacity: 1;
+          transform: translateY(-2px);
         }
       }
 
@@ -3679,6 +3728,14 @@
         </div>
         <div class="app-loader__status" role="status" aria-live="polite">
           <div class="app-loader__spinner" aria-hidden="true"></div>
+          <div class="app-loader__loading">
+            Laden
+            <span class="app-loader__dots" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </div>
         </div>
       </div>
     </div>
