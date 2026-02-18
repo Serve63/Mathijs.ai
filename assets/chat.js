@@ -490,6 +490,36 @@
         thinkingModeTrigger.setAttribute("aria-expanded", "false");
       }
 
+      const adjustChatPlusMenuPosition = () => {
+        if (!chatPlus || !chatPlusMenu) return;
+        chatPlusMenu.style.bottom = "calc(100% + 10px)";
+        const menuRect = chatPlusMenu.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const minSpaceFromBottom = 20;
+
+        if (menuRect.bottom > viewportHeight - minSpaceFromBottom) {
+          const chatPlusRect = chatPlus.getBoundingClientRect();
+          const menuHeight = menuRect.height;
+          const newBottom = viewportHeight - chatPlusRect.top - menuHeight - minSpaceFromBottom;
+          chatPlusMenu.style.bottom = `${Math.max(newBottom, 10)}px`;
+        }
+      };
+
+      const closeChatPlusMenu = () => {
+        if (!chatPlusMenu || !chatPlus) return;
+        chatPlusMenu.classList.remove("is-open");
+        chatPlusMenu.style.removeProperty("display");
+        chatPlus.setAttribute("aria-expanded", "false");
+      };
+
+      const openChatPlusMenu = () => {
+        if (!chatPlusMenu || !chatPlus) return;
+        chatPlusMenu.classList.add("is-open");
+        chatPlusMenu.style.removeProperty("display");
+        chatPlus.setAttribute("aria-expanded", "true");
+        requestAnimationFrame(adjustChatPlusMenuPosition);
+      };
+
       const updateThinkingModeVisibility = () => {
         if (!thinkingModeWrap) return;
         const shouldShow = !noThinkingModels.has(selectedModel);
@@ -515,8 +545,7 @@
           }
         }
         if (chatPlusMenu && exception !== chatPlusMenu) {
-          chatPlusMenu.style.display = "none";
-          if (chatPlus) chatPlus.setAttribute("aria-expanded", "false");
+          closeChatPlusMenu();
         }
         if (thinkingModeMenu && exception !== thinkingModeMenu) {
           closeThinkingMenu();
@@ -959,12 +988,14 @@
         updateSelectedModel(modelSwipeItems[activeModelIndex].getAttribute("data-model") || selectedModelLabel);
 
         modelSwipeItems.forEach((item, idx) => {
-          item.addEventListener("click", async (event) => {
+          item.addEventListener("click", (event) => {
             event.preventDefault();
             event.stopPropagation();
-            await selectModelByIndex(idx, { silent: true, switchSession: true });
             closeModelPicker();
             modelPickerTrigger?.focus();
+            void selectModelByIndex(idx, { silent: true, switchSession: true }).catch((error) => {
+              console.error("Model select failed", error);
+            });
           });
         });
 
@@ -1008,7 +1039,7 @@
           }
         });
 
-        modelPickerMenu?.addEventListener("keydown", async (event) => {
+        modelPickerMenu?.addEventListener("keydown", (event) => {
           if (event.key === "Escape") {
             event.preventDefault();
             closeModelPicker();
@@ -1017,14 +1048,18 @@
           }
           if (event.key === "ArrowDown") {
             event.preventDefault();
-            await moveModelBy(1);
-            modelSwipeItems[activeModelIndex]?.focus();
+            const focusedIndex = modelSwipeItems.indexOf(document.activeElement);
+            const baseIndex = focusedIndex >= 0 ? focusedIndex : activeModelIndex;
+            const nextIndex = Math.min(baseIndex + 1, modelSwipeItems.length - 1);
+            modelSwipeItems[nextIndex]?.focus();
             return;
           }
           if (event.key === "ArrowUp") {
             event.preventDefault();
-            await moveModelBy(-1);
-            modelSwipeItems[activeModelIndex]?.focus();
+            const focusedIndex = modelSwipeItems.indexOf(document.activeElement);
+            const baseIndex = focusedIndex >= 0 ? focusedIndex : activeModelIndex;
+            const nextIndex = Math.max(baseIndex - 1, 0);
+            modelSwipeItems[nextIndex]?.focus();
             return;
           }
           if ((event.key === "Enter" || event.key === " ") && event.target instanceof HTMLElement) {
@@ -1033,9 +1068,11 @@
             event.preventDefault();
             const idx = modelSwipeItems.indexOf(optionEl);
             if (idx >= 0) {
-              await selectModelByIndex(idx, { silent: true, switchSession: true });
               closeModelPicker();
               modelPickerTrigger?.focus();
+              void selectModelByIndex(idx, { silent: true, switchSession: true }).catch((error) => {
+                console.error("Model select failed", error);
+              });
             }
           }
         });
@@ -1142,7 +1179,7 @@
 
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
-          closeThinkingMenu();
+          closeAllDropdowns();
         }
       });
 
@@ -1162,30 +1199,12 @@
       if (chatPlus && chatPlusMenu && chatPlusTrigger) {
         chatPlusTrigger.addEventListener("click", (event) => {
           event.stopPropagation();
-          const isOpen = chatPlusMenu.style.display === "flex";
+          const isOpen = chatPlusMenu.classList.contains("is-open");
           closeAllDropdowns(isOpen ? null : chatPlusMenu);
-          chatPlusMenu.style.display = isOpen ? "none" : "flex";
-          chatPlus.setAttribute("aria-expanded", !isOpen ? "true" : "false");
-          
-          // Adjust position to keep menu fully visible
-          if (!isOpen) {
-            setTimeout(() => {
-              const menuRect = chatPlusMenu.getBoundingClientRect();
-              const viewportHeight = window.innerHeight;
-              const minSpaceFromBottom = 20;
-              
-              // If menu extends below viewport, move it up
-              if (menuRect.bottom > viewportHeight - minSpaceFromBottom) {
-                const chatPlusRect = chatPlus.getBoundingClientRect();
-                const menuHeight = menuRect.height;
-                // Position menu so bottom edge is 20px from viewport bottom
-                const newBottom = viewportHeight - chatPlusRect.top - menuHeight - minSpaceFromBottom;
-                chatPlusMenu.style.bottom = `${Math.max(newBottom, 10)}px`;
-              } else {
-                // Reset to default position
-                chatPlusMenu.style.bottom = "calc(100% + 10px)";
-              }
-            }, 0);
+          if (isOpen) {
+            closeChatPlusMenu();
+          } else {
+            openChatPlusMenu();
           }
         });
 
@@ -1195,6 +1214,16 @@
             chatPlusTrigger.click();
           }
         });
+
+        window.addEventListener(
+          "resize",
+          () => {
+            if (chatPlusMenu.classList.contains("is-open")) {
+              requestAnimationFrame(adjustChatPlusMenuPosition);
+            }
+          },
+          { passive: true },
+        );
       }
 
       if (toggleWebSearch) {

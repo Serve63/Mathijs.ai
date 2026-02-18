@@ -1461,6 +1461,17 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 .chat-plus {
   position: relative;
   flex-shrink: 0;
+  width: auto;
+  height: auto;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  display: block;
+  color: inherit;
+  transition: none;
+  font-size: 0;
+  line-height: 0;
 }
 
 .chat-plus__trigger {
@@ -1505,9 +1516,22 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 }
 
 .chat-plus__menu {
-  display: none;
-  flex-direction: column;
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 10px);
+  z-index: 120;
+  width: max-content;
+  max-width: min(82vw, 284px);
   min-width: 248px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.96);
+  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0s linear 0.22s;
+  will-change: opacity, transform;
+  animation: none;
   background: rgba(255, 255, 255, 0.84);
   border: 1px solid rgba(255, 255, 255, 0.88);
   border-radius: 20px;
@@ -1519,11 +1543,16 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   backdrop-filter: blur(36px) saturate(180%);
   -webkit-backdrop-filter: blur(36px) saturate(180%);
   transform-origin: bottom left;
-  animation: menuIn 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.chat-plus[aria-expanded="true"] .chat-plus__menu {
-  display: flex;
+.chat-plus[aria-expanded="true"] .chat-plus__menu,
+.chat-plus__menu.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition-delay: 0s;
+  animation: none;
 }
 
 .chat-plus__menu::before {
@@ -1775,9 +1804,20 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 }
 
 .chat-mode-menu {
-  display: none;
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 120;
+  display: flex;
   flex-direction: column;
   min-width: 162px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.96);
+  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0s linear 0.22s;
+  will-change: opacity, transform;
+  animation: none;
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.88);
   background: rgba(255, 255, 255, 0.84);
@@ -1789,7 +1829,6 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   backdrop-filter: blur(36px) saturate(180%);
   -webkit-backdrop-filter: blur(36px) saturate(180%);
   transform-origin: bottom right;
-  animation: menuIn 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .chat-mode-menu::before {
@@ -1804,7 +1843,12 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 }
 
 .chat-mode-menu.is-open {
-  display: flex;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition-delay: 0s;
+  animation: none;
 }
 
 .chat-mode-option {
@@ -1832,6 +1876,11 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 .chat-mode-option.is-active {
   color: var(--premium-blue-deep);
   font-weight: 600;
+}
+
+.chat-mode-option[aria-selected="true"]::after,
+.chat-mode-option.is-active::after {
+  content: none;
 }
 
 .chat-mode-option[aria-selected="true"]::before,
@@ -1922,6 +1971,18 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 .edit-credentials-modal,
 .topup-modal {
   backdrop-filter: blur(12px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .model-picker__menu,
+  .chat-plus__menu,
+  .chat-mode-menu,
+  .chat-plus__trigger,
+  .chat-mode-trigger,
+  .chat-input__inner > button[aria-label="Stuur bericht"] {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 @media (max-width: 960px) {
