@@ -60,14 +60,6 @@ html {
     animation: loaderDotBounce 1.4s ease-in-out infinite !important;
   }
 
-  .loader-progress {
-    animation: loaderFadeIn 0.6s ease-out 1.1s both !important;
-  }
-
-  .loader-progress-fill {
-    animation: loaderProgressSlide 2s ease-in-out infinite !important;
-  }
-
   .loader-corner {
     animation: loaderCornerFade 0.6s ease-out 1.2s forwards !important;
   }
@@ -141,14 +133,6 @@ html.stability-mode .loader-status {
 
 html.stability-mode .loader-status-dots span {
   animation: loaderDotBounce 1.4s ease-in-out infinite !important;
-}
-
-html.stability-mode .loader-progress {
-  animation: loaderFadeIn 0.6s ease-out 1.1s both !important;
-}
-
-html.stability-mode .loader-progress-fill {
-  animation: loaderProgressSlide 2s ease-in-out infinite !important;
 }
 
 html.stability-mode .loader-corner {
