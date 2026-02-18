@@ -166,6 +166,7 @@
       const profileModalClose = document.querySelector(".profile-modal__close");
       const profileModalDialog = profileModal ? profileModal.querySelector(".profile-modal__dialog") : null;
       const chatPlus = document.getElementById("chat-plus");
+      const chatPlusTrigger = chatPlus ? chatPlus.querySelector(".chat-plus__trigger") : null;
       const chatPlusMenu = document.getElementById("chat-plus-menu");
       const thinkingModeSelect = document.getElementById("thinking-mode-select");
       const thinkingModeTrigger = document.getElementById("thinking-mode-trigger");
@@ -1114,8 +1115,8 @@
         webSearchEnabled = state;
       };
 
-      if (chatPlus && chatPlusMenu) {
-        chatPlus.addEventListener("click", (event) => {
+      if (chatPlus && chatPlusMenu && chatPlusTrigger) {
+        chatPlusTrigger.addEventListener("click", (event) => {
           event.stopPropagation();
           const isOpen = chatPlusMenu.style.display === "flex";
           closeAllDropdowns(isOpen ? null : chatPlusMenu);
@@ -1141,6 +1142,13 @@
                 chatPlusMenu.style.bottom = "calc(100% + 10px)";
               }
             }, 0);
+          }
+        });
+
+        chatPlusTrigger.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            chatPlusTrigger.click();
           }
         });
       }
