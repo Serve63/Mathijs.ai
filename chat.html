@@ -3824,8 +3824,8 @@
     <div class="chat-layout">
 			      <aside class="sidebar">
             <div class="sidebar-header-shell">
-              <div class="sidebar-logo" aria-hidden="true">S</div>
-              <div class="sidebar-brandtext"><span>Servé</span> AI</div>
+              <div class="sidebar-logo" aria-hidden="true">M</div>
+              <div class="sidebar-brandtext">Mathijs.ai</div>
               <button class="sidebar-collapse-toggle" id="sidebar-collapse-toggle" type="button" aria-label="Sidebar inklappen" title="Sidebar inklappen">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M15 18l-6-6 6-6" />
@@ -3833,12 +3833,18 @@
               </button>
             </div>
 			        <div class="sidebar-top">
-                <button class="new-chat" type="button" aria-label="Start nieuwe chat">
-                  <span class="new-chat__label">
-                    <span class="new-chat__plus">+</span>
-                    <span class="new-chat__text">Nieuw gesprek</span>
-                  </span>
-                </button>
+                <div class="new-chat-split" role="group" aria-label="Cursus of nieuwe chat">
+                  <a class="new-chat-split__btn new-chat-split__btn--course" href="/course" aria-label="Terug naar cursus">
+                    <span class="new-chat-split__icon" aria-hidden="true">←</span>
+                    <span class="new-chat-split__text">Cursus</span>
+                  </a>
+                  <button class="new-chat new-chat-split__btn new-chat-split__btn--new" type="button" aria-label="Start nieuwe chat">
+                    <span class="new-chat__label">
+                      <span class="new-chat__plus">+</span>
+                      <span class="new-chat__text">Chat</span>
+                    </span>
+                  </button>
+                </div>
 			          <div class="sessions-heading">
 			            <h2>Recente sessies</h2>
 			            <span class="tokens-inline" id="credits-balance" title="Je tokensaldo.">
@@ -3982,13 +3988,6 @@
       <main class="chat-main">
 		        <header class="chat-header">
 		          <div class="status">
-                <button class="main-sidebar-toggle" id="main-sidebar-toggle" type="button" aria-label="Sidebar inklappen" title="Sidebar inklappen">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="3" y1="6" x2="21" y2="6" />
-                    <line x1="3" y1="12" x2="16" y2="12" />
-                    <line x1="3" y1="18" x2="21" y2="18" />
-                  </svg>
-                </button>
                 <div class="status-actions">
                   <div class="chat-model-selector">
                 <div class="model-swipe" id="model-swipe" data-category="chat" data-label="Model" aria-label="Model swipe balk" tabindex="0">
@@ -4018,12 +4017,6 @@
                 </div>
                     </div>
                   </div>
-                <button class="topbar-action" type="button" aria-label="Instellingen" title="Instellingen">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
-                  </svg>
-                </button>
 	          </div>
 	        </header>
         <div class="chat-content-wrapper">

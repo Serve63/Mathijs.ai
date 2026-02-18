@@ -480,24 +480,87 @@ body {
   overflow: hidden;
 }
 
-.new-chat {
+.new-chat-split {
+  display: flex;
   width: 100%;
-  border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--premium-gold) 0%, #a88a0a 100%);
-  color: #ffffff;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--premium-gold) 0%, #caa20d 100%);
+  border: 1px solid rgba(184, 150, 12, 0.55);
+  box-shadow: 0 8px 20px -14px rgba(184, 150, 12, 0.56);
+}
+
+.new-chat-split__btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: #141a31;
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 14px;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 11px 10px;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(184, 150, 12, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.2s ease;
+}
+
+.new-chat-split__btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.new-chat-split__btn--course {
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  min-width: 0;
+  padding-left: 12px;
+  position: relative;
+}
+
+.new-chat-split__btn--course::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: rgba(20, 26, 49, 0.22);
+}
+
+.new-chat-split__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.new-chat-split__icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.new-chat {
+  flex: 0 0 96px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #141a31;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 10px;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background 0.2s ease;
 }
 
 .new-chat:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 22px rgba(184, 150, 12, 0.4);
+  transform: none;
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .new-chat:disabled {
@@ -510,13 +573,13 @@ body {
 .new-chat__label {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
+  gap: 6px;
+  font-size: 0.82rem;
   font-weight: 700;
 }
 
 .new-chat__plus {
-  font-size: 1.1rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
@@ -636,9 +699,7 @@ body {
 }
 
 .session-select__meta {
-  font-size: 0.68rem;
-  color: rgba(255, 255, 255, 0.35);
-  white-space: nowrap;
+  display: none;
 }
 
 .session-row:hover .session-select,
@@ -694,22 +755,23 @@ body {
 }
 
 .token-usage-card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 12px;
-  padding: 9px 10px;
-  gap: 6px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 4px 2px 0;
+  gap: 4px;
+  box-shadow: none;
 }
 
 .token-usage-card__label {
-  font-size: 0.62rem;
-  letter-spacing: 0.14em;
-  color: rgba(255, 255, 255, 0.34);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.3);
 }
 
 .token-usage-card__bar {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
+  height: 4px;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .token-usage-card__fill {
@@ -718,15 +780,15 @@ body {
 }
 
 .token-usage-card__meta {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
 }
 
 .token-usage-card__current {
-  color: rgba(255, 255, 255, 0.94);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .token-usage-card__total {
-  color: rgba(255, 255, 255, 0.54);
+  color: rgba(255, 255, 255, 0.48);
 }
 
 .profile {
@@ -796,10 +858,10 @@ body {
 .status {
   width: 100%;
   max-width: 980px;
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: 0;
 }
 
 .status-actions {
@@ -1163,10 +1225,10 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 
 .message.system .bubble {
   max-width: min(720px, 92%);
-  background: var(--premium-white);
-  border: 1px solid var(--premium-border);
-  box-shadow: var(--premium-shadow-sm);
-  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
 }
 
 .chat-log .message.user .bubble {

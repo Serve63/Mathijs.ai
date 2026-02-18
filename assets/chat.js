@@ -1981,26 +1981,6 @@
         if (actionsEl) actionsEl.remove();
       };
 
-      const formatSessionTimeLabel = (value) => {
-        if (!value) return "Zojuist";
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return "Zojuist";
-        const now = new Date();
-        const sameDay =
-          date.getFullYear() === now.getFullYear() &&
-          date.getMonth() === now.getMonth() &&
-          date.getDate() === now.getDate();
-        if (sameDay) return "Zojuist";
-        const yesterday = new Date(now);
-        yesterday.setDate(now.getDate() - 1);
-        const isYesterday =
-          date.getFullYear() === yesterday.getFullYear() &&
-          date.getMonth() === yesterday.getMonth() &&
-          date.getDate() === yesterday.getDate();
-        if (isYesterday) return "Gisteren";
-        return date.toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
-      };
-
       const renderSessionList = () => {
         if (!sessionListEl) return;
         sessionListEl.innerHTML = "";
@@ -2038,12 +2018,7 @@
           titleEl.className = "session-select__title";
           titleEl.textContent = getDisplayTitle(session);
 
-          const metaEl = document.createElement("span");
-          metaEl.className = "session-select__meta";
-          metaEl.textContent = formatSessionTimeLabel(session.updatedAt || session.createdAt);
-
           textWrap.appendChild(titleEl);
-          textWrap.appendChild(metaEl);
           selectBtn.appendChild(icon);
           selectBtn.appendChild(textWrap);
 
