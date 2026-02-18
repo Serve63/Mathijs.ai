@@ -34,12 +34,12 @@
       };
 
       const modelSelects = Array.from(document.querySelectorAll(".model-select"));
-      const modelSwipe = document.getElementById("model-swipe");
-      const modelSwipeTrack = document.getElementById("model-swipe-track");
-      const modelSwipeViewport = document.getElementById("model-swipe-viewport");
-      const modelSwipePrev = document.getElementById("model-swipe-prev");
-      const modelSwipeNext = document.getElementById("model-swipe-next");
-      const modelSwipeItems = modelSwipeTrack ? Array.from(modelSwipeTrack.querySelectorAll(".model-swipe__item")) : [];
+      const modelPicker = document.getElementById("model-picker");
+      const modelPickerTrigger = document.getElementById("model-picker-trigger");
+      const modelPickerMenu = document.getElementById("model-picker-menu");
+      const modelPickerLabel = document.getElementById("model-picker-label");
+      const modelSwipe = modelPicker;
+      const modelSwipeItems = modelPickerMenu ? Array.from(modelPickerMenu.querySelectorAll(".model-picker__option")) : [];
       const statusIndicator = null;
       const chatLayout = document.querySelector(".chat-layout");
       const sidebar = document.querySelector(".sidebar");
@@ -204,8 +204,6 @@
       let modelSessionMap = {};
       let modelStateHydratedForUserId = null;
       let hydratedPreferredModelLabel = null;
-      let touchStartX = 0;
-      let touchEndX = 0;
       const createSystemMessage = () => ({
         role: "developer",
         content: "Je bent een behulpzame AI-assistent in de AI-leeromgeving van Mathijs.ai. Je helpt ondernemers kiezen en toepassen wanneer ze welk model gebruiken.",
@@ -468,6 +466,12 @@
           dropdown.classList.remove("active");
           trigger.setAttribute("aria-expanded", "false");
         });
+        if (modelPicker && modelPickerMenu && exception !== modelPickerMenu) {
+          modelPicker.classList.remove("is-open");
+          if (modelPickerTrigger) {
+            modelPickerTrigger.setAttribute("aria-expanded", "false");
+          }
+        }
         if (chatPlusMenu && exception !== chatPlusMenu) {
           chatPlusMenu.style.display = "none";
           if (chatPlus) chatPlus.setAttribute("aria-expanded", "false");
@@ -617,48 +621,22 @@
         return ordered[0]?.label || uniqueLabels[0] || null;
       };
 
-      const getModelLabelByIndex = (index) => {
-        if (index < 0 || index >= modelSwipeItems.length) return "";
-        return (modelSwipeItems[index]?.getAttribute("data-model") || "").trim();
-      };
-
-      const getSwipeLayoutMetrics = () => {
-        if (!modelSwipeTrack || !modelSwipeViewport || !modelSwipeItems.length) return null;
-        const firstItem = modelSwipeItems[0];
-        const viewportWidth = modelSwipeViewport.getBoundingClientRect().width;
-        const itemWidth =
-          firstItem.getBoundingClientRect().width || Number.parseFloat(window.getComputedStyle(firstItem).width) || 0;
-        const trackStyle = window.getComputedStyle(modelSwipeTrack);
-        const gapRaw = trackStyle.columnGap || trackStyle.gap || "0";
-        const gap = Number.parseFloat(gapRaw) || 0;
-        const step = itemWidth + gap;
-        const contentWidth = modelSwipeItems.length * itemWidth + Math.max(0, modelSwipeItems.length - 1) * gap;
-        return { viewportWidth, itemWidth, gap, step, contentWidth };
-      };
-
       const syncModelSwipeUI = () => {
-        if (!modelSwipeTrack || !modelSwipeItems.length) return;
+        if (!modelSwipeItems.length) return;
         const index = normalizeModelIndex(activeModelIndex);
-        const modelLocked = isModelSwitchLocked();
         activeModelIndex = index;
-        const metrics = getSwipeLayoutMetrics();
-        if (metrics) {
-          const { viewportWidth, itemWidth, step, contentWidth } = metrics;
-          const idealTranslate = (viewportWidth - itemWidth) / 2 - index * step;
-          const minTranslate = Math.min(0, viewportWidth - contentWidth);
-          const maxTranslate = 0;
-          const translate = Math.min(maxTranslate, Math.max(minTranslate, idealTranslate));
-          modelSwipeTrack.style.transform = `translateX(${translate}px)`;
-        } else {
-          modelSwipeTrack.style.transform = `translateX(-${index * 100}%)`;
+        const selectedItem = modelSwipeItems[index];
+        const selectedLabel = (selectedItem?.getAttribute("data-model") || "").trim();
+
+        if (modelPickerLabel) {
+          modelPickerLabel.textContent = selectedLabel || selectedModelLabel || "Kies model";
         }
-        const prevIndex = index - 1;
-        const nextIndex = index + 1;
+        if (modelPicker) {
+          modelPicker.setAttribute("data-provider", getModelKeyForLabel(selectedLabel || selectedModelLabel));
+        }
+
         modelSwipeItems.forEach((item, idx) => {
           const isSelected = idx === index;
-          item.classList.toggle("is-prev", idx === prevIndex);
-          item.classList.toggle("is-next", idx === nextIndex);
-          item.classList.toggle("is-far", Math.abs(idx - index) > 1);
           item.classList.toggle("is-selected", isSelected);
           item.setAttribute("aria-selected", isSelected ? "true" : "false");
           const modelLabel = (item.getAttribute("data-model") || "").trim();
@@ -666,38 +644,6 @@
             item.setAttribute("data-provider", getModelKeyForLabel(modelLabel));
           }
         });
-        const prevLabel = getModelLabelByIndex(prevIndex);
-        const nextLabel = getModelLabelByIndex(nextIndex);
-        if (modelSwipePrev) {
-          const hasPrev = Boolean(prevLabel);
-          const canUsePrev = hasPrev && !modelLocked;
-          modelSwipePrev.disabled = !canUsePrev;
-          modelSwipePrev.setAttribute("aria-disabled", canUsePrev ? "false" : "true");
-          modelSwipePrev.setAttribute("data-preview", prevLabel);
-          modelSwipePrev.setAttribute(
-            "aria-label",
-            modelLocked ? "Model vergrendeld voor dit gesprek" : hasPrev ? `Vorig model: ${prevLabel}` : "Geen vorig model"
-          );
-          modelSwipePrev.setAttribute(
-            "title",
-            modelLocked ? MODEL_SWITCH_LOCK_MESSAGE : hasPrev ? `Naar ${prevLabel}` : "Geen vorig model"
-          );
-        }
-        if (modelSwipeNext) {
-          const hasNext = Boolean(nextLabel);
-          const canUseNext = hasNext && !modelLocked;
-          modelSwipeNext.disabled = !canUseNext;
-          modelSwipeNext.setAttribute("aria-disabled", canUseNext ? "false" : "true");
-          modelSwipeNext.setAttribute("data-preview", nextLabel);
-          modelSwipeNext.setAttribute(
-            "aria-label",
-            modelLocked ? "Model vergrendeld voor dit gesprek" : hasNext ? `Volgend model: ${nextLabel}` : "Geen volgend model"
-          );
-          modelSwipeNext.setAttribute(
-            "title",
-            modelLocked ? MODEL_SWITCH_LOCK_MESSAGE : hasNext ? `Naar ${nextLabel}` : "Geen volgend model"
-          );
-        }
         updateModelSwitcherState();
       };
 
@@ -945,82 +891,123 @@
         }
       };
 
+      const closeModelPicker = () => {
+        if (!modelPicker) return;
+        modelPicker.classList.remove("is-open");
+        if (modelPickerTrigger) {
+          modelPickerTrigger.setAttribute("aria-expanded", "false");
+        }
+      };
+
+      const openModelPicker = () => {
+        if (!modelPicker || !modelPickerMenu) return;
+        modelPicker.classList.add("is-open");
+        if (modelPickerTrigger) {
+          modelPickerTrigger.setAttribute("aria-expanded", "true");
+        }
+      };
+
       if (modelSwipeItems.length) {
         const initialIndex = getModelIndexByLabel(selectedModelLabel);
         activeModelIndex = initialIndex >= 0 ? initialIndex : 0;
         syncModelSwipeUI();
         updateSelectedModel(modelSwipeItems[activeModelIndex].getAttribute("data-model") || selectedModelLabel);
 
-        modelSwipePrev?.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          moveModelBy(-1);
-        });
-
-        modelSwipeNext?.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          moveModelBy(1);
-        });
-
         modelSwipeItems.forEach((item, idx) => {
-          item.addEventListener("click", (event) => {
+          item.addEventListener("click", async (event) => {
             event.preventDefault();
             event.stopPropagation();
-            selectModelByIndex(idx, { silent: true, switchSession: true });
+            await selectModelByIndex(idx, { silent: true, switchSession: true });
+            closeModelPicker();
+            modelPickerTrigger?.focus();
           });
         });
 
-        if (modelSwipe) {
-          modelSwipe.addEventListener("keydown", (event) => {
-            if (event.key === "ArrowLeft") {
-              event.preventDefault();
-              moveModelBy(-1);
-            } else if (event.key === "ArrowRight") {
-              event.preventDefault();
-              moveModelBy(1);
+        modelPickerTrigger?.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const willOpen = !modelPicker.classList.contains("is-open");
+          closeAllDropdowns(willOpen ? modelPickerMenu : null);
+          if (willOpen) {
+            openModelPicker();
+          } else {
+            closeModelPicker();
+          }
+        });
+
+        modelPickerTrigger?.addEventListener("keydown", async (event) => {
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            openModelPicker();
+            modelSwipeItems[activeModelIndex]?.focus();
+            return;
+          }
+          if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            await moveModelBy(-1);
+            return;
+          }
+          if (event.key === "ArrowRight") {
+            event.preventDefault();
+            await moveModelBy(1);
+            return;
+          }
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            const willOpen = !modelPicker.classList.contains("is-open");
+            if (willOpen) {
+              openModelPicker();
+            } else {
+              closeModelPicker();
+            }
+          }
+        });
+
+        modelPickerMenu?.addEventListener("keydown", async (event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            closeModelPicker();
+            modelPickerTrigger?.focus();
+            return;
+          }
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            await moveModelBy(1);
+            modelSwipeItems[activeModelIndex]?.focus();
+            return;
+          }
+          if (event.key === "ArrowUp") {
+            event.preventDefault();
+            await moveModelBy(-1);
+            modelSwipeItems[activeModelIndex]?.focus();
+            return;
+          }
+          if ((event.key === "Enter" || event.key === " ") && event.target instanceof HTMLElement) {
+            const optionEl = event.target.closest(".model-picker__option");
+            if (!optionEl) return;
+            event.preventDefault();
+            const idx = modelSwipeItems.indexOf(optionEl);
+            if (idx >= 0) {
+              await selectModelByIndex(idx, { silent: true, switchSession: true });
+              closeModelPicker();
+              modelPickerTrigger?.focus();
+            }
+          }
+        });
+
+        modelPickerMenu?.addEventListener("click", (event) => {
+          const optionEl = event.target.closest(".model-picker__option");
+          if (!optionEl) return;
+          event.stopPropagation();
+        });
+
+        if (modelPicker) {
+          modelPicker.addEventListener("keydown", async (event) => {
+            if (event.key === "Escape") {
+              closeModelPicker();
+              modelPickerTrigger?.focus();
             }
           });
-        }
-
-        if (modelSwipeViewport) {
-          modelSwipeViewport.addEventListener(
-            "touchstart",
-            (event) => {
-              touchStartX = event.changedTouches[0]?.clientX || 0;
-              touchEndX = touchStartX;
-            },
-            { passive: true }
-          );
-          modelSwipeViewport.addEventListener(
-            "touchmove",
-            (event) => {
-              touchEndX = event.changedTouches[0]?.clientX || touchEndX;
-            },
-            { passive: true }
-          );
-          modelSwipeViewport.addEventListener(
-            "touchend",
-            () => {
-              const delta = touchEndX - touchStartX;
-              if (Math.abs(delta) < 38) return;
-              if (delta < 0) {
-                moveModelBy(1);
-              } else {
-                moveModelBy(-1);
-              }
-            },
-            { passive: true }
-          );
-        }
-
-        const syncSwipeOnResize = () => syncModelSwipeUI();
-        window.addEventListener("resize", syncSwipeOnResize, { passive: true });
-        if (window.ResizeObserver && modelSwipeViewport) {
-          const swipeViewportResizeObserver = new ResizeObserver(() => {
-            syncModelSwipeUI();
-          });
-          swipeViewportResizeObserver.observe(modelSwipeViewport);
         }
       }
 
@@ -1102,7 +1089,7 @@
       setActiveCategory(activeCategory);
 
       document.addEventListener("click", (event) => {
-        const insideControl = event.target.closest(".model-select, .model-swipe, .chat-plus, .chat-mode-select");
+        const insideControl = event.target.closest(".model-picker, .model-select, .chat-plus, .chat-mode-select");
         if (!insideControl) {
           closeAllDropdowns();
         }

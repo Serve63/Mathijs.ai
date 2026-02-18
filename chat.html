@@ -3990,31 +3990,34 @@
 		          <div class="status">
                 <div class="status-actions">
                   <div class="chat-model-selector">
-                <div class="model-swipe" id="model-swipe" data-category="chat" data-label="Model" aria-label="Model swipe balk" tabindex="0">
-                  <button type="button" class="model-swipe__arrow model-swipe__arrow--left" id="model-swipe-prev" aria-label="Vorig model">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M15 18l-6-6 6-6" />
-                    </svg>
-                  </button>
-                  <div class="model-swipe__viewport" id="model-swipe-viewport" role="listbox" aria-label="Kies model door te swipen">
-                    <div class="model-swipe__track" id="model-swipe-track">
-                      <button type="button" class="model-swipe__item is-selected" data-model="GPT-5 mini" role="option" aria-selected="true">GPT-5 mini</button>
-                      <button type="button" class="model-swipe__item" data-model="ChatGPT 5.2" role="option" aria-selected="false">ChatGPT 5.2</button>
-                      <button type="button" class="model-swipe__item" data-model="Gemini 3" role="option" aria-selected="false">Gemini 3</button>
-                      <button type="button" class="model-swipe__item" data-model="Grok 4" role="option" aria-selected="false">Grok 4</button>
-                      <button type="button" class="model-swipe__item" data-model="Opus 4.5" role="option" aria-selected="false">Opus 4.5</button>
-                      <button type="button" class="model-swipe__item" data-model="Sonnet 4.5" role="option" aria-selected="false">Sonnet 4.5</button>
-                      <button type="button" class="model-swipe__item" data-model="Haiku 4.5" role="option" aria-selected="false">Haiku 4.5</button>
-                      <button type="button" class="model-swipe__item" data-model="Qwen3-MAX" role="option" aria-selected="false">Qwen3-MAX</button>
-                      <button type="button" class="model-swipe__item" data-model="DeepSeek V2" role="option" aria-selected="false">DeepSeek V2</button>
+                    <div class="model-picker" id="model-picker" data-category="chat" data-label="Model">
+                      <button
+                        type="button"
+                        class="model-picker__trigger"
+                        id="model-picker-trigger"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Kies model"
+                      >
+                        <span class="model-picker__trigger-label">
+                          <span class="model-picker__label" id="model-picker-label">GPT-5 mini</span>
+                        </span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M6 9l6 6 6-6" />
+                        </svg>
+                      </button>
+                      <div class="model-picker__menu" id="model-picker-menu" role="listbox" aria-label="Kies model">
+                        <button type="button" class="model-picker__option is-selected" data-model="GPT-5 mini" role="option" aria-selected="true">GPT-5 mini</button>
+                        <button type="button" class="model-picker__option" data-model="ChatGPT 5.2" role="option" aria-selected="false">ChatGPT 5.2</button>
+                        <button type="button" class="model-picker__option" data-model="Gemini 3" role="option" aria-selected="false">Gemini 3</button>
+                        <button type="button" class="model-picker__option" data-model="Grok 4" role="option" aria-selected="false">Grok 4</button>
+                        <button type="button" class="model-picker__option" data-model="Opus 4.5" role="option" aria-selected="false">Opus 4.5</button>
+                        <button type="button" class="model-picker__option" data-model="Sonnet 4.5" role="option" aria-selected="false">Sonnet 4.5</button>
+                        <button type="button" class="model-picker__option" data-model="Haiku 4.5" role="option" aria-selected="false">Haiku 4.5</button>
+                        <button type="button" class="model-picker__option" data-model="Qwen3-MAX" role="option" aria-selected="false">Qwen3-MAX</button>
+                        <button type="button" class="model-picker__option" data-model="DeepSeek V2" role="option" aria-selected="false">DeepSeek V2</button>
+                      </div>
                     </div>
-                  </div>
-                  <button type="button" class="model-swipe__arrow model-swipe__arrow--right" id="model-swipe-next" aria-label="Volgend model">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
-                  </button>
-                </div>
                     </div>
                   </div>
 	          </div>
