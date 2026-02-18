@@ -531,6 +531,7 @@
       }
 
       .hero-panel {
+        position: relative;
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 24px;
@@ -1341,60 +1342,130 @@
         margin-top: 24px;
       }
 
-      /* Motion */
-      @keyframes float {
-        0%,
-        100% {
-          transform: translateY(0);
-        }
-        50% {
-          transform: translateY(-8px);
-        }
+      /* ── Motion Design System ── */
+
+      /* Aurora orb drift */
+      @keyframes orbDrift1 {
+        0%,100% { transform: translate(0,0) scale(1); opacity: 0.9; }
+        40%     { transform: translate(90px,70px) scale(1.15); opacity: 1; }
+        75%     { transform: translate(-30px,40px) scale(0.92); opacity: 0.8; }
+      }
+      @keyframes orbDrift2 {
+        0%,100% { transform: translate(0,0); }
+        50%     { transform: translate(-70px,-90px); }
+      }
+      @keyframes orbDrift3 {
+        0%,100% { transform: translate(0,0) scale(1); }
+        50%     { transform: translate(50px,-40px) scale(1.25); }
       }
 
-      @keyframes fadeUp {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      /* Hero entrance */
+      @keyframes heroReveal {
+        from { opacity: 0; transform: translateY(30px); filter: blur(4px); }
+        to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+      }
+      @keyframes heroSlideIn {
+        from { opacity: 0; transform: translateX(48px) scale(0.96); }
+        to   { opacity: 1; transform: translateX(0)    scale(1); }
       }
 
-      .hero-content > * {
-        animation: fadeUp 0.8s ease forwards;
+      /* Badge pulse glow */
+      @keyframes badgePulse {
+        0%,100% { box-shadow: 0 0 0 0    rgba(245,197,24,0.35); }
+        50%     { box-shadow: 0 0 0 10px rgba(245,197,24,0); }
       }
 
-      .hero-content > *:nth-child(2) {
-        animation-delay: 0.1s;
+      /* Floating cards */
+      @keyframes floatA {
+        0%,100% { transform: translateY(0) rotate(-1deg); }
+        50%     { transform: translateY(-10px) rotate(0.5deg); }
+      }
+      @keyframes floatB {
+        0%,100% { transform: translateY(0) rotate(1deg); }
+        50%     { transform: translateY(-7px) rotate(-0.5deg); }
       }
 
-      .hero-content > *:nth-child(3) {
-        animation-delay: 0.2s;
+      /* Panel shimmer border */
+      @keyframes borderShimmer {
+        0%   { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
       }
 
-      .hero-content > *:nth-child(4) {
-        animation-delay: 0.3s;
+      /* ── Aurora orbs ── */
+      .hero-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(90px);
+        pointer-events: none;
+        will-change: transform, opacity;
+        z-index: 0;
+      }
+      .hero-orb--1 {
+        width: 700px; height: 450px;
+        background: radial-gradient(circle, rgba(245,197,24,0.20) 0%, transparent 70%);
+        top: -120px; left: -80px;
+        animation: orbDrift1 20s ease-in-out infinite;
+      }
+      .hero-orb--2 {
+        width: 520px; height: 520px;
+        background: radial-gradient(circle, rgba(45,45,80,0.45) 0%, transparent 70%);
+        top: 30%; right: -180px;
+        animation: orbDrift2 26s ease-in-out infinite;
+      }
+      .hero-orb--3 {
+        width: 350px; height: 350px;
+        background: radial-gradient(circle, rgba(245,197,24,0.13) 0%, transparent 70%);
+        bottom: -60px; right: 28%;
+        animation: orbDrift3 16s ease-in-out infinite;
       }
 
-      .hero-content > *:nth-child(5) {
-        animation-delay: 0.4s;
+      /* ── Entrance animaties ── */
+      .hero-badge {
+        animation: heroReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.05s both,
+                   badgePulse 3.5s ease-in-out 2s infinite;
+      }
+      .hero h1       { animation: heroReveal 0.85s cubic-bezier(0.22,1,0.36,1) 0.18s both; }
+      .hero-subtitle { animation: heroReveal 0.85s cubic-bezier(0.22,1,0.36,1) 0.32s both; }
+      .hero-kpis     { animation: heroReveal 0.85s cubic-bezier(0.22,1,0.36,1) 0.46s both; }
+      .hero-visual   { animation: heroSlideIn 1s cubic-bezier(0.22,1,0.36,1) 0.35s both; }
+
+      /* ── Floating cards ── */
+      .hero-float--a { animation: floatA 7s ease-in-out infinite; }
+      .hero-float--b { animation: floatB 9s ease-in-out 1.8s infinite; }
+
+      /* ── Hero panel shimmer border ── */
+      .hero-panel::before {
+        content: '';
+        position: absolute;
+        inset: -1px;
+        border-radius: 25px;
+        background: linear-gradient(
+          270deg,
+          rgba(245,197,24,0),
+          rgba(245,197,24,0.45),
+          rgba(255,255,255,0.18),
+          rgba(245,197,24,0)
+        );
+        background-size: 300% 300%;
+        animation: borderShimmer 4s linear 1.2s infinite;
+        pointer-events: none;
+        z-index: -1;
       }
 
-      .hero-float {
-        animation: float 6s ease-in-out infinite;
-      }
-
-      .hero-float--b {
-        animation-delay: 1.5s;
+      /* KPI values klaar voor counter */
+      .hero-kpi__value {
+        display: inline-block;
+        will-change: contents;
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .hero-content > *,
-        .hero-float {
-          animation: none;
+        .hero-badge, .hero h1, .hero-subtitle, .hero-kpis,
+        .hero-visual, .hero-float--a, .hero-float--b,
+        .hero-orb, .hero-panel::before {
+          animation: none !important;
+          opacity: 1 !important;
+          transform: none !important;
+          filter: none !important;
         }
       }
 
@@ -1550,6 +1621,9 @@
 
     <main id="main-content">
       <section class="hero">
+        <div class="hero-orb hero-orb--1" aria-hidden="true"></div>
+        <div class="hero-orb hero-orb--2" aria-hidden="true"></div>
+        <div class="hero-orb hero-orb--3" aria-hidden="true"></div>
         <div class="hero-inner">
           <div class="hero-content">
             <div class="hero-badge">
@@ -1622,6 +1696,14 @@
                   <span>Korte workshops die je meteen kunt toepassen</span>
                 </div>
               </div>
+            </div>
+            <div class="hero-float hero-float--a" aria-hidden="true">
+              <h4>⚡ Real-time</h4>
+              <p>Switch models direct</p>
+            </div>
+            <div class="hero-float hero-float--b" aria-hidden="true">
+              <h4>✓ 9 modellen</h4>
+              <p>GPT · Gemini · Grok</p>
             </div>
             <div class="trustpilot-widget">
               <a href="https://nl.trustpilot.com/review/mathijs.ai" target="_blank" rel="noopener noreferrer" class="trustpilot-link" aria-label="Bekijk onze Trustpilot reviews (opent in nieuw tabblad)">
@@ -1949,6 +2031,69 @@
           }
         });
       });
+
+      // ── KPI counter animatie ──
+      (function () {
+        const kpis = [
+          { selector: '.hero-kpi:nth-child(1) .hero-kpi__value', end: 1200, suffix: 'k+', divisor: 1000, decimals: 1 },
+          { selector: '.hero-kpi:nth-child(2) .hero-kpi__value', end: 50,   suffix: '+',  divisor: null  },
+          { selector: '.hero-kpi:nth-child(3) .hero-kpi__value', end: 92,   suffix: '%',  divisor: null  },
+        ];
+        function animateKPI(kpi) {
+          if (!kpi.el) return;
+          const duration = 1800;
+          const startTime = performance.now();
+          const tick = (now) => {
+            const progress = Math.min((now - startTime) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const value = eased * kpi.end;
+            kpi.el.textContent = kpi.divisor
+              ? (value / kpi.divisor).toFixed(kpi.decimals) + kpi.suffix
+              : Math.round(value) + kpi.suffix;
+            if (progress < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        }
+        const hero = document.querySelector('.hero');
+        if (hero && 'IntersectionObserver' in window) {
+          kpis.forEach(k => { k.el = document.querySelector(k.selector); });
+          const obs = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+              setTimeout(() => kpis.forEach(animateKPI), 600);
+              obs.disconnect();
+            }
+          }, { threshold: 0.3 });
+          obs.observe(hero);
+        }
+      })();
+
+      // ── Cursor parallax op hero visual ──
+      (function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const hero   = document.querySelector('.hero');
+        const visual = document.querySelector('.hero-visual');
+        if (!hero || !visual) return;
+        let ticking = false;
+        hero.addEventListener('mousemove', (e) => {
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(() => {
+            const rect = hero.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width  - 0.5;
+            const y = (e.clientY - rect.top)  / rect.height - 0.5;
+            visual.style.transform = `translate(${x * 14}px, ${y * 10}px)`;
+            ticking = false;
+          });
+        });
+        hero.addEventListener('mouseleave', () => {
+          visual.style.transition = 'transform 0.9s cubic-bezier(0.22,1,0.36,1)';
+          visual.style.transform  = '';
+          setTimeout(() => { visual.style.transition = ''; }, 900);
+        });
+        hero.addEventListener('mouseenter', () => {
+          visual.style.transition = 'transform 0.12s linear';
+        });
+      })();
     </script>
   </body>
 </html>
