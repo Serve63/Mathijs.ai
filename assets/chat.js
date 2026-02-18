@@ -416,9 +416,49 @@
         return "chatgpt52";
       };
 
+      const MODEL_PICKER_SUBLABEL_MAP = {
+        "GPT-5 mini": "OpenAI · Efficient",
+        "ChatGPT 5.2": "OpenAI · Flagship",
+        "Gemini 3": "Google · Multimodal",
+        "Grok 4": "xAI · Reasoning",
+        "Opus 4.5": "Anthropic · Powerful",
+        "Sonnet 4.5": "Anthropic · Fast",
+        "Haiku 4.5": "Anthropic · Lite",
+        "Qwen3-MAX": "Alibaba · Max",
+        "DeepSeek V2": "DeepSeek · Research",
+      };
+
+      const escapeModelPickerHtml = (value) =>
+        String(value || "").replace(/[&<>"']/g, (char) => {
+          if (char === "&") return "&amp;";
+          if (char === "<") return "&lt;";
+          if (char === ">") return "&gt;";
+          if (char === '"') return "&quot;";
+          return "&#39;";
+        });
+
+      const renderModelPickerLabel = (label) => {
+        if (!modelPickerLabel) return;
+        const safeLabel = String(label || "").trim() || "GPT-5 mini";
+        const sub = MODEL_PICKER_SUBLABEL_MAP[safeLabel] || "AI · Model";
+        modelPickerLabel.innerHTML = `
+          <span class="trigger-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="6" r="2.5" fill="currentColor"></circle>
+              <path d="M3 13c0-2.761 2.239-4 5-4s5 1.239 5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"></path>
+            </svg>
+          </span>
+          <span class="trigger-info">
+            <span class="trigger-name">${escapeModelPickerHtml(safeLabel)}</span>
+            <span class="trigger-sub">${escapeModelPickerHtml(sub)}</span>
+          </span>
+        `;
+      };
+
       const updateSelectedModel = (label) => {
         selectedModelLabel = label || "GPT-5 mini";
         selectedModel = getModelKeyForLabel(selectedModelLabel);
+        renderModelPickerLabel(selectedModelLabel);
         syncThinkingModeOptions();
         updateToolMenuLabels();
         updateToolMenuVisibility();
@@ -469,6 +509,7 @@
         });
         if (modelPicker && modelPickerMenu && exception !== modelPickerMenu) {
           modelPicker.classList.remove("is-open");
+          modelPickerMenu.classList.remove("open");
           if (modelPickerTrigger) {
             modelPickerTrigger.setAttribute("aria-expanded", "false");
           }
@@ -630,7 +671,7 @@
         const selectedLabel = (selectedItem?.getAttribute("data-model") || "").trim();
 
         if (modelPickerLabel) {
-          modelPickerLabel.textContent = selectedLabel || selectedModelLabel || "Kies model";
+          renderModelPickerLabel(selectedLabel || selectedModelLabel || "GPT-5 mini");
         }
         if (modelPicker) {
           modelPicker.setAttribute("data-provider", getModelKeyForLabel(selectedLabel || selectedModelLabel));
@@ -638,6 +679,7 @@
 
         modelSwipeItems.forEach((item, idx) => {
           const isSelected = idx === index;
+          item.classList.toggle("selected", isSelected);
           item.classList.toggle("is-selected", isSelected);
           item.setAttribute("aria-selected", isSelected ? "true" : "false");
           const modelLabel = (item.getAttribute("data-model") || "").trim();
@@ -895,6 +937,7 @@
       const closeModelPicker = () => {
         if (!modelPicker) return;
         modelPicker.classList.remove("is-open");
+        modelPickerMenu?.classList.remove("open");
         if (modelPickerTrigger) {
           modelPickerTrigger.setAttribute("aria-expanded", "false");
         }
@@ -903,6 +946,7 @@
       const openModelPicker = () => {
         if (!modelPicker || !modelPickerMenu) return;
         modelPicker.classList.add("is-open");
+        modelPickerMenu.classList.add("open");
         if (modelPickerTrigger) {
           modelPickerTrigger.setAttribute("aria-expanded", "true");
         }
