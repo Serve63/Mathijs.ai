@@ -1998,7 +1998,7 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   }
 
   .chat-header {
-    padding: 10px 12px 12px;
+    padding: calc(12px + env(safe-area-inset-top)) 12px 12px;
     height: auto;
     min-height: 0;
     border-bottom: 0;
@@ -2025,25 +2025,30 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   }
 
   .model-picker__menu {
-    max-height: 260px;
+    max-height: min(52dvh, 320px);
   }
 
   .chat-content-wrapper {
-    padding-bottom: 210px;
+    padding-bottom: calc(210px + env(safe-area-inset-bottom));
   }
 
   .chat-log {
-    padding: 10px 14px 220px;
+    padding: 10px 14px calc(220px + env(safe-area-inset-bottom));
   }
 
   .chat-footer {
-    padding: 8px 10px 10px;
+    padding: 8px 10px calc(12px + env(safe-area-inset-bottom));
   }
 
   .chat-input__inner {
-    min-height: 56px;
-    border-radius: 16px;
+    min-height: 54px;
+    border-radius: 18px;
     padding: 6px 8px;
+  }
+
+  .chat-input textarea {
+    font-size: 16px;
+    height: 42px;
   }
 
   .chat-mode-trigger {
@@ -2052,18 +2057,49 @@ body.sidebar-collapsed .sidebar-expand-toggle {
     font-size: 0.84rem;
   }
 
-  .chat-input__inner > button[aria-label="Stuur bericht"],
-  .chat-plus__trigger {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+  .chat-plus__menu {
+    width: min(292px, calc(100vw - 24px));
+    left: 0;
+    right: auto;
   }
 
+  .chat-plus-more-submenu {
+    left: auto;
+    right: 0;
+    margin-left: 0;
+    bottom: calc(100% + 8px);
+    width: min(220px, calc(100vw - 24px));
+  }
+
+  .chat-input__inner > button[aria-label="Stuur bericht"],
+  .chat-plus__trigger {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+  }
+
+  .chat-bottom-spacer {
+    height: calc(34px + env(safe-area-inset-bottom));
+  }
 }
 
 @media (max-width: 480px) {
   .model-picker {
-    max-width: min(100vw - 16px, 340px);
+    max-width: min(100vw - 20px, 320px);
+  }
+
+  .chat-log {
+    padding: 8px 12px calc(214px + env(safe-area-inset-bottom));
+  }
+
+  .chat-mode-trigger {
+    min-width: 82px;
+    font-size: 0.8rem;
+  }
+
+  .chat-disclaimer {
+    font-size: 0.64rem;
+    line-height: 1.25;
   }
 
   .loader-logo-name,
