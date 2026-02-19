@@ -651,7 +651,7 @@
           inset 0 1px 0 rgba(255, 255, 255, 0.18);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        z-index: 2;
+        z-index: 14;
         transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
       }
 
@@ -659,11 +659,17 @@
         content: "";
         position: absolute;
         left: 50%;
-        top: -26px;
-        width: 1px;
-        height: 20px;
+        top: -56px;
+        width: 2px;
+        height: 48px;
         transform: translateX(-50%);
-        background: linear-gradient(180deg, rgba(245, 197, 24, 0), rgba(245, 197, 24, 0.66));
+        background: linear-gradient(
+          180deg,
+          rgba(245, 197, 24, 0) 0%,
+          rgba(245, 197, 24, 0.42) 42%,
+          rgba(245, 197, 24, 0.78) 100%
+        );
+        box-shadow: 0 0 12px rgba(245, 197, 24, 0.38);
         pointer-events: none;
       }
 
@@ -691,6 +697,7 @@
       .section#features {
         position: relative;
         overflow: visible;
+        z-index: 6;
       }
 
       .trustpilot-widget {
@@ -1593,8 +1600,8 @@
         }
 
         .hero-scroll-cue::before {
-          top: -18px;
-          height: 14px;
+          top: -42px;
+          height: 34px;
         }
 
         .section,
