@@ -1488,8 +1488,8 @@
         max-width: 1120px;
         margin: 0 auto;
         display: grid;
-        grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
-        gap: 18px 30px;
+        grid-template-columns: 1fr;
+        gap: 14px;
         position: relative;
         z-index: 1;
       }
@@ -1518,26 +1518,32 @@
         align-self: start;
       }
 
+      .footer-bottom-row {
+        margin-top: 12px;
+        display: flex;
+        align-items: flex-start;
+        gap: 18px;
+      }
+
       .footer-media {
-        align-self: start;
-        justify-self: end;
         width: 100%;
-        max-width: 330px;
+        max-width: 170px;
+        flex: 0 0 170px;
       }
 
       .footer-photo {
         position: relative;
         background: #fdfdfd;
-        border-radius: 18px;
-        padding: 10px;
-        box-shadow: 0 16px 34px -24px rgba(0, 0, 0, 0.62);
+        border-radius: 14px;
+        padding: 7px;
+        box-shadow: 0 10px 22px -16px rgba(0, 0, 0, 0.56);
       }
 
       .footer-photo::before {
         content: "";
         position: absolute;
-        inset: -6px;
-        border-radius: 24px;
+        inset: -4px;
+        border-radius: 18px;
         border: 1px solid rgba(255, 255, 255, 0.12);
         pointer-events: none;
       }
@@ -1545,7 +1551,7 @@
       .footer-photo img {
         width: 100%;
         height: auto;
-        border-radius: 12px;
+        border-radius: 9px;
         background: #0d1f3d;
         display: block;
       }
@@ -1564,10 +1570,9 @@
         border-radius: 999px;
       }
 
-      .footer-media-caption {
-        margin-top: 8px;
-        font-size: 0.78rem;
-        color: rgba(255, 255, 255, 0.58);
+      .footer-links-panel {
+        min-width: 0;
+        padding-top: 2px;
       }
 
       .footer-about-label {
@@ -1628,23 +1633,11 @@
         flex-shrink: 0;
       }
 
-      .footer-meta {
-        grid-column: 1 / -1;
-        margin-top: 2px;
-        padding-top: 10px;
-        border-top: 1px solid rgba(255, 255, 255, 0.09);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px 16px;
-        flex-wrap: wrap;
-      }
-
       .footer-links {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px 14px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 7px;
         margin: 0;
       }
 
@@ -1658,9 +1651,9 @@
       }
 
       .footer-copy {
+        margin-top: 10px;
         font-size: 0.7rem;
         color: rgba(255, 255, 255, 0.4);
-        margin: 0;
       }
 
       /* Motion */
@@ -1765,9 +1758,13 @@
           grid-template-columns: 1fr;
         }
 
+        .footer-bottom-row {
+          gap: 14px;
+        }
+
         .footer-media {
-          justify-self: start;
-          max-width: 300px;
+          max-width: 150px;
+          flex-basis: 150px;
         }
       }
 
@@ -1847,24 +1844,25 @@
 
         .footer-inner {
           grid-template-columns: 1fr;
-          gap: 16px;
+          gap: 14px;
+        }
+
+        .footer-bottom-row {
+          gap: 12px;
+          flex-wrap: wrap;
         }
 
         .footer-media {
-          max-width: 280px;
+          max-width: 128px;
+          flex-basis: 128px;
         }
 
         .footer-about-points {
           grid-template-columns: 1fr;
         }
 
-        .footer-meta {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .footer-media-caption {
-          display: none;
+        .footer-links {
+          gap: 6px;
         }
       }
     </style>
@@ -2181,7 +2179,7 @@
         <div class="footer-about">
           <span class="footer-about-label">Over ons</span>
           <h2 class="footer-about-title">Gemaakt dóór ondernemers, vóór ondernemers :)</h2>
-          <p class="footer-about-subtitle">Snel, praktisch en gericht op impact. Direct contact, korte lijnen en begeleiding die je echt verder helpt.</p>
+          <p class="footer-about-subtitle">Snel, praktisch en gericht op impact.</p>
           <ul class="footer-about-points">
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2208,32 +2206,33 @@
               <span>Team-implementatie</span>
             </li>
           </ul>
-        </div>
 
-        <div class="footer-media">
-          <div class="footer-photo">
-            <span class="footer-photo-badge">Team</span>
-            <img
-              src="assets/team-duo.svg"
-              alt="Twee jongens van het Mathijs.ai team"
-              width="900"
-              height="640"
-              loading="lazy"
-              decoding="async"
-              fetchpriority="low"
-            />
-          </div>
-          <p class="footer-media-caption">Direct contact, korte lijnen en begeleiding die je echt verder helpt.</p>
-        </div>
+          <div class="footer-bottom-row">
+            <div class="footer-media">
+              <div class="footer-photo">
+                <span class="footer-photo-badge">Team</span>
+                <img
+                  src="assets/team-duo.svg"
+                  alt="Twee jongens van het Mathijs.ai team"
+                  width="900"
+                  height="640"
+                  loading="lazy"
+                  decoding="async"
+                  fetchpriority="low"
+                />
+              </div>
+            </div>
 
-        <div class="footer-meta">
-          <div class="footer-links" aria-label="Footer links">
-            <a href="privacy.html">Privacy policy</a>
-            <a href="voorwaarden.html">Algemene voorwaarden</a>
-            <a href="over.html">Over Mathijs.ai</a>
-            <a href="/staff-login">Personeel</a>
+            <div class="footer-links-panel">
+              <div class="footer-links" aria-label="Footer links">
+                <a href="privacy.html">Privacy policy</a>
+                <a href="voorwaarden.html">Algemene voorwaarden</a>
+                <a href="over.html">Over Mathijs.ai</a>
+                <a href="/staff-login">Personeel</a>
+              </div>
+              <p class="footer-copy">© 2024 Mathijs.ai · Alle rechten voorbehouden</p>
+            </div>
           </div>
-          <p class="footer-copy">© 2024 Mathijs.ai · Alle rechten voorbehouden</p>
         </div>
       </div>
     </footer>
