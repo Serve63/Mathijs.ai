@@ -545,14 +545,14 @@
       }
 
       .hero-panel--video {
-        min-height: 610px;
-        padding: 16px;
+        padding: 14px;
       }
 
       .hero-video-placeholder {
         position: relative;
         width: 100%;
-        min-height: 100%;
+        min-height: 0;
+        aspect-ratio: 16 / 9;
         border-radius: 20px;
         border: 1px solid rgba(255, 255, 255, 0.14);
         overflow: hidden;
@@ -1891,10 +1891,6 @@
           margin: 0 auto;
         }
 
-        .hero-panel--video {
-          min-height: 520px;
-        }
-
         .hero-float {
           position: static;
           width: auto;
@@ -1986,11 +1982,11 @@
         }
 
         .hero-panel--video {
-          min-height: 380px;
           padding: 12px;
         }
 
         .hero-video-placeholder {
+          aspect-ratio: 16 / 10;
           border-radius: 18px;
           padding: 14px;
         }
