@@ -544,6 +544,115 @@
         text-align: left;
       }
 
+      .hero-panel--video {
+        min-height: 610px;
+        padding: 16px;
+      }
+
+      .hero-video-placeholder {
+        position: relative;
+        width: 100%;
+        min-height: 100%;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 18px;
+        background:
+          radial-gradient(circle at 14% 10%, rgba(245, 197, 24, 0.16), rgba(245, 197, 24, 0) 56%),
+          radial-gradient(circle at 90% 92%, rgba(34, 74, 172, 0.26), rgba(34, 74, 172, 0) 58%),
+          linear-gradient(155deg, rgba(16, 32, 78, 0.96), rgba(9, 20, 55, 0.98));
+      }
+
+      .hero-video-placeholder::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0.22;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px);
+        background-size: 22px 22px;
+        pointer-events: none;
+      }
+
+      .hero-video-chrome {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .hero-video-chrome span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .hero-video-chrome p {
+        margin: 0 0 0 8px;
+        font-size: 0.74rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .hero-video-center {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        gap: 12px;
+        text-align: center;
+      }
+
+      .hero-video-play {
+        width: 84px;
+        height: 84px;
+        border-radius: 999px;
+        border: 1px solid rgba(245, 197, 24, 0.52);
+        background: rgba(10, 23, 63, 0.72);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow:
+          0 16px 32px -18px rgba(0, 0, 0, 0.8),
+          inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      }
+
+      .hero-video-play svg {
+        width: 30px;
+        height: 30px;
+        margin-left: 2px;
+        fill: var(--accent-sun);
+      }
+
+      .hero-video-center p {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .hero-video-timeline {
+        position: relative;
+        z-index: 1;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.13);
+        overflow: hidden;
+      }
+
+      .hero-video-timeline span {
+        display: block;
+        width: 36%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba(245, 197, 24, 0.95), rgba(255, 223, 107, 0.9));
+      }
+
       .hero-card__header {
         display: flex;
         flex-direction: row;
@@ -1782,6 +1891,10 @@
           margin: 0 auto;
         }
 
+        .hero-panel--video {
+          min-height: 520px;
+        }
+
         .hero-float {
           position: static;
           width: auto;
@@ -1872,6 +1985,26 @@
           flex-direction: column;
         }
 
+        .hero-panel--video {
+          min-height: 380px;
+          padding: 12px;
+        }
+
+        .hero-video-placeholder {
+          border-radius: 18px;
+          padding: 14px;
+        }
+
+        .hero-video-play {
+          width: 72px;
+          height: 72px;
+        }
+
+        .hero-video-play svg {
+          width: 26px;
+          height: 26px;
+        }
+
         .cta-section {
           margin: 0 20px 40px;
           padding: 60px 20px;
@@ -1958,47 +2091,24 @@
             </div>
           </div>
           <div class="hero-visual">
-            <div class="hero-panel">
-              <div class="hero-card__header">
-                <img
-                  src="assets/logo-ui.webp"
-                  alt="Mathijs.ai avatar"
-                  class="hero-card__avatar"
-                  width="46"
-                  height="46"
-                  loading="eager"
-                  decoding="async"
-                  fetchpriority="high"
-                />
-                <div>
-                  <p class="hero-card__title">Mathijs.ai</p>
-                  <p class="hero-card__subtitle">50+ korte videolessen (zonder theorie-gedoe)</p>
+            <div class="hero-panel hero-panel--video">
+              <div class="hero-video-placeholder" role="img" aria-label="Videoplaceholder voor de hero-sectie">
+                <div class="hero-video-chrome">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <p>Video placeholder</p>
                 </div>
-              </div>
-              <p class="hero-card__text">
-                <strong>Leer wat werkt in de praktijk</strong>
-              </p>
-              <p class="hero-card__text">
-                Je leert per model waar het sterk in is, waar je op moet letten en hoe je het snel inzet voor echte business-taken.
-              </p>
-              <div class="hero-features">
-                <div class="hero-feature">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Leer werken met topmodellen (GPT, Gemini, Grok & meer)</span>
+                <div class="hero-video-center">
+                  <div class="hero-video-play" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <polygon points="8,5 20,12 8,19"></polygon>
+                    </svg>
+                  </div>
+                  <p>Plaats hier je introductievideo</p>
                 </div>
-                <div class="hero-feature">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Praktijkvoorbeelden voor marketing, sales en operations</span>
-                </div>
-                <div class="hero-feature">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Korte workshops die je meteen kunt toepassen</span>
+                <div class="hero-video-timeline" aria-hidden="true">
+                  <span></span>
                 </div>
               </div>
             </div>
