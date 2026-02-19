@@ -1033,26 +1033,32 @@
       }
 
       /* Team */
-      .team-section {
-        padding: 120px 40px;
+      /* ── Continuous yellow band wrapping team + footer ── */
+      .team-footer-band {
         position: relative;
         background: #0D1840;
-        color: #fff;
         overflow: hidden;
-        margin-top: 40px;
       }
 
-      .team-section::before {
+      .team-footer-band::before {
         content: "";
         position: absolute;
         top: 0;
         right: 0;
         width: 48%;
         height: 100%;
-        background: linear-gradient(135deg, #F5C518 0%, #FFE066 100%);
+        background: linear-gradient(160deg, #F5C518 0%, #FFE066 100%);
         clip-path: polygon(18% 0, 100% 0, 100% 100%, 0 100%);
         pointer-events: none;
         z-index: 0;
+      }
+
+      .team-section {
+        padding: 120px 40px;
+        position: relative;
+        background: transparent;
+        color: #fff;
+        margin-top: 40px;
       }
 
       .team-section::after {
@@ -1256,21 +1262,13 @@
       /* Footer */
       .site-footer {
         padding: 50px 40px 60px;
-        background: var(--dark);
+        background: transparent;
         color: rgba(255, 255, 255, 0.65);
         position: relative;
-        overflow: hidden;
       }
 
       .site-footer::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 48%;
-        height: 100%;
-        background: linear-gradient(135deg, #F5C518 0%, #FFE066 100%);
-        clip-path: polygon(0 0, 100% 0, 100% 100%, -18% 100%);
+        display: none;
         pointer-events: none;
         z-index: 0;
       }
@@ -1441,7 +1439,7 @@
           justify-content: space-between;
         }
 
-        .site-footer::before {
+        .team-footer-band::before {
           display: none;
         }
       }
@@ -1858,6 +1856,9 @@
         </div>
       </section>
 
+    </main>
+
+    <div class="team-footer-band">
       <section class="team-section defer-render" id="team">
         <div class="section-inner team-shell">
           <div class="team-copy">
@@ -1913,24 +1914,23 @@
         </div>
       </section>
 
-    </main>
-
-    <footer class="site-footer">
-      <div class="footer-inner">
-        <div class="footer-brand">
-          <p class="brand-text">MATHIJS<span class="brand-dot">.AI</span></p>
-          <p>Leren met AI, maar dan menselijk.</p>
-          <p class="footer-disclaimer">Mathijs.ai is een onafhankelijk platform. Merknamen en logo's zijn eigendom van hun eigenaren en betekenen geen affiliatie of goedkeuring. AI-output kan fouten bevatten; check belangrijke beslissingen altijd.</p>
-        </div>
+      <footer class="site-footer">
+        <div class="footer-inner">
+          <div class="footer-brand">
+            <p class="brand-text">MATHIJS<span class="brand-dot">.AI</span></p>
+            <p>Leren met AI, maar dan menselijk.</p>
+            <p class="footer-disclaimer">Mathijs.ai is een onafhankelijk platform. Merknamen en logo's zijn eigendom van hun eigenaren en betekenen geen affiliatie of goedkeuring. AI-output kan fouten bevatten; check belangrijke beslissingen altijd.</p>
+          </div>
           <div class="footer-links" aria-label="Footer links">
             <a href="privacy.html">Privacy policy</a>
             <a href="voorwaarden.html">Algemene voorwaarden</a>
             <a href="over.html">Over Mathijs.ai</a>
             <a href="/staff-login">Personeel</a>
+          </div>
+          <p class="footer-copy">© 2024 Mathijs.ai · Alle rechten voorbehouden</p>
         </div>
-        <p class="footer-copy">© 2024 Mathijs.ai · Alle rechten voorbehouden</p>
-      </div>
-    </footer>
+      </footer>
+    </div>
     
     <script>
       // Smooth scroll voor anchor links
