@@ -1082,180 +1082,7 @@
         }
       }
 
-      /* Team */
-      /* ── Blue band with warm-to-blue transition between team and footer ── */
-      .team-footer-band {
-        position: relative;
-        background: #0D1840;
-        overflow: hidden;
-        isolation: isolate;
-      }
-
-      .team-footer-band::before {
-        display: none;
-      }
-
-      .team-section {
-        padding: 120px 40px;
-        position: relative;
-        background: transparent;
-        color: #fff;
-        margin-top: 40px;
-      }
-
-      .team-section::before {
-        content: none;
-      }
-
-      .team-section::after {
-        content: none;
-      }
-
-      .team-shell {
-        display: grid;
-        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-        gap: 72px;
-        align-items: center;
-        position: relative;
-        z-index: 1;
-      }
-
-      .team-copy {
-        max-width: 560px;
-      }
-
-      .team-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 0.78rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.2em;
-        color: var(--accent);
-        margin-bottom: 18px;
-      }
-
-      .team-label::before {
-        content: "";
-        width: 8px;
-        height: 8px;
-        border-radius: 999px;
-        background: var(--accent);
-        box-shadow: 0 0 0 6px rgba(245, 197, 24, 0.18);
-      }
-
-      .team-title {
-        font-family: "Sora", sans-serif;
-        font-size: clamp(1.8rem, 2.7vw, 2.3rem);
-        margin: 0 0 16px;
-        line-height: 1.1;
-      }
-
-      .team-title-line {
-        display: block;
-        white-space: nowrap;
-      }
-
-      .team-subtitle {
-        margin: 0 0 18px;
-        color: rgba(255, 255, 255, 0.75);
-        font-size: 1.05rem;
-      }
-
-      .team-divider {
-        width: 140px;
-        height: 2px;
-        border-radius: 999px;
-        background: linear-gradient(90deg, rgba(245, 197, 24, 0.9), rgba(245, 197, 24, 0));
-        margin: 18px 0 22px;
-      }
-
-      .team-points {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px 24px;
-      }
-
-      .team-points li {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.82);
-      }
-
-      .team-points svg {
-        width: 18px;
-        height: 18px;
-        color: var(--accent);
-        flex-shrink: 0;
-        margin-top: 2px;
-      }
-
-      .team-media {
-        position: relative;
-        justify-self: end;
-        margin-left: auto;
-        width: 100%;
-        max-width: 520px;
-        transform: none;
-      }
-
-      @media (min-width: 1100px) {
-        .team-media {
-          transform: translateX(clamp(0px, 4vw, 90px));
-        }
-      }
-
-      .team-photo {
-        position: relative;
-        background: #fdfdfd;
-        border-radius: 30px;
-        padding: 16px;
-        box-shadow: 0 34px 70px -42px rgba(0, 0, 0, 0.75);
-      }
-
-      .team-photo::before {
-        content: "";
-        position: absolute;
-        inset: -12px;
-        border-radius: 36px;
-        border: 1px solid rgba(13, 24, 64, 0.28);
-        pointer-events: none;
-      }
-
-      .team-photo img {
-        width: 100%;
-        height: auto;
-        border-radius: 22px;
-        background: #0d1f3d;
-      }
-
-      .team-photo-badge {
-        position: absolute;
-        top: 14px;
-        left: 14px;
-        background: var(--accent);
-        color: #1a1600;
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        padding: 8px 12px;
-        border-radius: 999px;
-      }
-
-      .team-caption {
-        margin-top: 14px;
-        font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.78);
-        font-weight: 500;
-        text-align: left;
-      }
+      /* Team section is merged into footer. */
 
       /* CTA */
       .cta-section {
@@ -1298,8 +1125,8 @@
       /* Footer */
       .site-footer {
         padding: 50px 40px 60px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.65);
+        background: #0D1840;
+        color: rgba(255, 255, 255, 0.66);
         position: relative;
       }
 
@@ -1310,11 +1137,9 @@
       .footer-inner {
         max-width: 1200px;
         margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 24px;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+        gap: 28px 42px;
         position: relative;
         z-index: 1;
       }
@@ -1336,15 +1161,90 @@
         font-size: 0.75rem;
         color: rgba(255, 255, 255, 0.5);
         line-height: 1.5;
-        max-width: 500px;
+        max-width: 560px;
+      }
+
+      .footer-about {
+        align-self: center;
+      }
+
+      .footer-about-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--accent);
+      }
+
+      .footer-about-label::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 4px rgba(245, 197, 24, 0.15);
+      }
+
+      .footer-about-title {
+        margin: 10px 0 8px;
+        font-family: "Sora", sans-serif;
+        font-size: clamp(1.1rem, 1.65vw, 1.35rem);
+        line-height: 1.2;
+        color: #fff;
+        text-transform: uppercase;
+      }
+
+      .footer-about-subtitle {
+        margin: 0;
+        font-size: 0.92rem;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .footer-about-points {
+        list-style: none;
+        padding: 0;
+        margin: 14px 0 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 18px;
+      }
+
+      .footer-about-points li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 0.85rem;
+      }
+
+      .footer-about-points svg {
+        width: 14px;
+        height: 14px;
+        color: var(--accent);
+        flex-shrink: 0;
+      }
+
+      .footer-meta {
+        grid-column: 1 / -1;
+        margin-top: 8px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.09);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px 24px;
+        flex-wrap: wrap;
       }
 
       .footer-links {
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-        margin-top: calc(1.1rem + 6px);
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 18px;
+        margin: 0;
       }
 
       .footer-links a {
@@ -1356,21 +1256,10 @@
         color: var(--accent-sun);
       }
 
-      @media (min-width: 1025px) {
-        .footer-links a {
-          color: rgba(13, 24, 64, 0.82);
-        }
-
-        .footer-links a:hover {
-          color: #0D1840;
-        }
-      }
-
       .footer-copy {
-        width: 100%;
         font-size: 0.75rem;
-        color: rgba(255, 255, 255, 0.4);
-        margin-top: 24px;
+        color: rgba(255, 255, 255, 0.44);
+        margin: 0;
       }
 
       /* Motion */
@@ -1471,12 +1360,8 @@
           margin: 0 20px 40px;
         }
 
-        .team-shell {
+        .footer-inner {
           grid-template-columns: 1fr;
-        }
-
-        .team-media {
-          transform: none;
         }
       }
 
@@ -1488,10 +1373,6 @@
         .header-inner {
           flex-wrap: wrap;
           justify-content: space-between;
-        }
-
-        .team-footer-band::before {
-          display: none;
         }
       }
 
@@ -1554,25 +1435,22 @@
           padding: 60px 20px;
         }
 
-        .team-title-line {
-          white-space: normal;
-        }
-
-        .team-points {
-          grid-template-columns: 1fr;
-        }
-
         .site-footer {
           padding: 40px 20px;
         }
 
         .footer-inner {
-          flex-direction: column;
+          grid-template-columns: 1fr;
+          gap: 22px;
         }
 
-        .footer-links {
+        .footer-about-points {
+          grid-template-columns: 1fr;
+        }
+
+        .footer-meta {
           align-items: flex-start;
-          margin-top: 20px;
+          flex-direction: column;
         }
       }
     </style>
@@ -1921,69 +1799,47 @@
 
     </main>
 
-    <div class="team-footer-band">
-      <section class="team-section defer-render" id="team">
-        <div class="section-inner team-shell">
-          <div class="team-copy">
-            <span class="team-label">Over ons</span>
-            <h2 class="team-title">
-              <span class="team-title-line">GEMAAKT DÓÓR ONDERNEMERS,</span>
-              <span class="team-title-line">VÓÓR ONDERNEMERS :)</span>
-            </h2>
-            <p class="team-subtitle">We bouwen dit platform zoals we onze eigen bedrijven runnen: snel, praktisch en gericht op impact.</p>
-            <div class="team-divider"></div>
-            <ul class="team-points">
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span>Begeleiding door founders</span>
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span>Korte lijnen, snelle feedback</span>
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span>Tijdswinst en kwaliteit</span>
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span>Team-implementatie</span>
-              </li>
-            </ul>
-          </div>
-          <div class="team-media">
-            <div class="team-photo">
-              <span class="team-photo-badge">Team</span>
-              <img
-                src="assets/team-duo.svg"
-                alt="Twee jongens van het Mathijs.ai team"
-                width="900"
-                height="640"
-                loading="lazy"
-                decoding="async"
-                fetchpriority="low"
-              />
-            </div>
-            <p class="team-caption">Direct contact, korte lijnen en begeleiding die je echt verder helpt.</p>
-          </div>
+    <footer class="site-footer" id="team">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <p class="brand-text">MATHIJS<span class="brand-dot">.AI</span></p>
+          <p>Leren met AI, maar dan menselijk.</p>
+          <p class="footer-disclaimer">Mathijs.ai is een onafhankelijk platform. Merknamen en logo's zijn eigendom van hun eigenaren en betekenen geen affiliatie of goedkeuring. AI-output kan fouten bevatten; check belangrijke beslissingen altijd.</p>
         </div>
-      </section>
 
-      <footer class="site-footer">
-        <div class="footer-inner">
-          <div class="footer-brand">
-            <p class="brand-text">MATHIJS<span class="brand-dot">.AI</span></p>
-            <p>Leren met AI, maar dan menselijk.</p>
-            <p class="footer-disclaimer">Mathijs.ai is een onafhankelijk platform. Merknamen en logo's zijn eigendom van hun eigenaren en betekenen geen affiliatie of goedkeuring. AI-output kan fouten bevatten; check belangrijke beslissingen altijd.</p>
-          </div>
+        <div class="footer-about">
+          <span class="footer-about-label">Over ons</span>
+          <h2 class="footer-about-title">Gemaakt dóór ondernemers, vóór ondernemers :)</h2>
+          <p class="footer-about-subtitle">Snel, praktisch en gericht op impact. Direct contact, korte lijnen en begeleiding die je echt verder helpt.</p>
+          <ul class="footer-about-points">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>Begeleiding door founders</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>Korte lijnen, snelle feedback</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>Tijdswinst en kwaliteit</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>Team-implementatie</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="footer-meta">
           <div class="footer-links" aria-label="Footer links">
             <a href="privacy.html">Privacy policy</a>
             <a href="voorwaarden.html">Algemene voorwaarden</a>
@@ -1992,8 +1848,8 @@
           </div>
           <p class="footer-copy">© 2024 Mathijs.ai · Alle rechten voorbehouden</p>
         </div>
-      </footer>
-    </div>
+      </div>
+    </footer>
     
     <script>
       // Smooth scroll voor anchor links
