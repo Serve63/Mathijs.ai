@@ -1165,101 +1165,241 @@
       }
 
       .pricing-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 28px;
-        max-width: 900px;
+        display: flex;
+        justify-content: center;
         margin: 0 auto;
       }
 
-      .pricing-card {
-        background: #fff;
-        border-radius: 28px;
-        padding: 38px 30px;
-        border: 2px solid rgba(245, 197, 24, 0.15);
-        text-align: center;
-        box-shadow: 0 18px 40px -30px rgba(16, 26, 23, 0.5);
-      }
-
-      .pricing-card.featured {
-        border-color: var(--accent-cool);
+      .pc-card {
+        background: #0d1b3e;
+        border-radius: 32px;
+        width: 100%;
+        max-width: 680px;
+        overflow: hidden;
         position: relative;
-        background: linear-gradient(180deg, #ffffff 0%, #f4f6ff 100%);
+        box-shadow: 0 40px 80px rgba(13, 27, 62, 0.3);
+        font-family: "Plus Jakarta Sans", sans-serif;
       }
 
-      .pricing-badge {
+      .pc-card::before {
+        content: "";
         position: absolute;
-        top: -12px;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: #f5c842;
+      }
+
+      .pc-card::after {
+        content: "mathijs.ai";
+        position: absolute;
+        bottom: -12px;
         left: 50%;
         transform: translateX(-50%);
-        background: var(--accent);
-        color: #1f223a;
-        padding: 6px 16px;
-        border-radius: 999px;
-        font-size: 0.75rem;
-        font-weight: 700;
+        font-family: "Syne", sans-serif;
+        font-size: 100px;
+        font-weight: 800;
+        white-space: nowrap;
+        color: rgba(255, 255, 255, 0.04);
+        pointer-events: none;
+        user-select: none;
+        letter-spacing: -0.03em;
+      }
+
+      .pc-header {
+        padding: 44px 52px 36px;
+        position: relative;
+      }
+
+      .pc-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f5c842;
+        color: #0d1b3e;
+        font-family: "Syne", sans-serif;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        padding: 5px 14px;
+        border-radius: 20px;
+        margin-bottom: 20px;
       }
 
-      .pricing-name {
-        font-family: "Sora", sans-serif;
-        font-size: 1.15rem;
-        margin: 0 0 12px;
+      .pc-badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #0d1b3e;
       }
 
-      .pricing-amount {
-        font-family: "Sora", sans-serif;
-        font-size: 2.8rem;
+      .pc-plan-name {
+        font-family: "Syne", sans-serif;
+        font-size: 13px;
         font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.4);
+        margin: 0 0 16px;
       }
 
-      .pricing-period {
-        color: var(--muted);
+      .pc-price-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        margin-bottom: 6px;
       }
 
-      .pricing-features {
-        list-style: none;
-        padding: 0;
-        margin: 28px 0 0;
-        text-align: left;
+      .pc-price-amount {
+        font-family: "Syne", sans-serif;
+        font-size: 72px;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1;
+        letter-spacing: -0.03em;
       }
 
-      .pricing-features-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 22px;
-        margin: 28px 0 0;
+      .pc-price-currency {
+        font-family: "Syne", sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+        color: #f5c842;
+        line-height: 1;
+        margin-bottom: 8px;
       }
 
-      .pricing-features-grid .pricing-features {
+      .pc-price-period {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.4);
+        font-weight: 400;
         margin: 0;
       }
 
-      .pricing-features li {
-        display: flex;
-        gap: 10px;
-        padding: 10px 0;
-        font-size: 0.95rem;
+      .pc-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+        margin: 0 52px;
       }
 
-      .pricing-features li svg {
+      .pc-features {
+        padding: 36px 52px 40px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+      }
+
+      .pc-feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .pc-feature-item:nth-last-child(-n + 2) {
+        border-bottom: none;
+      }
+
+      .pc-check {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: rgba(245, 200, 66, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+
+      .pc-check svg {
+        width: 10px;
+        height: 10px;
+      }
+
+      .pc-feature-text {
+        font-size: 13.5px;
+        color: rgba(255, 255, 255, 0.65);
+        line-height: 1.5;
+        font-weight: 400;
+      }
+
+      .pc-cta-section {
+        padding: 0 52px 44px;
+      }
+
+      .pc-cta-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        background: #f5c842;
+        color: #0d1b3e;
+        font-family: "Syne", sans-serif;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        border: none;
+        border-radius: 16px;
+        padding: 18px 32px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .pc-cta-btn:hover {
+        background: #ffd94d;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(245, 200, 66, 0.35);
+      }
+
+      .pc-cta-btn svg {
         width: 18px;
         height: 18px;
-        color: var(--accent-cool);
-        flex-shrink: 0;
-        margin-top: 2px;
+        transition: transform 0.3s ease;
       }
 
-      .pricing-cta {
-        margin-top: 28px;
-        width: 100%;
+      .pc-cta-btn:hover svg {
+        transform: translateX(4px);
       }
 
-      @media (min-width: 860px) {
-        .pricing-features-grid {
-          grid-template-columns: 1fr 1fr;
-          gap: 26px;
+      .pc-guarantee {
+        text-align: center;
+        margin-top: 16px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.28);
+        font-weight: 400;
+      }
+
+      @media (max-width: 600px) {
+        .pc-header,
+        .pc-cta-section {
+          padding-left: 32px;
+          padding-right: 32px;
+        }
+
+        .pc-features {
+          padding: 28px 32px 32px;
+          grid-template-columns: 1fr;
+        }
+
+        .pc-divider {
+          margin: 0 32px;
+        }
+
+        .pc-price-amount {
+          font-size: 56px;
+        }
+
+        .pc-feature-item:nth-last-child(-n + 2) {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .pc-feature-item:last-child {
+          border-bottom: none;
         }
       }
 
@@ -1906,81 +2046,40 @@
             </p>
           </div>
           <div class="pricing-grid">
-            <article class="pricing-card featured">
-              <div class="pricing-badge">Populair</div>
-              <h3 class="pricing-name">STANDAARD</h3>
-              <div class="pricing-price">
-                <div class="pricing-amount">€25</div>
-                <div class="pricing-period">per maand</div>
+            <div class="pc-card">
+              <div class="pc-header">
+                <div class="pc-badge"><span class="pc-badge-dot"></span> Populair</div>
+                <p class="pc-plan-name">Standaard</p>
+                <div class="pc-price-row">
+                  <span class="pc-price-currency">€</span>
+                  <span class="pc-price-amount">25</span>
+                </div>
+                <p class="pc-price-period">per maand</p>
               </div>
-              <div class="pricing-features-grid">
-              <ul class="pricing-features">
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Toegang tot alle AI-modellen (GPT, Gemini, Grok, etc.)</span>
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Kant-en-klare workflows voor operations</span>
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>50+ video lessen en workshops</span>
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Onbeperkt chatten en vergelijken</span>
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Model-advies per use case</span>
-                </li>
-              </ul>
-                <ul class="pricing-features">
-                  <li>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    <span>Prompts opslaan als sjabloon</span>
-                  </li>
-                  <li>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    <span>Promptbibliotheek met voorbeelden</span>
-                  </li>
-                  <li>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    <span>Richtlijnen per model (do’s & don’ts)</span>
-                  </li>
-                  <li>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    <span>Workflows hergebruiken per project</span>
-                  </li>
-                  <li>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    <span>Continu nieuwe modellen & updates</span>
-                  </li>
-                </ul>
+
+              <div class="pc-divider"></div>
+
+              <div class="pc-features">
+                <div class="pc-feature-item"><span class="pc-check"><svg viewBox="0 0 12 12" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke="#f5c842"><polyline points="2 6 5 9 10 3"/></svg></span><span class="pc-feature-text">Toegang tot alle AI-modellen (GPT, Gemini, Grok, etc.)</span></div>
+                <div class="pc-feature-item"><span class="pc-check"><svg viewBox="0 0 12 12" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke="#f5c842"><polyline points="2 6 5 9 10 3"/></svg></span><span class="pc-feature-text">Prompts opslaan als sjabloon</span></div>
+                <div class="pc-feature-item"><span class="pc-check"><svg viewBox="0 0 12 12" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke="#f5c842"><polyline points="2 6 5 9 10 3"/></svg></span><span class="pc-feature-text">Kant-en-klare workflows voor operations</span></div>
+                <div class="pc-feature-item"><span class="pc-check"><svg viewBox="0 0 12 12" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke="#f5c842"><polyline points="2 6 5 9 10 3"/></svg></span><span class="pc-feature-text">Promptbibliotheek met voorbeelden</span></div>
+                <div class="pc-feature-item"><span class="pc-check"><svg viewBox="0 0 12 12" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke="#f5c842"><polyline points="2 6 5 9 10 3"/></svg></span><span class="pc-feature-text">50+ video lessen en workshops</span></div>
+                <div class="pc-feature-item"><span class="pc-check"><svg viewBox="0 0 12 12" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke="#f5c842"><polyline points="2 6 5 9 10 3"/></svg></span><span class="pc-feature-text">Richtlijnen per model (do's & don'ts)</span></div>
+                <div class="pc-feature-item"><span class="pc-check"><svg viewBox="0 0 12 12" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke="#f5c842"><polyline points="2 6 5 9 10 3"/></svg></span><span class="pc-feature-text">Onbeperkt chatten en vergelijken</span></div>
+                <div class="pc-feature-item"><span class="pc-check"><svg viewBox="0 0 12 12" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke="#f5c842"><polyline points="2 6 5 9 10 3"/></svg></span><span class="pc-feature-text">Workflows hergebruiken per project</span></div>
+                <div class="pc-feature-item"><span class="pc-check"><svg viewBox="0 0 12 12" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke="#f5c842"><polyline points="2 6 5 9 10 3"/></svg></span><span class="pc-feature-text">Model-advies per use case</span></div>
+                <div class="pc-feature-item"><span class="pc-check"><svg viewBox="0 0 12 12" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke="#f5c842"><polyline points="2 6 5 9 10 3"/></svg></span><span class="pc-feature-text">Continu nieuwe modellen & updates</span></div>
               </div>
-              <a href="/subscribe" class="btn primary pricing-cta">Start Nu</a>
-            </article>
+
+              <div class="pc-cta-section">
+                <a class="pc-cta-btn" href="/subscribe">
+                  Start Nu
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke="#0d1b3e"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+                <p class="pc-guarantee">Geen verborgen kosten · Maandelijks opzegbaar</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
