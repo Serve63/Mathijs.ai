@@ -1040,7 +1040,15 @@
         overflow: hidden;
       }
 
-      .team-footer-band::before {
+      .team-section {
+        padding: 120px 40px;
+        position: relative;
+        background: transparent;
+        color: #fff;
+        margin-top: 40px;
+      }
+
+      .team-section::before {
         content: "";
         position: absolute;
         top: 0;
@@ -1051,14 +1059,6 @@
         clip-path: polygon(18% 0, 100% 0, 100% 100%, 0 100%);
         pointer-events: none;
         z-index: 0;
-      }
-
-      .team-section {
-        padding: 120px 40px;
-        position: relative;
-        background: transparent;
-        color: #fff;
-        margin-top: 40px;
       }
 
       .team-section::after {
