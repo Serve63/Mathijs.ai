@@ -1110,17 +1110,44 @@
       }
 
       .step-number {
-        width: 52px;
-        height: 52px;
-        border-radius: 16px;
-        background: var(--accent-sun);
-        color: #2b1c0f;
+        position: relative;
+        width: 62px;
+        height: 62px;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.26);
+        box-shadow: 0 8px 22px -16px rgba(0, 0, 0, 0.55);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: "Sora", sans-serif;
-        font-weight: 700;
         margin-bottom: 16px;
+      }
+
+      .step-number img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .step-number::after {
+        content: attr(data-step);
+        position: absolute;
+        right: 5px;
+        bottom: 5px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: rgba(13, 27, 62, 0.9);
+        border: 1px solid rgba(245, 197, 24, 0.58);
+        color: #f5c842;
+        font-family: "Sora", sans-serif;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
       }
 
       .step h3 {
@@ -1194,24 +1221,22 @@
       }
 
       .testimonial-avatar {
-        width: 42px;
-        height: 42px;
+        width: 52px;
+        height: 52px;
         border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 8px 20px -14px rgba(0, 0, 0, 0.5);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 700;
       }
 
-      .testimonials-grid .testimonial-card:nth-child(1) .testimonial-avatar,
-      .testimonials-grid .testimonial-card:nth-child(3) .testimonial-avatar {
-        background: rgba(255, 255, 255, 0.14);
-        color: #f5c842;
-      }
-
-      .testimonials-grid .testimonial-card:nth-child(2) .testimonial-avatar {
-        background: rgba(255, 255, 255, 0.14);
-        color: #f5c842;
+      .testimonial-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
       }
 
       .testimonial-name {
@@ -2033,17 +2058,23 @@
           </div>
           <div class="steps">
             <div class="step">
-              <div class="step-number">1</div>
+              <div class="step-number" data-step="1">
+                <img src="assets/step-diagnose.jpg" alt="Diagnose stap foto" loading="lazy" />
+              </div>
               <h3>DIAGNOSE</h3>
               <p>Geef je taak en kanaal (mail, ads, audio). Wij matchen het juiste model.</p>
             </div>
             <div class="step">
-              <div class="step-number">2</div>
+              <div class="step-number" data-step="2">
+                <img src="assets/step-dialoog.jpg" alt="Dialoog stap foto" loading="lazy" />
+              </div>
               <h3>DIALOOG</h3>
               <p>Experimenteer live met prompts per model: GPT, Gemini, Grok of andere.</p>
             </div>
             <div class="step">
-              <div class="step-number">3</div>
+              <div class="step-number" data-step="3">
+                <img src="assets/step-implementatie.jpg" alt="Implementatie stap foto" loading="lazy" />
+              </div>
               <h3>IMPLEMENTATIE</h3>
               <p>Neem de beste prompt over in je proces en bewaar hem als sjabloon.</p>
             </div>
@@ -2066,7 +2097,9 @@
                 "Eindelijk een plek waar ik alle AI-modellen kan vergelijken zonder 10 verschillende tools te openen."
               </p>
               <div class="testimonial-author">
-                <div class="testimonial-avatar">M</div>
+                <div class="testimonial-avatar">
+                  <img src="assets/testimonial-mila.jpg" alt="Foto van Mila" loading="lazy" />
+                </div>
                 <div>
                   <p class="testimonial-name">Mila, Operations</p>
                   <p class="testimonial-role">E-commerce</p>
@@ -2078,7 +2111,9 @@
                 "Reviewtekst volgt."
               </p>
               <div class="testimonial-author">
-                <div class="testimonial-avatar">R</div>
+                <div class="testimonial-avatar">
+                  <img src="assets/testimonial-rogier.jpg" alt="Foto van Rogier Schoenmakers" loading="lazy" />
+                </div>
                 <div>
                   <p class="testimonial-name">Rogier Schoenmakers</p>
                   <p class="testimonial-role">Growsocialmedia.nl</p>
@@ -2090,7 +2125,9 @@
                 "Reviewtekst volgt."
               </p>
               <div class="testimonial-author">
-                <div class="testimonial-avatar">M</div>
+                <div class="testimonial-avatar">
+                  <img src="assets/testimonial-maarten.jpg" alt="Foto van Maarten van Gemert" loading="lazy" />
+                </div>
                 <div>
                   <p class="testimonial-name">Maarten van Gemert</p>
                   <p class="testimonial-role">Growingbyknowing.nl</p>
