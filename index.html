@@ -851,7 +851,7 @@
         opacity: 1;
         transform: translateY(0);
         transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease;
-        font-family: "Plus Jakarta Sans", sans-serif;
+        font-family: "Manrope", sans-serif;
       }
 
       @media (prefers-reduced-motion: no-preference) {
@@ -894,27 +894,6 @@
 
       .card-3:hover { box-shadow: 0 28px 60px rgba(245, 200, 66, 0.45); }
 
-      .bg-letter {
-        position: absolute;
-        bottom: -10px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-family: "Syne", sans-serif;
-        font-size: 110px;
-        font-weight: 800;
-        line-height: 1;
-        user-select: none;
-        pointer-events: none;
-        letter-spacing: -0.03em;
-        white-space: nowrap;
-        width: 100%;
-        text-align: center;
-      }
-
-      .card-1 .bg-letter { color: rgba(13, 27, 62, 0.07); }
-      .card-2 .bg-letter { color: rgba(255, 255, 255, 0.08); }
-      .card-3 .bg-letter { color: rgba(13, 27, 62, 0.12); }
-
       .icon-wrap {
         width: 48px;
         height: 48px;
@@ -943,9 +922,9 @@
       .card-3 .icon-wrap svg { stroke: #0d1b3e; }
 
       .card-num {
-        font-family: "Syne", sans-serif;
+        font-family: "Manrope", sans-serif;
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 600;
         letter-spacing: 0.18em;
         text-transform: uppercase;
         margin-bottom: 14px;
@@ -957,9 +936,9 @@
       .card-3 .card-num { color: rgba(13, 27, 62, 0.4); }
 
       .card-title {
-        font-family: "Syne", sans-serif;
+        font-family: "Sora", sans-serif;
         font-size: 20px;
-        font-weight: 800;
+        font-weight: 700;
         line-height: 1.2;
         margin-bottom: 16px;
         position: relative;
@@ -997,7 +976,7 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        font-family: "Syne", sans-serif;
+        font-family: "Manrope", sans-serif;
         font-size: 13px;
         font-weight: 700;
         letter-spacing: 0.04em;
@@ -1049,11 +1028,6 @@
       @media (max-width: 640px) {
         .feature-card {
           padding: 34px 26px 30px;
-        }
-
-        .bg-letter {
-          font-size: 88px;
-          bottom: -8px;
         }
       }
 
@@ -1913,7 +1887,6 @@
           </div>
           <div class="features-grid">
             <div class="feature-card card-1">
-              <span class="bg-letter">MATH</span>
               <div class="icon-wrap">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="3"></circle><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"></path>
@@ -1927,7 +1900,6 @@
             </div>
 
             <div class="feature-card card-2">
-              <span class="bg-letter">IJS.</span>
               <div class="icon-wrap">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
@@ -1941,7 +1913,6 @@
             </div>
 
             <div class="feature-card card-3">
-              <span class="bg-letter">AI</span>
               <div class="icon-wrap">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2"></rect>
