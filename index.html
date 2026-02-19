@@ -1488,8 +1488,8 @@
         max-width: 1120px;
         margin: 0 auto;
         display: grid;
-        grid-template-columns: 1fr;
-        gap: 14px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px 40px;
         position: relative;
         z-index: 1;
       }
@@ -1516,11 +1516,13 @@
 
       .footer-about {
         align-self: start;
+        min-width: 0;
       }
 
       .footer-links-panel {
-        margin-top: 12px;
-        min-width: 0;
+        min-width: 220px;
+        justify-self: end;
+        align-self: start;
       }
 
       .footer-about-label {
@@ -1562,8 +1564,9 @@
         padding: 0;
         margin: 10px 0 0;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 6px 14px;
+        grid-template-columns: repeat(2, max-content);
+        gap: 8px 44px;
+        justify-content: start;
       }
 
       .footer-about-points li {
@@ -1572,6 +1575,7 @@
         gap: 6px;
         color: rgba(255, 255, 255, 0.76);
         font-size: 0.79rem;
+        white-space: nowrap;
       }
 
       .footer-about-points svg {
@@ -1789,10 +1793,15 @@
 
         .footer-about-points {
           grid-template-columns: 1fr;
+          gap: 6px;
         }
 
         .footer-links {
           gap: 6px;
+        }
+
+        .footer-about-points li {
+          white-space: normal;
         }
       }
     </style>
@@ -2136,16 +2145,16 @@
               <span>Team-implementatie</span>
             </li>
           </ul>
+        </div>
 
-          <div class="footer-links-panel">
-            <div class="footer-links" aria-label="Footer links">
-              <a href="privacy.html">Privacy policy</a>
-              <a href="voorwaarden.html">Algemene voorwaarden</a>
-              <a href="over.html">Over Mathijs.ai</a>
-              <a href="/staff-login">Personeel</a>
-            </div>
-            <p class="footer-copy">© 2024 Mathijs.ai · Alle rechten voorbehouden</p>
+        <div class="footer-links-panel">
+          <div class="footer-links" aria-label="Footer links">
+            <a href="privacy.html">Privacy policy</a>
+            <a href="voorwaarden.html">Algemene voorwaarden</a>
+            <a href="over.html">Over Mathijs.ai</a>
+            <a href="/staff-login">Personeel</a>
           </div>
+          <p class="footer-copy">© 2024 Mathijs.ai · Alle rechten voorbehouden</p>
         </div>
       </div>
     </footer>
