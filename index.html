@@ -1092,17 +1092,7 @@
       }
 
       .team-footer-band::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 220px;
-        background:
-          radial-gradient(78% 140% at 88% 0%, rgba(245, 197, 24, 0.28) 0%, rgba(245, 197, 24, 0.12) 38%, rgba(13, 24, 64, 0) 72%),
-          linear-gradient(180deg, rgba(13, 24, 64, 0) 0%, rgba(13, 24, 64, 0.86) 78%, #0D1840 100%);
-        pointer-events: none;
-        z-index: 0;
+        display: none;
       }
 
       .team-section {
@@ -1114,37 +1104,11 @@
       }
 
       .team-section::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 48%;
-        height: 100%;
-        background: linear-gradient(
-          165deg,
-          #F5C518 0%,
-          #FFE066 40%,
-          #d0b45f 60%,
-          #4a5785 82%,
-          #0D1840 100%
-        );
-        clip-path: polygon(18% 0, 100% 0, 100% 100%, 0 100%);
-        pointer-events: none;
-        z-index: 0;
+        content: none;
       }
 
       .team-section::after {
-        content: "";
-        position: absolute;
-        top: -15%;
-        left: 55%;
-        width: 2px;
-        height: 130%;
-        background: linear-gradient(180deg, rgba(245, 197, 24, 0) 0%, rgba(255, 224, 102, 0.95) 30%, rgba(245, 197, 24, 0.95) 70%, rgba(245, 197, 24, 0) 100%);
-        transform: rotate(10deg);
-        box-shadow: 0 0 32px rgba(245, 197, 24, 0.55);
-        pointer-events: none;
-        z-index: 0;
+        content: none;
       }
 
       .team-shell {
@@ -1288,7 +1252,7 @@
       .team-caption {
         margin-top: 14px;
         font-size: 0.95rem;
-        color: rgba(13, 24, 64, 0.84);
+        color: rgba(255, 255, 255, 0.78);
         font-weight: 500;
         text-align: left;
       }
@@ -1527,13 +1491,7 @@
         }
 
         .team-footer-band::before {
-          height: 150px;
-          background: linear-gradient(
-            180deg,
-            rgba(13, 24, 64, 0) 0%,
-            rgba(13, 24, 64, 0.8) 76%,
-            #0D1840 100%
-          );
+          display: none;
         }
       }
 
