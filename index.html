@@ -36,6 +36,10 @@
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
     
     <!-- Preload kritieke afbeeldingen -->
     <link rel="preload" as="image" href="assets/logo-ui.webp" type="image/webp" />
@@ -839,44 +843,214 @@
       }
 
       .feature-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 26px;
-        padding: 32px;
-        box-shadow: 0 12px 30px -24px rgba(16, 26, 23, 0.4);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 28px;
+        padding: 40px 36px 36px;
+        position: relative;
+        overflow: hidden;
+        cursor: default;
+        opacity: 0;
+        transform: translateY(24px);
+        animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease;
+        font-family: "Plus Jakarta Sans", sans-serif;
       }
+
+      .feature-card:nth-child(1) { animation-delay: 0.1s; }
+      .feature-card:nth-child(2) { animation-delay: 0.22s; }
+      .feature-card:nth-child(3) { animation-delay: 0.34s; }
 
       .feature-card:hover {
         transform: translateY(-6px);
-        box-shadow: 0 24px 50px -30px rgba(16, 26, 23, 0.5);
       }
 
-      .feature-icon {
-        width: 52px;
-        height: 52px;
-        background: linear-gradient(135deg, rgba(245, 197, 24, 0.25), rgba(45, 45, 80, 0.25));
-        border-radius: 18px;
+      .card-1 {
+        background: #fffdf7;
+        border: 1.5px solid rgba(0, 0, 0, 0.07);
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.06);
+      }
+
+      .card-1:hover { box-shadow: 0 28px 60px rgba(13, 27, 62, 0.13); }
+
+      .card-2 {
+        background: #0d1b3e;
+        border: 1.5px solid transparent;
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
+      }
+
+      .card-2:hover { box-shadow: 0 28px 60px rgba(13, 27, 62, 0.35); }
+
+      .card-3 {
+        background: #f5c842;
+        border: 1.5px solid transparent;
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+      }
+
+      .card-3:hover { box-shadow: 0 28px 60px rgba(245, 200, 66, 0.45); }
+
+      .bg-letter {
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: "Syne", sans-serif;
+        font-size: 110px;
+        font-weight: 800;
+        line-height: 1;
+        user-select: none;
+        pointer-events: none;
+        letter-spacing: -0.03em;
+        white-space: nowrap;
+        width: 100%;
+        text-align: center;
+      }
+
+      .card-1 .bg-letter { color: rgba(13, 27, 62, 0.07); }
+      .card-2 .bg-letter { color: rgba(255, 255, 255, 0.08); }
+      .card-3 .bg-letter { color: rgba(13, 27, 62, 0.12); }
+
+      .icon-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 18px;
+        margin-bottom: 32px;
       }
 
-      .feature-icon svg {
-        width: 24px;
-        height: 24px;
-        color: var(--accent-cool);
+      .card-1 .icon-wrap { background: #0d1b3e; }
+      .card-2 .icon-wrap { background: rgba(255, 255, 255, 0.12); }
+      .card-3 .icon-wrap { background: rgba(13, 27, 62, 0.12); }
+
+      .icon-wrap svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
-      .feature-card h3 {
-        font-family: "Sora", sans-serif;
-        font-size: 1.05rem;
-        margin: 0 0 10px;
+      .card-1 .icon-wrap svg { stroke: #f5c842; }
+      .card-2 .icon-wrap svg { stroke: #f5c842; }
+      .card-3 .icon-wrap svg { stroke: #0d1b3e; }
+
+      .card-num {
+        font-family: "Syne", sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+        display: block;
       }
 
-      .feature-card p {
-        color: var(--muted);
+      .card-1 .card-num { color: rgba(13, 27, 62, 0.3); }
+      .card-2 .card-num { color: rgba(255, 255, 255, 0.35); }
+      .card-3 .card-num { color: rgba(13, 27, 62, 0.4); }
+
+      .card-title {
+        font-family: "Syne", sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 16px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .card-1 .card-title { color: #0d1b3e; }
+      .card-2 .card-title { color: #fff; }
+      .card-3 .card-title { color: #0d1b3e; }
+
+      .card-desc {
+        font-size: 14.5px;
+        line-height: 1.72;
+        font-weight: 400;
+        position: relative;
+        z-index: 1;
+      }
+
+      .card-1 .card-desc { color: #5a6480; }
+      .card-2 .card-desc { color: rgba(255, 255, 255, 0.6); }
+      .card-3 .card-desc { color: rgba(13, 27, 62, 0.65); }
+
+      .card-divider {
+        height: 1px;
+        margin: 28px 0 22px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .card-1 .card-divider { background: rgba(13, 27, 62, 0.08); }
+      .card-2 .card-divider { background: rgba(255, 255, 255, 0.1); }
+      .card-3 .card-divider { background: rgba(13, 27, 62, 0.12); }
+
+      .card-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: "Syne", sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-decoration: none;
+        position: relative;
+        z-index: 1;
+        transition: gap 0.3s ease;
+      }
+
+      .feature-card:hover .card-cta { gap: 14px; }
+
+      .card-1 .card-cta { color: #0d1b3e; }
+      .card-2 .card-cta { color: #f5c842; }
+      .card-3 .card-cta { color: #0d1b3e; }
+
+      .cta-arrow {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: transform 0.3s ease;
+      }
+
+      .feature-card:hover .cta-arrow { transform: translateX(3px); }
+
+      .card-1 .cta-arrow { background: #0d1b3e; }
+      .card-2 .cta-arrow { background: #f5c842; }
+      .card-3 .cta-arrow { background: #0d1b3e; }
+
+      .card-1 .cta-arrow svg { stroke: #fff; }
+      .card-2 .cta-arrow svg { stroke: #0d1b3e; }
+      .card-3 .cta-arrow svg { stroke: #f5c842; }
+
+      .cta-arrow svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      @keyframes rise {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 640px) {
+        .feature-card {
+          padding: 34px 26px 30px;
+        }
+
+        .bg-letter {
+          font-size: 88px;
+          bottom: -8px;
+        }
+      }
+
+      .card-desc {
         margin: 0;
       }
 
@@ -1595,36 +1769,47 @@
             </p>
           </div>
           <div class="features-grid">
-            <article class="feature-card">
-              <div class="feature-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
+            <div class="feature-card card-1">
+              <span class="bg-letter">MATH</span>
+              <div class="icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"></path>
                 </svg>
               </div>
-              <h3>MODEL-KEUZE ZONDER RUIS</h3>
-              <p>Krijg per taak advies welk model het best past: GPT voor lange copy, Gemini voor context, Grok voor snelheid.</p>
-            </article>
-            <article class="feature-card">
-              <div class="feature-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              <span class="card-num">01 — Model</span>
+              <h3 class="card-title">Model-keuze zonder ruis</h3>
+              <p class="card-desc">Krijg per taak advies welk model het best past: GPT voor lange copy, Gemini voor context, Grok voor snelheid.</p>
+              <div class="card-divider"></div>
+              <a class="card-cta" href="#"><span>Ontdek meer</span><span class="cta-arrow"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></a>
+            </div>
+
+            <div class="feature-card card-2">
+              <span class="bg-letter">IJS.</span>
+              <div class="icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
                 </svg>
               </div>
-              <h3>KANT-EN-KLARE WORKFLOWS</h3>
-              <p>Gebruik prompts en flows voor marketing, sales en operations. Pas ze aan in de chat en zet ze direct in je proces.</p>
-            </article>
-            <article class="feature-card">
-              <div class="feature-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polygon points="23 7 16 12 23 17 23 7" />
-                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+              <span class="card-num">02 — Workflow</span>
+              <h3 class="card-title">Kant-en-klare workflows</h3>
+              <p class="card-desc">Gebruik prompts en flows voor marketing, sales en operations. Pas ze aan in de chat en zet ze direct in je proces.</p>
+              <div class="card-divider"></div>
+              <a class="card-cta" href="#"><span>Ontdek meer</span><span class="cta-arrow"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></a>
+            </div>
+
+            <div class="feature-card card-3">
+              <span class="bg-letter">AI</span>
+              <div class="icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2"></rect>
                 </svg>
               </div>
-              <h3>BLIJF LEREN MET VIDEO</h3>
-              <p>Korte lessen die je direct kunt toepassen: van modelkeuze tot betere prompts, workflows en echte business-cases.</p>
-            </article>
+              <span class="card-num">03 — Video</span>
+              <h3 class="card-title">Blijf leren met video</h3>
+              <p class="card-desc">Korte lessen die je direct kunt toepassen: van modelkeuze tot betere prompts, workflows en echte business-cases.</p>
+              <div class="card-divider"></div>
+              <a class="card-cta" href="#"><span>Ontdek meer</span><span class="cta-arrow"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span></a>
+            </div>
           </div>
         </div>
       </section>
