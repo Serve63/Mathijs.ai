@@ -1033,7 +1033,7 @@
       }
 
       /* Team */
-      /* ── Continuous yellow band wrapping team + footer ── */
+      /* ── Blue band with warm-to-blue transition between team and footer ── */
       .team-footer-band {
         position: relative;
         background: #0D1840;
@@ -1055,7 +1055,14 @@
         right: 0;
         width: 48%;
         height: 100%;
-        background: linear-gradient(160deg, #F5C518 0%, #FFE066 100%);
+        background: linear-gradient(
+          165deg,
+          #F5C518 0%,
+          #FFE066 40%,
+          #d0b45f 60%,
+          #4a5785 82%,
+          #0D1840 100%
+        );
         clip-path: polygon(18% 0, 100% 0, 100% 100%, 0 100%);
         pointer-events: none;
         z-index: 0;
@@ -1268,7 +1275,18 @@
       }
 
       .site-footer::before {
-        display: none;
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: -140px;
+        height: 180px;
+        background: linear-gradient(
+          180deg,
+          rgba(245, 197, 24, 0.44) 0%,
+          rgba(245, 197, 24, 0.2) 34%,
+          rgba(13, 24, 64, 0) 78%
+        );
         pointer-events: none;
         z-index: 0;
       }
@@ -1441,6 +1459,17 @@
 
         .team-footer-band::before {
           display: none;
+        }
+
+        .site-footer::before {
+          top: -90px;
+          height: 120px;
+          background: linear-gradient(
+            180deg,
+            rgba(245, 197, 24, 0.3) 0%,
+            rgba(245, 197, 24, 0.12) 36%,
+            rgba(13, 24, 64, 0) 82%
+          );
         }
       }
 
