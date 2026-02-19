@@ -1463,6 +1463,58 @@
         align-self: center;
       }
 
+      .footer-media {
+        align-self: center;
+        justify-self: end;
+        width: 100%;
+        max-width: 460px;
+      }
+
+      .footer-photo {
+        position: relative;
+        background: #fdfdfd;
+        border-radius: 26px;
+        padding: 14px;
+        box-shadow: 0 30px 64px -40px rgba(0, 0, 0, 0.75);
+      }
+
+      .footer-photo::before {
+        content: "";
+        position: absolute;
+        inset: -10px;
+        border-radius: 32px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        pointer-events: none;
+      }
+
+      .footer-photo img {
+        width: 100%;
+        height: auto;
+        border-radius: 18px;
+        background: #0d1f3d;
+        display: block;
+      }
+
+      .footer-photo-badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: var(--accent);
+        color: #1a1600;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        padding: 7px 11px;
+        border-radius: 999px;
+      }
+
+      .footer-media-caption {
+        margin-top: 12px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.74);
+      }
+
       .footer-about-label {
         display: inline-flex;
         align-items: center;
@@ -1658,6 +1710,10 @@
         .footer-inner {
           grid-template-columns: 1fr;
         }
+
+        .footer-media {
+          justify-self: start;
+        }
       }
 
       @media (max-width: 820px) {
@@ -1737,6 +1793,10 @@
         .footer-inner {
           grid-template-columns: 1fr;
           gap: 22px;
+        }
+
+        .footer-media {
+          max-width: 100%;
         }
 
         .footer-about-points {
@@ -2089,6 +2149,22 @@
               <span>Team-implementatie</span>
             </li>
           </ul>
+        </div>
+
+        <div class="footer-media">
+          <div class="footer-photo">
+            <span class="footer-photo-badge">Team</span>
+            <img
+              src="assets/team-duo.svg"
+              alt="Twee jongens van het Mathijs.ai team"
+              width="900"
+              height="640"
+              loading="lazy"
+              decoding="async"
+              fetchpriority="low"
+            />
+          </div>
+          <p class="footer-media-caption">Direct contact, korte lijnen en begeleiding die je echt verder helpt.</p>
         </div>
 
         <div class="footer-meta">
