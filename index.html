@@ -1948,6 +1948,34 @@
 
       }
 
+      @media (max-width: 900px) {
+        .hero {
+          padding: 78px 24px 102px;
+        }
+
+        .hero-inner {
+          gap: 34px;
+        }
+
+        .section,
+        .pricing-section {
+          padding-left: 24px;
+          padding-right: 24px;
+        }
+
+        .cta-section {
+          margin-left: 24px;
+          margin-right: 24px;
+          padding-left: 24px;
+          padding-right: 24px;
+        }
+
+        .site-footer {
+          padding-left: 24px;
+          padding-right: 24px;
+        }
+      }
+
       @media (max-width: 820px) {
         .main-nav {
           display: none;
@@ -1981,10 +2009,14 @@
         }
 
         .header-actions {
+          width: 100%;
           gap: 12px;
+          justify-content: stretch;
         }
 
         .header-actions .btn {
+          flex: 1;
+          justify-content: center;
           padding: 11px 20px;
           font-size: 0.85rem;
           border-radius: 12px;
@@ -2011,6 +2043,38 @@
 
         .hero-kpis {
           flex-direction: column;
+        }
+
+        .hero h1 {
+          font-size: clamp(1.78rem, 8vw, 2.08rem);
+        }
+
+        .hero-subtitle {
+          font-size: 0.98rem;
+          margin-bottom: 22px;
+        }
+
+        .hero-kpi {
+          min-width: 0;
+          width: 100%;
+        }
+
+        .section-header {
+          margin-bottom: 38px;
+        }
+
+        .section-title {
+          font-size: clamp(1.45rem, 7.2vw, 1.9rem);
+        }
+
+        .features-grid,
+        .steps,
+        .testimonials-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .pc-card {
+          border-radius: 22px;
         }
 
         .hero-panel--video {
@@ -2058,6 +2122,38 @@
 
         .footer-about-points li {
           white-space: normal;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .hero {
+          padding: calc(64px + env(safe-area-inset-top)) 16px 82px;
+        }
+
+        .section,
+        .pricing-section {
+          padding: 42px 16px 58px;
+        }
+
+        .cta-section {
+          margin: 0 16px 32px;
+          padding: 44px 16px;
+          border-radius: 26px;
+        }
+
+        .site-footer {
+          padding: 24px 16px 28px;
+        }
+
+        .hero-scroll-cue {
+          width: 40px;
+          height: 40px;
+          top: 14px;
+        }
+
+        .footer-links-panel {
+          justify-self: start;
+          min-width: 0;
         }
       }
     </style>

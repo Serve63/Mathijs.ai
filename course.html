@@ -33,6 +33,7 @@
         background: var(--bg);
         color: var(--fg);
         font-family: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        overflow-x: hidden;
       }
 
       header {
@@ -605,6 +606,123 @@
         }
 
         /* back-link blijft links boven */
+      }
+
+      @media (max-width: 560px) {
+        header {
+          padding: 12px 14px;
+        }
+
+        .chat-link {
+          padding: 9px 13px;
+          border-radius: 10px;
+          font-size: 0.8rem;
+          gap: 6px;
+        }
+
+        .hero {
+          padding: calc(58px + env(safe-area-inset-top)) 16px 24px;
+        }
+
+        .hero h1 {
+          font-size: 1.58rem;
+        }
+
+        .hero-subtitle {
+          font-size: 0.92rem;
+          line-height: 1.5;
+          margin-bottom: 14px;
+        }
+
+        .hero-stats {
+          gap: 14px;
+        }
+
+        .hero-stat__value {
+          font-size: 1.2rem;
+        }
+
+        .hero-stat__label {
+          font-size: 0.78rem;
+        }
+
+        main {
+          padding: 24px 16px;
+          gap: 24px;
+        }
+
+        .section-title {
+          font-size: 1.2rem;
+        }
+
+        .section-filter {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .section-filter::-webkit-scrollbar {
+          display: none;
+        }
+
+        .filter-btn {
+          padding: 7px 13px;
+          font-size: 0.8rem;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+
+        .lesson-tile {
+          padding: 18px;
+          border-radius: 14px;
+        }
+
+        .lesson-title {
+          font-size: 1rem;
+        }
+
+        .lesson-meta {
+          font-size: 0.78rem;
+        }
+
+        .lesson-modal {
+          padding: 10px;
+        }
+
+        .lesson-modal__panel {
+          border-radius: 14px;
+        }
+
+        .lesson-modal__head {
+          padding: 12px;
+        }
+
+        .lesson-modal__body {
+          padding: 12px;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .hero {
+          padding-bottom: 20px;
+        }
+
+        .hero-badge {
+          font-size: 0.72rem;
+          padding: 7px 12px;
+        }
+
+        .chat-link {
+          font-size: 0.76rem;
+          padding: 8px 12px;
+        }
+
+        .chat-link svg {
+          width: 16px;
+          height: 16px;
+        }
       }
     </style>
       <link rel="stylesheet" href="assets/stability.css" />

@@ -40,7 +40,7 @@
       linear-gradient(180deg, var(--navy) 0%, var(--navy) 100%);
     position: relative;
     overflow: hidden;
-    padding: 72px 20px 42px;
+    padding: calc(72px + env(safe-area-inset-top)) 20px 42px;
   }
 
   .hero::before {
@@ -150,7 +150,7 @@
     width: 100%;
     max-width: 1240px;
     margin: 0 auto;
-    padding: 40px 20px 32px;
+    padding: 40px 20px calc(32px + env(safe-area-inset-bottom));
   }
 
   .grid {
@@ -214,6 +214,7 @@
     flex-direction: column;
     gap: 12px;
     animation: fadeUp 0.6s ease both;
+    min-height: 280px;
   }
 
   .card:nth-child(1) { animation-delay: 0.1s; }
@@ -342,9 +343,27 @@
     .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
+  @media (max-width: 900px) {
+    .hero {
+      padding-bottom: 34px;
+    }
+
+    .header {
+      margin: 28px 0 18px;
+    }
+
+    .app-main {
+      padding: 30px 16px calc(28px + env(safe-area-inset-bottom));
+    }
+
+    .coming-soon-list {
+      margin-top: 42px;
+    }
+  }
+
   @media (max-width: 560px) {
     .hero {
-      padding: 16px 16px 26px;
+      padding: calc(16px + env(safe-area-inset-top)) 16px 22px;
     }
 
     .hero-inner {
@@ -361,7 +380,26 @@
     }
 
     .app-main {
-      padding: 24px 16px 28px;
+      padding: 22px 16px calc(24px + env(safe-area-inset-bottom));
+    }
+
+    .card {
+      min-height: 0;
+      border-radius: 16px;
+      padding: 20px 16px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+    }
+
+    .card-desc {
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .coming-soon-list {
+      margin-top: 34px;
     }
 
     .grid { grid-template-columns: 1fr; }
