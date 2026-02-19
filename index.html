@@ -1059,7 +1059,6 @@
       }
 
       .feature-card::after,
-      .step::after,
       .testimonial-card::after,
       .section.dark::after {
         content: "";
@@ -1068,6 +1067,15 @@
         background:
           radial-gradient(460px 260px at 20% 12%, rgba(245, 197, 24, 0.18) 0%, transparent 62%),
           radial-gradient(420px 240px at 88% 92%, rgba(245, 197, 24, 0.09) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .step::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(420px 240px at 20% 12%, rgba(245, 197, 24, 0.16) 0%, transparent 64%);
         pointer-events: none;
         z-index: 0;
       }
