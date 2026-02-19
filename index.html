@@ -1088,6 +1088,21 @@
         position: relative;
         background: #0D1840;
         overflow: hidden;
+        isolation: isolate;
+      }
+
+      .team-footer-band::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 220px;
+        background:
+          radial-gradient(78% 140% at 88% 0%, rgba(245, 197, 24, 0.28) 0%, rgba(245, 197, 24, 0.12) 38%, rgba(13, 24, 64, 0) 72%),
+          linear-gradient(180deg, rgba(13, 24, 64, 0) 0%, rgba(13, 24, 64, 0.86) 78%, #0D1840 100%);
+        pointer-events: none;
+        z-index: 0;
       }
 
       .team-section {
@@ -1325,20 +1340,7 @@
       }
 
       .site-footer::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: -140px;
-        height: 180px;
-        background: linear-gradient(
-          180deg,
-          rgba(245, 197, 24, 0.44) 0%,
-          rgba(245, 197, 24, 0.2) 34%,
-          rgba(13, 24, 64, 0) 78%
-        );
-        pointer-events: none;
-        z-index: 0;
+        display: none;
       }
 
       .footer-inner {
@@ -1525,17 +1527,12 @@
         }
 
         .team-footer-band::before {
-          display: none;
-        }
-
-        .site-footer::before {
-          top: -90px;
-          height: 120px;
+          height: 150px;
           background: linear-gradient(
             180deg,
-            rgba(245, 197, 24, 0.3) 0%,
-            rgba(245, 197, 24, 0.12) 36%,
-            rgba(13, 24, 64, 0) 82%
+            rgba(13, 24, 64, 0) 0%,
+            rgba(13, 24, 64, 0.8) 76%,
+            #0D1840 100%
           );
         }
       }
