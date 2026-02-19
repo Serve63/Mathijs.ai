@@ -635,8 +635,8 @@
       .hero-scroll-cue {
         position: absolute;
         left: 50%;
-        bottom: -6px;
-        transform: translateX(-50%);
+        top: 0;
+        transform: translate(-50%, -50%);
         width: 50px;
         height: 50px;
         border-radius: 999px;
@@ -686,6 +686,11 @@
       .hero-scroll-cue:focus-visible {
         outline: 2px solid rgba(245, 197, 24, 0.96);
         outline-offset: 3px;
+      }
+
+      .section#features {
+        position: relative;
+        overflow: visible;
       }
 
       .trustpilot-widget {
@@ -1500,7 +1505,6 @@
         .hero-scroll-cue {
           width: 46px;
           height: 46px;
-          bottom: -4px;
         }
 
         .section.dark {
@@ -1584,7 +1588,6 @@
         .hero-scroll-cue {
           width: 42px;
           height: 42px;
-          bottom: -2px;
         }
 
         .hero-scroll-cue::before {
@@ -1754,15 +1757,15 @@
             </div>
           </div>
         </div>
-        <a href="#features" class="hero-scroll-cue" aria-label="Scroll naar volgende sectie">
+      </section>
+
+      <section class="section defer-render" id="features">
+        <a href="#features" class="hero-scroll-cue" aria-label="Scroll naar Waarom Mathijs.ai">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 6v12" />
             <path d="M7 13l5 5 5-5" />
           </svg>
         </a>
-      </section>
-
-      <section class="section defer-render" id="features">
         <div class="section-inner">
           <div class="section-header">
             <span class="section-eyebrow">Waarom Mathijs.ai</span>
