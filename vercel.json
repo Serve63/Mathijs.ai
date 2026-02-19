@@ -46,6 +46,10 @@
       "destination": "/course.html"
     },
     {
+      "source": "/app-store",
+      "destination": "/app-store.html"
+    },
+    {
       "source": "/chat",
       "destination": "/chat.html"
     },
