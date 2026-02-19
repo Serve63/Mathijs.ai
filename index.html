@@ -870,29 +870,19 @@
         transform: translateY(-6px);
       }
 
-      .card-1 {
-        background: #fffdf7;
-        border: 1.5px solid rgba(0, 0, 0, 0.07);
-        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.06);
-      }
-
-      .card-1:hover { box-shadow: 0 28px 60px rgba(13, 27, 62, 0.13); }
-
-      .card-2 {
-        background: #0d1b3e;
-        border: 1.5px solid transparent;
-        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
-      }
-
-      .card-2:hover { box-shadow: 0 28px 60px rgba(13, 27, 62, 0.35); }
-
+      .card-1,
+      .card-2,
       .card-3 {
         background: #f5c842;
         border: 1.5px solid transparent;
         box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
       }
 
-      .card-3:hover { box-shadow: 0 28px 60px rgba(245, 200, 66, 0.45); }
+      .card-1:hover,
+      .card-2:hover,
+      .card-3:hover {
+        box-shadow: 0 28px 60px rgba(245, 200, 66, 0.45);
+      }
 
       .icon-wrap {
         width: 48px;
@@ -904,8 +894,8 @@
         margin-bottom: 32px;
       }
 
-      .card-1 .icon-wrap { background: #0d1b3e; }
-      .card-2 .icon-wrap { background: rgba(255, 255, 255, 0.12); }
+      .card-1 .icon-wrap,
+      .card-2 .icon-wrap,
       .card-3 .icon-wrap { background: rgba(13, 27, 62, 0.12); }
 
       .icon-wrap svg {
@@ -917,8 +907,8 @@
         stroke-linejoin: round;
       }
 
-      .card-1 .icon-wrap svg { stroke: #f5c842; }
-      .card-2 .icon-wrap svg { stroke: #f5c842; }
+      .card-1 .icon-wrap svg,
+      .card-2 .icon-wrap svg,
       .card-3 .icon-wrap svg { stroke: #0d1b3e; }
 
       .card-num {
@@ -931,8 +921,8 @@
         display: block;
       }
 
-      .card-1 .card-num { color: rgba(13, 27, 62, 0.3); }
-      .card-2 .card-num { color: rgba(255, 255, 255, 0.35); }
+      .card-1 .card-num,
+      .card-2 .card-num,
       .card-3 .card-num { color: rgba(13, 27, 62, 0.4); }
 
       .card-title {
@@ -945,8 +935,8 @@
         z-index: 1;
       }
 
-      .card-1 .card-title { color: #0d1b3e; }
-      .card-2 .card-title { color: #fff; }
+      .card-1 .card-title,
+      .card-2 .card-title,
       .card-3 .card-title { color: #0d1b3e; }
 
       .card-desc {
@@ -957,8 +947,8 @@
         z-index: 1;
       }
 
-      .card-1 .card-desc { color: #5a6480; }
-      .card-2 .card-desc { color: rgba(255, 255, 255, 0.6); }
+      .card-1 .card-desc,
+      .card-2 .card-desc,
       .card-3 .card-desc { color: rgba(13, 27, 62, 0.65); }
 
       .card-divider {
@@ -968,8 +958,8 @@
         z-index: 1;
       }
 
-      .card-1 .card-divider { background: rgba(13, 27, 62, 0.08); }
-      .card-2 .card-divider { background: rgba(255, 255, 255, 0.1); }
+      .card-1 .card-divider,
+      .card-2 .card-divider,
       .card-3 .card-divider { background: rgba(13, 27, 62, 0.12); }
 
       .card-cta {
@@ -988,8 +978,8 @@
 
       .feature-card:hover .card-cta { gap: 14px; }
 
-      .card-1 .card-cta { color: #0d1b3e; }
-      .card-2 .card-cta { color: #f5c842; }
+      .card-1 .card-cta,
+      .card-2 .card-cta,
       .card-3 .card-cta { color: #0d1b3e; }
 
       .cta-arrow {
@@ -1005,12 +995,12 @@
 
       .feature-card:hover .cta-arrow { transform: translateX(3px); }
 
-      .card-1 .cta-arrow { background: #0d1b3e; }
-      .card-2 .cta-arrow { background: #f5c842; }
+      .card-1 .cta-arrow,
+      .card-2 .cta-arrow,
       .card-3 .cta-arrow { background: #0d1b3e; }
 
-      .card-1 .cta-arrow svg { stroke: #fff; }
-      .card-2 .cta-arrow svg { stroke: #0d1b3e; }
+      .card-1 .cta-arrow svg,
+      .card-2 .cta-arrow svg,
       .card-3 .cta-arrow svg { stroke: #f5c842; }
 
       .cta-arrow svg {
