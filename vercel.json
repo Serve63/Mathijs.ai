@@ -46,6 +46,10 @@
       "destination": "/course.html"
     },
     {
+      "source": "/agent",
+      "destination": "/agent.html"
+    },
+    {
       "source": "/app-store",
       "destination": "/app-store.html"
     },
