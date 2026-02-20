@@ -2012,6 +2012,9 @@
       const LEGACY_SESSION_ID = "__legacy_session__";
       const SESSION_LOADING_MESSAGE = "Chats laden...";
       const SESSION_EMPTY_MESSAGE = "Nog geen gesprekken. Start je eerste chat.";
+      const SESSION_INITIAL_VISIBLE_COUNT = 15;
+      const SESSION_LOAD_MORE_STEP = 10;
+      let visibleSessionCount = SESSION_INITIAL_VISIBLE_COUNT;
 
       const generateSessionId = () => {
         if (window.crypto && crypto.randomUUID) {
@@ -2057,6 +2060,19 @@
         if (actionsEl) actionsEl.remove();
       };
 
+      const ensureActiveSessionVisible = () => {
+        if (!sessionState.activeId) return;
+        const activeIndex = sessionState.list.findIndex((session) => session.id === sessionState.activeId);
+        if (activeIndex >= 0 && activeIndex + 1 > visibleSessionCount) {
+          visibleSessionCount = activeIndex + 1;
+        }
+      };
+
+      const loadMoreSessions = () => {
+        visibleSessionCount = Math.min(visibleSessionCount + SESSION_LOAD_MORE_STEP, sessionState.list.length);
+        renderSessionList();
+      };
+
       const renderSessionList = () => {
         if (!sessionListEl) return;
         sessionListEl.innerHTML = "";
@@ -2071,9 +2087,11 @@
         if (sessionEmptyEl) {
           sessionEmptyEl.style.display = "none";
         }
+        ensureActiveSessionVisible();
+        const visibleSessions = sessionState.list.slice(0, Math.max(visibleSessionCount, SESSION_INITIAL_VISIBLE_COUNT));
         // Verwijder de actieknoppen als er sessies zijn
         removeSessionEmptyActions();
-        sessionState.list.forEach((session) => {
+        visibleSessions.forEach((session) => {
           const row = document.createElement("div");
           row.className = `session-row${session.id === sessionState.activeId ? " is-active" : ""}`;
           row.setAttribute("data-session-id", session.id);
@@ -2198,6 +2216,23 @@
           row.appendChild(actions);
           sessionListEl.appendChild(row);
         });
+
+        const remaining = sessionState.list.length - visibleSessions.length;
+        if (remaining > 0) {
+          const loadMoreWrap = document.createElement("div");
+          loadMoreWrap.className = "session-load-more-wrap";
+
+          const loadMoreBtn = document.createElement("button");
+          loadMoreBtn.type = "button";
+          loadMoreBtn.className = "session-load-more-btn";
+          const increment = Math.min(SESSION_LOAD_MORE_STEP, remaining);
+          loadMoreBtn.textContent = `Laad ${increment} extra gesprekken`;
+          loadMoreBtn.setAttribute("aria-label", `Laad ${increment} extra gesprekken`);
+          loadMoreBtn.addEventListener("click", loadMoreSessions);
+
+          loadMoreWrap.appendChild(loadMoreBtn);
+          sessionListEl.appendChild(loadMoreWrap);
+        }
       };
 
       const bumpSessionToTop = (sessionId) => {
