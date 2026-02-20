@@ -4037,6 +4037,7 @@
         bindCurrentModelToSession(sessionId);
         appendMessage(value, "user");
         chatInput.value = "";
+        chatInput.style.height = "";
         chatInput.focus();
         const userSavePromise = saveMessageToApi(sessionId, "user", value, provider).then((save) => {
           if (!save.ok) {
@@ -4130,6 +4131,10 @@
             event.preventDefault();
             sendMessage();
           }
+        });
+        chatInput.addEventListener("input", () => {
+          chatInput.style.height = "auto";
+          chatInput.style.height = Math.min(chatInput.scrollHeight, 180) + "px";
         });
       }
 
