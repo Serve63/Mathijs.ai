@@ -1,5 +1,38 @@
 (() => {
+  const SUPABASE_URL = "https://mengrlsqgshxqcxhirjn.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_PeVTrMXz6UaeMhkPn5Fs-Q_xfJFVRNt";
+
+  const bindLogoutButton = () => {
+    const logoutBtn = document.getElementById("course-logout-btn");
+    if (!logoutBtn) return;
+
+    logoutBtn.addEventListener("click", async (event) => {
+      event.preventDefault();
+      try {
+        if (window.supabase?.createClient) {
+          const client = window.mathijsSupabase
+            || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+              auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+            });
+          window.mathijsSupabase = client;
+          await client.auth.signOut();
+        }
+      } catch (error) {
+        console.warn("Uitloggen via Supabase mislukt", error);
+      } finally {
+        try {
+          const ref = new URL(SUPABASE_URL).hostname.split(".")[0];
+          localStorage.removeItem(`sb-${ref}-auth-token`);
+        } catch (_) {
+          // no-op
+        }
+        window.location.replace("/login");
+      }
+    });
+  };
+
   const init = async () => {
+    bindLogoutButton();
     const data = await window.CourseData?.load?.();
     if (!data) return;
 
