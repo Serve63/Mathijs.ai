@@ -33,6 +33,165 @@
     overflow-x: hidden;
   }
 
+  body.route-loading {
+    overflow: hidden;
+  }
+
+  .tool-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(180deg, #0D1840 0%, #12122A 100%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.24s ease, visibility 0.24s ease;
+  }
+
+  .tool-loader.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .tool-loader::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(245, 197, 24, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245, 197, 24, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .tool-loader__orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    animation: toolLoaderFloat 8s ease-in-out infinite;
+  }
+
+  .tool-loader__orb--1 {
+    width: 400px;
+    height: 400px;
+    top: -10%;
+    right: -5%;
+    background: radial-gradient(circle, rgba(245, 197, 24, 0.12), transparent 70%);
+  }
+
+  .tool-loader__orb--2 {
+    width: 300px;
+    height: 300px;
+    bottom: -5%;
+    left: -5%;
+    background: radial-gradient(circle, rgba(45, 45, 80, 0.26), transparent 70%);
+    animation-delay: -3s;
+  }
+
+  .tool-loader__orb--3 {
+    width: 220px;
+    height: 220px;
+    right: 20%;
+    bottom: 30%;
+    background: radial-gradient(circle, rgba(245, 197, 24, 0.08), transparent 70%);
+    animation-delay: -5s;
+  }
+
+  .tool-loader__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 34px;
+    animation: toolLoaderFadeIn 0.5s ease-out;
+  }
+
+  .tool-loader__logo {
+    display: inline-flex;
+    align-items: baseline;
+    font-family: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+    font-weight: 700;
+    font-size: clamp(38px, 6vw, 52px);
+    letter-spacing: -0.02em;
+    color: #f8f9fc;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .tool-loader__logo-dot,
+  .tool-loader__logo-ai {
+    color: #f5c518;
+  }
+
+  .tool-loader__spinner-wrap {
+    position: relative;
+    width: 64px;
+    height: 64px;
+  }
+
+  .tool-loader__spinner-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2.5px solid rgba(245, 197, 24, 0.08);
+  }
+
+  .tool-loader__spinner {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2.5px solid transparent;
+    border-top-color: #f5c518;
+    border-right-color: #f5c518;
+    animation: toolLoaderSpin 1.2s cubic-bezier(0.5, 0.15, 0.35, 0.85) infinite;
+  }
+
+  .tool-loader__spinner-inner {
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-bottom-color: #2d2d50;
+    border-left-color: #2d2d50;
+    animation: toolLoaderSpin 1.8s cubic-bezier(0.5, 0.15, 0.35, 0.85) infinite reverse;
+  }
+
+  .tool-loader__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: rgba(248, 249, 252, 0.55);
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .tool-loader__dots {
+    display: inline-flex;
+    gap: 5px;
+  }
+
+  .tool-loader__dots span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #f5c518;
+    animation: toolLoaderDotBounce 1.4s ease-in-out infinite;
+  }
+
+  .tool-loader__dots span:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+
+  .tool-loader__dots span:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
   .hero {
     background:
       radial-gradient(1200px 560px at 22% 12%, rgba(245, 197, 24, 0.18) 0%, rgba(245, 197, 24, 0.08) 28%, transparent 62%),
@@ -352,6 +511,26 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  @keyframes toolLoaderFadeIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes toolLoaderFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(18px, -14px) scale(1.05); }
+    66% { transform: translate(-10px, 10px) scale(0.95); }
+  }
+
+  @keyframes toolLoaderSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes toolLoaderDotBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
   @media (max-width: 1100px) {
     .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
@@ -443,6 +622,26 @@
 </head>
 <body>
 
+<div class="tool-loader" id="tool-route-loader" aria-hidden="true">
+  <div class="tool-loader__orb tool-loader__orb--1" aria-hidden="true"></div>
+  <div class="tool-loader__orb tool-loader__orb--2" aria-hidden="true"></div>
+  <div class="tool-loader__orb tool-loader__orb--3" aria-hidden="true"></div>
+  <div class="tool-loader__content">
+    <div class="tool-loader__logo">
+      <span>MATHIJS</span><span class="tool-loader__logo-dot">.</span><span class="tool-loader__logo-ai">AI</span>
+    </div>
+    <div class="tool-loader__spinner-wrap" aria-hidden="true">
+      <div class="tool-loader__spinner-track"></div>
+      <div class="tool-loader__spinner"></div>
+      <div class="tool-loader__spinner-inner"></div>
+    </div>
+    <div class="tool-loader__status" role="status" aria-live="polite">
+      <span>Laden</span>
+      <span class="tool-loader__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+    </div>
+  </div>
+</div>
+
 <section class="hero">
   <div class="hero-inner">
     <a class="back-btn" href="/course" aria-label="Terug naar cursus">← Terug</a>
@@ -510,6 +709,42 @@
 
 </div>
 </main>
+
+<script>
+(() => {
+  const loader = document.getElementById("tool-route-loader");
+  if (!loader) return;
+
+  const toolCards = Array.from(document.querySelectorAll(".grid .card[href]"));
+  let isNavigating = false;
+
+  const showLoader = () => {
+    loader.classList.add("is-visible");
+    loader.setAttribute("aria-hidden", "false");
+    document.body.classList.add("route-loading");
+  };
+
+  const navigateWithLoader = (url) => {
+    if (isNavigating) return;
+    isNavigating = true;
+    showLoader();
+    window.setTimeout(() => {
+      window.location.href = url;
+    }, 780);
+  };
+
+  toolCards.forEach((card) => {
+    card.addEventListener("click", (event) => {
+      if (event.defaultPrevented) return;
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const href = card.getAttribute("href");
+      if (!href) return;
+      event.preventDefault();
+      navigateWithLoader(new URL(href, window.location.href).href);
+    });
+  });
+})();
+</script>
 
 </body>
 </html>
