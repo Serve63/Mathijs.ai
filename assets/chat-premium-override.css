@@ -1342,13 +1342,13 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 
 .chat-content-wrapper {
   padding-top: 94px;
-  padding-bottom: 252px;
+  padding-bottom: 18px;
   background: transparent;
 }
 
 .chat-log {
   width: min(860px, 100%);
-  padding: 18px 22px 236px;
+  padding: 18px 22px 28px;
   gap: 14px;
 }
 
@@ -1433,12 +1433,12 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 }
 
 .chat-footer {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 12px;
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
   width: min(760px, calc(100% - 36px));
-  margin: 0 auto;
+  margin: 0 auto 12px;
   background: transparent;
   padding: 0;
   gap: 10px;
@@ -1446,7 +1446,7 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  z-index: 38;
+  z-index: 6;
 }
 
 .chat-bottom-spacer {
