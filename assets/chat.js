@@ -631,13 +631,13 @@
         let message = `${categoryLabel} ${value} is nog niet gekoppeld.`;
         if (connected) {
           if (provider === "gemini") {
-            message = `${categoryLabel} ${value} is verbonden via Gemini.`;
+            message = `${categoryLabel} ${value} is nu verbonden via Gemini.`;
           } else if (provider === "grok") {
-            message = `${categoryLabel} ${value} is verbonden via Grok.`;
+            message = `${categoryLabel} ${value} is nu verbonden via Grok.`;
           } else if (provider === "anthropic") {
-            message = `${categoryLabel} ${value} is verbonden via Claude.`;
+            message = `${categoryLabel} ${value} is nu verbonden via Claude.`;
           } else {
-            message = `${categoryLabel} ${value} is verbonden via OpenAI.`;
+            message = `${categoryLabel} ${value} is nu verbonden via OpenAI.`;
           }
         } else if (provider === "gemini") {
           message = `${categoryLabel} ${value} is nog niet gekoppeld. Voeg GEMINI_API_KEY toe om Gemini te gebruiken.`;
@@ -1001,7 +1001,7 @@
             event.stopPropagation();
             closeModelPicker();
             modelPickerTrigger?.focus();
-            void selectModelByIndex(idx, { silent: true, switchSession: false }).catch((error) => {
+            void selectModelByIndex(idx, { silent: false, switchSession: false }).catch((error) => {
               console.error("Model select failed", error);
             });
           });
@@ -1078,7 +1078,7 @@
             if (idx >= 0) {
               closeModelPicker();
               modelPickerTrigger?.focus();
-              void selectModelByIndex(idx, { silent: true, switchSession: false }).catch((error) => {
+              void selectModelByIndex(idx, { silent: false, switchSession: false }).catch((error) => {
                 console.error("Model select failed", error);
               });
             }
