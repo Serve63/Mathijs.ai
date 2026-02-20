@@ -851,9 +851,9 @@ body {
 }
 
 .chat-header {
-  height: 56px;
-  min-height: 56px;
-  padding: 0 20px;
+  height: auto;
+  min-height: 72px;
+  padding: 10px 20px 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -875,6 +875,7 @@ body {
   width: 100%;
   display: flex;
   justify-content: center;
+  padding-top: 2px;
 }
 
 .main-sidebar-toggle,
@@ -937,9 +938,10 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 
 .model-picker {
   position: relative;
-  width: 280px;
+  width: 272px;
   max-width: min(100vw - 340px, 320px);
   z-index: 30;
+  margin-top: 2px;
 }
 
 .model-picker.is-locked .model-picker__option:not(.is-selected):not(.selected) {
@@ -976,13 +978,13 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 14px;
-  border: 1px solid rgba(15, 25, 58, 0.16);
-  background: rgba(250, 249, 245, 0.9);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
+  gap: 9px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 25, 58, 0.12);
+  background: rgba(250, 249, 245, 0.84);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: rgba(13, 24, 64, 0.9);
   cursor: pointer;
   outline: none;
@@ -1001,24 +1003,24 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 }
 
 .model-picker__trigger:hover {
-  border-color: rgba(245, 197, 24, 0.38);
-  background: rgba(253, 252, 249, 0.97);
-  box-shadow: 0 16px 34px -26px rgba(13, 24, 64, 0.48), 0 0 22px var(--picker-glow, rgba(245, 197, 24, 0.16));
+  border-color: rgba(245, 197, 24, 0.28);
+  background: rgba(253, 252, 249, 0.93);
+  box-shadow: 0 10px 24px -20px rgba(13, 24, 64, 0.38), 0 0 12px var(--picker-glow, rgba(245, 197, 24, 0.12));
 }
 
 .model-picker__trigger:focus-visible {
   outline: none;
-  border-color: rgba(245, 197, 24, 0.52);
-  box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.18), 0 16px 34px -26px rgba(13, 24, 64, 0.48);
+  border-color: rgba(245, 197, 24, 0.44);
+  box-shadow: 0 0 0 2px rgba(245, 197, 24, 0.14), 0 10px 24px -20px rgba(13, 24, 64, 0.34);
 }
 
 .model-picker__trigger[aria-expanded="true"],
 .model-picker.is-open .model-picker__trigger {
-  border-color: rgba(245, 197, 24, 0.35);
+  border-color: rgba(245, 197, 24, 0.28);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
-  background: rgba(251, 250, 246, 0.98);
-  box-shadow: 0 0 26px var(--picker-glow, rgba(245, 197, 24, 0.16));
+  background: rgba(251, 250, 246, 0.94);
+  box-shadow: 0 8px 20px -18px rgba(13, 24, 64, 0.4);
 }
 
 .model-picker__label {
@@ -1030,15 +1032,15 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 }
 
 .trigger-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
   background: linear-gradient(135deg, #f5c518 0%, #e0a800 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 0 10px rgba(245, 197, 24, 0.34);
+  box-shadow: 0 0 8px rgba(245, 197, 24, 0.24);
   color: #0d1840;
 }
 
@@ -1055,7 +1057,7 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 }
 
 .trigger-name {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   color: rgba(13, 24, 64, 0.92);
   white-space: nowrap;
@@ -1065,7 +1067,7 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 }
 
 .trigger-sub {
-  font-size: 10.5px;
+  font-size: 10px;
   font-family: "Space Grotesk", "Plus Jakarta Sans", system-ui, sans-serif;
   font-weight: 500;
   color: rgba(13, 24, 64, 0.48);
