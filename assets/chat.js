@@ -653,11 +653,11 @@
       const getModelIndexByLabel = (label) =>
         modelSwipeItems.findIndex((item) => (item.getAttribute("data-model") || "").trim() === String(label || "").trim());
 
-      const MODEL_SWITCH_LOCK_MESSAGE = "Model wisselen kan alleen voordat je eerste bericht is verstuurd.";
+      const MODEL_SWITCH_LOCK_MESSAGE = "Model wisselen is tijdelijk niet beschikbaar.";
       let lastModelSwitchLockNoticeAt = 0;
 
       function isModelSwitchLocked() {
-        return !isActiveSessionEmpty();
+        return false;
       }
 
       const notifyModelSwitchLocked = () => {
@@ -957,7 +957,7 @@
         if (!modelSwipeItems.length) return;
         const nextIndex = normalizeModelIndex(activeModelIndex + delta);
         if (nextIndex === activeModelIndex) return;
-        const changed = await selectModelByIndex(nextIndex, { silent: true, switchSession: true });
+        const changed = await selectModelByIndex(nextIndex, { silent: true, switchSession: false });
         if (changed === false) {
           notifyModelSwitchLocked();
         }
@@ -993,7 +993,7 @@
             event.stopPropagation();
             closeModelPicker();
             modelPickerTrigger?.focus();
-            void selectModelByIndex(idx, { silent: true, switchSession: true }).catch((error) => {
+            void selectModelByIndex(idx, { silent: true, switchSession: false }).catch((error) => {
               console.error("Model select failed", error);
             });
           });
@@ -1070,7 +1070,7 @@
             if (idx >= 0) {
               closeModelPicker();
               modelPickerTrigger?.focus();
-              void selectModelByIndex(idx, { silent: true, switchSession: true }).catch((error) => {
+              void selectModelByIndex(idx, { silent: true, switchSession: false }).catch((error) => {
                 console.error("Model select failed", error);
               });
             }
