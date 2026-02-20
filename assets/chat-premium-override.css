@@ -802,10 +802,12 @@ body {
   border-radius: 0;
   padding: 6px 2px 4px;
   gap: 10px;
+  transition: none;
 }
 
 .profile:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: transparent;
+  border-color: transparent;
 }
 
 .profile-avatar {
