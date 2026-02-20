@@ -1438,7 +1438,7 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   right: auto;
   bottom: auto;
   width: min(760px, calc(100% - 36px));
-  margin: 0 auto 12px;
+  margin: 18px auto 12px;
   background: transparent;
   padding: 0;
   gap: 10px;
