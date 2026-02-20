@@ -1025,6 +1025,9 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   position: relative;
   overflow: hidden;
+  box-shadow:
+    0 10px 24px -22px rgba(13, 24, 64, 0.5),
+    0 2px 7px -5px rgba(13, 24, 64, 0.32);
 }
 
 .model-picker__trigger::before {
@@ -1054,7 +1057,9 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   background: rgba(251, 250, 246, 0.94);
-  box-shadow: 0 8px 20px -18px rgba(13, 24, 64, 0.4);
+  box-shadow:
+    0 10px 24px -16px rgba(13, 24, 64, 0.34),
+    0 0 12px var(--picker-glow, rgba(245, 197, 24, 0.1));
 }
 
 .model-picker__label {
