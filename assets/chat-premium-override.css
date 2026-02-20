@@ -1437,7 +1437,7 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   left: 0;
   right: 0;
   bottom: 12px;
-  width: min(940px, calc(100% - 28px));
+  width: min(760px, calc(100% - 36px));
   margin: 0 auto;
   background: transparent;
   padding: 0;
@@ -1455,7 +1455,7 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 }
 
 .chat-input {
-  width: min(820px, 100%);
+  width: min(700px, 100%);
   background: rgba(255, 255, 255, 0.52);
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 26px;
@@ -1513,7 +1513,7 @@ body.sidebar-collapsed .sidebar-expand-toggle {
 
 .chat-input__inner {
   max-width: 100%;
-  min-height: 64px;
+  min-height: 58px;
   align-items: flex-end;
   gap: 7px;
   padding: 12px 12px 12px 10px;
