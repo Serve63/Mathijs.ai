@@ -510,6 +510,10 @@
         chatPlusMenu.classList.remove("is-open");
         chatPlusMenu.style.removeProperty("display");
         chatPlus.setAttribute("aria-expanded", "false");
+        if (chatPlusTrigger) {
+          chatPlusTrigger.textContent = "+";
+          chatPlusTrigger.setAttribute("aria-label", "Meer opties");
+        }
       };
 
       const openChatPlusMenu = () => {
@@ -517,6 +521,10 @@
         chatPlusMenu.classList.add("is-open");
         chatPlusMenu.style.removeProperty("display");
         chatPlus.setAttribute("aria-expanded", "true");
+        if (chatPlusTrigger) {
+          chatPlusTrigger.textContent = "×";
+          chatPlusTrigger.setAttribute("aria-label", "Meer opties sluiten");
+        }
         requestAnimationFrame(adjustChatPlusMenuPosition);
       };
 
