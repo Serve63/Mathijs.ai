@@ -1000,10 +1000,6 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   --picker-glow: rgba(159, 125, 255, 0.24);
 }
 
-.model-picker[data-provider="qwen"] {
-  --picker-glow: rgba(255, 122, 106, 0.22);
-}
-
 .model-picker[data-provider="deepseekv2"] {
   --picker-glow: rgba(120, 176, 255, 0.24);
 }

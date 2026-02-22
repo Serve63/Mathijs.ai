@@ -245,8 +245,6 @@
           photoInfoText = `Foto model: Imagen 3\nLaatste update: ${TOOLTIP_UPDATE_DATE}`;
         } else if (selectedModel === "grok4") {
           photoInfoText = `Foto model: grok-2-image\nLaatste update: ${TOOLTIP_UPDATE_DATE}`;
-        } else if (selectedModel === "qwen") {
-          photoInfoText = `Foto model: qwen-image-plus\nLaatste update: ${TOOLTIP_UPDATE_DATE}`;
         }
         if (actionGeneratePhotoLabel) {
           actionGeneratePhotoLabel.textContent = "Foto maken";
@@ -263,8 +261,6 @@
           videoInfoText = "Veo 3.1";
         } else if (selectedModel === "chatgpt52") {
           videoInfoText = "Sora 1";
-        } else if (selectedModel === "qwen") {
-          videoInfoText = "wan2.6-t2v";
         }
         actionGenerateVideoLabel.textContent = "Video maken";
         const videoTooltip = videoInfoText
@@ -283,12 +279,11 @@
           const showPhoto =
             selectedModel === "chatgpt52" ||
             selectedModel === "gemini3" ||
-            selectedModel === "grok4" ||
-            selectedModel === "qwen";
+            selectedModel === "grok4";
           actionGeneratePhoto.style.display = showPhoto ? "flex" : "none";
         }
         if (actionGenerateVideo) {
-          const showVideo = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "qwen";
+          const showVideo = selectedModel === "chatgpt52" || selectedModel === "gemini3";
           actionGenerateVideo.style.display = showVideo ? "flex" : "none";
         }
         if (chatPlus) {
@@ -384,7 +379,6 @@
         sonnet45: "anthropic",
         haiku45: "anthropic",
         gemini3: "gemini",
-        qwen: "qwen",
         deepseekv2: "deepseek",
         grok4: "grok",
       };
@@ -410,7 +404,6 @@
         if (safeLabel.startsWith("Sonnet 4.5")) return "sonnet45";
         if (safeLabel.startsWith("Haiku 4.5")) return "haiku45";
         if (safeLabel.startsWith("Gemini 3")) return "gemini3";
-        if (safeLabel.startsWith("Qwen3-MAX")) return "qwen";
         if (safeLabel.startsWith("DeepSeek V2")) return "deepseekv2";
         if (safeLabel.startsWith("Grok 4")) return "grok4";
         return "chatgpt52";
@@ -424,7 +417,6 @@
         "Opus 4.5": "Anthropic · Powerful",
         "Sonnet 4.5": "Anthropic · Fast",
         "Haiku 4.5": "Anthropic · Lite",
-        "Qwen3-MAX": "Alibaba · Max",
         "DeepSeek V2": "DeepSeek · Research",
       };
 
