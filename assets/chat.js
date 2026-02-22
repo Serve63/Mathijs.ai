@@ -4131,6 +4131,7 @@
               model: selectedApiModel,
               model_key: selectedModel,
               model_label: selectedModelLabel,
+              web_search: webSearchEnabled,
               messages: requestMessages,
             }),
           });

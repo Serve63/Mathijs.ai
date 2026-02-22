@@ -707,10 +707,13 @@ function extractGeminiUsage(payload) {
   };
 }
 
-async function geminiGenerateViaRest({ apiKey, model, prompt }) {
+async function geminiGenerateViaRest({ apiKey, model, prompt, webSearch = false }) {
   const body = {
     contents: [{ role: "user", parts: [{ text: prompt }] }],
   };
+  if (webSearch) {
+    body.tools = [{ google_search: {} }];
+  }
 
   const versions = ["v1", "v1beta"];
   let lastErr = null;
@@ -775,31 +778,35 @@ async function listGeminiModels(apiKey) {
   return [];
 }
 
-async function runGeminiChat({ apiKey, model, messages }) {
+async function runGeminiChat({ apiKey, model, messages, webSearch = false }) {
   const prompt = buildGeminiPrompt(messages);
 
   try {
-    // First try the requested model (mapped). If it fails with 404-like errors, list available models and try those.
-    const candidates = [model, "gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"].filter(Boolean);
+    // Try requested capabilities first; if search tooling is rejected, retry once without it.
+    const searchModes = webSearch ? [true, false] : [false];
     let lastError = null;
-    for (const candidateModel of candidates) {
-      try {
-        const result = await geminiGenerateViaRest({ apiKey, model: candidateModel, prompt });
-        return { text: result?.text || "", usage: result?.usage || null, modelUsed: candidateModel };
-      } catch (e) {
-        lastError = e;
+    for (const useWebSearch of searchModes) {
+      // First try the requested model (mapped). If it fails with 404-like errors, list available models and try those.
+      const candidates = [model, "gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"].filter(Boolean);
+      for (const candidateModel of candidates) {
+        try {
+          const result = await geminiGenerateViaRest({ apiKey, model: candidateModel, prompt, webSearch: useWebSearch });
+          return { text: result?.text || "", usage: result?.usage || null, modelUsed: candidateModel };
+        } catch (e) {
+          lastError = e;
+        }
       }
-    }
 
-    // If all candidates failed, list available models and try the first one
-    console.log("[gemini] All hardcoded models failed. Listing available models...");
-    const availableModels = await listGeminiModels(apiKey);
-    console.log(`[gemini] Available models: ${availableModels.join(", ") || "none"}`);
-    if (availableModels.length) {
-      const firstAvailable = availableModels[0];
-      console.log(`[gemini] Trying first available model: ${firstAvailable}`);
-      const result = await geminiGenerateViaRest({ apiKey, model: firstAvailable, prompt });
-      return { text: result?.text || "", usage: result?.usage || null, modelUsed: firstAvailable };
+      // If all candidates failed, list available models and try the first one
+      console.log("[gemini] All hardcoded models failed. Listing available models...");
+      const availableModels = await listGeminiModels(apiKey);
+      console.log(`[gemini] Available models: ${availableModels.join(", ") || "none"}`);
+      if (availableModels.length) {
+        const firstAvailable = availableModels[0];
+        console.log(`[gemini] Trying first available model: ${firstAvailable}`);
+        const result = await geminiGenerateViaRest({ apiKey, model: firstAvailable, prompt, webSearch: useWebSearch });
+        return { text: result?.text || "", usage: result?.usage || null, modelUsed: firstAvailable };
+      }
     }
 
     throw lastError || new Error("gemini_rest_failed");
@@ -837,11 +844,11 @@ function extractGrokUsage(payload) {
   };
 }
 
-async function runGrokChat({ apiKey, model, messages }) {
+async function runGrokChat({ apiKey, model, messages, webSearch = false }) {
   try {
     // Grok API uses standard chat completions format (similar to OpenAI)
     const url = "https://api.x.ai/v1/chat/completions";
-    
+
     // Convert messages to Grok format (developer role becomes system). Grok expects string content.
     const grokMessages = messages.map((msg) => {
       const content = typeof msg.content === "string" ? msg.content : normalizeContent(msg.content);
@@ -851,23 +858,33 @@ async function runGrokChat({ apiKey, model, messages }) {
       return { role: msg.role, content };
     });
 
-    const body = {
-      model: model,
-      messages: grokMessages,
-    };
+    const searchModes = webSearch ? [true, false] : [false];
+    let payload = null;
+    let lastError = null;
+    for (const useWebSearch of searchModes) {
+      const body = {
+        model: model,
+        messages: grokMessages,
+      };
+      if (useWebSearch) {
+        body.tools = [{ type: "web_search" }];
+      }
 
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(body),
-    });
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(body),
+      });
 
-    const payload = await resp.json().catch(() => ({}));
-    
-    if (!resp.ok) {
+      payload = await resp.json().catch(() => ({}));
+      if (resp.ok) {
+        lastError = null;
+        break;
+      }
+
       const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
       const errorType = payload?.error?.type || payload?.type || "";
       console.error(`[grok] API error (model: ${model}, status: ${resp.status}):`, msg);
@@ -875,7 +892,7 @@ async function runGrokChat({ apiKey, model, messages }) {
       if (payload?.error) {
         console.error(`[grok] Full error payload:`, JSON.stringify(payload.error, null, 2));
       }
-      
+
       // Provide more specific error messages for common issues
       let errorMessage = msg;
       if (resp.status === 403) {
@@ -891,11 +908,14 @@ async function runGrokChat({ apiKey, model, messages }) {
       } else if (resp.status === 400) {
         errorMessage = `400 Bad Request: ${msg}. Controleer of het model '${model}' beschikbaar is.`;
       }
-      
+
       const err = new Error(errorMessage);
       err.status = resp.status;
       err.payload = payload;
-      throw err;
+      lastError = err;
+    }
+    if (lastError) {
+      throw lastError;
     }
 
     return {
@@ -991,7 +1011,7 @@ function extractClaudeUsage(payload) {
   };
 }
 
-async function runClaudeChat({ apiKey, model, messages }) {
+async function runClaudeChat({ apiKey, model, messages, webSearch = false }) {
   try {
     const { system, messages: claudeMessages } = buildClaudeRequest(messages);
     if (!claudeMessages.length) {
@@ -1005,23 +1025,41 @@ async function runClaudeChat({ apiKey, model, messages }) {
     };
     if (system) body.system = system;
 
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify(body),
-    });
+    const searchModes = webSearch ? [true, false] : [false];
+    let payload = null;
+    let lastError = null;
+    for (const useWebSearch of searchModes) {
+      const requestBody = { ...body };
+      if (useWebSearch) {
+        requestBody.tools = [{ type: "web_search_20250305", name: "web_search" }];
+      } else {
+        delete requestBody.tools;
+      }
 
-    const payload = await resp.json().catch(() => ({}));
-    if (!resp.ok) {
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          ...(useWebSearch ? { "anthropic-beta": "web-search-2025-03-05" } : {}),
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      payload = await resp.json().catch(() => ({}));
+      if (resp.ok) {
+        lastError = null;
+        break;
+      }
       const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
       const err = new Error(sanitizeProviderErrorMessage(msg));
       err.status = resp.status;
       err.payload = payload;
-      throw err;
+      lastError = err;
+    }
+    if (lastError) {
+      throw lastError;
     }
 
     return {
@@ -1071,6 +1109,7 @@ module.exports = async function handler(req, res) {
     }
 
     const { messages, model, provider } = body || {};
+    const webSearchRequested = Boolean(body?.web_search || body?.webSearch);
     const modelKey =
       typeof body?.model_key === "string"
         ? body.model_key
@@ -1097,6 +1136,12 @@ module.exports = async function handler(req, res) {
             : "openai");
 
     const requestedModel = typeof model === "string" ? model : "";
+    const webSearchEnabled =
+      webSearchRequested &&
+      (inferredProvider === "openai" ||
+        inferredProvider === "gemini" ||
+        inferredProvider === "grok" ||
+        inferredProvider === "anthropic");
     const resolvedOpenAIModel = inferredProvider === "openai" ? resolveOpenAIModel(requestedModel) : null;
     const resolvedGeminiModel = inferredProvider === "gemini" ? resolveGeminiModel(requestedModel) : null;
     const resolvedGrokModel = inferredProvider === "grok" ? resolveGrokModel(requestedModel) : null;
@@ -1251,7 +1296,12 @@ module.exports = async function handler(req, res) {
           return json(res, 500, { error: "Invalid GEMINI_API_KEY format. API key should start with 'AIza'" });
         }
         console.log(`[gemini] Using model: ${geminiModel}, messages: ${normalizedMessages.length}`);
-        const result = await runGeminiChat({ apiKey, model: geminiModel, messages: normalizedMessages });
+        const result = await runGeminiChat({
+          apiKey,
+          model: geminiModel,
+          messages: normalizedMessages,
+          webSearch: webSearchEnabled,
+        });
         const usageTokens = Number(result?.usage?.totalTokens || 0);
         const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
         const usedModel = result?.modelUsed || geminiModel;
@@ -1282,7 +1332,12 @@ module.exports = async function handler(req, res) {
           console.warn(`[grok] Key length: ${apiKey.length}, first 10 chars: ${apiKey.substring(0, 10)}...`);
         }
         console.log(`[grok] Using model: ${grokModel}, messages: ${normalizedMessages.length}, key length: ${apiKey.length}`);
-        const result = await runGrokChat({ apiKey, model: grokModel, messages: normalizedMessages });
+        const result = await runGrokChat({
+          apiKey,
+          model: grokModel,
+          messages: normalizedMessages,
+          webSearch: webSearchEnabled,
+        });
         const usageTokens = Number(result?.usage?.totalTokens || 0);
         const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
         const usedModel = result?.modelUsed || grokModel;
@@ -1306,7 +1361,12 @@ module.exports = async function handler(req, res) {
           await refundTokensBestEffort();
           return json(res, 500, { error: "Missing CLAUDE_API_KEY" });
         }
-        const result = await runClaudeChat({ apiKey, model: claudeModel, messages: normalizedMessages });
+        const result = await runClaudeChat({
+          apiKey,
+          model: claudeModel,
+          messages: normalizedMessages,
+          webSearch: webSearchEnabled,
+        });
         const usageTokens = Number(result?.usage?.totalTokens || 0);
         const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
         const usedModel = result?.modelUsed || claudeModel;
@@ -1333,10 +1393,28 @@ module.exports = async function handler(req, res) {
       const client = new OpenAI({ apiKey });
       let response;
       try {
-        response = await client.responses.create({
-          model: openaiModel,
-          input: normalizedMessages.map((message) => ({ role: message.role, content: message.content })),
-        });
+        const input = normalizedMessages.map((message) => ({ role: message.role, content: message.content }));
+        const openAiModes = webSearchEnabled ? [true, false] : [false];
+        let lastOpenAiError = null;
+        for (const useWebSearch of openAiModes) {
+          try {
+            const payload = {
+              model: openaiModel,
+              input,
+            };
+            if (useWebSearch) {
+              payload.tools = [{ type: "web_search_preview" }];
+            }
+            response = await client.responses.create(payload);
+            lastOpenAiError = null;
+            break;
+          } catch (innerError) {
+            lastOpenAiError = innerError;
+          }
+        }
+        if (lastOpenAiError) {
+          throw lastOpenAiError;
+        }
       } catch (err) {
         await refundTokensBestEffort();
         const safe = sanitizeProviderErrorMessage(err?.message || "");
