@@ -186,14 +186,6 @@
       const chatSearchIndicator = document.getElementById("chat-search-indicator");
       const chatSearchClose = document.getElementById("chat-search-close");
       const actionUpload = document.getElementById("action-upload");
-      const actionGeneratePhoto = document.getElementById("action-generate-photo");
-      const actionGeneratePhotoLabel = actionGeneratePhoto
-        ? actionGeneratePhoto.querySelector(".chat-plus__label-text")
-        : null;
-      const actionGeneratePhotoInfo = actionGeneratePhoto
-        ? actionGeneratePhoto.querySelector(".chat-plus__info")
-        : null;
-      const TOOLTIP_UPDATE_DATE = "2025-12-21";
       const layoutToggleBtn = document.getElementById("layout-toggle");
       const chatAttachmentsEl = document.getElementById("chat-attachments");
       const hiddenFileInput = document.createElement("input");
@@ -202,12 +194,6 @@
       hiddenFileInput.multiple = true;
       hiddenFileInput.style.display = "none";
       document.body.appendChild(hiddenFileInput);
-      const hiddenCameraInput = document.createElement("input");
-      hiddenCameraInput.type = "file";
-      hiddenCameraInput.setAttribute("accept", "image/*");
-      hiddenCameraInput.setAttribute("capture", "environment");
-      hiddenCameraInput.style.display = "none";
-      document.body.appendChild(hiddenCameraInput);
       let pendingAttachments = [];
       let cameraStream = null;
       let connectTimeout;
@@ -249,46 +235,16 @@
       };
       const noThinkingModels = new Set(["opus46", "sonnet46", "haiku45", "llama4"]);
 
-      const updateToolMenuLabels = () => {
-        let photoInfoText = "";
-        if (selectedModel === "chatgpt52") {
-          photoInfoText = `Foto model: GPT Image 1.5\nLaatste update: ${TOOLTIP_UPDATE_DATE}`;
-        } else if (selectedModel === "gemini3") {
-          photoInfoText = `Foto model: Imagen 3\nLaatste update: ${TOOLTIP_UPDATE_DATE}`;
-        } else if (selectedModel === "grok4") {
-          photoInfoText = `Foto model: grok-2-image\nLaatste update: ${TOOLTIP_UPDATE_DATE}`;
-        }
-        if (actionGeneratePhotoLabel) {
-          actionGeneratePhotoLabel.textContent = "Foto maken";
-        }
-        if (actionGeneratePhotoInfo) {
-          actionGeneratePhotoInfo.dataset.tooltip = photoInfoText;
-          actionGeneratePhotoInfo.removeAttribute("title");
-          actionGeneratePhotoInfo.style.display = photoInfoText ? "inline-flex" : "none";
-        }
-      };
+      const updateToolMenuLabels = () => {};
 
       const updateToolMenuVisibility = () => {
         if (toggleWebSearch) {
           toggleWebSearch.style.display = "flex";
         }
-        if (actionGeneratePhoto) {
-          const showPhoto =
-            selectedModel === "chatgpt52" ||
-            selectedModel === "gemini3" ||
-            selectedModel === "grok4";
-          actionGeneratePhoto.style.display = showPhoto ? "flex" : "none";
-        }
         if (chatPlus) {
           chatPlus.style.display = selectedModel === "llama4" ? "none" : "";
         }
       };
-
-      if (actionGeneratePhotoInfo) {
-        actionGeneratePhotoInfo.addEventListener("click", (event) => {
-          event.stopPropagation();
-        });
-      }
 
       let currentThinkingOptions = defaultThinkingOptions;
 
@@ -1411,26 +1367,6 @@
         const files = hiddenFileInput.files;
         if (files && files.length) addPendingAttachments(Array.from(files));
         hiddenFileInput.value = "";
-      });
-
-      actionGeneratePhoto?.addEventListener("click", async (event) => {
-        event.stopPropagation();
-        if (!isMobileDevice() && cameraModal) {
-          await openCameraModal();
-          closeAllDropdowns();
-          return;
-        }
-        hiddenCameraInput.value = "";
-        hiddenCameraInput.setAttribute("capture", "environment");
-        hiddenCameraInput.removeAttribute("multiple");
-        hiddenCameraInput.click();
-        closeAllDropdowns();
-      });
-
-      hiddenCameraInput.addEventListener("change", () => {
-        const files = hiddenCameraInput.files;
-        if (files && files.length) addPendingAttachments(Array.from(files));
-        hiddenCameraInput.value = "";
       });
 
       if (cameraModal) {
