@@ -3350,7 +3350,8 @@
 	      };
 
 	      const saveMessageToApi = async (sessionId, role, content, provider = null) => {
-	        const body = { session_id: sessionId, role, message_text: content };
+          const serializedContent = typeof content === "string" ? content : JSON.stringify(content);
+	        const body = { session_id: sessionId, role, message_text: serializedContent };
 	        if (provider) {
 	          body.provider = provider;
 	        }
@@ -3360,7 +3361,7 @@
 	        });
           if (resp.ok) return resp;
           const userId = currentUser?.id;
-          const direct = await insertMessageDirect(userId, sessionId, role, content, provider);
+          const direct = await insertMessageDirect(userId, sessionId, role, serializedContent, provider);
           if (direct.ok) {
             return { ok: true, status: 200, payload: { ok: true, fallback: true } };
           }
@@ -3516,8 +3517,9 @@
 	          const history = [];
 	          data.forEach((entry) => {
 	            const normalizedRole = entry.role === "user" ? "user" : "assistant";
-	            appendMessage(entry.message_text, normalizedRole, { persist: false });
-	            history.push({ role: normalizedRole, content: entry.message_text });
+              const parsedContent = parseStoredMessageContent(entry.message_text);
+	            appendMessage(parsedContent, normalizedRole, { persist: false });
+	            history.push({ role: normalizedRole, content: parsedContent });
 	          });
 	          messages = [createSystemMessage(), ...history];
 	          updateNewChatButtonState();
@@ -3996,6 +3998,28 @@
 	          .join("\n");
 	      };
 
+      const parseStoredMessageContent = (rawContent) => {
+        if (typeof rawContent !== "string") return rawContent;
+        const trimmed = rawContent.trim();
+        if (!trimmed || (trimmed[0] !== "[" && trimmed[0] !== "{")) return rawContent;
+        try {
+          return JSON.parse(trimmed);
+        } catch {
+          return rawContent;
+        }
+      };
+
+      const extractImageUrlFromContentPart = (part) => {
+        if (!part || typeof part !== "object") return "";
+        if (part.type === "image_url" && part.image_url && typeof part.image_url.url === "string") {
+          return part.image_url.url.trim();
+        }
+        if (part.type === "image" && typeof part.image === "string") {
+          return part.image.trim();
+        }
+        return "";
+      };
+
 	      const appendMessage = (content, role = "assistant", options = {}) => {
 	        if (!chatLog) return;
 	        if (content === undefined || content === null) return;
@@ -4007,8 +4031,48 @@
 
         const bubble = document.createElement("div");
         bubble.className = "bubble";
-        bubble.innerHTML = formatMessageContent(contentToDisplayString(content));
-        enhanceCodeBlocks(bubble);
+        const hasInlineImages =
+          role === "user" &&
+          Array.isArray(content) &&
+          content.some((part) => Boolean(extractImageUrlFromContentPart(part)));
+        if (hasInlineImages) {
+          const text = content
+            .map((part) => (part && part.type === "text" && typeof part.text === "string" ? part.text : ""))
+            .filter(Boolean)
+            .join("\n")
+            .trim();
+          if (text) {
+            const textEl = document.createElement("div");
+            textEl.innerHTML = formatMessageContent(text);
+            enhanceCodeBlocks(textEl);
+            bubble.appendChild(textEl);
+          }
+          const imageWrap = document.createElement("div");
+          imageWrap.style.display = "flex";
+          imageWrap.style.flexWrap = "wrap";
+          imageWrap.style.gap = "8px";
+          imageWrap.style.marginTop = text ? "8px" : "0";
+          content.forEach((part) => {
+            const url = extractImageUrlFromContentPart(part);
+            if (!url) return;
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = "Bijlage";
+            img.style.width = "180px";
+            img.style.maxWidth = "100%";
+            img.style.borderRadius = "12px";
+            img.style.display = "block";
+            img.style.objectFit = "cover";
+            img.style.border = "1px solid rgba(255,255,255,0.25)";
+            imageWrap.appendChild(img);
+          });
+          if (imageWrap.childElementCount) {
+            bubble.appendChild(imageWrap);
+          }
+        } else {
+          bubble.innerHTML = formatMessageContent(contentToDisplayString(content));
+          enhanceCodeBlocks(bubble);
+        }
 
         article.appendChild(bubble);
         chatLog.appendChild(article);
@@ -4333,7 +4397,7 @@
         pendingAttachments = [];
         renderPendingAttachments();
         chatInput.focus();
-        const userSavePromise = saveMessageToApi(sessionId, "user", contentToDisplayString(content), provider).then((save) => {
+        const userSavePromise = saveMessageToApi(sessionId, "user", content, provider).then((save) => {
           if (!save.ok) {
             console.error("Gebruikersbericht opslaan mislukt", save?.payload?.error || save);
             if (window.siteUI?.toast) {
