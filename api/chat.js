@@ -630,6 +630,63 @@ function extractResponseText(response) {
   return text;
 }
 
+function extractOpenAiSources(response) {
+  const output = Array.isArray(response?.output) ? response.output : [];
+  const seen = new Set();
+  const sources = [];
+  output.forEach((item) => {
+    const content = Array.isArray(item?.content) ? item.content : [];
+    content.forEach((part) => {
+      const annotations = Array.isArray(part?.annotations) ? part.annotations : [];
+      annotations.forEach((annotation) => {
+        const rawUrl =
+          annotation?.url ||
+          annotation?.source?.url ||
+          annotation?.url_citation?.url ||
+          annotation?.web_search_result?.url ||
+          "";
+        const rawTitle =
+          annotation?.title ||
+          annotation?.source?.title ||
+          annotation?.url_citation?.title ||
+          annotation?.web_search_result?.title ||
+          "";
+        const url = typeof rawUrl === "string" ? rawUrl.trim() : "";
+        if (!url || seen.has(url)) return;
+        seen.add(url);
+        sources.push({ url, title: typeof rawTitle === "string" ? rawTitle.trim() : "" });
+      });
+    });
+  });
+  return sources;
+}
+
+function getLatestUserText(normalizedMessages) {
+  if (!Array.isArray(normalizedMessages)) return "";
+  for (let i = normalizedMessages.length - 1; i >= 0; i -= 1) {
+    const msg = normalizedMessages[i];
+    if (!msg || msg.role !== "user") continue;
+    const text = typeof msg.content === "string" ? msg.content : normalizeContent(msg.content);
+    if (text && text.trim()) return text.trim();
+  }
+  return "";
+}
+
+function buildModeInstruction({ toolMode, thinkingMode }) {
+  const parts = [];
+  if (thinkingMode === "thinking") {
+    parts.push("Werk stap voor stap en controleer je redenering voordat je antwoord geeft.");
+  }
+  if (toolMode === "deep_research") {
+    parts.push("Voer diepgaand onderzoek uit. Gebruik meerdere actuele bronnen en sluit af met een sectie 'Bronnen'.");
+  }
+  if (toolMode === "shopping_research") {
+    parts.push("Voer winkelonderzoek uit: vergelijk concrete opties, noem prijsindicaties, plus- en minpunten en sluit af met een aanbeveling.");
+  }
+  if (!parts.length) return null;
+  return parts.join(" ");
+}
+
 function extractOpenAiUsage(response) {
   const usage = response?.usage || {};
   const inputTokens = Number(usage?.input_tokens ?? usage?.inputTokens ?? 0);
@@ -1110,6 +1167,16 @@ module.exports = async function handler(req, res) {
 
     const { messages, model, provider } = body || {};
     const webSearchRequested = Boolean(body?.web_search || body?.webSearch);
+    const toolModeRaw = typeof body?.tool_mode === "string" ? body.tool_mode.trim().toLowerCase() : "";
+    const toolMode =
+      toolModeRaw === "image_generation" ||
+      toolModeRaw === "thinking" ||
+      toolModeRaw === "deep_research" ||
+      toolModeRaw === "shopping_research"
+        ? toolModeRaw
+        : "none";
+    const thinkingModeRaw = typeof body?.thinking_mode === "string" ? body.thinking_mode.trim().toLowerCase() : "";
+    const thinkingMode = thinkingModeRaw === "thinking" ? "thinking" : "instantly";
     const modelKey =
       typeof body?.model_key === "string"
         ? body.model_key
@@ -1137,7 +1204,7 @@ module.exports = async function handler(req, res) {
 
     const requestedModel = typeof model === "string" ? model : "";
     const webSearchEnabled =
-      webSearchRequested &&
+      (webSearchRequested || toolMode === "deep_research" || toolMode === "shopping_research") &&
       (inferredProvider === "openai" ||
         inferredProvider === "gemini" ||
         inferredProvider === "grok" ||
@@ -1391,9 +1458,55 @@ module.exports = async function handler(req, res) {
       }
 
       const client = new OpenAI({ apiKey });
+      if (toolMode === "image_generation") {
+        const prompt = getLatestUserText(normalizedMessages);
+        if (!prompt) {
+          await refundTokensBestEffort();
+          return json(res, 400, { error: "Geef eerst een beschrijving voor de afbeelding." });
+        }
+        try {
+          const imageResp = await client.images.generate({
+            model: "gpt-image-1",
+            prompt,
+            size: "1024x1024",
+          });
+          const b64 = imageResp?.data?.[0]?.b64_json || "";
+          if (!b64) {
+            throw new Error("OpenAI gaf geen afbeelding terug.");
+          }
+          const imageData = `data:image/png;base64,${b64}`;
+          void recordUsageEvent({
+            userId: user.id,
+            provider: "openai",
+            model: "gpt-image-1",
+            modelLabel: "Maak een afbeelding",
+            tokens: tokensRequired,
+            tokensPerEur,
+            costEur: requestCostEur,
+          });
+          return json(res, 200, {
+            text: "Hier is je afbeelding.",
+            image_data: imageData,
+            sources: [],
+          });
+        } catch (err) {
+          await refundTokensBestEffort();
+          const safe = sanitizeProviderErrorMessage(err?.message || "");
+          const wrapped = new Error("openai_failed");
+          wrapped.statusCode = 502;
+          wrapped.publicMessage = safe ? `OpenAI afbeelding mislukt: ${safe}` : "OpenAI afbeelding mislukt.";
+          wrapped.cause = err;
+          throw wrapped;
+        }
+      }
+
       let response;
       try {
-        const input = normalizedMessages.map((message) => ({ role: message.role, content: message.content }));
+        const modeInstruction = buildModeInstruction({ toolMode, thinkingMode });
+        const effectiveMessages = modeInstruction
+          ? [...normalizedMessages, { role: "developer", content: modeInstruction }]
+          : normalizedMessages;
+        const input = effectiveMessages.map((message) => ({ role: message.role, content: message.content }));
         const openAiModes = webSearchEnabled ? [true, false] : [false];
         let lastOpenAiError = null;
         for (const useWebSearch of openAiModes) {
@@ -1426,6 +1539,7 @@ module.exports = async function handler(req, res) {
       }
       const text = extractResponseText(response);
       const usage = extractOpenAiUsage(response);
+      const sources = extractOpenAiSources(response);
       const actualTokens =
         Number.isFinite(usage?.totalTokens) && usage.totalTokens > 0 ? usage.totalTokens : tokensRequired;
       void recordUsageEvent({
@@ -1437,7 +1551,7 @@ module.exports = async function handler(req, res) {
         tokensPerEur,
         costEur: requestCostEur,
       });
-      return json(res, 200, { text: text || "" });
+      return json(res, 200, { text: text || "", sources });
     } catch (err) {
       // Refund tokens on any provider/runtime error after deduction.
       await refundTokensBestEffort();

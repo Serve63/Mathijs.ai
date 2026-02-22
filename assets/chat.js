@@ -177,7 +177,18 @@
       const webSearchState = document.getElementById("web-search-state");
       const chatSearchIndicator = document.getElementById("chat-search-indicator");
       const chatSearchClose = document.getElementById("chat-search-close");
+      const chatToolIndicator = document.getElementById("chat-tool-indicator");
+      const chatToolIndicatorLabel = document.getElementById("chat-tool-indicator-label");
+      const chatToolClose = document.getElementById("chat-tool-close");
       const actionUpload = document.getElementById("action-upload");
+      const actionGenerateImage = document.getElementById("action-generate-image");
+      const actionThinking = document.getElementById("action-thinking");
+      const actionDeepResearch = document.getElementById("action-deep-research");
+      const actionShoppingResearch = document.getElementById("action-shopping-research");
+      const researchActivityEl = document.getElementById("research-activity");
+      const researchActivityClose = document.getElementById("research-activity-close");
+      const researchActivityList = document.getElementById("research-activity-list");
+      const researchActivitySources = document.getElementById("research-activity-sources");
       const layoutToggleBtn = document.getElementById("layout-toggle");
       const chatAttachmentsEl = document.getElementById("chat-attachments");
       const hiddenFileInput = document.createElement("input");
@@ -201,6 +212,10 @@
       let messages = [createSystemMessage()];
       let webSearchEnabled = false;
       let selectedThinkingMode = "instantly";
+      let activeToolMode = "none";
+      let researchActivityTimer = null;
+      let researchActivityStepIndex = -1;
+      let shoppingAwaitingAnswers = false;
 
       const defaultThinkingOptions = [
         { value: "snel", label: "Snel" },
@@ -226,11 +241,134 @@
       };
       const noThinkingModels = new Set(["opus46", "sonnet46", "haiku45", "llama4"]);
 
+      const TOOL_MODE_LABELS = {
+        image_generation: "Afbeelding",
+        thinking: "Thinking",
+        deep_research: "Diepgaand onderzoek",
+        shopping_research: "Winkelonderzoek",
+      };
+
+      const researchSteps = [
+        "Onderzoeksvraag analyseren",
+        "Bronnen verzamelen",
+        "Inhoud vergelijken",
+        "Resultaat opstellen",
+      ];
+
+      const isEnhancedOpenAiMode = () => selectedModel === "chatgpt52";
+
+      const renderResearchActivity = () => {
+        if (!researchActivityList) return;
+        researchActivityList.innerHTML = "";
+        researchSteps.forEach((step, index) => {
+          const row = document.createElement("div");
+          const isDone = index < researchActivityStepIndex;
+          const isLive = index === researchActivityStepIndex;
+          row.className = `research-activity__item${isDone ? " done" : ""}${isLive ? " live" : ""}`;
+          const dot = document.createElement("span");
+          dot.className = "research-activity__dot";
+          const label = document.createElement("span");
+          label.textContent = step;
+          row.appendChild(dot);
+          row.appendChild(label);
+          researchActivityList.appendChild(row);
+        });
+      };
+
+      const closeResearchActivity = () => {
+        if (researchActivityTimer) {
+          clearInterval(researchActivityTimer);
+          researchActivityTimer = null;
+        }
+        researchActivityStepIndex = -1;
+        if (researchActivityEl) researchActivityEl.classList.remove("visible");
+      };
+
+      const startResearchActivity = () => {
+        if (!researchActivityEl) return;
+        researchActivityStepIndex = 0;
+        renderResearchActivity();
+        researchActivityEl.classList.add("visible");
+        if (researchActivitySources) {
+          researchActivitySources.style.display = "none";
+          researchActivitySources.innerHTML = "";
+        }
+        if (researchActivityTimer) clearInterval(researchActivityTimer);
+        researchActivityTimer = setInterval(() => {
+          if (researchActivityStepIndex < researchSteps.length - 1) {
+            researchActivityStepIndex += 1;
+            renderResearchActivity();
+          }
+        }, 1400);
+      };
+
+      const completeResearchActivity = (sources = []) => {
+        if (!researchActivityEl) return;
+        if (researchActivityTimer) {
+          clearInterval(researchActivityTimer);
+          researchActivityTimer = null;
+        }
+        researchActivityStepIndex = researchSteps.length;
+        renderResearchActivity();
+        if (researchActivitySources) {
+          researchActivitySources.innerHTML = "";
+          const cleanSources = Array.isArray(sources) ? sources.filter((s) => s && s.url) : [];
+          if (cleanSources.length) {
+            cleanSources.slice(0, 8).forEach((source) => {
+              const link = document.createElement("a");
+              link.href = source.url;
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+              link.textContent = source.title || source.url;
+              researchActivitySources.appendChild(link);
+            });
+            researchActivitySources.style.display = "flex";
+          } else {
+            researchActivitySources.style.display = "none";
+          }
+        }
+      };
+
+      const renderToolIndicator = () => {
+        if (!chatToolIndicator || !chatToolIndicatorLabel) return;
+        const label = TOOL_MODE_LABELS[activeToolMode] || "";
+        chatToolIndicatorLabel.textContent = label;
+        chatToolIndicator.classList.toggle("visible", Boolean(label));
+      };
+
+      const setToolMode = (mode) => {
+        const nextMode = mode || "none";
+        activeToolMode = nextMode;
+        const modes = [
+          [actionGenerateImage, "image_generation"],
+          [actionThinking, "thinking"],
+          [actionDeepResearch, "deep_research"],
+          [actionShoppingResearch, "shopping_research"],
+        ];
+        modes.forEach(([el, value]) => {
+          if (!el) return;
+          el.classList.toggle("is-active", nextMode === value);
+        });
+        if (nextMode !== "shopping_research") {
+          shoppingAwaitingAnswers = false;
+        }
+        renderToolIndicator();
+      };
+
       const updateToolMenuLabels = () => {};
 
       const updateToolMenuVisibility = () => {
         if (toggleWebSearch) {
           toggleWebSearch.style.display = "flex";
+        }
+        const showOpenAiExtras = isEnhancedOpenAiMode();
+        if (actionGenerateImage) actionGenerateImage.style.display = showOpenAiExtras ? "flex" : "none";
+        if (actionThinking) actionThinking.style.display = showOpenAiExtras ? "flex" : "none";
+        if (actionDeepResearch) actionDeepResearch.style.display = showOpenAiExtras ? "flex" : "none";
+        if (actionShoppingResearch) actionShoppingResearch.style.display = showOpenAiExtras ? "flex" : "none";
+        if (!showOpenAiExtras && activeToolMode !== "none") {
+          setToolMode("none");
+          closeResearchActivity();
         }
         if (chatPlus) {
           chatPlus.style.display = selectedModel === "llama4" ? "none" : "";
@@ -1189,6 +1327,62 @@
           toggleWebBadge(false);
         });
       }
+
+      if (chatToolClose) {
+        chatToolClose.addEventListener("click", (event) => {
+          event.stopPropagation();
+          setToolMode("none");
+          closeResearchActivity();
+        });
+      }
+
+      if (researchActivityClose) {
+        researchActivityClose.addEventListener("click", () => {
+          closeResearchActivity();
+        });
+      }
+
+      actionGenerateImage?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        setToolMode(activeToolMode === "image_generation" ? "none" : "image_generation");
+        closeAllDropdowns();
+      });
+
+      actionThinking?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const nextMode = activeToolMode === "thinking" ? "none" : "thinking";
+        setToolMode(nextMode);
+        selectedThinkingMode = nextMode === "thinking" ? "thinking" : "instantly";
+        if (thinkingModeSelect) {
+          thinkingModeSelect.value = selectedThinkingMode;
+          thinkingModeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        closeAllDropdowns();
+      });
+
+      actionDeepResearch?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const nextMode = activeToolMode === "deep_research" ? "none" : "deep_research";
+        setToolMode(nextMode);
+        if (nextMode === "deep_research") toggleWebBadge(true);
+        closeAllDropdowns();
+      });
+
+      actionShoppingResearch?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const nextMode = activeToolMode === "shopping_research" ? "none" : "shopping_research";
+        setToolMode(nextMode);
+        if (nextMode === "shopping_research") {
+          toggleWebBadge(true);
+          shoppingAwaitingAnswers = true;
+          appendMessage(
+            "Winkelonderzoek staat aan. Geef eerst je voorkeuren:\n1. Product/categorie\n2. Budget\n3. Merkvoorkeur (optioneel)\n4. Gebruikssituatie\n5. Must-haves",
+            "assistant",
+            { persist: false },
+          );
+        }
+        closeAllDropdowns();
+      });
 
       const addPendingAttachments = (files, asDataUrl = true) => {
         if (!files || !files.length) return;
@@ -2437,6 +2631,11 @@
 	        if (chatInput) {
 	          chatInput.value = "";
 	        }
+        pendingAttachments = [];
+        renderPendingAttachments();
+        setToolMode("none");
+        closeResearchActivity();
+        shoppingAwaitingAnswers = false;
 	        renderEmptyState();
 	        messages = [createSystemMessage()];
 	        updateNewChatButtonState();
@@ -3825,6 +4024,25 @@
 	        updateNewChatButtonState();
 	      };
 
+      const appendGeneratedImage = (dataUrl, altText = "Gegenereerde afbeelding") => {
+        if (!chatLog || typeof dataUrl !== "string" || !dataUrl.trim()) return;
+        clearEmptyState();
+        const article = document.createElement("article");
+        article.className = "message system";
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        const img = document.createElement("img");
+        img.src = dataUrl;
+        img.alt = altText;
+        img.style.maxWidth = "100%";
+        img.style.borderRadius = "14px";
+        img.style.display = "block";
+        bubble.appendChild(img);
+        article.appendChild(bubble);
+        chatLog.appendChild(article);
+        scrollToBottomIfPinned();
+      };
+
       const createAssistantStreamMessage = () => {
         if (!chatLog) return null;
         clearEmptyState();
@@ -4047,6 +4265,20 @@
 	        }
 	        if (!value && !hasImages) return;
 	        if (typeof content === "string" && !content.trim()) return;
+        const toolModeForRequest = isEnhancedOpenAiMode() ? activeToolMode : "none";
+        const webSearchForRequest =
+          webSearchEnabled || toolModeForRequest === "deep_research" || toolModeForRequest === "shopping_research";
+        if (toolModeForRequest === "image_generation" && !value) {
+          appendMessage("Geef eerst een beschrijving voor de afbeelding.", "assistant", { persist: false });
+          return;
+        }
+        if (toolModeForRequest === "shopping_research" && shoppingAwaitingAnswers && !value) {
+          appendMessage("Vul eerst je voorkeuren in zodat ik gericht kan zoeken.", "assistant", { persist: false });
+          return;
+        }
+        if (toolModeForRequest === "shopping_research" && shoppingAwaitingAnswers && value) {
+          shoppingAwaitingAnswers = false;
+        }
 
         const provider = getSelectedProvider();
         let status = await refreshProviderStatus();
@@ -4115,6 +4347,9 @@
         showThinkingIndicator();
 
 		                try {
+          if (toolModeForRequest === "deep_research") {
+            startResearchActivity();
+          }
           const accessToken = await requireAccessToken();
           if (!accessToken) {
             throw new Error("Je sessie is verlopen. Log opnieuw in.");
@@ -4131,7 +4366,9 @@
               model: selectedApiModel,
               model_key: selectedModel,
               model_label: selectedModelLabel,
-              web_search: webSearchEnabled,
+              web_search: webSearchForRequest,
+              tool_mode: toolModeForRequest,
+              thinking_mode: selectedThinkingMode,
               messages: requestMessages,
             }),
           });
@@ -4166,6 +4403,12 @@
           // Hide indicator as soon as we have the answer, before any extra work.
           hideThinkingIndicator();
           await streamAssistantMessage(finalContent);
+          if (payload?.image_data) {
+            appendGeneratedImage(payload.image_data, "AI afbeelding");
+          }
+          if (toolModeForRequest === "deep_research") {
+            completeResearchActivity(payload?.sources || []);
+          }
 
           // Ensure the user message save is at least attempted; we don't block UI on it.
           await userSavePromise;
@@ -4180,9 +4423,15 @@
           console.error("OpenAI model:", openaiModel);
           console.error("Error details:", error.message, error.stack);
           hideThinkingIndicator();
+          if (toolModeForRequest === "deep_research") {
+            closeResearchActivity();
+          }
           const fallbackMessage = `De AI-request mislukte: ${error.message || "Onbekende fout"}. Controleer je verbinding en probeer opnieuw.`;
           appendMessage(fallbackMessage, "assistant", { persist: false });
 	        } finally {
+          if (toolModeForRequest === "image_generation") {
+            setToolMode("none");
+          }
 	          refreshCreditsBalance();
 	        }
 	      };
