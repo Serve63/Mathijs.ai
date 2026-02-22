@@ -235,7 +235,7 @@
           { value: "expert", label: "Expert" },
         ],
       };
-      const noThinkingModels = new Set(["opus45", "sonnet45", "haiku45", "llama4"]);
+      const noThinkingModels = new Set(["opus46", "sonnet46", "haiku45", "llama4"]);
 
       const updateToolMenuLabels = () => {
         let photoInfoText = "";
@@ -369,14 +369,14 @@
         "Grok 4": "grok-4-0709",
       };
       const CLAUDE_MODEL_LABEL_MAP = {
-        "Opus 4.5": "claude-opus-4-5",
-        "Sonnet 4.5": "claude-sonnet-4-5",
+        "Opus 4.6": "claude-opus-4-6",
+        "Sonnet 4.6": "claude-sonnet-4-6",
         "Haiku 4.5": "claude-haiku-4-5",
       };
       const MODEL_PROVIDER_MAP = {
         chatgpt52: "openai",
-        opus45: "anthropic",
-        sonnet45: "anthropic",
+        opus46: "anthropic",
+        sonnet46: "anthropic",
         haiku45: "anthropic",
         gemini3: "gemini",
         deepseekv2: "deepseek",
@@ -400,8 +400,10 @@
 
       const getModelKeyForLabel = (label) => {
         const safeLabel = String(label || "").trim();
-        if (safeLabel.startsWith("Opus 4.5")) return "opus45";
-        if (safeLabel.startsWith("Sonnet 4.5")) return "sonnet45";
+        if (safeLabel.startsWith("Opus 4.6")) return "opus46";
+        if (safeLabel.startsWith("Sonnet 4.6")) return "sonnet46";
+        if (safeLabel.startsWith("Opus 4.5")) return "opus46";
+        if (safeLabel.startsWith("Sonnet 4.5")) return "sonnet46";
         if (safeLabel.startsWith("Haiku 4.5")) return "haiku45";
         if (safeLabel.startsWith("Gemini 3")) return "gemini3";
         if (safeLabel.startsWith("DeepSeek V2")) return "deepseekv2";
@@ -414,8 +416,8 @@
         "ChatGPT 5.2": "OpenAI · Flagship",
         "Gemini 3": "Google · Multimodal",
         "Grok 4": "xAI · Reasoning",
-        "Opus 4.5": "Anthropic · Powerful",
-        "Sonnet 4.5": "Anthropic · Fast",
+        "Opus 4.6": "Anthropic · Powerful",
+        "Sonnet 4.6": "Anthropic · Fast",
         "Haiku 4.5": "Anthropic · Lite",
         "DeepSeek V2": "DeepSeek · Research",
       };
@@ -653,6 +655,13 @@
       const getModelIndexByLabel = (label) =>
         modelSwipeItems.findIndex((item) => (item.getAttribute("data-model") || "").trim() === String(label || "").trim());
 
+      const normalizeSavedModelLabel = (label) => {
+        const s = String(label || "").trim();
+        if (s === "Opus 4.5") return "Opus 4.6";
+        if (s === "Sonnet 4.5") return "Sonnet 4.6";
+        return label;
+      };
+
       const MODEL_SWITCH_LOCK_MESSAGE = "Model wisselen is tijdelijk niet beschikbaar.";
       let lastModelSwitchLockNoticeAt = 0;
 
@@ -841,8 +850,9 @@
       const hydrateModelStateForUser = async (userId) => {
         if (!userId || modelStateHydratedForUserId === userId) return;
         const sanitizedMap = sanitizeModelSessionMap(loadModelSessionMap(userId));
-        const savedLabel = loadSavedModelLabel(userId);
-        hydratedPreferredModelLabel = typeof savedLabel === "string" && savedLabel.trim() ? savedLabel.trim() : null;
+        const rawSaved = loadSavedModelLabel(userId);
+        const savedLabel = typeof rawSaved === "string" && rawSaved.trim() ? normalizeSavedModelLabel(rawSaved.trim()) : null;
+        hydratedPreferredModelLabel = savedLabel;
         modelSessionMap = normalizeLabelScopedModelSessionMap(sanitizedMap, hydratedPreferredModelLabel);
         if (JSON.stringify(modelSessionMap) !== JSON.stringify(sanitizedMap)) {
           saveModelSessionMap(userId, modelSessionMap);

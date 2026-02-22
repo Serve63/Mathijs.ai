@@ -27,9 +27,11 @@ const GEMINI_ALLOWED_MODELS = [
 const GROK_DEFAULT_MODEL = "grok-4-0709";
 const GROK_ALLOWED_MODELS = ["grok-4-0709", "grok-4", "grok-4-code", "grok-beta", "grok-2", "grok-3", "grok-3-mini"];
 
-// Claude (Anthropic) model IDs - Opus 4.5, Sonnet 4.5, Haiku 4.5
-const CLAUDE_DEFAULT_MODEL = "claude-sonnet-4-5";
+// Claude (Anthropic) model IDs - Opus 4.6, Sonnet 4.6, Haiku 4.5
+const CLAUDE_DEFAULT_MODEL = "claude-sonnet-4-6";
 const CLAUDE_ALLOWED_MODELS = [
+  "claude-opus-4-6",
+  "claude-sonnet-4-6",
   "claude-opus-4-5",
   "claude-opus-4-5-20251101",
   "claude-sonnet-4-5",
@@ -90,8 +92,8 @@ const DEFAULT_CREDIT_ALLOWANCE_EUR = 10;
 const MODEL_TOKEN_COSTS = {
   chatgpt52: 2,
   gemini3: 1,
-  opus45: 5,
-  sonnet45: 3,
+  opus46: 5,
+  sonnet46: 3,
   haiku45: 1,
   grok4: 3,
   llama4: 1,
@@ -102,6 +104,8 @@ const MODEL_LABEL_TOKEN_COSTS = [
   ["chatgpt 5.2", 2],
   ["gpt-5 mini", 1],
   ["gemini 3", 1],
+  ["opus 4.6", 5],
+  ["sonnet 4.6", 3],
   ["opus 4.5", 5],
   ["sonnet 4.5", 3],
   ["haiku 4.5", 1],
@@ -132,6 +136,8 @@ const GROK_MODEL_TOKEN_COSTS = {
   "grok-3-mini": 1,
 };
 const CLAUDE_MODEL_TOKEN_COSTS = {
+  "claude-opus-4-6": 5,
+  "claude-sonnet-4-6": 3,
   "claude-opus-4-5": 5,
   "claude-opus-4-5-20251101": 5,
   "claude-sonnet-4-5": 3,
@@ -421,6 +427,8 @@ function resolveClaudeModel(requested) {
   if (CLAUDE_ALLOWED_MODELS.includes(normalized)) return normalized;
   // Map UI labels / aliases to Anthropic API model IDs
   const modelMap = {
+    "opus 4.6": "claude-opus-4-6",
+    "sonnet 4.6": "claude-sonnet-4-6",
     "opus 4.5": "claude-opus-4-5",
     "claude-opus-4-5-20251101": "claude-opus-4-5",
     "sonnet 4.5": "claude-sonnet-4-5",

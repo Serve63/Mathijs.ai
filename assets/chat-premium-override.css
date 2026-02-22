@@ -994,8 +994,8 @@ body.sidebar-collapsed .sidebar-expand-toggle {
   --picker-glow: rgba(242, 143, 59, 0.22);
 }
 
-.model-picker[data-provider="opus45"],
-.model-picker[data-provider="sonnet45"],
+.model-picker[data-provider="opus46"],
+.model-picker[data-provider="sonnet46"],
 .model-picker[data-provider="haiku45"] {
   --picker-glow: rgba(159, 125, 255, 0.24);
 }
