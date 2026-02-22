@@ -165,14 +165,6 @@
       const profileModal = document.getElementById("profile-modal");
       const profileModalClose = document.querySelector(".profile-modal__close");
       const profileModalDialog = profileModal ? profileModal.querySelector(".profile-modal__dialog") : null;
-      const cameraModal = document.getElementById("camera-modal");
-      const cameraModalDialog = cameraModal ? cameraModal.querySelector(".camera-modal__dialog") : null;
-      const cameraModalClose = document.querySelector(".camera-modal__close");
-      const cameraVideo = document.getElementById("camera-video");
-      const cameraFallback = document.getElementById("camera-fallback");
-      const cameraCaptureButton = document.getElementById("camera-capture");
-      const cameraCancelButton = document.getElementById("camera-cancel");
-      const cameraChooseFileButton = document.getElementById("camera-choose-file");
       const chatPlus = document.getElementById("chat-plus");
       const chatPlusTrigger = chatPlus ? chatPlus.querySelector(".chat-plus__trigger") : null;
       const chatPlusMenu = document.getElementById("chat-plus-menu");
@@ -195,7 +187,6 @@
       hiddenFileInput.style.display = "none";
       document.body.appendChild(hiddenFileInput);
       let pendingAttachments = [];
-      let cameraStream = null;
       let connectTimeout;
       const selectionState = {};
       let activeModelIndex = 0;
@@ -1262,98 +1253,9 @@
         return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       };
 
-      const canUseCamera = () => Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-
-      const setCameraFallback = (message, show) => {
-        if (!cameraFallback) return;
-        cameraFallback.textContent = message;
-        cameraFallback.style.display = show ? "flex" : "none";
-      };
-
-      const setCameraCaptureEnabled = (enabled) => {
-        if (cameraCaptureButton) cameraCaptureButton.disabled = !enabled;
-      };
-
-      const stopCameraStream = () => {
-        if (cameraStream) {
-          cameraStream.getTracks().forEach((track) => track.stop());
-          cameraStream = null;
-        }
-        if (cameraVideo) {
-          cameraVideo.srcObject = null;
-        }
-      };
-
-      const openCameraModal = async () => {
-        if (!cameraModal) return false;
-        cameraModal.classList.add("is-visible");
-        document.body.style.overflow = "hidden";
-        setCameraFallback("", false);
-        setCameraCaptureEnabled(false);
-        if (!canUseCamera()) {
-          setCameraFallback("Camera wordt niet ondersteund in deze browser.", true);
-          return true;
-        }
-        try {
-          cameraStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: "environment" } },
-            audio: false,
-          });
-          if (cameraVideo) {
-            cameraVideo.srcObject = cameraStream;
-            try {
-              await cameraVideo.play();
-            } catch (error) {
-              console.warn("Camera video play failed", error);
-            }
-          }
-          setCameraCaptureEnabled(true);
-          return true;
-        } catch (error) {
-          console.warn("Camera access failed", error);
-          setCameraFallback("Camera toestemming geweigerd of niet beschikbaar.", true);
-          stopCameraStream();
-          return true;
-        }
-      };
-
-      const closeCameraModal = () => {
-        if (!cameraModal) return;
-        cameraModal.classList.remove("is-visible");
-        document.body.style.removeProperty("overflow");
-        stopCameraStream();
-      };
-
-      const captureCameraFrame = () => {
-        if (!cameraVideo) return;
-        const width = cameraVideo.videoWidth || 1280;
-        const height = cameraVideo.videoHeight || 720;
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const context = canvas.getContext("2d");
-        if (!context) return;
-        context.drawImage(cameraVideo, 0, 0, width, height);
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) return;
-            const file = new File([blob], `camera-${Date.now()}.jpg`, { type: "image/jpeg" });
-            addPendingAttachments([file]);
-            closeCameraModal();
-          },
-          "image/jpeg",
-          0.92,
-        );
-      };
-
       if (actionUpload) {
-        actionUpload.addEventListener("click", async (event) => {
+        actionUpload.addEventListener("click", (event) => {
           event.stopPropagation();
-          if (!isMobileDevice() && cameraModal) {
-            await openCameraModal();
-            closeAllDropdowns();
-            return;
-          }
           hiddenFileInput.value = "";
           hiddenFileInput.removeAttribute("capture");
           hiddenFileInput.accept = "image/*,.pdf,.txt,.doc,.docx";
@@ -1368,51 +1270,6 @@
         if (files && files.length) addPendingAttachments(Array.from(files));
         hiddenFileInput.value = "";
       });
-
-      if (cameraModal) {
-        cameraModal.addEventListener("click", (event) => {
-          if (event.target === cameraModal) closeCameraModal();
-        });
-      }
-
-      if (cameraModalDialog) {
-        cameraModalDialog.addEventListener("click", (event) => {
-          event.stopPropagation();
-        });
-      }
-
-      if (cameraModalClose) {
-        cameraModalClose.addEventListener("click", (event) => {
-          event.preventDefault();
-          closeCameraModal();
-        });
-      }
-
-      if (cameraCancelButton) {
-        cameraCancelButton.addEventListener("click", (event) => {
-          event.preventDefault();
-          closeCameraModal();
-        });
-      }
-
-      if (cameraChooseFileButton) {
-        cameraChooseFileButton.addEventListener("click", (event) => {
-          event.preventDefault();
-          closeCameraModal();
-          hiddenFileInput.value = "";
-          hiddenFileInput.removeAttribute("capture");
-          hiddenFileInput.accept = "image/*,.pdf,.txt,.doc,.docx";
-          hiddenFileInput.multiple = true;
-          hiddenFileInput.click();
-        });
-      }
-
-      if (cameraCaptureButton) {
-        cameraCaptureButton.addEventListener("click", (event) => {
-          event.preventDefault();
-          captureCameraFrame();
-        });
-      }
 
       if (profileAvatar && profileAvatarInput && profileAvatarImage) {
         profileAvatar.addEventListener("click", () => {
@@ -1483,9 +1340,6 @@
         document.addEventListener("keydown", (event) => {
           if (event.key === "Escape" && profileModal.classList.contains("is-visible")) {
             closeProfileModal();
-          }
-          if (event.key === "Escape" && cameraModal && cameraModal.classList.contains("is-visible")) {
-            closeCameraModal();
           }
         });
       }
