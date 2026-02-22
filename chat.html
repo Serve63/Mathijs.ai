@@ -3076,6 +3076,50 @@
         opacity: 1;
       }
 
+      .chat-attachments {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px 0;
+        align-items: flex-start;
+      }
+      .chat-attachment-preview {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        width: 56px;
+        height: 56px;
+        flex-shrink: 0;
+        background: rgba(0, 0, 0, 0.2);
+      }
+      .chat-attachment-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .chat-attachment-preview button {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 20px;
+        height: 20px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        font-size: 14px;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+      .chat-attachment-preview button:hover {
+        background: rgba(0, 0, 0, 0.8);
+      }
+
       /* ── Send button ── */
       .chat-input__inner > button[aria-label="Stuur bericht"] {
         flex-shrink: 0;
@@ -4165,15 +4209,6 @@
                       <span class="chat-plus__info" id="photo-model-info" aria-label="Foto model info">?</span>
                     </span>
                   </button>
-                  <button type="button" id="action-generate-video" class="chat-plus__item">
-                    <span class="chat-plus__icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="15" height="14" rx="2"/><path d="M21 7l-4 3v4l4 3z"/></svg>
-                    </span>
-                    <span class="chat-plus__label chat-plus__label--with-info">
-                      <span class="chat-plus__label-text">Video maken</span>
-                      <span class="chat-plus__info" id="video-model-info" aria-label="Video model info">?</span>
-                    </span>
-                  </button>
                 </div>
               </div>
               <span class="chat-search-pill" id="chat-search-indicator" title="Web zoeken">
@@ -4184,6 +4219,7 @@
                 <span>Zoek</span>
                 <span class="close-icon" id="chat-search-close" aria-label="Web zoeken uit">✕</span>
               </span>
+              <div class="chat-attachments" id="chat-attachments" aria-live="polite" style="display: none;"></div>
               <textarea placeholder="Stuur een bericht" rows="1"></textarea>
               <div class="chat-mode-select">
                 <button class="chat-mode-trigger" id="thinking-mode-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">

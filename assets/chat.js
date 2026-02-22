@@ -179,13 +179,6 @@
       const chatSearchClose = document.getElementById("chat-search-close");
       const actionUpload = document.getElementById("action-upload");
       const actionGeneratePhoto = document.getElementById("action-generate-photo");
-      const actionGenerateVideo = document.getElementById("action-generate-video");
-      const actionGenerateVideoLabel = actionGenerateVideo
-        ? actionGenerateVideo.querySelector(".chat-plus__label-text")
-        : null;
-      const actionGenerateVideoInfo = actionGenerateVideo
-        ? actionGenerateVideo.querySelector(".chat-plus__info")
-        : null;
       const actionGeneratePhotoLabel = actionGeneratePhoto
         ? actionGeneratePhoto.querySelector(".chat-plus__label-text")
         : null;
@@ -194,10 +187,20 @@
         : null;
       const TOOLTIP_UPDATE_DATE = "2025-12-21";
       const layoutToggleBtn = document.getElementById("layout-toggle");
+      const chatAttachmentsEl = document.getElementById("chat-attachments");
       const hiddenFileInput = document.createElement("input");
       hiddenFileInput.type = "file";
+      hiddenFileInput.setAttribute("accept", "image/*,.pdf,.txt,.doc,.docx");
+      hiddenFileInput.multiple = true;
       hiddenFileInput.style.display = "none";
       document.body.appendChild(hiddenFileInput);
+      const hiddenCameraInput = document.createElement("input");
+      hiddenCameraInput.type = "file";
+      hiddenCameraInput.setAttribute("accept", "image/*");
+      hiddenCameraInput.setAttribute("capture", "environment");
+      hiddenCameraInput.style.display = "none";
+      document.body.appendChild(hiddenCameraInput);
+      let pendingAttachments = [];
       let connectTimeout;
       const selectionState = {};
       let activeModelIndex = 0;
@@ -254,21 +257,6 @@
           actionGeneratePhotoInfo.removeAttribute("title");
           actionGeneratePhotoInfo.style.display = photoInfoText ? "inline-flex" : "none";
         }
-
-        if (!actionGenerateVideoLabel || !actionGenerateVideoInfo) return;
-        let videoInfoText = "";
-        if (selectedModel === "gemini3") {
-          videoInfoText = "Veo 3.1";
-        } else if (selectedModel === "chatgpt52") {
-          videoInfoText = "Sora 1";
-        }
-        actionGenerateVideoLabel.textContent = "Video maken";
-        const videoTooltip = videoInfoText
-          ? `Video model: ${videoInfoText}\nLaatste update: ${TOOLTIP_UPDATE_DATE}`
-          : "";
-        actionGenerateVideoInfo.dataset.tooltip = videoTooltip;
-        actionGenerateVideoInfo.removeAttribute("title");
-        actionGenerateVideoInfo.style.display = videoTooltip ? "inline-flex" : "none";
       };
 
       const updateToolMenuVisibility = () => {
@@ -282,21 +270,16 @@
             selectedModel === "grok4";
           actionGeneratePhoto.style.display = showPhoto ? "flex" : "none";
         }
-        if (actionGenerateVideo) {
-          const showVideo = selectedModel === "chatgpt52" || selectedModel === "gemini3";
-          actionGenerateVideo.style.display = showVideo ? "flex" : "none";
-        }
         if (chatPlus) {
           chatPlus.style.display = selectedModel === "llama4" ? "none" : "";
         }
       };
 
-      [actionGeneratePhotoInfo, actionGenerateVideoInfo].forEach((infoEl) => {
-        if (!infoEl) return;
-        infoEl.addEventListener("click", (event) => {
+      if (actionGeneratePhotoInfo) {
+        actionGeneratePhotoInfo.addEventListener("click", (event) => {
           event.stopPropagation();
         });
-      });
+      }
 
       let currentThinkingOptions = defaultThinkingOptions;
 
@@ -1251,31 +1234,93 @@
         });
       }
 
+      const addPendingAttachments = (files, asDataUrl = true) => {
+        if (!files || !files.length) return;
+        const toAdd = [];
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          if (!file.type.startsWith("image/")) continue;
+          toAdd.push({ file, name: file.name, dataUrl: null });
+        }
+        if (!toAdd.length) return;
+        let done = 0;
+        toAdd.forEach((entry) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            entry.dataUrl = reader.result;
+            done++;
+            if (done === toAdd.length) {
+              pendingAttachments.push(...toAdd);
+              renderPendingAttachments();
+            }
+          };
+          reader.readAsDataURL(entry.file);
+        });
+      };
+
+      const removePendingAttachment = (index) => {
+        pendingAttachments.splice(index, 1);
+        renderPendingAttachments();
+      };
+
+      const renderPendingAttachments = () => {
+        if (!chatAttachmentsEl) return;
+        chatAttachmentsEl.innerHTML = "";
+        if (!pendingAttachments.length) {
+          chatAttachmentsEl.style.display = "none";
+          return;
+        }
+        chatAttachmentsEl.style.display = "flex";
+        pendingAttachments.forEach((entry, index) => {
+          const wrap = document.createElement("div");
+          wrap.className = "chat-attachment-preview";
+          if (entry.dataUrl) {
+            const img = document.createElement("img");
+            img.src = entry.dataUrl;
+            img.alt = entry.name || "Bijlage";
+            wrap.appendChild(img);
+          }
+          const removeBtn = document.createElement("button");
+          removeBtn.type = "button";
+          removeBtn.setAttribute("aria-label", "Verwijder bijlage");
+          removeBtn.textContent = "×";
+          removeBtn.addEventListener("click", () => removePendingAttachment(index));
+          wrap.appendChild(removeBtn);
+          chatAttachmentsEl.appendChild(wrap);
+        });
+      };
+
       if (actionUpload) {
         actionUpload.addEventListener("click", (event) => {
           event.stopPropagation();
-          hiddenFileInput.accept = "";
+          hiddenFileInput.value = "";
+          hiddenFileInput.removeAttribute("capture");
+          hiddenFileInput.accept = "image/*,.pdf,.txt,.doc,.docx";
+          hiddenFileInput.multiple = true;
           hiddenFileInput.click();
           closeAllDropdowns();
         });
       }
 
       hiddenFileInput.addEventListener("change", () => {
-        if (hiddenFileInput.files && hiddenFileInput.files.length) {
-          alert(`Bestand geselecteerd: ${hiddenFileInput.files[0].name}`);
-        }
+        const files = hiddenFileInput.files;
+        if (files && files.length) addPendingAttachments(Array.from(files));
+        hiddenFileInput.value = "";
       });
 
       actionGeneratePhoto?.addEventListener("click", (event) => {
         event.stopPropagation();
-        alert("Foto's maken wordt later toegevoegd.");
+        hiddenCameraInput.value = "";
+        hiddenCameraInput.setAttribute("capture", "environment");
+        hiddenCameraInput.removeAttribute("multiple");
+        hiddenCameraInput.click();
         closeAllDropdowns();
       });
 
-      actionGenerateVideo?.addEventListener("click", (event) => {
-        event.stopPropagation();
-        alert("Video's maken wordt later toegevoegd.");
-        closeAllDropdowns();
+      hiddenCameraInput.addEventListener("change", () => {
+        const files = hiddenCameraInput.files;
+        if (files && files.length) addPendingAttachments(Array.from(files));
+        hiddenCameraInput.value = "";
       });
 
       if (profileAvatar && profileAvatarInput && profileAvatarImage) {
@@ -3791,15 +3836,31 @@
         return output;
       };
 
+	      const contentToDisplayString = (content) => {
+	        if (typeof content === "string") return content;
+	        if (!Array.isArray(content)) return "";
+	        return content
+	          .map((p) => {
+	            if (p && p.type === "text" && typeof p.text === "string") return p.text;
+	            if (p && (p.type === "image_url" || p.type === "image")) return "[Afbeelding]";
+	            return "";
+	          })
+	          .filter(Boolean)
+	          .join("\n");
+	      };
+
 	      const appendMessage = (content, role = "assistant", options = {}) => {
-	        if (!chatLog || !content) return;
+	        if (!chatLog) return;
+	        if (content === undefined || content === null) return;
+	        if (typeof content === "string" && !content.trim()) return;
+	        if (Array.isArray(content) && !content.length) return;
 	        clearEmptyState();
 	        const article = document.createElement("article");
 	        article.className = "message " + (role === "user" ? "user" : "system");
 
         const bubble = document.createElement("div");
         bubble.className = "bubble";
-        bubble.innerHTML = formatMessageContent(content);
+        bubble.innerHTML = formatMessageContent(contentToDisplayString(content));
         enhanceCodeBlocks(bubble);
 
         article.appendChild(bubble);
@@ -3970,13 +4031,14 @@
 
       const buildRequestMessages = () => {
         const cleaned = (messages || [])
-          .filter(
-            (message) =>
-              message &&
-              typeof message.content === "string" &&
-              message.content.trim() &&
-              (message.role === "user" || message.role === "assistant" || message.role === "developer")
-          )
+          .filter((message) => {
+            if (!message || (message.role !== "user" && message.role !== "assistant" && message.role !== "developer"))
+              return false;
+            const c = message.content;
+            if (typeof c === "string") return c.trim().length > 0;
+            if (Array.isArray(c)) return c.length > 0;
+            return false;
+          })
           .map((message) => ({ role: message.role, content: message.content }));
 
         const developer = cleaned.filter((m) => m.role === "developer");
@@ -4022,7 +4084,21 @@
 	        await workspaceReady;
 	        if (!chatInput) return;
 	        const value = chatInput.value.trim();
-	        if (!value) return;
+	        const imageAttachments = pendingAttachments.filter((a) => a.dataUrl);
+	        const hasImages = imageAttachments.length > 0;
+	        let content;
+	        if (hasImages) {
+	          const parts = [];
+	          if (value) parts.push({ type: "text", text: value });
+	          imageAttachments.forEach((a) => {
+	            if (a.dataUrl) parts.push({ type: "image_url", image_url: { url: a.dataUrl } });
+	          });
+	          content = parts;
+	        } else {
+	          content = value;
+	        }
+	        if (!value && !hasImages) return;
+	        if (typeof content === "string" && !content.trim()) return;
 
         const provider = getSelectedProvider();
         let status = await refreshProviderStatus();
@@ -4072,10 +4148,12 @@
         }
         const sessionId = ensureActiveSessionId();
         bindCurrentModelToSession(sessionId);
-        appendMessage(value, "user");
+        appendMessage(content, "user");
         chatInput.value = "";
+        pendingAttachments = [];
+        renderPendingAttachments();
         chatInput.focus();
-        const userSavePromise = saveMessageToApi(sessionId, "user", value, provider).then((save) => {
+        const userSavePromise = saveMessageToApi(sessionId, "user", contentToDisplayString(content), provider).then((save) => {
           if (!save.ok) {
             console.error("Gebruikersbericht opslaan mislukt", save?.payload?.error || save);
             if (window.siteUI?.toast) {

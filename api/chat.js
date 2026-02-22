@@ -542,6 +542,20 @@ function normalizeContent(content) {
   return "";
 }
 
+function contentLengthForLimit(content) {
+  if (typeof content === "string") return content.length;
+  if (!Array.isArray(content)) return 0;
+  let len = 0;
+  for (const part of content) {
+    if (part && part.type === "text" && typeof part.text === "string") len += part.text.length;
+  }
+  return len;
+}
+
+function isMultimodalContent(content) {
+  return Array.isArray(content) && content.length > 0 && content.some((p) => p && (p.type === "image_url" || p.type === "image"));
+}
+
 function validateAndNormalizeMessages(messages) {
   if (!Array.isArray(messages)) {
     const err = new Error("messages_required");
@@ -561,23 +575,34 @@ function validateAndNormalizeMessages(messages) {
   for (const message of messages) {
     const role = (message?.role || "user").toLowerCase();
     if (role !== "user" && role !== "assistant" && role !== "developer") continue;
-    const content = normalizeContent(message?.content);
-    if (!content) continue;
-
-    if (content.length > MAX_MESSAGE_CHARS) {
-      const err = new Error("message_too_large");
-      err.statusCode = 413;
-      throw err;
+    const rawContent = message?.content;
+    const isArray = Array.isArray(rawContent);
+    const content = isArray ? rawContent : normalizeContent(rawContent);
+    if (isArray) {
+      if (!content.length) continue;
+      const textLen = contentLengthForLimit(content);
+      if (textLen > MAX_MESSAGE_CHARS) {
+        const err = new Error("message_too_large");
+        err.statusCode = 413;
+        throw err;
+      }
+      totalChars += textLen;
+    } else {
+      if (!content) continue;
+      if (content.length > MAX_MESSAGE_CHARS) {
+        const err = new Error("message_too_large");
+        err.statusCode = 413;
+        throw err;
+      }
+      totalChars += content.length;
     }
-
-    totalChars += content.length;
     if (totalChars > MAX_TOTAL_CHARS) {
       const err = new Error("messages_too_large");
       err.statusCode = 413;
       throw err;
     }
 
-    normalized.push({ role, content });
+    normalized.push({ role, content: isArray ? rawContent : content });
   }
 
   if (!normalized.length) {
@@ -626,17 +651,19 @@ function buildGeminiPrompt(normalizedMessages) {
   const lines = [];
 
   normalizedMessages.forEach((message) => {
-    if (!message || typeof message.content !== "string") return;
+    if (!message) return;
+    const text = typeof message.content === "string" ? message.content : normalizeContent(message.content);
+    if (!text) return;
     if (message.role === "developer") {
-      developerParts.push(message.content);
+      developerParts.push(text);
       return;
     }
     if (message.role === "user") {
-      lines.push(`User: ${message.content}`);
+      lines.push(`User: ${text}`);
       return;
     }
     if (message.role === "assistant") {
-      lines.push(`Assistant: ${message.content}`);
+      lines.push(`Assistant: ${text}`);
     }
   });
 
@@ -815,12 +842,13 @@ async function runGrokChat({ apiKey, model, messages }) {
     // Grok API uses standard chat completions format (similar to OpenAI)
     const url = "https://api.x.ai/v1/chat/completions";
     
-    // Convert messages to Grok format (developer role becomes system)
+    // Convert messages to Grok format (developer role becomes system). Grok expects string content.
     const grokMessages = messages.map((msg) => {
+      const content = typeof msg.content === "string" ? msg.content : normalizeContent(msg.content);
       if (msg.role === "developer") {
-        return { role: "system", content: msg.content };
+        return { role: "system", content };
       }
-      return { role: msg.role, content: msg.content };
+      return { role: msg.role, content };
     });
 
     const body = {
@@ -885,17 +913,52 @@ async function runGrokChat({ apiKey, model, messages }) {
   }
 }
 
+function dataUrlToBase64(dataUrl) {
+  if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:")) return null;
+  const comma = dataUrl.indexOf(",");
+  if (comma === -1) return null;
+  return dataUrl.slice(comma + 1);
+}
+
+function dataUrlToMediaType(dataUrl) {
+  if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:")) return "image/jpeg";
+  const match = dataUrl.match(/^data:([^;]+);/);
+  const mime = match ? match[1].trim().toLowerCase() : "image/jpeg";
+  if (mime === "image/png" || mime === "image/jpeg" || mime === "image/gif" || mime === "image/webp") return mime;
+  return "image/jpeg";
+}
+
 function buildClaudeRequest(normalizedMessages) {
   const systemParts = [];
   const messages = [];
   for (const msg of normalizedMessages) {
-    if (!msg || typeof msg.content !== "string") continue;
+    if (!msg) continue;
     if (msg.role === "developer") {
-      systemParts.push(msg.content);
+      const text = typeof msg.content === "string" ? msg.content : normalizeContent(msg.content);
+      if (text) systemParts.push(text);
       continue;
     }
-    if (msg.role === "user" || msg.role === "assistant") {
-      messages.push({ role: msg.role, content: msg.content });
+    if (msg.role !== "user" && msg.role !== "assistant") continue;
+    const content = msg.content;
+    if (Array.isArray(content)) {
+      const blocks = [];
+      for (const part of content) {
+        if (!part) continue;
+        if (part.type === "text" && typeof part.text === "string") {
+          blocks.push({ type: "text", text: part.text });
+          continue;
+        }
+        if (part.type === "image_url" && part.image_url && typeof part.image_url.url === "string") {
+          const data = dataUrlToBase64(part.image_url.url);
+          const mediaType = dataUrlToMediaType(part.image_url.url);
+          if (data) blocks.push({ type: "image", source: { type: "base64", media_type: mediaType, data } });
+        }
+      }
+      if (blocks.length) messages.push({ role: msg.role, content: blocks });
+      continue;
+    }
+    if (typeof content === "string" && content.trim()) {
+      messages.push({ role: msg.role, content: content });
     }
   }
   return {
@@ -998,10 +1061,10 @@ module.exports = async function handler(req, res) {
       );
     }
 
-    // Parse & validate request FIRST so we don't deduct tokens for invalid requests.
+    // Parse & validate request FIRST so we don't deduct tokens for invalid requests. Larger limit for image attachments.
     let body = {};
     try {
-      body = await readJson(req, { maxBytes: 64 * 1024 });
+      body = await readJson(req, { maxBytes: 6 * 1024 * 1024 });
     } catch (error) {
       const status = error?.code === "payload_too_large" ? 413 : 400;
       return json(res, status, { error: "Invalid request body" });
