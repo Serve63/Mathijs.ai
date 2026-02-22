@@ -4438,6 +4438,21 @@
 
       if (sendButton && chatInput) {
         sendButton.addEventListener("click", sendMessage);
+        chatInput.addEventListener("paste", (event) => {
+          const clipboard = event.clipboardData;
+          if (!clipboard || !clipboard.items || !clipboard.items.length) return;
+          const imageFiles = [];
+          for (let i = 0; i < clipboard.items.length; i += 1) {
+            const item = clipboard.items[i];
+            if (!item || item.kind !== "file") continue;
+            const file = item.getAsFile();
+            if (!file || !file.type || !file.type.startsWith("image/")) continue;
+            imageFiles.push(file);
+          }
+          if (imageFiles.length) {
+            addPendingAttachments(imageFiles);
+          }
+        });
         chatInput.addEventListener("keydown", (event) => {
           if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();

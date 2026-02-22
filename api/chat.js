@@ -630,6 +630,34 @@ function extractResponseText(response) {
   return text;
 }
 
+function toOpenAiInputContent(content) {
+  if (typeof content === "string") {
+    const text = content.trim();
+    return text ? [{ type: "input_text", text }] : [];
+  }
+  if (!Array.isArray(content)) {
+    return [];
+  }
+
+  const out = [];
+  for (const part of content) {
+    if (!part) continue;
+    if (part.type === "text" && typeof part.text === "string" && part.text.trim()) {
+      out.push({ type: "input_text", text: part.text });
+      continue;
+    }
+    if (part.type === "image_url" && part.image_url && typeof part.image_url.url === "string" && part.image_url.url.trim()) {
+      out.push({ type: "input_image", image_url: part.image_url.url });
+      continue;
+    }
+    if (part.type === "image" && typeof part.image === "string" && part.image.trim()) {
+      out.push({ type: "input_image", image_url: part.image });
+      continue;
+    }
+  }
+  return out;
+}
+
 function extractOpenAiSources(response) {
   const output = Array.isArray(response?.output) ? response.output : [];
   const seen = new Set();
@@ -1506,7 +1534,16 @@ module.exports = async function handler(req, res) {
         const effectiveMessages = modeInstruction
           ? [...normalizedMessages, { role: "developer", content: modeInstruction }]
           : normalizedMessages;
-        const input = effectiveMessages.map((message) => ({ role: message.role, content: message.content }));
+        const input = effectiveMessages.reduce((acc, message) => {
+          const role = message.role === "developer" ? "system" : message.role;
+          const content = toOpenAiInputContent(message.content);
+          if (!content.length) return acc;
+          acc.push({ role, content });
+          return acc;
+        }, []);
+        if (!input.length) {
+          throw new Error("Geen geldige OpenAI input gevonden.");
+        }
         const openAiModes = webSearchEnabled ? [true, false] : [false];
         let lastOpenAiError = null;
         for (const useWebSearch of openAiModes) {
