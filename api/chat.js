@@ -630,10 +630,11 @@ function extractResponseText(response) {
   return text;
 }
 
-function toOpenAiInputContent(content) {
+function toOpenAiInputContent(content, role = "user") {
+  const textType = role === "assistant" ? "output_text" : "input_text";
   if (typeof content === "string") {
     const text = content.trim();
-    return text ? [{ type: "input_text", text }] : [];
+    return text ? [{ type: textType, text }] : [];
   }
   if (!Array.isArray(content)) {
     return [];
@@ -643,14 +644,20 @@ function toOpenAiInputContent(content) {
   for (const part of content) {
     if (!part) continue;
     if (part.type === "text" && typeof part.text === "string" && part.text.trim()) {
-      out.push({ type: "input_text", text: part.text });
+      out.push({ type: textType, text: part.text });
       continue;
     }
-    if (part.type === "image_url" && part.image_url && typeof part.image_url.url === "string" && part.image_url.url.trim()) {
+    if (
+      role !== "assistant" &&
+      part.type === "image_url" &&
+      part.image_url &&
+      typeof part.image_url.url === "string" &&
+      part.image_url.url.trim()
+    ) {
       out.push({ type: "input_image", image_url: part.image_url.url });
       continue;
     }
-    if (part.type === "image" && typeof part.image === "string" && part.image.trim()) {
+    if (role !== "assistant" && part.type === "image" && typeof part.image === "string" && part.image.trim()) {
       out.push({ type: "input_image", image_url: part.image });
       continue;
     }
@@ -1536,7 +1543,7 @@ module.exports = async function handler(req, res) {
           : normalizedMessages;
         const input = effectiveMessages.reduce((acc, message) => {
           const role = message.role === "developer" ? "system" : message.role;
-          const content = toOpenAiInputContent(message.content);
+          const content = toOpenAiInputContent(message.content, role);
           if (!content.length) return acc;
           acc.push({ role, content });
           return acc;
