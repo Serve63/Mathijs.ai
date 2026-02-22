@@ -1812,6 +1812,147 @@
         color: rgba(180, 26, 26, 0.9);
       }
 
+      .camera-modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10, 12, 18, 0.58);
+        backdrop-filter: blur(8px);
+        z-index: 150;
+        padding: 24px;
+      }
+
+      .camera-modal.is-visible {
+        display: flex;
+      }
+
+      .camera-modal__dialog {
+        width: min(720px, 100%);
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 24px;
+        box-shadow: 0 40px 90px -50px rgba(16, 21, 32, 0.6);
+        border: 1px solid rgba(16, 21, 32, 0.08);
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+      }
+
+      .camera-modal__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 26px 16px;
+        border-bottom: 1px solid rgba(16, 21, 32, 0.06);
+      }
+
+      .camera-modal__title {
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: #1a1a1f;
+      }
+
+      .camera-modal__close {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(26, 26, 31, 0.6);
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .camera-modal__close:hover {
+        background: rgba(16, 21, 32, 0.06);
+        color: #1a1a1f;
+      }
+
+      .camera-modal__body {
+        padding: 22px 26px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .camera-modal__preview {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background: #0b0f1a;
+        border-radius: 18px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .camera-modal__preview video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .camera-modal__fallback {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        text-align: center;
+        font-size: 0.9rem;
+        color: #e2e8f0;
+        background: rgba(15, 23, 42, 0.86);
+      }
+
+      .camera-modal__actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      }
+
+      .camera-modal__btn {
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(16, 21, 32, 0.12);
+      }
+
+      .camera-modal__btn.secondary {
+        background: #fff;
+        color: #1a1a1f;
+      }
+
+      .camera-modal__btn.secondary:hover {
+        background: rgba(16, 21, 32, 0.04);
+      }
+
+      .camera-modal__btn.primary {
+        background: var(--chat-accent);
+        color: #1a1600;
+        border-color: var(--chat-accent);
+      }
+
+      .camera-modal__btn.primary:hover {
+        background: #ffe55a;
+        transform: translateY(-1px);
+      }
+
+      .camera-modal__btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
       .chat-main {
         display: flex;
         flex-direction: column;
@@ -4043,6 +4184,29 @@
                 <button type="button" class="edit-credentials-modal__cancel">Annuleren</button>
                 <button type="button" class="edit-credentials-modal__save">Opslaan</button>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="camera-modal" id="camera-modal" role="dialog" aria-modal="true" aria-labelledby="camera-modal-title">
+        <div class="camera-modal__dialog">
+          <header class="camera-modal__header">
+            <h2 class="camera-modal__title" id="camera-modal-title">Camera</h2>
+            <button class="camera-modal__close" type="button" aria-label="Sluit camera">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6l-12 12" />
+              </svg>
+            </button>
+          </header>
+          <div class="camera-modal__body">
+            <div class="camera-modal__preview">
+              <video id="camera-video" autoplay playsinline></video>
+              <div class="camera-modal__fallback" id="camera-fallback">Camera niet beschikbaar.</div>
+            </div>
+            <div class="camera-modal__actions">
+              <button type="button" class="camera-modal__btn secondary" id="camera-choose-file">Bestand kiezen</button>
+              <button type="button" class="camera-modal__btn secondary" id="camera-cancel">Annuleren</button>
+              <button type="button" class="camera-modal__btn primary" id="camera-capture">Foto maken</button>
             </div>
           </div>
         </div>
