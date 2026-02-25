@@ -511,6 +511,16 @@
         return html.join("");
       };
 
+      const getCanvasPrimaryHeading = (markdown, fallback = "canvas") => {
+        const lines = String(markdown || "").replace(/\r\n/g, "\n").split("\n");
+        for (let i = 0; i < lines.length; i += 1) {
+          const line = lines[i].trim();
+          const h1 = line.match(/^#\s+(.+)$/);
+          if (h1 && h1[1]) return h1[1].trim();
+        }
+        return String(fallback || "canvas").trim() || "canvas";
+      };
+
       const getCanvasEditorMarkdown = () => {
         if (!canvasEditor) return "";
         const blocks = [];
@@ -2153,14 +2163,16 @@
         const format = btn.getAttribute("data-canvas-download");
         const doc = getActiveCanvasDoc();
         if (!doc) return;
-        const safeName = (doc.title || "canvas").replace(/[^\w\-]+/g, "-").toLowerCase() || "canvas";
+        const contentForExport = getCanvasEditorMarkdown() || doc.content || "";
+        const exportTitle = getCanvasPrimaryHeading(contentForExport, doc.title || "canvas");
+        const safeName = exportTitle.replace(/[^\w\-]+/g, "-").toLowerCase() || "canvas";
         if (format === "md") {
-          downloadBlob(`${safeName}.md`, "text/markdown;charset=utf-8", doc.content || "");
+          downloadBlob(`${safeName}.md`, "text/markdown;charset=utf-8", contentForExport);
         } else if (format === "doc") {
-          const html = `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Calibri,Arial,sans-serif;padding:28px;color:#111}h1{font-size:28px;font-weight:700;margin:0 0 16px}h2{font-size:20px;font-weight:700;margin:18px 0 10px}h3{font-size:17px;font-weight:700;margin:14px 0 8px}p{line-height:1.6;margin:0 0 10px}</style></head><body><h1>${escapeCanvasHtml(doc.title)}</h1>${renderCanvasMarkdown(doc.content)}</body></html>`;
+          const html = `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Calibri,Arial,sans-serif;padding:28px;color:#111}h1{font-size:28px;font-weight:700;margin:0 0 16px}h2{font-size:20px;font-weight:700;margin:18px 0 10px}h3{font-size:17px;font-weight:700;margin:14px 0 8px}p{line-height:1.6;margin:0 0 10px}</style></head><body>${renderCanvasMarkdown(contentForExport)}</body></html>`;
           downloadBlob(`${safeName}.doc`, "application/msword", html);
         } else if (format === "pdf") {
-          const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeCanvasHtml(doc.title)}</title><style>body{font-family:Arial,sans-serif;padding:48px;color:#111}h1{font-size:34px;font-weight:800;margin:0 0 24px}h2{font-size:24px;font-weight:700;margin:22px 0 10px}h3{font-size:20px;font-weight:700;margin:18px 0 8px}p{line-height:1.7;margin:0 0 14px}</style></head><body><h1>${escapeCanvasHtml(doc.title)}</h1>${renderCanvasMarkdown(doc.content)}</body></html>`;
+          const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeCanvasHtml(exportTitle)}</title><style>body{font-family:Arial,sans-serif;padding:48px;color:#111}h1{font-size:34px;font-weight:800;margin:0 0 24px}h2{font-size:24px;font-weight:700;margin:22px 0 10px}h3{font-size:20px;font-weight:700;margin:18px 0 8px}p{line-height:1.7;margin:0 0 14px}</style></head><body>${renderCanvasMarkdown(contentForExport)}</body></html>`;
           const blob = new Blob([html], { type: "text/html;charset=utf-8" });
           const url = URL.createObjectURL(blob);
           const printWindow = window.open(url, "_blank", "noopener,noreferrer");
