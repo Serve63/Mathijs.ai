@@ -3439,6 +3439,52 @@
         opacity: 1;
       }
 
+      #action-deep-research {
+        transition: transform 90ms ease, filter 0.2s ease, box-shadow 0.24s ease;
+      }
+
+      #action-deep-research:hover {
+        filter: brightness(1.05);
+        box-shadow: 0 0 0 1px rgba(94, 146, 255, 0.22) inset;
+      }
+
+      #action-deep-research.is-pressed {
+        transform: scale(0.97);
+      }
+
+      #action-deep-research.is-active::before {
+        background: linear-gradient(135deg, rgba(68, 125, 255, 0.24) 0%, rgba(59, 130, 246, 0.14) 100%);
+        border-color: rgba(95, 150, 255, 0.52);
+        box-shadow:
+          0 0 0 1px rgba(108, 161, 255, 0.25) inset,
+          0 8px 20px -15px rgba(56, 130, 246, 0.6);
+      }
+
+      #action-deep-research.is-active .chat-plus__icon {
+        animation: deepResearchPulse 1.35s ease-in-out infinite;
+      }
+
+      .chat-plus__menu.deep-research-active .chat-plus__item {
+        opacity: 0.56;
+      }
+
+      .chat-plus__menu.deep-research-active #action-deep-research,
+      .chat-plus__menu.deep-research-active #action-upload,
+      .chat-plus__menu.deep-research-active #toggle-web-search {
+        opacity: 1;
+      }
+
+      @keyframes deepResearchPulse {
+        0%, 100% {
+          transform: scale(1);
+          filter: drop-shadow(0 0 0 rgba(96, 165, 250, 0.1));
+        }
+        50% {
+          transform: scale(1.12);
+          filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.5));
+        }
+      }
+
       .chat-plus__item > * {
         position: relative;
         z-index: 1;

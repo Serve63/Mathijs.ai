@@ -965,6 +965,9 @@
         if (nextMode !== "shopping_research") {
           shoppingAwaitingAnswers = false;
         }
+        if (chatPlusMenu) {
+          chatPlusMenu.classList.toggle("deep-research-active", nextMode === "deep_research");
+        }
         renderToolIndicator();
       };
 
@@ -975,17 +978,19 @@
           toggleWebSearch.style.display = "flex";
         }
         const showOpenAiExtras = isEnhancedOpenAiMode();
+        const showDeepResearchTool = selectedModel === "chatgpt52" || selectedModel === "gemini3";
         const showImageTool = selectedModel === "chatgpt52" || selectedModel === "gemini3";
         const showCanvasTool = selectedModel === "chatgpt52" || selectedModel === "gemini3";
         if (actionGenerateImage) actionGenerateImage.style.display = showImageTool ? "flex" : "none";
         if (actionThinking) actionThinking.style.display = showOpenAiExtras ? "flex" : "none";
-        if (actionDeepResearch) actionDeepResearch.style.display = showOpenAiExtras ? "flex" : "none";
+        if (actionDeepResearch) actionDeepResearch.style.display = showDeepResearchTool ? "flex" : "none";
         if (actionShoppingResearch) actionShoppingResearch.style.display = showOpenAiExtras ? "flex" : "none";
         if (actionCanvas) actionCanvas.style.display = showCanvasTool ? "flex" : "none";
         if (
           (!showImageTool && activeToolMode === "image_generation") ||
           (!showCanvasTool && activeToolMode === "canvas") ||
-          (!showOpenAiExtras && ["thinking", "deep_research", "shopping_research"].includes(activeToolMode))
+          (!showDeepResearchTool && activeToolMode === "deep_research") ||
+          (!showOpenAiExtras && ["thinking", "shopping_research"].includes(activeToolMode))
         ) {
           setToolMode("none");
           closeResearchActivity();
@@ -1985,6 +1990,8 @@
 
       actionDeepResearch?.addEventListener("click", (event) => {
         event.stopPropagation();
+        actionDeepResearch.classList.add("is-pressed");
+        setTimeout(() => actionDeepResearch.classList.remove("is-pressed"), 90);
         const nextMode = activeToolMode === "deep_research" ? "none" : "deep_research";
         setToolMode(nextMode);
         if (nextMode === "deep_research") toggleWebBadge(true);
@@ -5149,11 +5156,14 @@
 	        if (typeof content === "string" && !content.trim()) return;
         const canvasCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3";
         const imageCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3";
+        const deepResearchCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3";
         let toolModeForRequest = "none";
         if (activeToolMode === "canvas") {
           toolModeForRequest = canvasCapableModel ? "canvas" : "none";
         } else if (activeToolMode === "image_generation") {
           toolModeForRequest = imageCapableModel ? "image_generation" : "none";
+        } else if (activeToolMode === "deep_research") {
+          toolModeForRequest = deepResearchCapableModel ? "deep_research" : "none";
         } else {
           toolModeForRequest = isEnhancedOpenAiMode() ? activeToolMode : "none";
         }
