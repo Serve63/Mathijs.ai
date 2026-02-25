@@ -1489,6 +1489,12 @@ async function runGrokChat({ apiKey, model, messages, webSearch = false, thinkin
 }
 
 function extractGrokImageData(payload) {
+  const directUrl = payload?.url || payload?.image_url || payload?.imageUrl || "";
+  if (typeof directUrl === "string" && directUrl.trim()) return directUrl.trim();
+  const directB64 = payload?.image || payload?.b64_json || payload?.base64 || "";
+  if (typeof directB64 === "string" && directB64.trim()) {
+    return `data:image/png;base64,${directB64.trim()}`;
+  }
   const first = Array.isArray(payload?.data) ? payload.data[0] : null;
   const b64 = first?.b64_json || first?.base64 || first?.image_base64 || "";
   if (typeof b64 === "string" && b64.trim()) {
@@ -1512,7 +1518,7 @@ async function runGrokImageGeneration({ apiKey, prompt, model }) {
   const modelCandidates = Array.from(
     new Set([model || getGrokImageModel() || GROK_IMAGE_DEFAULT_MODEL, GROK_IMAGE_DEFAULT_MODEL, "grok-2-image"].filter(Boolean))
   );
-  const formatCandidates = [{ response_format: "b64_json" }, { image_format: "base64" }, {}];
+  const formatCandidates = [{ image_format: "base64" }, {}];
   let lastError = null;
 
   for (const candidateModel of modelCandidates) {
@@ -1521,7 +1527,6 @@ async function runGrokImageGeneration({ apiKey, prompt, model }) {
         model: candidateModel,
         prompt,
         n: 1,
-        size: "1024x1024",
         ...formatOptions,
       };
       const resp = await fetch(url, {
@@ -1546,7 +1551,7 @@ async function runGrokImageGeneration({ apiKey, prompt, model }) {
           modelUsed: candidateModel,
         };
       }
-      const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+      const msg = payload?.error?.message || payload?.message || payload?.detail || `${resp.status} ${resp.statusText}`;
       const err = new Error(sanitizeProviderErrorMessage(msg));
       err.status = resp.status;
       err.payload = payload;
