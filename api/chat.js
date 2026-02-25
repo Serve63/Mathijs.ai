@@ -22,7 +22,7 @@ const OPENAI_ALLOWED_MODELS = ["gpt-4o", "gpt-4o-mini"];
 // Gemini model IDs vary by API version and rollout. We keep a conservative default and
 // map UI labels/legacy names to something likely to exist, then we try both v1 and v1beta endpoints.
 const GEMINI_DEFAULT_MODEL = "gemini-1.5-flash";
-const GEMINI_IMAGE_DEFAULT_MODEL = "gemini-2.5-flash-image-preview";
+const GEMINI_IMAGE_DEFAULT_MODEL = "gemini-2.5-flash-image";
 const GEMINI_ALLOWED_MODELS = [
   "gemini-1.5-flash",
   "gemini-1.5-pro",
@@ -869,49 +869,146 @@ function extractGeminiImagePart(payload) {
   return null;
 }
 
+function extractGeminiInteractionImage(payload) {
+  const outputs = Array.isArray(payload?.outputs) ? payload.outputs : [];
+  for (const output of outputs) {
+    if (!output || output.type !== "image") continue;
+    const data = typeof output?.data === "string" ? output.data : "";
+    const mime = typeof output?.mime_type === "string" ? output.mime_type : "image/png";
+    if (data) {
+      return { b64: data, mime };
+    }
+  }
+  return null;
+}
+
 async function geminiGenerateImageViaRest({ apiKey, model, prompt }) {
-  const body = {
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    generationConfig: {
-      responseModalities: ["TEXT", "IMAGE"],
-    },
-  };
+  const modelCandidates = Array.from(
+    new Set(
+      [
+        model,
+        "gemini-2.5-flash-image",
+        "gemini-2.5-flash-image-preview",
+        "gemini-3-pro-image-preview",
+        "gemini-2.0-flash-exp-image-generation",
+      ].filter(Boolean)
+    )
+  );
+
   const versions = ["v1beta", "v1"];
   let lastErr = null;
 
-  for (const version of versions) {
-    const url = `https://generativelanguage.googleapis.com/${version}/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`;
+  for (const modelName of modelCandidates) {
+    // 1) Interactions API (newer multimodal path).
     try {
-      const resp = await fetch(url, {
+      const interactionsResp = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          model: modelName,
+          input: prompt,
+          response_modalities: ["IMAGE"],
+        }),
       });
-      const payload = await resp.json().catch(() => ({}));
-      if (!resp.ok) {
-        const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
-        const err = new Error(msg);
-        err.status = resp.status;
-        err.payload = payload;
-        lastErr = err;
-        continue;
+      const interactionsPayload = await interactionsResp.json().catch(() => ({}));
+      if (interactionsResp.ok) {
+        const image = extractGeminiInteractionImage(interactionsPayload);
+        if (image?.b64) {
+          return {
+            imageData: `data:${image.mime || "image/png"};base64,${image.b64}`,
+            text: "Hier is je afbeelding.",
+            usage: null,
+          };
+        }
+      } else {
+        const msg = interactionsPayload?.error?.message || interactionsPayload?.message || `${interactionsResp.status} ${interactionsResp.statusText}`;
+        lastErr = new Error(`[interactions ${modelName}] ${msg}`);
       }
-      const image = extractGeminiImagePart(payload);
-      if (!image?.b64) {
-        const err = new Error("Gemini gaf geen afbeelding terug.");
-        err.payload = payload;
-        lastErr = err;
-        continue;
-      }
-      return {
-        imageData: `data:${image.mime || "image/png"};base64,${image.b64}`,
-        text: extractGeminiText(payload) || "Hier is je afbeelding.",
-        usage: extractGeminiUsage(payload),
-      };
     } catch (err) {
       lastErr = err;
     }
+
+    const contentVariants = [
+      { generation_config: { response_modalities: ["TEXT", "IMAGE"] } },
+      { generation_config: { responseModalities: ["TEXT", "IMAGE"] } },
+      { generationConfig: { response_modalities: ["TEXT", "IMAGE"] } },
+      { generationConfig: { responseModalities: ["TEXT", "IMAGE"] } },
+    ];
+
+    for (const version of versions) {
+      const url = `https://generativelanguage.googleapis.com/${version}/models/${encodeURIComponent(modelName)}:generateContent?key=${apiKey}`;
+      for (const variant of contentVariants) {
+        const body = {
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          ...variant,
+        };
+        try {
+          const resp = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const payload = await resp.json().catch(() => ({}));
+          if (!resp.ok) {
+            const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+            lastErr = new Error(`[${version} ${modelName}] ${msg}`);
+            continue;
+          }
+          const image = extractGeminiImagePart(payload);
+          if (!image?.b64) {
+            lastErr = new Error(`[${version} ${modelName}] Gemini gaf geen afbeelding terug.`);
+            continue;
+          }
+          return {
+            imageData: `data:${image.mime || "image/png"};base64,${image.b64}`,
+            text: extractGeminiText(payload) || "Hier is je afbeelding.",
+            usage: extractGeminiUsage(payload),
+          };
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+    }
   }
+
+  // Final fallback: list models and retry first image-capable candidate once.
+  try {
+    const available = await listGeminiModels(apiKey);
+    const imageLike = available.find((m) => /image|vision|flash/i.test(m));
+    if (imageLike) {
+      for (const version of versions) {
+        const url = `https://generativelanguage.googleapis.com/${version}/models/${encodeURIComponent(imageLike)}:generateContent?key=${apiKey}`;
+        try {
+          const resp = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+              generation_config: { response_modalities: ["TEXT", "IMAGE"] },
+            }),
+          });
+          const payload = await resp.json().catch(() => ({}));
+          if (!resp.ok) continue;
+          const image = extractGeminiImagePart(payload);
+          if (image?.b64) {
+            return {
+              imageData: `data:${image.mime || "image/png"};base64,${image.b64}`,
+              text: extractGeminiText(payload) || "Hier is je afbeelding.",
+              usage: extractGeminiUsage(payload),
+            };
+          }
+        } catch {
+          // continue
+        }
+      }
+    }
+  } catch {
+    // ignore listing failures
+  }
+
   throw lastErr || new Error("gemini_image_failed");
 }
 
