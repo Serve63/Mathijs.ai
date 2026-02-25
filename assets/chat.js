@@ -272,8 +272,11 @@
           { value: "diepdenken", label: "Diepdenken" },
         ],
         grok4: [
+          { value: "automatisch", label: "Automatisch" },
           { value: "snel", label: "Snel" },
           { value: "expert", label: "Expert" },
+          { value: "grok420beta", label: "Grok 4.20 (Beta)" },
+          { value: "heavy", label: "Heavy" },
         ],
       };
       const noThinkingModels = new Set(["opus46", "sonnet46", "haiku45", "llama4"]);

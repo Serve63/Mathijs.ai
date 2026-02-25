@@ -18,11 +18,13 @@ const { adminRestFetch } = require("./_lib/supabaseAdmin");
 // Keep this conservative and stable across accounts/keys.
 const OPENAI_DEFAULT_MODEL = "gpt-4o-mini";
 const OPENAI_ALLOWED_MODELS = ["gpt-4o", "gpt-4o-mini"];
+const OPENAI_DEEP_RESEARCH_MODELS = ["o4-mini-deep-research", "o3-deep-research"];
 
 // Gemini model IDs vary by API version and rollout. We keep a conservative default and
 // map UI labels/legacy names to something likely to exist, then we try both v1 and v1beta endpoints.
 const GEMINI_DEFAULT_MODEL = "gemini-1.5-flash";
 const GEMINI_IMAGE_DEFAULT_MODEL = "gemini-2.5-flash-image";
+const GEMINI_DEEP_RESEARCH_AGENT = "deep-research-pro-preview-12-2025";
 const GEMINI_ALLOWED_MODELS = [
   "gemini-1.5-flash",
   "gemini-1.5-pro",
@@ -855,6 +857,57 @@ async function geminiGenerateViaRest({ apiKey, model, prompt, webSearch = false 
   throw lastErr || new Error("gemini_rest_failed");
 }
 
+function getDeepResearchPollingConfig() {
+  const intervalMsRaw = Number(process.env.DEEP_RESEARCH_POLL_INTERVAL_MS || 3000);
+  const timeoutMsRaw = Number(process.env.DEEP_RESEARCH_POLL_TIMEOUT_MS || 90000);
+  const intervalMs = Number.isFinite(intervalMsRaw) && intervalMsRaw >= 1000 ? Math.floor(intervalMsRaw) : 3000;
+  const timeoutMs = Number.isFinite(timeoutMsRaw) && timeoutMsRaw >= 10_000 ? Math.floor(timeoutMsRaw) : 90000;
+  return { intervalMs, timeoutMs };
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function extractSourcesFromAnyPayload(payload) {
+  const out = [];
+  const seen = new Set();
+  const queue = [payload];
+
+  while (queue.length) {
+    const node = queue.shift();
+    if (!node) continue;
+    if (Array.isArray(node)) {
+      for (const item of node) queue.push(item);
+      continue;
+    }
+    if (typeof node !== "object") continue;
+
+    const rawUrl =
+      node.url ||
+      node.uri ||
+      node.link ||
+      node.sourceUrl ||
+      node.source_url ||
+      node.webUri ||
+      node.web_uri ||
+      "";
+    const rawTitle = node.title || node.name || node.sourceTitle || node.source_title || "";
+    const url = typeof rawUrl === "string" ? rawUrl.trim() : "";
+    if (url && /^https?:\/\//i.test(url) && !seen.has(url)) {
+      seen.add(url);
+      out.push({ url, title: typeof rawTitle === "string" ? rawTitle.trim() : "" });
+      if (out.length >= 60) break;
+    }
+
+    for (const value of Object.values(node)) {
+      if (value && (typeof value === "object" || Array.isArray(value))) queue.push(value);
+    }
+  }
+
+  return out;
+}
+
 function extractGeminiImagePart(payload) {
   const candidates = Array.isArray(payload?.candidates) ? payload.candidates : [];
   const parts = candidates?.[0]?.content?.parts || [];
@@ -880,6 +933,185 @@ function extractGeminiInteractionImage(payload) {
     }
   }
   return null;
+}
+
+function extractGeminiInteractionText(payload) {
+  if (payload && typeof payload?.response === "object") {
+    const nested = extractGeminiInteractionText(payload.response);
+    if (nested) return nested;
+  }
+  const outputs = Array.isArray(payload?.outputs) ? payload.outputs : [];
+  const chunks = [];
+  for (const output of outputs) {
+    if (!output) continue;
+    if (typeof output?.text === "string" && output.text.trim()) {
+      chunks.push(output.text.trim());
+      continue;
+    }
+    const parts = Array.isArray(output?.content?.parts)
+      ? output.content.parts
+      : Array.isArray(output?.parts)
+        ? output.parts
+        : [];
+    for (const part of parts) {
+      if (typeof part?.text === "string" && part.text.trim()) {
+        chunks.push(part.text.trim());
+      }
+    }
+  }
+  return chunks.join("\n\n").trim();
+}
+
+function buildDeepResearchPrompt(messages) {
+  const base = buildGeminiPrompt(messages).trim();
+  if (!base) return "Voer diepgaand onderzoek uit op basis van de gegeven context en vraag.";
+  return `${base}\n\nLever een gestructureerd rapport op met duidelijke koppen en concrete bronverwijzingen.`;
+}
+
+async function runGeminiDeepResearch({ apiKey, messages }) {
+  const prompt = buildDeepResearchPrompt(messages);
+  const agent = process.env.GEMINI_DEEP_RESEARCH_AGENT || GEMINI_DEEP_RESEARCH_AGENT;
+  const { intervalMs, timeoutMs } = getDeepResearchPollingConfig();
+  const start = Date.now();
+
+  const startResp = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey,
+    },
+    body: JSON.stringify({
+      input: prompt,
+      agent,
+      background: true,
+    }),
+  });
+  const startPayload = await startResp.json().catch(() => ({}));
+  if (!startResp.ok) {
+    const msg = startPayload?.error?.message || startPayload?.message || `${startResp.status} ${startResp.statusText}`;
+    throw new Error(`Gemini deep research start mislukte: ${msg}`);
+  }
+
+  const interactionRef = startPayload?.id || startPayload?.name || startPayload?.interaction?.id || startPayload?.interaction?.name;
+  if (!interactionRef || typeof interactionRef !== "string") {
+    throw new Error("Gemini deep research gaf geen interaction id terug.");
+  }
+
+  let latest = startPayload;
+  while (Date.now() - start < timeoutMs) {
+    const status = String(latest?.status || "").toLowerCase();
+    const done = latest?.done === true || status === "completed";
+    if (done) {
+      const text = extractGeminiInteractionText(latest);
+      const usage = extractGeminiUsage(latest);
+      const sources = extractSourcesFromAnyPayload(latest);
+      return { text, usage, sources, modelUsed: agent };
+    }
+    if (status === "failed" || status === "cancelled") {
+      const msg =
+        latest?.error?.message ||
+        latest?.error ||
+        latest?.status_detail ||
+        `Gemini deep research status: ${status}`;
+      throw new Error(typeof msg === "string" ? msg : "Gemini deep research mislukt.");
+    }
+
+    await sleep(intervalMs);
+    const pollPath = interactionRef.startsWith("interactions/")
+      ? `https://generativelanguage.googleapis.com/v1beta/${interactionRef}`
+      : `https://generativelanguage.googleapis.com/v1beta/interactions/${encodeURIComponent(interactionRef)}`;
+    const pollResp = await fetch(pollPath, {
+      method: "GET",
+      headers: { "x-goog-api-key": apiKey },
+    });
+    latest = await pollResp.json().catch(() => ({}));
+    if (!pollResp.ok) {
+      const msg = latest?.error?.message || latest?.message || `${pollResp.status} ${pollResp.statusText}`;
+      throw new Error(`Gemini deep research polling mislukte: ${msg}`);
+    }
+  }
+
+  throw new Error(
+    "Gemini deep research duurt langer dan verwacht. Verhoog DEEP_RESEARCH_POLL_TIMEOUT_MS of probeer een kortere vraag."
+  );
+}
+
+function resolveOpenAiDeepResearchModel() {
+  const preferred = String(process.env.OPENAI_DEEP_RESEARCH_MODEL || "").trim();
+  if (preferred) return preferred;
+  return OPENAI_DEEP_RESEARCH_MODELS[0];
+}
+
+async function runOpenAiDeepResearch({ client, messages }) {
+  const modeInstruction =
+    "Voer diepgaand onderzoek uit. Gebruik meerdere actuele bronnen, citeer concrete feiten en sluit af met een sectie 'Bronnen'.";
+  const effectiveMessages = [...messages, { role: "developer", content: modeInstruction }];
+  const input = effectiveMessages.reduce((acc, message) => {
+    const role = message.role === "developer" ? "system" : message.role;
+    const content = toOpenAiInputContent(message.content, role);
+    if (!content.length) return acc;
+    acc.push({ role, content });
+    return acc;
+  }, []);
+  if (!input.length) {
+    throw new Error("Geen geldige OpenAI input gevonden.");
+  }
+
+  const modelCandidates = Array.from(
+    new Set([resolveOpenAiDeepResearchModel(), ...OPENAI_DEEP_RESEARCH_MODELS].filter(Boolean))
+  );
+  const { intervalMs, timeoutMs } = getDeepResearchPollingConfig();
+
+  let lastError = null;
+  for (const deepModel of modelCandidates) {
+    try {
+      let response = await client.responses.create({
+        model: deepModel,
+        input,
+        background: true,
+        tools: [{ type: "web_search_preview" }],
+      });
+
+      const id = response?.id;
+      const start = Date.now();
+      while (id && Date.now() - start < timeoutMs) {
+        const status = String(response?.status || "").toLowerCase();
+        if (status === "completed") {
+          const text = extractResponseText(response);
+          const usage = extractOpenAiUsage(response);
+          const sources = extractOpenAiSources(response);
+          const fallbackSources = sources.length ? sources : extractSourcesFromAnyPayload(response);
+          return { text, usage, sources: fallbackSources, modelUsed: deepModel };
+        }
+        if (status === "failed" || status === "cancelled" || status === "incomplete") {
+          const msg =
+            response?.error?.message ||
+            response?.incomplete_details?.reason ||
+            `OpenAI deep research status: ${status}`;
+          throw new Error(typeof msg === "string" ? msg : "OpenAI deep research mislukt.");
+        }
+        await sleep(intervalMs);
+        response = await client.responses.retrieve(id);
+      }
+
+      if (id) {
+        throw new Error(
+          "OpenAI deep research duurt langer dan verwacht. Verhoog DEEP_RESEARCH_POLL_TIMEOUT_MS of probeer een kortere vraag."
+        );
+      }
+
+      // Fallback in case API returned immediately without id/status.
+      const text = extractResponseText(response);
+      const usage = extractOpenAiUsage(response);
+      const sources = extractOpenAiSources(response);
+      const fallbackSources = sources.length ? sources : extractSourcesFromAnyPayload(response);
+      return { text, usage, sources: fallbackSources, modelUsed: deepModel };
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error("OpenAI deep research mislukt.");
 }
 
 async function geminiGenerateImageViaRest({ apiKey, model, prompt }) {
@@ -1102,7 +1334,49 @@ function extractGrokUsage(payload) {
   };
 }
 
-async function runGrokChat({ apiKey, model, messages, webSearch = false }) {
+const GROK_THINKING_MODES = new Set([
+  "automatisch",
+  "snel",
+  "expert",
+  "grok420beta",
+  "heavy",
+  "instantly",
+  "thinking",
+]);
+
+function normalizeThinkingMode(rawMode) {
+  const mode = typeof rawMode === "string" ? rawMode.trim().toLowerCase() : "";
+  if (!mode) return "instantly";
+  if (GROK_THINKING_MODES.has(mode)) return mode;
+  return "instantly";
+}
+
+function buildGrokModeCandidates({ model, thinkingMode }) {
+  const normalizedMode = normalizeThinkingMode(thinkingMode);
+  const base = { model };
+  if (normalizedMode === "automatisch" || normalizedMode === "instantly") {
+    return [base];
+  }
+  if (normalizedMode === "snel") {
+    return [{ ...base, reasoning_effort: "low" }, base];
+  }
+  if (normalizedMode === "expert" || normalizedMode === "thinking") {
+    return [{ ...base, reasoning_effort: "high" }, base];
+  }
+  if (normalizedMode === "heavy") {
+    return [{ ...base, reasoning_effort: "high" }, base];
+  }
+  if (normalizedMode === "grok420beta") {
+    return [
+      { model: "grok-beta", reasoning_effort: "high" },
+      { ...base, reasoning_effort: "high" },
+      base,
+    ];
+  }
+  return [base];
+}
+
+async function runGrokChat({ apiKey, model, messages, webSearch = false, thinkingMode = "instantly" }) {
   try {
     // Grok API uses standard chat completions format (similar to OpenAI)
     const url = "https://api.x.ai/v1/chat/completions";
@@ -1120,67 +1394,75 @@ async function runGrokChat({ apiKey, model, messages, webSearch = false }) {
     let payload = null;
     let lastError = null;
     for (const useWebSearch of searchModes) {
-      const body = {
-        model: model,
-        messages: grokMessages,
-      };
-      if (useWebSearch) {
-        body.tools = [{ type: "web_search" }];
-      }
-
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(body),
-      });
-
-      payload = await resp.json().catch(() => ({}));
-      if (resp.ok) {
-        lastError = null;
-        break;
-      }
-
-      const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
-      const errorType = payload?.error?.type || payload?.type || "";
-      console.error(`[grok] API error (model: ${model}, status: ${resp.status}):`, msg);
-      console.error(`[grok] Error type: ${errorType}`);
-      if (payload?.error) {
-        console.error(`[grok] Full error payload:`, JSON.stringify(payload.error, null, 2));
-      }
-
-      // Provide more specific error messages for common issues
-      let errorMessage = msg;
-      if (resp.status === 403) {
-        if (errorType === "insufficient_quota" || msg.includes("quota")) {
-          errorMessage = "403 Forbidden: API quota is opgebruikt of facturering is niet geactiveerd. Activeer facturering op docs.x.ai.";
-        } else if (errorType === "invalid_api_key" || msg.includes("invalid") || msg.includes("key")) {
-          errorMessage = "403 Forbidden: API key is ongeldig. Controleer of GROK_API_KEY correct is ingesteld.";
-        } else {
-          errorMessage = "403 Forbidden: API key heeft geen toegang tot de Grok API. Controleer of GROK_API_KEY correct is ingesteld en toegang heeft tot Grok-4.";
+      const modeCandidates = buildGrokModeCandidates({ model, thinkingMode });
+      for (const modeCandidate of modeCandidates) {
+        const body = {
+          ...modeCandidate,
+          messages: grokMessages,
+        };
+        if (useWebSearch) {
+          body.tools = [{ type: "web_search" }];
         }
-      } else if (resp.status === 401) {
-        errorMessage = "401 Unauthorized: API key ontbreekt of is ongeldig. Controleer GROK_API_KEY.";
-      } else if (resp.status === 400) {
-        errorMessage = `400 Bad Request: ${msg}. Controleer of het model '${model}' beschikbaar is.`;
-      }
 
-      const err = new Error(errorMessage);
-      err.status = resp.status;
-      err.payload = payload;
-      lastError = err;
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify(body),
+        });
+
+        payload = await resp.json().catch(() => ({}));
+        if (resp.ok) {
+          lastError = null;
+          return {
+            text: extractGrokText(payload),
+            usage: extractGrokUsage(payload),
+            modelUsed: body.model || model,
+          };
+        }
+
+        const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+        const errorType = payload?.error?.type || payload?.type || "";
+        const effortValue =
+          typeof modeCandidate.reasoning_effort === "string" ? modeCandidate.reasoning_effort : "none";
+        console.error(
+          `[grok] API error (model: ${body.model || model}, effort: ${effortValue}, status: ${resp.status}):`,
+          msg
+        );
+        console.error(`[grok] Error type: ${errorType}`);
+        if (payload?.error) {
+          console.error(`[grok] Full error payload:`, JSON.stringify(payload.error, null, 2));
+        }
+
+        // Provide more specific error messages for common issues
+        let errorMessage = msg;
+        if (resp.status === 403) {
+          if (errorType === "insufficient_quota" || msg.includes("quota")) {
+            errorMessage = "403 Forbidden: API quota is opgebruikt of facturering is niet geactiveerd. Activeer facturering op docs.x.ai.";
+          } else if (errorType === "invalid_api_key" || msg.includes("invalid") || msg.includes("key")) {
+            errorMessage = "403 Forbidden: API key is ongeldig. Controleer of GROK_API_KEY correct is ingesteld.";
+          } else {
+            errorMessage = "403 Forbidden: API key heeft geen toegang tot de Grok API. Controleer of GROK_API_KEY correct is ingesteld en toegang heeft tot Grok-4.";
+          }
+        } else if (resp.status === 401) {
+          errorMessage = "401 Unauthorized: API key ontbreekt of is ongeldig. Controleer GROK_API_KEY.";
+        } else if (resp.status === 400) {
+          errorMessage = `400 Bad Request: ${msg}. Controleer of het model '${body.model || model}' beschikbaar is.`;
+        }
+
+        const err = new Error(errorMessage);
+        err.status = resp.status;
+        err.payload = payload;
+        lastError = err;
+      }
     }
     if (lastError) {
       throw lastError;
     }
 
-    return {
-      text: extractGrokText(payload),
-      usage: extractGrokUsage(payload),
-      modelUsed: model,
-    };
+    throw new Error("Grok gaf geen bruikbare response terug.");
   } catch (err) {
     const safe = sanitizeProviderErrorMessage(err?.message || "");
     const wrapped = new Error("grok_failed");
@@ -1376,8 +1658,8 @@ module.exports = async function handler(req, res) {
       toolModeRaw === "shopping_research"
         ? toolModeRaw
         : "none";
-    const thinkingModeRaw = typeof body?.thinking_mode === "string" ? body.thinking_mode.trim().toLowerCase() : "";
-    const thinkingMode = thinkingModeRaw === "thinking" ? "thinking" : "instantly";
+    const thinkingModeRaw = typeof body?.thinking_mode === "string" ? body.thinking_mode : "";
+    const thinkingMode = normalizeThinkingMode(thinkingModeRaw);
     const modelKey =
       typeof body?.model_key === "string"
         ? body.model_key
@@ -1617,15 +1899,31 @@ module.exports = async function handler(req, res) {
             return json(res, 500, { error: "Invalid GEMINI_API_KEY format. API key should start with 'AIza'" });
           }
           console.log(`[gemini] Using model: ${geminiModel}, messages: ${normalizedMessages.length}`);
-          const result = await runGeminiChat({
-            apiKey,
-            model: geminiModel,
-            messages: normalizedMessages,
-            webSearch: webSearchEnabled,
-          });
+          let result;
+          try {
+            result =
+              effectiveToolMode === "deep_research"
+                ? await runGeminiDeepResearch({
+                    apiKey,
+                    messages: normalizedMessages,
+                  })
+                : await runGeminiChat({
+                    apiKey,
+                    model: geminiModel,
+                    messages: normalizedMessages,
+                    webSearch: webSearchEnabled,
+                  });
+          } catch (err) {
+            const safe = sanitizeProviderErrorMessage(err?.message || "");
+            const wrapped = new Error("gemini_failed");
+            wrapped.statusCode = 502;
+            wrapped.publicMessage = safe ? `Gemini request mislukte: ${safe}` : "Gemini request mislukte.";
+            wrapped.cause = err;
+            throw wrapped;
+          }
           const usageTokens = Number(result?.usage?.totalTokens || 0);
           const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
-          const usedModel = result?.modelUsed || geminiModel;
+          const usedModel = result?.modelUsed || (effectiveToolMode === "deep_research" ? GEMINI_DEEP_RESEARCH_AGENT : geminiModel);
           void recordUsageEvent({
             userId: user.id,
             provider: "gemini",
@@ -1635,7 +1933,7 @@ module.exports = async function handler(req, res) {
             tokensPerEur,
             costEur: requestCostEur,
           });
-          return json(res, 200, { text: result?.text || "" });
+          return json(res, 200, { text: result?.text || "", sources: result?.sources || [] });
         }
       }
 
@@ -1659,6 +1957,7 @@ module.exports = async function handler(req, res) {
           model: grokModel,
           messages: normalizedMessages,
           webSearch: webSearchEnabled,
+          thinkingMode,
         });
         const usageTokens = Number(result?.usage?.totalTokens || 0);
         const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
@@ -1810,6 +2109,29 @@ module.exports = async function handler(req, res) {
 
       let response;
       try {
+        if (effectiveToolMode === "deep_research") {
+          const deepResult = await runOpenAiDeepResearch({
+            client,
+            messages: normalizedMessages,
+          });
+          const usageTokens = Number(deepResult?.usage?.totalTokens || 0);
+          const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
+          const usedModel = deepResult?.modelUsed || resolveOpenAiDeepResearchModel();
+          void recordUsageEvent({
+            userId: user.id,
+            provider: "openai",
+            model: usedModel,
+            modelLabel: modelLabel || modelKey || requestedModel || usedModel,
+            tokens: actualTokens,
+            tokensPerEur,
+            costEur: requestCostEur,
+          });
+          return json(res, 200, {
+            text: deepResult?.text || "",
+            sources: deepResult?.sources || [],
+          });
+        }
+
         const modeInstruction = buildModeInstruction({ toolMode: effectiveToolMode, thinkingMode });
         const effectiveMessages = modeInstruction
           ? [...normalizedMessages, { role: "developer", content: modeInstruction }]
