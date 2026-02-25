@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gedeeld Canvas | Mathijs.ai</title>
+    <style>
+      :root {
+        --bg: #f3f4f6;
+        --text: #111827;
+        --muted: #6b7280;
+        --card: #ffffff;
+        --border: rgba(15, 23, 42, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      }
+
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 30px 16px 60px;
+      }
+
+      .head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .title {
+        margin: 0;
+        font-size: clamp(1.5rem, 5vw, 2.5rem);
+      }
+
+      .meta {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: clamp(18px, 3vw, 34px);
+      }
+
+      .content {
+        font-size: clamp(1.02rem, 1.8vw, 1.15rem);
+        line-height: 1.75;
+      }
+
+      .content p {
+        margin: 0 0 1rem;
+      }
+
+      .empty {
+        color: #991b1b;
+        font-weight: 600;
+      }
+
+      .embed .wrap {
+        max-width: 100%;
+        padding: 0;
+      }
+
+      .embed .card {
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="head">
+        <div>
+          <h1 id="title" class="title">Gedeeld canvas</h1>
+          <p id="meta" class="meta"></p>
+        </div>
+      </header>
+      <section class="card">
+        <article id="content" class="content"></article>
+      </section>
+    </main>
+    <script>
+      (function () {
+        const titleEl = document.getElementById("title");
+        const metaEl = document.getElementById("meta");
+        const contentEl = document.getElementById("content");
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("embed") === "1") document.body.classList.add("embed");
+
+        const decodePayload = (encoded) => {
+          if (!encoded) return null;
+          try {
+            const binary = atob(encoded);
+            const escaped = Array.from(binary)
+              .map((ch) => "%" + ch.charCodeAt(0).toString(16).padStart(2, "0"))
+              .join("");
+            const json = decodeURIComponent(escaped);
+            return JSON.parse(json);
+          } catch {
+            return null;
+          }
+        };
+
+        const escapeHtml = (value) =>
+          String(value || "").replace(/[&<>"']/g, (char) => {
+            if (char === "&") return "&amp;";
+            if (char === "<") return "&lt;";
+            if (char === ">") return "&gt;";
+            if (char === '"') return "&quot;";
+            return "&#39;";
+          });
+
+        const hashParams = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
+        const payload = decodePayload(hashParams.get("data"));
+        if (!payload || typeof payload !== "object") {
+          titleEl.textContent = "Canvas niet gevonden";
+          contentEl.innerHTML = '<p class="empty">Deze gedeelde canvas-link is ongeldig of beschadigd.</p>';
+          return;
+        }
+        const title = String(payload.title || "Gedeeld canvas").trim() || "Gedeeld canvas";
+        const content = String(payload.content || "");
+        const updatedAt = payload.updatedAt ? new Date(payload.updatedAt) : null;
+        titleEl.textContent = title;
+        metaEl.textContent = updatedAt && !Number.isNaN(updatedAt.getTime()) ? `Laatst bijgewerkt: ${updatedAt.toLocaleString("nl-NL")}` : "";
+        contentEl.innerHTML = content
+          .split(/\n{2,}/)
+          .map((block) => block.trim())
+          .filter(Boolean)
+          .map((block) => `<p>${escapeHtml(block)}</p>`)
+          .join("");
+      })();
+    </script>
+  </body>
+</html>

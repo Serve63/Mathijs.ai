@@ -185,6 +185,7 @@
       const actionThinking = document.getElementById("action-thinking");
       const actionDeepResearch = document.getElementById("action-deep-research");
       const actionShoppingResearch = document.getElementById("action-shopping-research");
+      const actionCanvas = document.getElementById("action-canvas");
       const researchActivityEl = document.getElementById("research-activity");
       const researchActivityClose = document.getElementById("research-activity-close");
       const researchActivityList = document.getElementById("research-activity-list");
@@ -216,6 +217,30 @@
       let researchActivityTimer = null;
       let researchActivityStepIndex = -1;
       let shoppingAwaitingAnswers = false;
+      const canvasModal = document.getElementById("canvas-modal");
+      const canvasClose = document.getElementById("canvas-close");
+      const canvasEditor = document.getElementById("canvas-editor");
+      const canvasTitleInput = document.getElementById("canvas-title-input");
+      const canvasCopy = document.getElementById("canvas-copy");
+      const canvasShare = document.getElementById("canvas-share");
+      const canvasDownload = document.getElementById("canvas-download");
+      const canvasDownloadMenu = document.getElementById("canvas-download-menu");
+      const canvasHistoryToggle = document.getElementById("canvas-history-toggle");
+      const canvasHistory = document.getElementById("canvas-history");
+      const canvasHistoryTitle = document.getElementById("canvas-history-title");
+      const canvasHistoryDiff = document.getElementById("canvas-history-diff");
+      const canvasMore = document.getElementById("canvas-more");
+      const canvasMoreMenu = document.getElementById("canvas-more-menu");
+      const canvasUndo = document.getElementById("canvas-undo");
+      const canvasRedo = document.getElementById("canvas-redo");
+      const canvasAssistToggle = document.getElementById("canvas-assist-toggle");
+      const canvasAssistRail = document.getElementById("canvas-assist-rail");
+      const canvasReadingTrigger = document.getElementById("canvas-reading-trigger");
+      const canvasLengthTrigger = document.getElementById("canvas-length-trigger");
+      const canvasSliderReading = document.getElementById("canvas-slider-reading");
+      const canvasSliderLength = document.getElementById("canvas-slider-length");
+      const canvasSliderReadingOptions = document.getElementById("canvas-slider-reading-options");
+      const canvasSliderLengthOptions = document.getElementById("canvas-slider-length-options");
 
       const defaultThinkingOptions = [
         { value: "snel", label: "Snel" },
@@ -246,6 +271,7 @@
         thinking: "Thinking",
         deep_research: "Diepgaand onderzoek",
         shopping_research: "Winkelonderzoek",
+        canvas: "Canvas",
       };
 
       const researchSteps = [
@@ -329,6 +355,453 @@
         }
       };
 
+      const CANVAS_DOCS_KEY = "mathijs_canvas_docs_v1";
+      const READING_LEVEL_OPTIONS = [
+        "Master",
+        "Hoger onderwijs",
+        "Bovenbouw middelbare school",
+        "Huidige leesniveau behouden",
+        "Onderbouw middelbare school",
+        "Kleuterschool",
+      ];
+      const LENGTH_OPTIONS = ["Langst", "Langer", "Huidige lengte behouden", "Korter", "Kortst"];
+      let canvasDocsStore = {};
+      let activeCanvasId = null;
+      let canvasSaveTimer = null;
+      let canvasUndoStack = [];
+      let canvasRedoStack = [];
+      let canvasHistoryVisible = false;
+      let canvasCompareIndex = null;
+      let selectedReadingLevel = "Huidige leesniveau behouden";
+      let selectedLengthLevel = "Huidige lengte behouden";
+
+      const escapeCanvasHtml = (value) =>
+        String(value || "").replace(/[&<>"']/g, (char) => {
+          if (char === "&") return "&amp;";
+          if (char === "<") return "&lt;";
+          if (char === ">") return "&gt;";
+          if (char === '"') return "&quot;";
+          return "&#39;";
+        });
+
+      const getCanvasStoreUserKey = () => currentUser?.id || "anon";
+
+      const parseCanvasStore = () => {
+        try {
+          const raw = localStorage.getItem(CANVAS_DOCS_KEY);
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === "object" ? parsed : {};
+        } catch {
+          return {};
+        }
+      };
+
+      const loadCanvasStore = () => {
+        canvasDocsStore = parseCanvasStore();
+      };
+
+      const saveCanvasStore = () => {
+        try {
+          localStorage.setItem(CANVAS_DOCS_KEY, JSON.stringify(canvasDocsStore));
+        } catch {
+          // ignore localStorage errors
+        }
+      };
+
+      const getCanvasDocsForSession = (sessionId) => {
+        const userKey = getCanvasStoreUserKey();
+        const byUser = canvasDocsStore[userKey] && typeof canvasDocsStore[userKey] === "object" ? canvasDocsStore[userKey] : {};
+        const docs = Array.isArray(byUser[sessionId]) ? byUser[sessionId] : [];
+        return docs.slice().sort((a, b) => new Date(a.updatedAt || a.createdAt || 0) - new Date(b.updatedAt || b.createdAt || 0));
+      };
+
+      const setCanvasDocsForSession = (sessionId, docs) => {
+        const userKey = getCanvasStoreUserKey();
+        if (!canvasDocsStore[userKey] || typeof canvasDocsStore[userKey] !== "object") {
+          canvasDocsStore[userKey] = {};
+        }
+        canvasDocsStore[userKey][sessionId] = Array.isArray(docs) ? docs : [];
+        saveCanvasStore();
+      };
+
+      const getActiveCanvasDoc = () => {
+        const sessionId = sessionState?.activeId;
+        if (!sessionId || !activeCanvasId) return null;
+        return getCanvasDocsForSession(sessionId).find((doc) => doc.id === activeCanvasId) || null;
+      };
+
+      const createCanvasDoc = (sessionId, content, title = "Nieuw canvas") => {
+        const safeContent = typeof content === "string" ? content : contentToDisplayString(content);
+        const now = new Date().toISOString();
+        const doc = {
+          id: `canvas-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          sessionId,
+          title: String(title || "Nieuw canvas").trim() || "Nieuw canvas",
+          content: String(safeContent || "").trim(),
+          createdAt: now,
+          updatedAt: now,
+          revisions: [{ content: String(safeContent || "").trim(), createdAt: now, source: "initial" }],
+        };
+        const docs = getCanvasDocsForSession(sessionId);
+        docs.push(doc);
+        setCanvasDocsForSession(sessionId, docs);
+        activeCanvasId = doc.id;
+        return doc;
+      };
+
+      const updateCanvasDoc = (docId, updater) => {
+        const sessionId = sessionState?.activeId;
+        if (!sessionId || !docId || typeof updater !== "function") return null;
+        const docs = getCanvasDocsForSession(sessionId);
+        const index = docs.findIndex((doc) => doc.id === docId);
+        if (index < 0) return null;
+        const nextDoc = updater({ ...docs[index] });
+        if (!nextDoc) return null;
+        docs[index] = nextDoc;
+        setCanvasDocsForSession(sessionId, docs);
+        return nextDoc;
+      };
+
+      const toCanvasParagraphs = (content) =>
+        String(content || "")
+          .split(/\n{2,}/)
+          .map((chunk) => chunk.trim())
+          .filter(Boolean)
+          .map((chunk) => `<p>${escapeCanvasHtml(chunk)}</p>`)
+          .join("");
+
+      const copyTextToClipboard = async (text) => {
+        const value = String(text || "");
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(value);
+            if (window.siteUI?.toast) window.siteUI.toast("Tekst gekopieerd.", { type: "success" });
+            return true;
+          }
+        } catch {
+          // fallback below
+        }
+        try {
+          const input = document.createElement("textarea");
+          input.value = value;
+          input.style.position = "fixed";
+          input.style.opacity = "0";
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand("copy");
+          input.remove();
+          if (window.siteUI?.toast) window.siteUI.toast("Tekst gekopieerd.", { type: "success" });
+          return true;
+        } catch {
+          return false;
+        }
+      };
+
+      const encodeSharePayload = (payload) => {
+        try {
+          const json = JSON.stringify(payload);
+          const utf8 = encodeURIComponent(json).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16)));
+          return btoa(utf8);
+        } catch {
+          return "";
+        }
+      };
+
+      const buildCanvasShareLinks = (doc) => {
+        const encoded = encodeSharePayload({
+          title: doc?.title || "Canvas",
+          content: doc?.content || "",
+          updatedAt: doc?.updatedAt || new Date().toISOString(),
+        });
+        if (!encoded) return { share: "", embed: "" };
+        const base = `${window.location.origin}/canvas-share.html#data=${encodeURIComponent(encoded)}`;
+        return { share: base, embed: `${window.location.origin}/canvas-share.html?embed=1#data=${encodeURIComponent(encoded)}` };
+      };
+
+      const downloadBlob = (filename, type, data) => {
+        const blob = new Blob([data], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      };
+
+      const tokenizeForDiff = (text) => String(text || "").match(/\s+|[^\s]+/g) || [];
+
+      const buildLcsMatrix = (a, b) => {
+        const rows = a.length + 1;
+        const cols = b.length + 1;
+        const matrix = Array.from({ length: rows }, () => new Array(cols).fill(0));
+        for (let i = 1; i < rows; i += 1) {
+          for (let j = 1; j < cols; j += 1) {
+            if (a[i - 1] === b[j - 1]) {
+              matrix[i][j] = matrix[i - 1][j - 1] + 1;
+            } else {
+              matrix[i][j] = Math.max(matrix[i - 1][j], matrix[i][j - 1]);
+            }
+          }
+        }
+        return matrix;
+      };
+
+      const diffHtml = (beforeText, afterText) => {
+        const before = tokenizeForDiff(beforeText);
+        const after = tokenizeForDiff(afterText);
+        const matrix = buildLcsMatrix(before, after);
+        let i = before.length;
+        let j = after.length;
+        const chunks = [];
+        while (i > 0 && j > 0) {
+          if (before[i - 1] === after[j - 1]) {
+            chunks.unshift(escapeCanvasHtml(before[i - 1]));
+            i -= 1;
+            j -= 1;
+          } else if (matrix[i - 1][j] >= matrix[i][j - 1]) {
+            chunks.unshift(`<span class="canvas-diff-del">${escapeCanvasHtml(before[i - 1])}</span>`);
+            i -= 1;
+          } else {
+            chunks.unshift(`<span class="canvas-diff-add">${escapeCanvasHtml(after[j - 1])}</span>`);
+            j -= 1;
+          }
+        }
+        while (i > 0) {
+          chunks.unshift(`<span class="canvas-diff-del">${escapeCanvasHtml(before[i - 1])}</span>`);
+          i -= 1;
+        }
+        while (j > 0) {
+          chunks.unshift(`<span class="canvas-diff-add">${escapeCanvasHtml(after[j - 1])}</span>`);
+          j -= 1;
+        }
+        return chunks.join("");
+      };
+
+      const renderCanvasHistory = () => {
+        if (!canvasHistory || !canvasHistoryDiff || !canvasHistoryTitle) return;
+        const doc = getActiveCanvasDoc();
+        if (!doc || !Array.isArray(doc.revisions) || doc.revisions.length < 2) {
+          canvasHistoryTitle.textContent = "Nog geen wijzigingen om te tonen.";
+          canvasHistoryDiff.innerHTML = "";
+          return;
+        }
+        const currentIndex = typeof canvasCompareIndex === "number" ? canvasCompareIndex : doc.revisions.length - 1;
+        const nextIndex = Math.max(1, Math.min(currentIndex, doc.revisions.length - 1));
+        const before = doc.revisions[nextIndex - 1]?.content || "";
+        const after = doc.revisions[nextIndex]?.content || "";
+        const stamp = doc.revisions[nextIndex]?.createdAt;
+        canvasHistoryTitle.textContent = `Wijziging ${nextIndex}/${doc.revisions.length - 1}${stamp ? ` · ${new Date(stamp).toLocaleString("nl-NL")}` : ""}`;
+        canvasHistoryDiff.innerHTML = diffHtml(before, after);
+      };
+
+      const renderCanvasCardsForSession = () => {
+        if (!chatLog || !sessionState?.activeId) return;
+        const oldCards = Array.from(chatLog.querySelectorAll(".message[data-canvas-card='true']"));
+        oldCards.forEach((card) => card.remove());
+        const docs = getCanvasDocsForSession(sessionState.activeId);
+        docs.forEach((doc) => {
+          const article = document.createElement("article");
+          article.className = "message system";
+          article.setAttribute("data-canvas-card", "true");
+          article.setAttribute("data-canvas-id", doc.id);
+          const wrap = document.createElement("div");
+          wrap.className = "canvas-card";
+          const head = document.createElement("div");
+          head.className = "canvas-card__head";
+          const title = document.createElement("h4");
+          title.className = "canvas-card__title";
+          title.textContent = doc.title || "Canvas";
+          const actions = document.createElement("div");
+          actions.className = "canvas-card__actions";
+          const openBtn = document.createElement("button");
+          openBtn.type = "button";
+          openBtn.className = "canvas-card__btn";
+          openBtn.textContent = "Canvas openen";
+          openBtn.addEventListener("click", () => openCanvasEditor(doc.id));
+          const copyBtn = document.createElement("button");
+          copyBtn.type = "button";
+          copyBtn.className = "canvas-card__btn";
+          copyBtn.textContent = "Kopiëren";
+          copyBtn.addEventListener("click", () => copyTextToClipboard(doc.content || ""));
+          const downloadBtn = document.createElement("button");
+          downloadBtn.type = "button";
+          downloadBtn.className = "canvas-card__btn";
+          downloadBtn.textContent = "Download";
+          downloadBtn.addEventListener("click", () => {
+            downloadBlob(`${(doc.title || "canvas").replace(/[^\w\-]+/g, "-").toLowerCase()}.md`, "text/markdown;charset=utf-8", doc.content || "");
+          });
+          actions.appendChild(copyBtn);
+          actions.appendChild(openBtn);
+          actions.appendChild(downloadBtn);
+          head.appendChild(title);
+          head.appendChild(actions);
+          const body = document.createElement("div");
+          body.className = "canvas-card__body";
+          body.innerHTML = toCanvasParagraphs(doc.content || "");
+          wrap.appendChild(head);
+          wrap.appendChild(body);
+          article.appendChild(wrap);
+          chatLog.appendChild(article);
+        });
+        scrollToBottomIfPinned();
+      };
+
+      const persistCanvasEdit = (newContent, source = "edit") => {
+        const trimmed = String(newContent || "");
+        const doc = getActiveCanvasDoc();
+        if (!doc || trimmed === doc.content) return;
+        const now = new Date().toISOString();
+        updateCanvasDoc(doc.id, (existing) => {
+          const revisions = Array.isArray(existing.revisions) ? existing.revisions.slice() : [];
+          revisions.push({ content: trimmed, createdAt: now, source });
+          return { ...existing, content: trimmed, updatedAt: now, revisions };
+        });
+        canvasUndoStack.push(doc.content || "");
+        if (canvasUndoStack.length > 120) canvasUndoStack.shift();
+        canvasRedoStack = [];
+        renderCanvasCardsForSession();
+        if (canvasHistoryVisible) renderCanvasHistory();
+      };
+
+      const setCanvasEditorContent = (text, { pushUndo = false } = {}) => {
+        if (!canvasEditor) return;
+        const previous = canvasEditor.value;
+        canvasEditor.value = String(text || "");
+        if (pushUndo && previous !== canvasEditor.value) {
+          canvasUndoStack.push(previous);
+          if (canvasUndoStack.length > 120) canvasUndoStack.shift();
+          canvasRedoStack = [];
+        }
+      };
+
+      const openCanvasEditor = (docId) => {
+        if (!canvasModal || !canvasEditor || !canvasTitleInput) return;
+        const sessionId = sessionState?.activeId;
+        if (!sessionId) return;
+        const doc = getCanvasDocsForSession(sessionId).find((item) => item.id === docId);
+        if (!doc) return;
+        activeCanvasId = doc.id;
+        canvasModal.classList.add("is-open");
+        canvasModal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        canvasUndoStack = [];
+        canvasRedoStack = [];
+        canvasHistoryVisible = false;
+        canvasCompareIndex = null;
+        if (canvasHistory) canvasHistory.classList.remove("is-open");
+        if (canvasEditor) canvasEditor.style.display = "block";
+        if (canvasHistoryToggle) canvasHistoryToggle.setAttribute("aria-pressed", "false");
+        canvasTitleInput.value = doc.title || "Canvas";
+        setCanvasEditorContent(doc.content || "");
+        canvasEditor.focus();
+      };
+
+      const closeCanvasEditor = () => {
+        if (!canvasModal) return;
+        if (canvasSaveTimer) {
+          clearTimeout(canvasSaveTimer);
+          canvasSaveTimer = null;
+        }
+        const currentValue = canvasEditor?.value || "";
+        persistCanvasEdit(currentValue, "edit");
+        canvasModal.classList.remove("is-open");
+        canvasModal.setAttribute("aria-hidden", "true");
+        canvasHistory?.classList.remove("is-open");
+        canvasMoreMenu?.classList.remove("is-open");
+        canvasDownloadMenu?.classList.remove("is-open");
+        canvasSliderReading?.classList.remove("is-open");
+        canvasSliderLength?.classList.remove("is-open");
+        canvasAssistRail?.classList.remove("is-open");
+        if (canvasEditor) canvasEditor.style.display = "block";
+        canvasHistoryVisible = false;
+        document.body.style.removeProperty("overflow");
+      };
+
+      const createCanvasFromText = (text, proposedTitle = "Nieuw canvas") => {
+        const sessionId = ensureActiveSessionId();
+        const generated = String(proposedTitle || "").trim() || "Nieuw canvas";
+        const doc = createCanvasDoc(sessionId, text, generated);
+        renderCanvasCardsForSession();
+        return doc;
+      };
+
+      const setCanvasSliderOptions = (container, options, activeLabel, onPick) => {
+        if (!container) return;
+        container.innerHTML = "";
+        options.forEach((label) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "canvas-slider__option";
+          btn.textContent = label;
+          if (label === activeLabel) btn.classList.add("is-active");
+          btn.addEventListener("click", () => onPick(label));
+          container.appendChild(btn);
+        });
+      };
+
+      const applyCanvasTransformation = async (kind, value) => {
+        const doc = getActiveCanvasDoc();
+        if (!doc || !canvasEditor) return;
+        const provider = getSelectedProvider();
+        if (provider !== "openai" && provider !== "gemini") {
+          appendMessage("Canvas bewerken met AI kan alleen met ChatGPT of Gemini.", "assistant", { persist: false });
+          return;
+        }
+        if (kind === "reading" && value === "Huidige leesniveau behouden") return;
+        if (kind === "length" && value === "Huidige lengte behouden") return;
+        const accessToken = await requireAccessToken();
+        if (!accessToken) {
+          appendMessage("Je sessie is verlopen. Log opnieuw in.", "assistant", { persist: false });
+          return;
+        }
+        const openaiModel = provider === "openai" ? getSelectedOpenAIModel() : null;
+        const geminiModel = provider === "gemini" ? getSelectedGeminiModel() : null;
+        const selectedApiModel = openaiModel || geminiModel;
+        if (!selectedApiModel) return;
+        const requestMessages = [
+          {
+            role: "developer",
+            content:
+              "Je herschrijft alleen de aangeleverde Nederlandse tekst. Behoud feiten, structuur en toon zoveel mogelijk. Geef uitsluitend de herschreven tekst zonder uitleg.",
+          },
+          {
+            role: "user",
+            content:
+              kind === "reading"
+                ? `Pas het leesniveau aan naar "${value}".\n\nTekst:\n${canvasEditor.value}`
+                : `Pas de lengte aan naar "${value}" (langst/langer/korter/kortst).\n\nTekst:\n${canvasEditor.value}`,
+          },
+        ];
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            provider,
+            model: selectedApiModel,
+            model_key: selectedModel,
+            model_label: selectedModelLabel,
+            web_search: false,
+            tool_mode: "none",
+            thinking_mode: selectedThinkingMode,
+            messages: requestMessages,
+          }),
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(payload?.error || "Canvas aanpassen mislukt.");
+        }
+        const rewritten = String(payload?.text || "").trim();
+        if (!rewritten) return;
+        setCanvasEditorContent(rewritten, { pushUndo: true });
+        persistCanvasEdit(rewritten, kind);
+      };
+
       const renderToolIndicator = () => {
         if (!chatToolIndicator || !chatToolIndicatorLabel) return;
         const label = TOOL_MODE_LABELS[activeToolMode] || "";
@@ -344,6 +817,7 @@
           [actionThinking, "thinking"],
           [actionDeepResearch, "deep_research"],
           [actionShoppingResearch, "shopping_research"],
+          [actionCanvas, "canvas"],
         ];
         modes.forEach(([el, value]) => {
           if (!el) return;
@@ -362,11 +836,13 @@
           toggleWebSearch.style.display = "flex";
         }
         const showOpenAiExtras = isEnhancedOpenAiMode();
+        const showCanvasTool = selectedModel === "chatgpt52" || selectedModel === "gemini3";
         if (actionGenerateImage) actionGenerateImage.style.display = showOpenAiExtras ? "flex" : "none";
         if (actionThinking) actionThinking.style.display = showOpenAiExtras ? "flex" : "none";
         if (actionDeepResearch) actionDeepResearch.style.display = showOpenAiExtras ? "flex" : "none";
         if (actionShoppingResearch) actionShoppingResearch.style.display = showOpenAiExtras ? "flex" : "none";
-        if (!showOpenAiExtras && activeToolMode !== "none") {
+        if (actionCanvas) actionCanvas.style.display = showCanvasTool ? "flex" : "none";
+        if (((!showOpenAiExtras && activeToolMode !== "none" && activeToolMode !== "canvas") || (!showCanvasTool && activeToolMode === "canvas"))) {
           setToolMode("none");
           closeResearchActivity();
         }
@@ -1267,6 +1743,9 @@
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
           closeAllDropdowns();
+          if (canvasModal?.classList.contains("is-open")) {
+            closeCanvasEditor();
+          }
         }
       });
 
@@ -1384,6 +1863,13 @@
         closeAllDropdowns();
       });
 
+      actionCanvas?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const nextMode = activeToolMode === "canvas" ? "none" : "canvas";
+        setToolMode(nextMode);
+        closeAllDropdowns();
+      });
+
       const addPendingAttachments = (files, asDataUrl = true) => {
         if (!files || !files.length) return;
         const toAdd = [];
@@ -1463,6 +1949,151 @@
         const files = hiddenFileInput.files;
         if (files && files.length) addPendingAttachments(Array.from(files));
         hiddenFileInput.value = "";
+      });
+
+      loadCanvasStore();
+      const handleReadingOption = async (label) => {
+        selectedReadingLevel = label;
+        setCanvasSliderOptions(canvasSliderReadingOptions, READING_LEVEL_OPTIONS, selectedReadingLevel, handleReadingOption);
+        try {
+          await applyCanvasTransformation("reading", label);
+        } catch (error) {
+          appendMessage(`Canvas update mislukte: ${error.message || "Onbekende fout"}`, "assistant", { persist: false });
+        }
+      };
+      const handleLengthOption = async (label) => {
+        selectedLengthLevel = label;
+        setCanvasSliderOptions(canvasSliderLengthOptions, LENGTH_OPTIONS, selectedLengthLevel, handleLengthOption);
+        try {
+          await applyCanvasTransformation("length", label);
+        } catch (error) {
+          appendMessage(`Canvas update mislukte: ${error.message || "Onbekende fout"}`, "assistant", { persist: false });
+        }
+      };
+      setCanvasSliderOptions(canvasSliderReadingOptions, READING_LEVEL_OPTIONS, selectedReadingLevel, handleReadingOption);
+      setCanvasSliderOptions(canvasSliderLengthOptions, LENGTH_OPTIONS, selectedLengthLevel, handleLengthOption);
+
+      const closeCanvasMenus = () => {
+        canvasMoreMenu?.classList.remove("is-open");
+        canvasDownloadMenu?.classList.remove("is-open");
+        canvasSliderReading?.classList.remove("is-open");
+        canvasSliderLength?.classList.remove("is-open");
+      };
+
+      canvasClose?.addEventListener("click", () => closeCanvasEditor());
+      canvasModal?.addEventListener("click", (event) => {
+        if (event.target === canvasModal) closeCanvasEditor();
+      });
+      canvasTitleInput?.addEventListener("change", () => {
+        const doc = getActiveCanvasDoc();
+        if (!doc) return;
+        const title = String(canvasTitleInput.value || "").trim() || "Canvas";
+        updateCanvasDoc(doc.id, (existing) => ({ ...existing, title, updatedAt: new Date().toISOString() }));
+        renderCanvasCardsForSession();
+      });
+      canvasEditor?.addEventListener("input", () => {
+        if (canvasSaveTimer) clearTimeout(canvasSaveTimer);
+        canvasSaveTimer = setTimeout(() => {
+          persistCanvasEdit(canvasEditor.value, "edit");
+        }, 450);
+      });
+      canvasCopy?.addEventListener("click", async () => {
+        await copyTextToClipboard(canvasEditor?.value || "");
+      });
+      canvasShare?.addEventListener("click", async () => {
+        const doc = getActiveCanvasDoc();
+        if (!doc) return;
+        const links = buildCanvasShareLinks(doc);
+        if (!links.share) return;
+        const copied = await copyTextToClipboard(links.share);
+        const info = `Deellink:\n${links.share}\n\nInsluitlink:\n${links.embed}`;
+        if (!copied) {
+          alert(info);
+        } else if (window.siteUI?.toast) {
+          window.siteUI.toast("Deellink gekopieerd. Insluitlink staat in console.", { type: "success" });
+          console.log(info);
+        }
+      });
+      canvasDownload?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        canvasDownloadMenu?.classList.toggle("is-open");
+        canvasMoreMenu?.classList.remove("is-open");
+      });
+      canvasDownloadMenu?.addEventListener("click", (event) => {
+        const btn = event.target.closest("[data-canvas-download]");
+        if (!btn) return;
+        const format = btn.getAttribute("data-canvas-download");
+        const doc = getActiveCanvasDoc();
+        if (!doc) return;
+        const safeName = (doc.title || "canvas").replace(/[^\w\-]+/g, "-").toLowerCase() || "canvas";
+        if (format === "md") {
+          downloadBlob(`${safeName}.md`, "text/markdown;charset=utf-8", doc.content || "");
+        } else if (format === "docx") {
+          const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><h1>${escapeCanvasHtml(doc.title)}</h1>${toCanvasParagraphs(doc.content)}</body></html>`;
+          downloadBlob(`${safeName}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", html);
+        } else if (format === "pdf") {
+          const printWindow = window.open("", "_blank", "noopener,noreferrer,width=900,height=700");
+          if (printWindow) {
+            printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeCanvasHtml(doc.title)}</title><style>body{font-family:Arial,sans-serif;padding:48px;color:#111}h1{font-size:34px;margin:0 0 24px}p{line-height:1.7;margin:0 0 14px}</style></head><body><h1>${escapeCanvasHtml(doc.title)}</h1>${toCanvasParagraphs(doc.content)}</body></html>`);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+          }
+        }
+        canvasDownloadMenu?.classList.remove("is-open");
+      });
+      canvasHistoryToggle?.addEventListener("click", () => {
+        canvasHistoryVisible = !canvasHistoryVisible;
+        canvasHistory?.classList.toggle("is-open", canvasHistoryVisible);
+        if (canvasEditor) canvasEditor.style.display = canvasHistoryVisible ? "none" : "block";
+        if (canvasHistoryVisible) renderCanvasHistory();
+      });
+      canvasMore?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        canvasMoreMenu?.classList.toggle("is-open");
+        canvasDownloadMenu?.classList.remove("is-open");
+      });
+      canvasUndo?.addEventListener("click", () => {
+        if (!canvasUndoStack.length) return;
+        const current = canvasEditor?.value || "";
+        const previous = canvasUndoStack.pop();
+        canvasRedoStack.push(current);
+        setCanvasEditorContent(previous || "");
+        persistCanvasEdit(canvasEditor.value, "undo");
+      });
+      canvasRedo?.addEventListener("click", () => {
+        if (!canvasRedoStack.length) return;
+        const current = canvasEditor?.value || "";
+        const next = canvasRedoStack.pop();
+        canvasUndoStack.push(current);
+        setCanvasEditorContent(next || "");
+        persistCanvasEdit(canvasEditor.value, "redo");
+      });
+      canvasAssistToggle?.addEventListener("click", () => {
+        canvasAssistRail?.classList.toggle("is-open");
+      });
+      canvasReadingTrigger?.addEventListener("click", () => {
+        canvasSliderReading?.classList.toggle("is-open");
+        canvasSliderLength?.classList.remove("is-open");
+      });
+      canvasLengthTrigger?.addEventListener("click", () => {
+        canvasSliderLength?.classList.toggle("is-open");
+        canvasSliderReading?.classList.remove("is-open");
+      });
+      document.addEventListener("keydown", (event) => {
+        if (!canvasModal?.classList.contains("is-open")) return;
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" && !event.shiftKey) {
+          event.preventDefault();
+          canvasUndo?.click();
+        }
+        if ((event.ctrlKey || event.metaKey) && (event.key.toLowerCase() === "y" || (event.key.toLowerCase() === "z" && event.shiftKey))) {
+          event.preventDefault();
+          canvasRedo?.click();
+        }
+      });
+      document.addEventListener("click", (event) => {
+        const insideCanvasAction = event.target.closest(".canvas-modal__more, .canvas-modal__download, .canvas-assist");
+        if (!insideCanvasAction) closeCanvasMenus();
       });
 
       if (profileAvatar && profileAvatarInput && profileAvatarImage) {
@@ -2615,6 +3246,10 @@
       };
 
       const createLocalSession = () => {
+        if (canvasModal?.classList.contains("is-open")) {
+          closeCanvasEditor();
+        }
+        activeCanvasId = null;
         const session = {
           id: generateSessionId(),
           title: selectedModelLabel || generateDefaultSessionTitle(),
@@ -2637,6 +3272,7 @@
         closeResearchActivity();
         shoppingAwaitingAnswers = false;
 	        renderEmptyState();
+        renderCanvasCardsForSession();
 	        messages = [createSystemMessage()];
 	        updateNewChatButtonState();
 	        return session;
@@ -3522,6 +4158,7 @@
 	            history.push({ role: normalizedRole, content: parsedContent });
 	          });
 	          messages = [createSystemMessage(), ...history];
+            renderCanvasCardsForSession();
 	          updateNewChatButtonState();
 	        };
 	        try {
@@ -3539,6 +4176,7 @@
 	            } else {
 	              if (!isStaleLoad()) {
                   renderEmptyState();
+                  renderCanvasCardsForSession();
                 }
 	              return;
 	            }
@@ -3570,6 +4208,10 @@
         if (!sessionId) {
           return;
         }
+        if (canvasModal?.classList.contains("is-open")) {
+          closeCanvasEditor();
+        }
+        activeCanvasId = null;
         if (sessionId !== sessionState.activeId) {
           sessionState.activeId = sessionId;
         }
@@ -4329,11 +4971,19 @@
 	        }
 	        if (!value && !hasImages) return;
 	        if (typeof content === "string" && !content.trim()) return;
-        const toolModeForRequest = isEnhancedOpenAiMode() ? activeToolMode : "none";
+        const canvasCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3";
+        const toolModeForRequest =
+          activeToolMode === "canvas"
+            ? (canvasCapableModel ? "canvas" : "none")
+            : (isEnhancedOpenAiMode() ? activeToolMode : "none");
         const webSearchForRequest =
           webSearchEnabled || toolModeForRequest === "deep_research" || toolModeForRequest === "shopping_research";
         if (toolModeForRequest === "image_generation" && !value) {
           appendMessage("Geef eerst een beschrijving voor de afbeelding.", "assistant", { persist: false });
+          return;
+        }
+        if (toolModeForRequest === "canvas" && !value) {
+          appendMessage("Beschrijf eerst wat je in het canvas wilt laten schrijven.", "assistant", { persist: false });
           return;
         }
         if (toolModeForRequest === "shopping_research" && shoppingAwaitingAnswers && !value) {
@@ -4467,6 +5117,13 @@
           // Hide indicator as soon as we have the answer, before any extra work.
           hideThinkingIndicator();
           await streamAssistantMessage(finalContent);
+          if (toolModeForRequest === "canvas") {
+            const draftTitle = generateSessionTitleFromPrompt(value) || "Nieuw canvas";
+            const doc = createCanvasFromText(finalContent, draftTitle);
+            if (doc?.id) {
+              openCanvasEditor(doc.id);
+            }
+          }
           if (payload?.image_data) {
             appendGeneratedImage(payload.image_data, "AI afbeelding");
           }
@@ -4493,7 +5150,7 @@
           const fallbackMessage = `De AI-request mislukte: ${error.message || "Onbekende fout"}. Controleer je verbinding en probeer opnieuw.`;
           appendMessage(fallbackMessage, "assistant", { persist: false });
 	        } finally {
-          if (toolModeForRequest === "image_generation") {
+          if (toolModeForRequest === "image_generation" || toolModeForRequest === "canvas") {
             setToolMode("none");
           }
 	          refreshCreditsBalance();
