@@ -272,6 +272,18 @@
           { value: "snel", label: "Snel" },
           { value: "diepdenken", label: "Diepdenken" },
         ],
+        opus46: [
+          { value: "instantly", label: "Instantly" },
+          { value: "extended_thinking", label: "Extended thinking" },
+        ],
+        sonnet46: [
+          { value: "instantly", label: "Instantly" },
+          { value: "extended_thinking", label: "Extended thinking" },
+        ],
+        haiku45: [
+          { value: "instantly", label: "Instantly" },
+          { value: "extended_thinking", label: "Extended thinking" },
+        ],
         grok4: [
           { value: "automatisch", label: "Automatisch" },
           { value: "snel", label: "Snel" },
@@ -280,7 +292,7 @@
           { value: "heavy", label: "Heavy" },
         ],
       };
-      const noThinkingModels = new Set(["opus46", "sonnet46", "haiku45", "llama4"]);
+      const noThinkingModels = new Set(["llama4"]);
 
       const TOOL_MODE_LABELS = {
         image_generation: "Afbeelding",

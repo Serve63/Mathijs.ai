@@ -725,7 +725,8 @@ function buildModeInstruction({ toolMode, thinkingMode }) {
     thinkingMode === "denken" ||
     thinkingMode === "expert" ||
     thinkingMode === "heavy" ||
-    thinkingMode === "pro"
+    thinkingMode === "pro" ||
+    thinkingMode === "extended_thinking"
   ) {
     parts.push("Werk stap voor stap en controleer je redenering voordat je antwoord geeft.");
   }
@@ -1349,6 +1350,8 @@ const SUPPORTED_THINKING_MODES = new Set([
   "grok420beta",
   "heavy",
   "diepdenken",
+  "extended_thinking",
+  "extendedthinking",
   "instantly",
   "thinking",
 ]);
@@ -1356,6 +1359,7 @@ const SUPPORTED_THINKING_MODES = new Set([
 function normalizeThinkingMode(rawMode) {
   const mode = typeof rawMode === "string" ? rawMode.trim().toLowerCase() : "";
   if (!mode) return "instantly";
+  if (mode === "extendedthinking") return "extended_thinking";
   if (SUPPORTED_THINKING_MODES.has(mode)) return mode;
   return "instantly";
 }
@@ -1560,62 +1564,70 @@ function extractClaudeUsage(payload) {
   };
 }
 
-async function runClaudeChat({ apiKey, model, messages, webSearch = false }) {
+function buildClaudeModeCandidates({ model, thinkingMode }) {
+  const mode = normalizeThinkingMode(thinkingMode);
+  const base = { model, max_tokens: 4096 };
+  if (mode !== "extended_thinking") return [base];
+  return [
+    { ...base, max_tokens: 12000, thinking: { type: "enabled", budget_tokens: 4096 } },
+    base,
+  ];
+}
+
+async function runClaudeChat({ apiKey, model, messages, webSearch = false, thinkingMode = "instantly" }) {
   try {
     const { system, messages: claudeMessages } = buildClaudeRequest(messages);
     if (!claudeMessages.length) {
       throw new Error("Claude: geen geldige berichten.");
     }
     const url = "https://api.anthropic.com/v1/messages";
-    const body = {
-      model,
-      max_tokens: 4096,
-      messages: claudeMessages,
-    };
-    if (system) body.system = system;
-
     const searchModes = webSearch ? [true, false] : [false];
     let payload = null;
     let lastError = null;
     for (const useWebSearch of searchModes) {
-      const requestBody = { ...body };
-      if (useWebSearch) {
-        requestBody.tools = [{ type: "web_search_20250305", name: "web_search" }];
-      } else {
-        delete requestBody.tools;
-      }
+      const modeCandidates = buildClaudeModeCandidates({ model, thinkingMode });
+      for (const modeCandidate of modeCandidates) {
+        const requestBody = {
+          ...modeCandidate,
+          messages: claudeMessages,
+        };
+        if (system) requestBody.system = system;
+        if (useWebSearch) {
+          requestBody.tools = [{ type: "web_search_20250305", name: "web_search" }];
+        } else {
+          delete requestBody.tools;
+        }
 
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-          ...(useWebSearch ? { "anthropic-beta": "web-search-2025-03-05" } : {}),
-        },
-        body: JSON.stringify(requestBody),
-      });
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+            ...(useWebSearch ? { "anthropic-beta": "web-search-2025-03-05" } : {}),
+          },
+          body: JSON.stringify(requestBody),
+        });
 
-      payload = await resp.json().catch(() => ({}));
-      if (resp.ok) {
-        lastError = null;
-        break;
+        payload = await resp.json().catch(() => ({}));
+        if (resp.ok) {
+          return {
+            text: extractClaudeText(payload),
+            usage: extractClaudeUsage(payload),
+            modelUsed: model,
+          };
+        }
+        const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+        const err = new Error(sanitizeProviderErrorMessage(msg));
+        err.status = resp.status;
+        err.payload = payload;
+        lastError = err;
       }
-      const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
-      const err = new Error(sanitizeProviderErrorMessage(msg));
-      err.status = resp.status;
-      err.payload = payload;
-      lastError = err;
     }
     if (lastError) {
       throw lastError;
     }
-
-    return {
-      text: extractClaudeText(payload),
-      usage: extractClaudeUsage(payload),
-      modelUsed: model,
-    };
+    throw new Error("Claude gaf geen bruikbare response terug.");
   } catch (err) {
     const safe = sanitizeProviderErrorMessage(err?.message || "");
     const wrapped = new Error("claude_failed");
@@ -2005,6 +2017,7 @@ module.exports = async function handler(req, res) {
           model: claudeModel,
           messages: normalizedMessages,
           webSearch: webSearchEnabled,
+          thinkingMode,
         });
         const usageTokens = Number(result?.usage?.totalTokens || 0);
         const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
