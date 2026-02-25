@@ -241,6 +241,12 @@
       const canvasSliderLength = document.getElementById("canvas-slider-length");
       const canvasSliderReadingOptions = document.getElementById("canvas-slider-reading-options");
       const canvasSliderLengthOptions = document.getElementById("canvas-slider-length-options");
+      const canvasReadingSelected = document.getElementById("canvas-reading-selected");
+      const canvasLengthSelected = document.getElementById("canvas-length-selected");
+      const canvasReadingConfirm = document.getElementById("canvas-reading-confirm");
+      const canvasLengthConfirm = document.getElementById("canvas-length-confirm");
+      const canvasRewriteIndicator = document.getElementById("canvas-rewrite-indicator");
+      const canvasRewriteLabel = document.getElementById("canvas-rewrite-label");
 
       const defaultThinkingOptions = [
         { value: "snel", label: "Snel" },
@@ -374,6 +380,9 @@
       let canvasCompareIndex = null;
       let selectedReadingLevel = "Huidige leesniveau behouden";
       let selectedLengthLevel = "Huidige lengte behouden";
+      let pendingReadingLevel = selectedReadingLevel;
+      let pendingLengthLevel = selectedLengthLevel;
+      let canvasRewriteInFlight = false;
 
       const escapeCanvasHtml = (value) =>
         String(value || "").replace(/[&<>"']/g, (char) => {
@@ -463,13 +472,44 @@
         return nextDoc;
       };
 
-      const toCanvasParagraphs = (content) =>
-        String(content || "")
-          .split(/\n{2,}/)
-          .map((chunk) => chunk.trim())
-          .filter(Boolean)
-          .map((chunk) => `<p>${escapeCanvasHtml(chunk)}</p>`)
-          .join("");
+      const renderCanvasMarkdown = (content) => {
+        const lines = String(content || "").replace(/\r\n/g, "\n").split("\n");
+        const html = [];
+        let paragraph = [];
+        const flushParagraph = () => {
+          if (!paragraph.length) return;
+          html.push(`<p>${escapeCanvasHtml(paragraph.join(" "))}</p>`);
+          paragraph = [];
+        };
+        lines.forEach((line) => {
+          const text = line.trim();
+          if (!text) {
+            flushParagraph();
+            return;
+          }
+          const h1 = text.match(/^#\s+(.+)$/);
+          if (h1) {
+            flushParagraph();
+            html.push(`<h1>${escapeCanvasHtml(h1[1])}</h1>`);
+            return;
+          }
+          const h2 = text.match(/^##\s+(.+)$/);
+          if (h2) {
+            flushParagraph();
+            html.push(`<h2>${escapeCanvasHtml(h2[1])}</h2>`);
+            return;
+          }
+          const h3 = text.match(/^###\s+(.+)$/);
+          if (h3) {
+            flushParagraph();
+            html.push(`<h3>${escapeCanvasHtml(h3[1])}</h3>`);
+            return;
+          }
+          paragraph.push(text);
+        });
+        flushParagraph();
+        return html.join("");
+      };
 
       const copyTextToClipboard = async (text) => {
         const value = String(text || "");
@@ -640,7 +680,7 @@
           head.appendChild(actions);
           const body = document.createElement("div");
           body.className = "canvas-card__body";
-          body.innerHTML = toCanvasParagraphs(doc.content || "");
+          body.innerHTML = renderCanvasMarkdown(doc.content || "");
           wrap.appendChild(head);
           wrap.appendChild(body);
           article.appendChild(wrap);
@@ -691,6 +731,11 @@
         canvasRedoStack = [];
         canvasHistoryVisible = false;
         canvasCompareIndex = null;
+        pendingReadingLevel = selectedReadingLevel;
+        pendingLengthLevel = selectedLengthLevel;
+        syncCanvasSelectionLabels();
+        setCanvasSliderOptions(canvasSliderReadingOptions, READING_LEVEL_OPTIONS, pendingReadingLevel, handleReadingOption);
+        setCanvasSliderOptions(canvasSliderLengthOptions, LENGTH_OPTIONS, pendingLengthLevel, handleLengthOption);
         if (canvasHistory) canvasHistory.classList.remove("is-open");
         if (canvasEditor) canvasEditor.style.display = "block";
         if (canvasHistoryToggle) canvasHistoryToggle.setAttribute("aria-pressed", "false");
@@ -717,6 +762,7 @@
         canvasAssistRail?.classList.remove("is-open");
         if (canvasEditor) canvasEditor.style.display = "block";
         canvasHistoryVisible = false;
+        setCanvasRewriteState(false);
         document.body.style.removeProperty("overflow");
       };
 
@@ -742,6 +788,23 @@
         });
       };
 
+      const setCanvasRewriteState = (busy, labelText = "Tekst wordt herschreven") => {
+        canvasRewriteInFlight = Boolean(busy);
+        if (canvasRewriteIndicator) {
+          canvasRewriteIndicator.classList.toggle("is-active", canvasRewriteInFlight);
+        }
+        if (canvasRewriteLabel) {
+          canvasRewriteLabel.textContent = labelText;
+        }
+        if (canvasReadingConfirm) canvasReadingConfirm.disabled = canvasRewriteInFlight;
+        if (canvasLengthConfirm) canvasLengthConfirm.disabled = canvasRewriteInFlight;
+      };
+
+      const syncCanvasSelectionLabels = () => {
+        if (canvasReadingSelected) canvasReadingSelected.textContent = `Geselecteerd: ${pendingReadingLevel}`;
+        if (canvasLengthSelected) canvasLengthSelected.textContent = `Geselecteerd: ${pendingLengthLevel}`;
+      };
+
       const applyCanvasTransformation = async (kind, value) => {
         const doc = getActiveCanvasDoc();
         if (!doc || !canvasEditor) return;
@@ -765,7 +828,7 @@
           {
             role: "developer",
             content:
-              "Je herschrijft alleen de aangeleverde Nederlandse tekst. Behoud feiten, structuur en toon zoveel mogelijk. Geef uitsluitend de herschreven tekst zonder uitleg.",
+              "Je herschrijft alleen de aangeleverde Nederlandse tekst. Gebruik altijd duidelijke koppen in Markdown: exact 1 H1-titel (#), daarna meerdere H2-secties (##). Behoud feiten en boodschap. Geef alleen de herschreven tekst zonder uitleg.",
           },
           {
             role: "user",
@@ -775,31 +838,36 @@
                 : `Pas de lengte aan naar "${value}" (langst/langer/korter/kortst).\n\nTekst:\n${canvasEditor.value}`,
           },
         ];
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            provider,
-            model: selectedApiModel,
-            model_key: selectedModel,
-            model_label: selectedModelLabel,
-            web_search: false,
-            tool_mode: "none",
-            thinking_mode: selectedThinkingMode,
-            messages: requestMessages,
-          }),
-        });
-        const payload = await response.json().catch(() => null);
-        if (!response.ok) {
-          throw new Error(payload?.error || "Canvas aanpassen mislukt.");
+        setCanvasRewriteState(true, kind === "reading" ? "Leesniveau wordt herschreven" : "Lengte wordt herschreven");
+        try {
+          const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              provider,
+              model: selectedApiModel,
+              model_key: selectedModel,
+              model_label: selectedModelLabel,
+              web_search: false,
+              tool_mode: "none",
+              thinking_mode: selectedThinkingMode,
+              messages: requestMessages,
+            }),
+          });
+          const payload = await response.json().catch(() => null);
+          if (!response.ok) {
+            throw new Error(payload?.error || "Canvas aanpassen mislukt.");
+          }
+          const rewritten = String(payload?.text || "").trim();
+          if (!rewritten) return;
+          setCanvasEditorContent(rewritten, { pushUndo: true });
+          persistCanvasEdit(rewritten, kind);
+        } finally {
+          setCanvasRewriteState(false);
         }
-        const rewritten = String(payload?.text || "").trim();
-        if (!rewritten) return;
-        setCanvasEditorContent(rewritten, { pushUndo: true });
-        persistCanvasEdit(rewritten, kind);
       };
 
       const renderToolIndicator = () => {
@@ -1952,26 +2020,19 @@
       });
 
       loadCanvasStore();
-      const handleReadingOption = async (label) => {
-        selectedReadingLevel = label;
-        setCanvasSliderOptions(canvasSliderReadingOptions, READING_LEVEL_OPTIONS, selectedReadingLevel, handleReadingOption);
-        try {
-          await applyCanvasTransformation("reading", label);
-        } catch (error) {
-          appendMessage(`Canvas update mislukte: ${error.message || "Onbekende fout"}`, "assistant", { persist: false });
-        }
+      const handleReadingOption = (label) => {
+        pendingReadingLevel = label;
+        setCanvasSliderOptions(canvasSliderReadingOptions, READING_LEVEL_OPTIONS, pendingReadingLevel, handleReadingOption);
+        syncCanvasSelectionLabels();
       };
-      const handleLengthOption = async (label) => {
-        selectedLengthLevel = label;
-        setCanvasSliderOptions(canvasSliderLengthOptions, LENGTH_OPTIONS, selectedLengthLevel, handleLengthOption);
-        try {
-          await applyCanvasTransformation("length", label);
-        } catch (error) {
-          appendMessage(`Canvas update mislukte: ${error.message || "Onbekende fout"}`, "assistant", { persist: false });
-        }
+      const handleLengthOption = (label) => {
+        pendingLengthLevel = label;
+        setCanvasSliderOptions(canvasSliderLengthOptions, LENGTH_OPTIONS, pendingLengthLevel, handleLengthOption);
+        syncCanvasSelectionLabels();
       };
-      setCanvasSliderOptions(canvasSliderReadingOptions, READING_LEVEL_OPTIONS, selectedReadingLevel, handleReadingOption);
-      setCanvasSliderOptions(canvasSliderLengthOptions, LENGTH_OPTIONS, selectedLengthLevel, handleLengthOption);
+      setCanvasSliderOptions(canvasSliderReadingOptions, READING_LEVEL_OPTIONS, pendingReadingLevel, handleReadingOption);
+      setCanvasSliderOptions(canvasSliderLengthOptions, LENGTH_OPTIONS, pendingLengthLevel, handleLengthOption);
+      syncCanvasSelectionLabels();
 
       const closeCanvasMenus = () => {
         canvasMoreMenu?.classList.remove("is-open");
@@ -2003,7 +2064,13 @@
       canvasShare?.addEventListener("click", async () => {
         const doc = getActiveCanvasDoc();
         if (!doc) return;
-        const links = buildCanvasShareLinks(doc);
+        const draft = {
+          ...doc,
+          title: (canvasTitleInput?.value || doc.title || "Canvas").trim(),
+          content: canvasEditor?.value || doc.content || "",
+          updatedAt: new Date().toISOString(),
+        };
+        const links = buildCanvasShareLinks(draft);
         if (!links.share) return;
         const copied = await copyTextToClipboard(links.share);
         const info = `Deellink:\n${links.share}\n\nInsluitlink:\n${links.embed}`;
@@ -2028,13 +2095,13 @@
         const safeName = (doc.title || "canvas").replace(/[^\w\-]+/g, "-").toLowerCase() || "canvas";
         if (format === "md") {
           downloadBlob(`${safeName}.md`, "text/markdown;charset=utf-8", doc.content || "");
-        } else if (format === "docx") {
-          const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><h1>${escapeCanvasHtml(doc.title)}</h1>${toCanvasParagraphs(doc.content)}</body></html>`;
-          downloadBlob(`${safeName}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", html);
+        } else if (format === "doc") {
+          const html = `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Calibri,Arial,sans-serif;padding:28px;color:#111}h1{font-size:28px;font-weight:700;margin:0 0 16px}h2{font-size:20px;font-weight:700;margin:18px 0 10px}h3{font-size:17px;font-weight:700;margin:14px 0 8px}p{line-height:1.6;margin:0 0 10px}</style></head><body><h1>${escapeCanvasHtml(doc.title)}</h1>${renderCanvasMarkdown(doc.content)}</body></html>`;
+          downloadBlob(`${safeName}.doc`, "application/msword", html);
         } else if (format === "pdf") {
           const printWindow = window.open("", "_blank", "noopener,noreferrer,width=900,height=700");
           if (printWindow) {
-            printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeCanvasHtml(doc.title)}</title><style>body{font-family:Arial,sans-serif;padding:48px;color:#111}h1{font-size:34px;margin:0 0 24px}p{line-height:1.7;margin:0 0 14px}</style></head><body><h1>${escapeCanvasHtml(doc.title)}</h1>${toCanvasParagraphs(doc.content)}</body></html>`);
+            printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeCanvasHtml(doc.title)}</title><style>body{font-family:Arial,sans-serif;padding:48px;color:#111}h1{font-size:34px;font-weight:800;margin:0 0 24px}h2{font-size:24px;font-weight:700;margin:22px 0 10px}h3{font-size:20px;font-weight:700;margin:18px 0 8px}p{line-height:1.7;margin:0 0 14px}</style></head><body><h1>${escapeCanvasHtml(doc.title)}</h1>${renderCanvasMarkdown(doc.content)}</body></html>`);
             printWindow.document.close();
             printWindow.focus();
             printWindow.print();
@@ -2079,6 +2146,22 @@
       canvasLengthTrigger?.addEventListener("click", () => {
         canvasSliderLength?.classList.toggle("is-open");
         canvasSliderReading?.classList.remove("is-open");
+      });
+      canvasReadingConfirm?.addEventListener("click", async () => {
+        selectedReadingLevel = pendingReadingLevel;
+        try {
+          await applyCanvasTransformation("reading", selectedReadingLevel);
+        } catch (error) {
+          appendMessage(`Canvas update mislukte: ${error.message || "Onbekende fout"}`, "assistant", { persist: false });
+        }
+      });
+      canvasLengthConfirm?.addEventListener("click", async () => {
+        selectedLengthLevel = pendingLengthLevel;
+        try {
+          await applyCanvasTransformation("length", selectedLengthLevel);
+        } catch (error) {
+          appendMessage(`Canvas update mislukte: ${error.message || "Onbekende fout"}`, "assistant", { persist: false });
+        }
       });
       document.addEventListener("keydown", (event) => {
         if (!canvasModal?.classList.contains("is-open")) return;
@@ -5069,6 +5152,13 @@
             throw new Error("Je sessie is verlopen. Log opnieuw in.");
           }
           const requestMessages = buildRequestMessages();
+          if (toolModeForRequest === "canvas") {
+            requestMessages.unshift({
+              role: "developer",
+              content:
+                "Antwoord als bewerkbare Nederlandstalige canvas-tekst in Markdown met 1 duidelijke H1 titel (#) en meerdere H2 secties (##). Gebruik alinea's onder elke sectie.",
+            });
+          }
           const response = await fetch("/api/chat", {
             method: "POST",
             headers: {

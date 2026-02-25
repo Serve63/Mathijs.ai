@@ -3759,6 +3759,31 @@
         color: #111827;
       }
 
+      .canvas-card__body h1 {
+        margin: 0 0 12px;
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1.2;
+      }
+
+      .canvas-card__body h2 {
+        margin: 16px 0 8px;
+        font-size: 1.32rem;
+        font-weight: 740;
+        line-height: 1.25;
+      }
+
+      .canvas-card__body h3 {
+        margin: 12px 0 6px;
+        font-size: 1.12rem;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+
+      .canvas-card__body p {
+        margin: 0 0 10px;
+      }
+
       .canvas-modal {
         position: fixed;
         inset: 0;
@@ -3779,7 +3804,7 @@
         height: min(96vh, 980px);
         background: #f5f5f5;
         border-radius: 18px;
-        overflow: hidden;
+        overflow: visible;
         border: 1px solid rgba(15, 23, 42, 0.16);
         box-shadow: 0 30px 80px -55px rgba(15, 23, 42, 0.7);
         display: flex;
@@ -3893,6 +3918,52 @@
         padding: 24px;
         overflow: auto;
         position: relative;
+      }
+
+      .canvas-rewrite-indicator {
+        position: absolute;
+        top: 10px;
+        left: 24px;
+        display: none;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.82rem;
+        color: #4b5563;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        border-radius: 10px;
+        padding: 6px 10px;
+      }
+
+      .canvas-rewrite-indicator.is-active {
+        display: inline-flex;
+      }
+
+      .canvas-rewrite-dots {
+        display: inline-flex;
+        gap: 4px;
+      }
+
+      .canvas-rewrite-dots span {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #6b7280;
+        opacity: 0.25;
+        animation: canvasDots 1s infinite;
+      }
+
+      .canvas-rewrite-dots span:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+
+      .canvas-rewrite-dots span:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+
+      @keyframes canvasDots {
+        0%, 100% { opacity: 0.25; transform: translateY(0); }
+        50% { opacity: 1; transform: translateY(-2px); }
       }
 
       .canvas-modal__textarea {
@@ -4037,6 +4108,35 @@
         border-color: rgba(15, 23, 42, 0.28);
         background: #eef2ff;
         font-weight: 700;
+      }
+
+      .canvas-slider__actions {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .canvas-slider__selected {
+        font-size: 0.74rem;
+        color: #4b5563;
+      }
+
+      .canvas-slider__confirm {
+        border: 1px solid rgba(15, 23, 42, 0.16);
+        background: #111827;
+        color: #fff;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 7px 10px;
+        cursor: pointer;
+      }
+
+      .canvas-slider__confirm[disabled] {
+        opacity: 0.45;
+        cursor: not-allowed;
       }
 
       .canvas-modal__download {
@@ -4792,7 +4892,7 @@
               </button>
               <div id="canvas-download-menu" class="canvas-modal__download-menu">
                 <button type="button" data-canvas-download="pdf" class="canvas-modal__download-btn">PDF Document (.pdf)</button>
-                <button type="button" data-canvas-download="docx" class="canvas-modal__download-btn">Microsoft Word Document (.docx)</button>
+                <button type="button" data-canvas-download="doc" class="canvas-modal__download-btn">Microsoft Word Document (.doc)</button>
                 <button type="button" data-canvas-download="md" class="canvas-modal__download-btn">Markdown Document (.md)</button>
               </div>
             </div>
@@ -4811,6 +4911,10 @@
           </div>
         </div>
         <div class="canvas-modal__body" id="canvas-modal-body">
+          <div id="canvas-rewrite-indicator" class="canvas-rewrite-indicator">
+            <span id="canvas-rewrite-label">Tekst wordt herschreven</span>
+            <span class="canvas-rewrite-dots"><span></span><span></span><span></span></span>
+          </div>
           <textarea id="canvas-editor" class="canvas-modal__textarea" spellcheck="false"></textarea>
           <div class="canvas-history" id="canvas-history">
             <p class="canvas-history__title" id="canvas-history-title"></p>
@@ -4820,10 +4924,18 @@
             <div id="canvas-slider-reading" class="canvas-slider">
               <p class="canvas-slider__title">Leesniveau</p>
               <div class="canvas-slider__options" id="canvas-slider-reading-options"></div>
+              <div class="canvas-slider__actions">
+                <span id="canvas-reading-selected" class="canvas-slider__selected"></span>
+                <button type="button" id="canvas-reading-confirm" class="canvas-slider__confirm">Bevestigen</button>
+              </div>
             </div>
             <div id="canvas-slider-length" class="canvas-slider">
               <p class="canvas-slider__title">Pas lengte aan</p>
               <div class="canvas-slider__options" id="canvas-slider-length-options"></div>
+              <div class="canvas-slider__actions">
+                <span id="canvas-length-selected" class="canvas-slider__selected"></span>
+                <button type="button" id="canvas-length-confirm" class="canvas-slider__confirm">Bevestigen</button>
+              </div>
             </div>
             <div class="canvas-assist__rail" id="canvas-assist-rail">
               <button type="button" id="canvas-reading-trigger" class="canvas-assist__tool" title="Leesniveau">
