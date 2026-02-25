@@ -266,6 +266,7 @@
         gemini3: [
           { value: "snel", label: "Snel" },
           { value: "denken", label: "Denken" },
+          { value: "pro", label: "Pro" },
         ],
         deepseekv2: [
           { value: "snel", label: "Snel" },
@@ -1203,7 +1204,12 @@
       };
       const getSelectedProvider = () => MODEL_PROVIDER_MAP[selectedModel] || "unknown";
       const getSelectedOpenAIModel = () => OPENAI_MODEL_LABEL_MAP[selectedModelLabel] || null;
-      const getSelectedGeminiModel = () => GEMINI_MODEL_LABEL_MAP[selectedModelLabel] || null;
+      const getSelectedGeminiModel = (mode = selectedThinkingMode) => {
+        const normalizedMode = String(mode || "").trim().toLowerCase();
+        if (normalizedMode === "pro") return "gemini-1.5-pro";
+        if (normalizedMode === "snel") return "gemini-1.5-flash";
+        return GEMINI_MODEL_LABEL_MAP[selectedModelLabel] || "gemini-1.5-flash";
+      };
       const getSelectedGrokModel = () => GROK_MODEL_LABEL_MAP[selectedModelLabel] || null;
       const getSelectedClaudeModel = () => CLAUDE_MODEL_LABEL_MAP[selectedModelLabel] || null;
 		      let selectedModel = "chatgpt52";

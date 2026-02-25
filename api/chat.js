@@ -720,7 +720,13 @@ function getLatestUserText(normalizedMessages) {
 
 function buildModeInstruction({ toolMode, thinkingMode }) {
   const parts = [];
-  if (thinkingMode === "thinking") {
+  if (
+    thinkingMode === "thinking" ||
+    thinkingMode === "denken" ||
+    thinkingMode === "expert" ||
+    thinkingMode === "heavy" ||
+    thinkingMode === "pro"
+  ) {
     parts.push("Werk stap voor stap en controleer je redenering voordat je antwoord geeft.");
   }
   if (toolMode === "deep_research") {
@@ -1334,12 +1340,15 @@ function extractGrokUsage(payload) {
   };
 }
 
-const GROK_THINKING_MODES = new Set([
+const SUPPORTED_THINKING_MODES = new Set([
   "automatisch",
   "snel",
+  "denken",
+  "pro",
   "expert",
   "grok420beta",
   "heavy",
+  "diepdenken",
   "instantly",
   "thinking",
 ]);
@@ -1347,7 +1356,7 @@ const GROK_THINKING_MODES = new Set([
 function normalizeThinkingMode(rawMode) {
   const mode = typeof rawMode === "string" ? rawMode.trim().toLowerCase() : "";
   if (!mode) return "instantly";
-  if (GROK_THINKING_MODES.has(mode)) return mode;
+  if (SUPPORTED_THINKING_MODES.has(mode)) return mode;
   return "instantly";
 }
 
@@ -1885,7 +1894,16 @@ module.exports = async function handler(req, res) {
             throw wrapped;
           }
         } else {
-          const geminiModel = resolvedGeminiModel || resolveGeminiModel(requestedModel);
+          let geminiModel = resolvedGeminiModel || resolveGeminiModel(requestedModel);
+          if (thinkingMode === "pro") {
+            geminiModel = resolveGeminiModel("gemini-1.5-pro");
+          } else if (thinkingMode === "snel") {
+            geminiModel = resolveGeminiModel("gemini-1.5-flash");
+          }
+          const modeInstruction = buildModeInstruction({ toolMode: effectiveToolMode, thinkingMode });
+          const geminiMessages = modeInstruction
+            ? [...normalizedMessages, { role: "developer", content: modeInstruction }]
+            : normalizedMessages;
           const apiKey = getGeminiApiKey();
           console.log(`[gemini] key ${apiKey ? "present" : "missing"}`);
           if (!apiKey) {
@@ -1898,19 +1916,19 @@ module.exports = async function handler(req, res) {
             await refundTokensBestEffort();
             return json(res, 500, { error: "Invalid GEMINI_API_KEY format. API key should start with 'AIza'" });
           }
-          console.log(`[gemini] Using model: ${geminiModel}, messages: ${normalizedMessages.length}`);
+          console.log(`[gemini] Using model: ${geminiModel}, messages: ${geminiMessages.length}, mode: ${thinkingMode}`);
           let result;
           try {
             result =
               effectiveToolMode === "deep_research"
                 ? await runGeminiDeepResearch({
                     apiKey,
-                    messages: normalizedMessages,
+                    messages: geminiMessages,
                   })
                 : await runGeminiChat({
                     apiKey,
                     model: geminiModel,
-                    messages: normalizedMessages,
+                    messages: geminiMessages,
                     webSearch: webSearchEnabled,
                   });
           } catch (err) {
