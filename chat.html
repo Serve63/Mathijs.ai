@@ -3669,22 +3669,33 @@
 
       .research-activity {
         position: fixed;
-        right: 18px;
-        top: 86px;
-        width: min(380px, calc(100vw - 36px));
-        max-height: min(70vh, 620px);
-        overflow: auto;
+        right: 10px;
+        top: 10px;
+        width: min(56vw, 860px);
+        min-width: 540px;
+        height: calc(100vh - 20px);
         border-radius: 18px;
-        border: 1px solid rgba(15, 23, 42, 0.1);
-        background: rgba(255, 255, 255, 0.96);
-        box-shadow: 0 20px 60px -35px rgba(15, 23, 42, 0.4);
-        padding: 14px;
-        z-index: 110;
-        display: none;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: 0 30px 80px -44px rgba(15, 23, 42, 0.55);
+        z-index: 210;
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        transform: translateX(24px) scale(0.98);
+        pointer-events: none;
+        transition: opacity 280ms cubic-bezier(0.16, 1, 0.3, 1), transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
       .research-activity.visible {
-        display: block;
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        pointer-events: auto;
+      }
+
+      body.deep-research-open .chat-main {
+        margin-right: min(56vw, 860px);
+        transform: scale(0.995);
       }
 
       .research-activity__head {
@@ -3692,7 +3703,9 @@
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        margin-bottom: 10px;
+        margin-bottom: 0;
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
       }
 
       .research-activity__title {
@@ -3710,10 +3723,52 @@
         line-height: 1;
       }
 
-      .research-activity__list {
+      .research-activity__status {
+        padding: 10px 14px;
+        font-size: 0.84rem;
+        color: #334155;
         display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .research-activity__status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #3b82f6;
+        animation: researchPulse 1.2s ease-in-out infinite;
+      }
+
+      @keyframes researchPulse {
+        0%, 100% { opacity: 0.4; transform: scale(0.9); }
+        50% { opacity: 1; transform: scale(1.1); }
+      }
+
+      .research-activity__process-toggle {
+        margin-left: auto;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: #fff;
+        color: #1e293b;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        cursor: pointer;
+      }
+
+      .research-activity__list {
+        display: none;
         flex-direction: column;
         gap: 8px;
+        padding: 0 14px 10px;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+        max-height: 180px;
+        overflow: auto;
+      }
+
+      .research-activity.show-process .research-activity__list {
+        display: flex;
       }
 
       .research-activity__item {
@@ -3742,18 +3797,118 @@
       }
 
       .research-activity__sources {
-        margin-top: 10px;
-        border-top: 1px solid rgba(15, 23, 42, 0.08);
-        padding-top: 10px;
+        margin-top: 0;
+        padding: 10px 14px 0;
         display: flex;
-        flex-direction: column;
+        flex-wrap: wrap;
         gap: 6px;
       }
 
       .research-activity__sources a {
-        color: #0b6bff;
+        color: #1d4ed8;
         text-decoration: none;
-        font-size: 0.84rem;
+        font-size: 0.76rem;
+        border: 1px dashed rgba(59, 130, 246, 0.45);
+        border-radius: 999px;
+        padding: 5px 10px;
+        background: rgba(239, 246, 255, 0.8);
+      }
+
+      .research-activity__skeleton {
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .research-activity__skeleton-line {
+        height: 12px;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #eef2f7 0%, #dbe6f2 50%, #eef2f7 100%);
+        background-size: 200% 100%;
+        animation: researchShimmer 1.2s linear infinite;
+      }
+
+      .research-activity__skeleton-line.title {
+        height: 18px;
+        width: 52%;
+      }
+
+      .research-activity__skeleton-line.w90 { width: 90%; }
+      .research-activity__skeleton-line.w80 { width: 80%; }
+      .research-activity__skeleton-line.w70 { width: 70%; }
+
+      @keyframes researchShimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+
+      .research-activity__report {
+        display: none;
+        padding: 8px 14px 18px;
+        overflow: auto;
+        font-size: 0.95rem;
+        line-height: 1.7;
+        color: #0f172a;
+      }
+
+      .research-activity.ready .research-activity__skeleton {
+        display: none;
+      }
+
+      .research-activity.ready .research-activity__report {
+        display: block;
+      }
+
+      .research-activity__report h2 {
+        margin: 0 0 0.7rem;
+        font-size: 1.2rem;
+        font-weight: 800;
+      }
+
+      .research-activity__report p {
+        margin: 0 0 0.7rem;
+        opacity: 0;
+        transform: translateY(10px);
+        animation: reportFadeIn 0.22s ease-out forwards;
+      }
+
+      @keyframes reportFadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .research-status-card {
+        border: 1px solid rgba(15, 23, 42, 0.1);
+        border-radius: 14px;
+        background: #f8fafc;
+        padding: 10px 12px;
+        max-width: min(720px, 90%);
+      }
+
+      .research-status-card__title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 3px;
+      }
+
+      .research-status-card__text {
+        font-size: 0.8rem;
+        color: #475569;
+      }
+
+      @media (max-width: 960px) {
+        .research-activity {
+          width: calc(100vw - 14px);
+          min-width: 0;
+          right: 7px;
+          left: 7px;
+        }
+        body.deep-research-open .chat-main {
+          margin-right: 0;
+          transform: none;
+        }
       }
 
       .canvas-card {
@@ -5002,11 +5157,24 @@
     </div>
     <aside class="research-activity" id="research-activity" aria-live="polite">
       <div class="research-activity__head">
-        <strong class="research-activity__title">Activiteit</strong>
+        <strong class="research-activity__title" id="research-activity-title">Diepgaand Onderzoek</strong>
         <button type="button" class="research-activity__close" id="research-activity-close" aria-label="Sluit activiteit">x</button>
+      </div>
+      <div class="research-activity__status" id="research-activity-status">
+        <span class="research-activity__status-dot" aria-hidden="true"></span>
+        <span id="research-activity-status-text">Onderzoek starten...</span>
+        <button type="button" id="research-process-toggle" class="research-activity__process-toggle">Denkproces tonen</button>
       </div>
       <div class="research-activity__list" id="research-activity-list"></div>
       <div class="research-activity__sources" id="research-activity-sources" style="display: none;"></div>
+      <div class="research-activity__skeleton" id="research-activity-skeleton">
+        <div class="research-activity__skeleton-line title"></div>
+        <div class="research-activity__skeleton-line w90"></div>
+        <div class="research-activity__skeleton-line w80"></div>
+        <div class="research-activity__skeleton-line w70"></div>
+        <div class="research-activity__skeleton-line w90"></div>
+      </div>
+      <div class="research-activity__report" id="research-activity-report"></div>
     </aside>
     <div class="canvas-modal" id="canvas-modal" aria-hidden="true">
       <div class="canvas-modal__panel" role="dialog" aria-modal="true" aria-labelledby="canvas-title-input">

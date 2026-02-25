@@ -188,8 +188,13 @@
       const actionCanvas = document.getElementById("action-canvas");
       const researchActivityEl = document.getElementById("research-activity");
       const researchActivityClose = document.getElementById("research-activity-close");
+      const researchActivityTitleEl = document.getElementById("research-activity-title");
+      const researchActivityStatusText = document.getElementById("research-activity-status-text");
+      const researchProcessToggle = document.getElementById("research-process-toggle");
       const researchActivityList = document.getElementById("research-activity-list");
       const researchActivitySources = document.getElementById("research-activity-sources");
+      const researchActivitySkeleton = document.getElementById("research-activity-skeleton");
+      const researchActivityReport = document.getElementById("research-activity-report");
       const layoutToggleBtn = document.getElementById("layout-toggle");
       const chatAttachmentsEl = document.getElementById("chat-attachments");
       const hiddenFileInput = document.createElement("input");
@@ -216,6 +221,7 @@
       let activeToolMode = "none";
       let researchActivityTimer = null;
       let researchActivityStepIndex = -1;
+      let researchStatusTimer = null;
       let shoppingAwaitingAnswers = false;
       const canvasModal = document.getElementById("canvas-modal");
       const canvasClose = document.getElementById("canvas-close");
@@ -286,6 +292,12 @@
         "Inhoud vergelijken",
         "Resultaat opstellen",
       ];
+      const researchStatusPhrases = [
+        "Bronnen aan het extraheren...",
+        "Relevantie aan het valideren...",
+        "Tegenstrijdige data aan het controleren...",
+        "Rapportstructuur aan het opbouwen...",
+      ];
 
       const isEnhancedOpenAiMode = () => selectedModel === "chatgpt52";
 
@@ -307,23 +319,104 @@
         });
       };
 
+      const escapeResearchHtml = (value) =>
+        String(value || "").replace(/[&<>"']/g, (char) => {
+          if (char === "&") return "&amp;";
+          if (char === "<") return "&lt;";
+          if (char === ">") return "&gt;";
+          if (char === '"') return "&quot;";
+          return "&#39;";
+        });
+
+      const renderResearchReport = (text) => {
+        const lines = String(text || "").replace(/\r\n/g, "\n").split("\n");
+        const blocks = [];
+        let paragraph = [];
+        const flush = () => {
+          if (!paragraph.length) return;
+          blocks.push(`<p>${escapeResearchHtml(paragraph.join(" "))}</p>`);
+          paragraph = [];
+        };
+        lines.forEach((line) => {
+          const t = line.trim();
+          if (!t) {
+            flush();
+            return;
+          }
+          const h2 = t.match(/^##\s+(.+)$/);
+          if (h2) {
+            flush();
+            blocks.push(`<h2>${escapeResearchHtml(h2[1])}</h2>`);
+            return;
+          }
+          paragraph.push(t.replace(/^#\s+/, ""));
+        });
+        flush();
+        return blocks.join("");
+      };
+
+      const appendResearchStatusCard = (promptText) => {
+        if (!chatLog) return;
+        const article = document.createElement("article");
+        article.className = "message system";
+        article.setAttribute("data-research-status", "true");
+        const card = document.createElement("div");
+        card.className = "research-status-card";
+        const title = document.createElement("div");
+        title.className = "research-status-card__title";
+        title.textContent = `Diepgaand Onderzoek ${String(promptText || "").slice(0, 60)}${String(promptText || "").length > 60 ? "..." : ""}`;
+        const text = document.createElement("div");
+        text.className = "research-status-card__text";
+        text.textContent = "Onderzoek gestart. Je kunt deze chat verlaten terwijl het rapport wordt opgebouwd.";
+        card.appendChild(title);
+        card.appendChild(text);
+        article.appendChild(card);
+        chatLog.appendChild(article);
+        scrollToBottomIfPinned();
+      };
+
       const closeResearchActivity = () => {
         if (researchActivityTimer) {
           clearInterval(researchActivityTimer);
           researchActivityTimer = null;
         }
+        if (researchStatusTimer) {
+          clearInterval(researchStatusTimer);
+          researchStatusTimer = null;
+        }
         researchActivityStepIndex = -1;
-        if (researchActivityEl) researchActivityEl.classList.remove("visible");
+        if (researchActivityEl) {
+          researchActivityEl.classList.remove("visible", "ready", "show-process");
+        }
+        document.body.classList.remove("deep-research-open");
       };
 
-      const startResearchActivity = () => {
+      const startResearchActivity = (promptText = "") => {
         if (!researchActivityEl) return;
         researchActivityStepIndex = 0;
         renderResearchActivity();
+        appendResearchStatusCard(promptText);
+        if (researchActivityTitleEl) {
+          researchActivityTitleEl.textContent = `Diepgaand Onderzoek${promptText ? ` · ${String(promptText).slice(0, 48)}${String(promptText).length > 48 ? "..." : ""}` : ""}`;
+        }
         researchActivityEl.classList.add("visible");
+        researchActivityEl.classList.remove("ready");
+        document.body.classList.add("deep-research-open");
+        if (researchActivityStatusText) researchActivityStatusText.textContent = "Onderzoek starten...";
+        if (researchActivityReport) researchActivityReport.innerHTML = "";
+        if (researchActivitySkeleton) researchActivitySkeleton.style.display = "flex";
         if (researchActivitySources) {
-          researchActivitySources.style.display = "none";
+          researchActivitySources.style.display = "flex";
           researchActivitySources.innerHTML = "";
+          researchSteps.forEach((step) => {
+            const chip = document.createElement("a");
+            chip.href = "#";
+            chip.textContent = step;
+            chip.style.pointerEvents = "none";
+            chip.style.opacity = "0.7";
+            chip.style.borderStyle = "dashed";
+            researchActivitySources.appendChild(chip);
+          });
         }
         if (researchActivityTimer) clearInterval(researchActivityTimer);
         researchActivityTimer = setInterval(() => {
@@ -332,16 +425,37 @@
             renderResearchActivity();
           }
         }, 1400);
+        if (researchStatusTimer) clearInterval(researchStatusTimer);
+        let phraseIndex = 0;
+        researchStatusTimer = setInterval(() => {
+          if (!researchActivityStatusText) return;
+          phraseIndex = (phraseIndex + 1) % researchStatusPhrases.length;
+          researchActivityStatusText.textContent = researchStatusPhrases[phraseIndex];
+        }, 1450);
       };
 
-      const completeResearchActivity = (sources = []) => {
+      const completeResearchActivity = ({ sources = [], reportText = "" } = {}) => {
         if (!researchActivityEl) return;
         if (researchActivityTimer) {
           clearInterval(researchActivityTimer);
           researchActivityTimer = null;
         }
+        if (researchStatusTimer) {
+          clearInterval(researchStatusTimer);
+          researchStatusTimer = null;
+        }
         researchActivityStepIndex = researchSteps.length;
         renderResearchActivity();
+        researchActivityEl.classList.add("ready");
+        if (researchActivityStatusText) {
+          researchActivityStatusText.textContent = "Onderzoek afgerond.";
+        }
+        if (researchActivitySkeleton) {
+          researchActivitySkeleton.style.display = "none";
+        }
+        if (researchActivityReport) {
+          researchActivityReport.innerHTML = renderResearchReport(reportText);
+        }
         if (researchActivitySources) {
           researchActivitySources.innerHTML = "";
           const cleanSources = Array.isArray(sources) ? sources.filter((s) => s && s.url) : [];
@@ -356,7 +470,7 @@
             });
             researchActivitySources.style.display = "flex";
           } else {
-            researchActivitySources.style.display = "none";
+            researchActivitySources.style.display = "flex";
           }
         }
       };
@@ -1967,6 +2081,13 @@
       if (researchActivityClose) {
         researchActivityClose.addEventListener("click", () => {
           closeResearchActivity();
+        });
+      }
+      if (researchProcessToggle && researchActivityEl) {
+        researchProcessToggle.addEventListener("click", () => {
+          const willShow = !researchActivityEl.classList.contains("show-process");
+          researchActivityEl.classList.toggle("show-process", willShow);
+          researchProcessToggle.textContent = willShow ? "Denkproces verbergen" : "Denkproces tonen";
         });
       }
 
@@ -5259,7 +5380,7 @@
 
 		                try {
           if (toolModeForRequest === "deep_research") {
-            startResearchActivity();
+            startResearchActivity(value);
           }
           const accessToken = await requireAccessToken();
           if (!accessToken) {
@@ -5332,7 +5453,10 @@
             appendGeneratedImage(payload.image_data, "AI afbeelding");
           }
           if (toolModeForRequest === "deep_research") {
-            completeResearchActivity(payload?.sources || []);
+            completeResearchActivity({
+              sources: payload?.sources || [],
+              reportText: finalContent,
+            });
           }
 
           // Ensure the user message save is at least attempted; we don't block UI on it.
