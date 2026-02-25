@@ -1307,8 +1307,17 @@ module.exports = async function handler(req, res) {
             : "openai");
 
     const requestedModel = typeof model === "string" ? model : "";
+    const latestUserText = getLatestUserText(normalizedMessages);
+    const looksLikeImageIntent =
+      /\b(maak|genereer|create|generate)\b[\s\S]{0,80}\b(afbeelding|image|foto|plaatje|illustratie)\b/i.test(
+        latestUserText || ""
+      );
+    const effectiveToolMode =
+      toolMode === "none" && looksLikeImageIntent && (inferredProvider === "openai" || inferredProvider === "gemini")
+        ? "image_generation"
+        : toolMode;
     const webSearchEnabled =
-      (webSearchRequested || toolMode === "deep_research" || toolMode === "shopping_research") &&
+      (webSearchRequested || effectiveToolMode === "deep_research" || effectiveToolMode === "shopping_research") &&
       (inferredProvider === "openai" ||
         inferredProvider === "gemini" ||
         inferredProvider === "grok" ||
@@ -1553,7 +1562,7 @@ module.exports = async function handler(req, res) {
         return json(res, 200, { text: result?.text || "" });
       }
 
-      if (toolMode === "image_generation") {
+      if (effectiveToolMode === "image_generation") {
         const prompt = getLatestUserText(normalizedMessages);
         if (!prompt) {
           await refundTokensBestEffort();
@@ -1615,7 +1624,7 @@ module.exports = async function handler(req, res) {
       }
 
       const client = new OpenAI({ apiKey });
-      if (toolMode === "image_generation") {
+      if (effectiveToolMode === "image_generation") {
         const prompt = getLatestUserText(normalizedMessages);
         if (!prompt) {
           await refundTokensBestEffort();
@@ -1659,7 +1668,7 @@ module.exports = async function handler(req, res) {
 
       let response;
       try {
-        const modeInstruction = buildModeInstruction({ toolMode, thinkingMode });
+        const modeInstruction = buildModeInstruction({ toolMode: effectiveToolMode, thinkingMode });
         const effectiveMessages = modeInstruction
           ? [...normalizedMessages, { role: "developer", content: modeInstruction }]
           : normalizedMessages;

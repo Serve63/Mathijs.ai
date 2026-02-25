@@ -5157,6 +5157,12 @@
         } else {
           toolModeForRequest = isEnhancedOpenAiMode() ? activeToolMode : "none";
         }
+        const looksLikeImageIntent =
+          !hasImages &&
+          /\b(maak|genereer|create|generate)\b[\s\S]{0,60}\b(afbeelding|image|foto|plaatje|illustratie)\b/i.test(value);
+        if (toolModeForRequest === "none" && imageCapableModel && looksLikeImageIntent) {
+          toolModeForRequest = "image_generation";
+        }
         const webSearchForRequest =
           webSearchEnabled || toolModeForRequest === "deep_research" || toolModeForRequest === "shopping_research";
         if (toolModeForRequest === "image_generation" && !value) {
