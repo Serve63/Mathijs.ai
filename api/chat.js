@@ -1493,6 +1493,7 @@ function extractGrokImageData(payload) {
   if (typeof directUrl === "string" && directUrl.trim()) return directUrl.trim();
   const directB64 = payload?.image || payload?.b64_json || payload?.base64 || "";
   if (typeof directB64 === "string" && directB64.trim()) {
+    if (directB64.trim().startsWith("data:")) return directB64.trim();
     return `data:image/png;base64,${directB64.trim()}`;
   }
   const first = Array.isArray(payload?.data) ? payload.data[0] : null;
@@ -1503,6 +1504,43 @@ function extractGrokImageData(payload) {
   const url = first?.url || first?.image_url || "";
   if (typeof url === "string" && url.trim()) return url.trim();
   return "";
+}
+
+async function resolveImageSourceToDataUrl(imageSource, { apiKey } = {}) {
+  const src = typeof imageSource === "string" ? imageSource.trim() : "";
+  if (!src) return "";
+  if (src.startsWith("data:")) return src;
+  if (!/^https?:\/\//i.test(src)) return "";
+
+  const toDataUrl = async (resp) => {
+    if (!resp || !resp.ok) return "";
+    const contentType = String(resp.headers.get("content-type") || "image/png").split(";")[0].trim() || "image/png";
+    const arrBuf = await resp.arrayBuffer();
+    const b64 = Buffer.from(arrBuf).toString("base64");
+    return b64 ? `data:${contentType};base64,${b64}` : "";
+  };
+
+  try {
+    if (apiKey) {
+      const authResp = await fetch(src, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      const authDataUrl = await toDataUrl(authResp);
+      if (authDataUrl) return authDataUrl;
+    }
+  } catch {
+    // fallback without auth
+  }
+
+  try {
+    const plainResp = await fetch(src);
+    const plainDataUrl = await toDataUrl(plainResp);
+    if (plainDataUrl) return plainDataUrl;
+  } catch {
+    // ignore and return original source as final fallback
+  }
+
+  return src;
 }
 
 function extractImageUsage(payload) {
@@ -1539,7 +1577,8 @@ async function runGrokImageGeneration({ apiKey, prompt, model }) {
       });
       const payload = await resp.json().catch(() => ({}));
       if (resp.ok) {
-        const imageData = extractGrokImageData(payload);
+        const rawImage = extractGrokImageData(payload);
+        const imageData = await resolveImageSourceToDataUrl(rawImage, { apiKey });
         if (!imageData) {
           lastError = new Error("Grok gaf geen afbeelding terug.");
           continue;
@@ -2089,9 +2128,16 @@ module.exports = async function handler(req, res) {
           } catch (err) {
             await refundTokensBestEffort();
             const safe = sanitizeProviderErrorMessage(err?.message || "");
+            const status = Number(err?.status || err?.statusCode || 0);
+            const accessHint =
+              status === 400 || status === 403
+                ? " Controleer in xAI Console of je Grok Imagine image model is geactiveerd voor deze API key."
+                : "";
             const wrapped = new Error("grok_failed");
             wrapped.statusCode = 502;
-            wrapped.publicMessage = safe ? `Grok afbeelding mislukt: ${safe}` : "Grok afbeelding mislukt.";
+            wrapped.publicMessage = safe
+              ? `Grok afbeelding mislukt: ${safe}${accessHint}`
+              : `Grok afbeelding mislukt.${accessHint}`;
             wrapped.cause = err;
             throw wrapped;
           }
