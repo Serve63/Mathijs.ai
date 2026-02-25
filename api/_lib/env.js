@@ -31,6 +31,20 @@ function getGeminiApiKey() {
   return pickEnv(["GEMINI_API_KEY", "GOOGLE_API_KEY", "google_api_key"]);
 }
 
+function getNanoBananaApiKey() {
+  return pickEnv([
+    "NANO_BANANA_API_KEY",
+    "GEMINI_NANO_BANANA_API_KEY",
+    "NANOBANANA_API_KEY",
+    "nano_banana_api_key",
+    "gemini_nano_banana_api_key",
+  ]);
+}
+
+function getNanoBananaModel() {
+  return pickEnv(["NANO_BANANA_MODEL", "GEMINI_NANO_BANANA_MODEL", "nano_banana_model"]);
+}
+
 function getGrokApiKey() {
   return pickEnv(["GROK_API_KEY", "XAI_API_KEY", "grok_api_key", "xai_api_key"]);
 }
@@ -81,6 +95,8 @@ module.exports = {
   getOpenAIApiKey,
   getOpenAICostsKey,
   getGeminiApiKey,
+  getNanoBananaApiKey,
+  getNanoBananaModel,
   getGrokApiKey,
   getClaudeApiKey,
   getSupabaseServiceRoleKey,

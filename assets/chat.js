@@ -975,13 +975,18 @@
           toggleWebSearch.style.display = "flex";
         }
         const showOpenAiExtras = isEnhancedOpenAiMode();
+        const showImageTool = selectedModel === "chatgpt52" || selectedModel === "gemini3";
         const showCanvasTool = selectedModel === "chatgpt52" || selectedModel === "gemini3";
-        if (actionGenerateImage) actionGenerateImage.style.display = showOpenAiExtras ? "flex" : "none";
+        if (actionGenerateImage) actionGenerateImage.style.display = showImageTool ? "flex" : "none";
         if (actionThinking) actionThinking.style.display = showOpenAiExtras ? "flex" : "none";
         if (actionDeepResearch) actionDeepResearch.style.display = showOpenAiExtras ? "flex" : "none";
         if (actionShoppingResearch) actionShoppingResearch.style.display = showOpenAiExtras ? "flex" : "none";
         if (actionCanvas) actionCanvas.style.display = showCanvasTool ? "flex" : "none";
-        if (((!showOpenAiExtras && activeToolMode !== "none" && activeToolMode !== "canvas") || (!showCanvasTool && activeToolMode === "canvas"))) {
+        if (
+          (!showImageTool && activeToolMode === "image_generation") ||
+          (!showCanvasTool && activeToolMode === "canvas") ||
+          (!showOpenAiExtras && ["thinking", "deep_research", "shopping_research"].includes(activeToolMode))
+        ) {
           setToolMode("none");
           closeResearchActivity();
         }
@@ -5143,10 +5148,15 @@
 	        if (!value && !hasImages) return;
 	        if (typeof content === "string" && !content.trim()) return;
         const canvasCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3";
-        const toolModeForRequest =
-          activeToolMode === "canvas"
-            ? (canvasCapableModel ? "canvas" : "none")
-            : (isEnhancedOpenAiMode() ? activeToolMode : "none");
+        const imageCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3";
+        let toolModeForRequest = "none";
+        if (activeToolMode === "canvas") {
+          toolModeForRequest = canvasCapableModel ? "canvas" : "none";
+        } else if (activeToolMode === "image_generation") {
+          toolModeForRequest = imageCapableModel ? "image_generation" : "none";
+        } else {
+          toolModeForRequest = isEnhancedOpenAiMode() ? activeToolMode : "none";
+        }
         const webSearchForRequest =
           webSearchEnabled || toolModeForRequest === "deep_research" || toolModeForRequest === "shopping_research";
         if (toolModeForRequest === "image_generation" && !value) {

@@ -1,6 +1,6 @@
 const { getBearerToken, json } = require("./_lib/security");
 const { getUserFromAccessToken } = require("./_lib/supabase");
-const { getOpenAIApiKey, getGeminiApiKey, getGrokApiKey, getClaudeApiKey } = require("./_lib/env");
+const { getOpenAIApiKey, getGeminiApiKey, getNanoBananaApiKey, getGrokApiKey, getClaudeApiKey } = require("./_lib/env");
 
 module.exports = async function handler(req, res) {
   try {
@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
     if (!user?.id) return json(res, 401, { error: "Unauthorized" });
 
     const openai = Boolean(getOpenAIApiKey());
-    const gemini = Boolean(getGeminiApiKey());
+    const gemini = Boolean(getGeminiApiKey() || getNanoBananaApiKey());
     const grok = Boolean(getGrokApiKey());
     const claude = Boolean(getClaudeApiKey());
 

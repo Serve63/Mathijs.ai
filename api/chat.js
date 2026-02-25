@@ -3,7 +3,15 @@ const OpenAI = require("openai");
 const { getBearerToken, getClientIp, json, publicError, rateLimit, rateLimitHeaders, readJson } = require("./_lib/security");
 const { getUserFromAccessToken } = require("./_lib/supabase");
 const { SUPABASE_URL } = require("./_lib/supabase");
-const { getOpenAIApiKey, getGeminiApiKey, getGrokApiKey, getClaudeApiKey, getSupabaseServiceRoleKey } = require("./_lib/env");
+const {
+  getOpenAIApiKey,
+  getGeminiApiKey,
+  getNanoBananaApiKey,
+  getNanoBananaModel,
+  getGrokApiKey,
+  getClaudeApiKey,
+  getSupabaseServiceRoleKey,
+} = require("./_lib/env");
 const { adminRestFetch } = require("./_lib/supabaseAdmin");
 
 // NOTE: UI labels may map to marketing names; server maps them to real OpenAI model IDs.
@@ -14,6 +22,7 @@ const OPENAI_ALLOWED_MODELS = ["gpt-4o", "gpt-4o-mini"];
 // Gemini model IDs vary by API version and rollout. We keep a conservative default and
 // map UI labels/legacy names to something likely to exist, then we try both v1 and v1beta endpoints.
 const GEMINI_DEFAULT_MODEL = "gemini-1.5-flash";
+const GEMINI_IMAGE_DEFAULT_MODEL = "gemini-2.5-flash-image-preview";
 const GEMINI_ALLOWED_MODELS = [
   "gemini-1.5-flash",
   "gemini-1.5-pro",
@@ -846,6 +855,66 @@ async function geminiGenerateViaRest({ apiKey, model, prompt, webSearch = false 
   throw lastErr || new Error("gemini_rest_failed");
 }
 
+function extractGeminiImagePart(payload) {
+  const candidates = Array.isArray(payload?.candidates) ? payload.candidates : [];
+  const parts = candidates?.[0]?.content?.parts || [];
+  for (const part of parts) {
+    const inlineData = part?.inlineData || part?.inline_data || null;
+    const b64 = typeof inlineData?.data === "string" ? inlineData.data : "";
+    const mime = typeof inlineData?.mimeType === "string" ? inlineData.mimeType : typeof inlineData?.mime_type === "string" ? inlineData.mime_type : "image/png";
+    if (b64) {
+      return { b64, mime };
+    }
+  }
+  return null;
+}
+
+async function geminiGenerateImageViaRest({ apiKey, model, prompt }) {
+  const body = {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseModalities: ["TEXT", "IMAGE"],
+    },
+  };
+  const versions = ["v1beta", "v1"];
+  let lastErr = null;
+
+  for (const version of versions) {
+    const url = `https://generativelanguage.googleapis.com/${version}/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`;
+    try {
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const payload = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+        const err = new Error(msg);
+        err.status = resp.status;
+        err.payload = payload;
+        lastErr = err;
+        continue;
+      }
+      const image = extractGeminiImagePart(payload);
+      if (!image?.b64) {
+        const err = new Error("Gemini gaf geen afbeelding terug.");
+        err.payload = payload;
+        lastErr = err;
+        continue;
+      }
+      return {
+        imageData: `data:${image.mime || "image/png"};base64,${image.b64}`,
+        text: extractGeminiText(payload) || "Hier is je afbeelding.",
+        usage: extractGeminiUsage(payload),
+      };
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr || new Error("gemini_image_failed");
+}
+
 async function listGeminiModels(apiKey) {
   const versions = ["v1", "v1beta"];
   for (const version of versions) {
@@ -1482,6 +1551,59 @@ module.exports = async function handler(req, res) {
           costEur: requestCostEur,
         });
         return json(res, 200, { text: result?.text || "" });
+      }
+
+      if (toolMode === "image_generation") {
+        const prompt = getLatestUserText(normalizedMessages);
+        if (!prompt) {
+          await refundTokensBestEffort();
+          return json(res, 400, { error: "Geef eerst een beschrijving voor de afbeelding." });
+        }
+
+        if (inferredProvider === "gemini") {
+          try {
+            const nanoKey = getNanoBananaApiKey() || getGeminiApiKey();
+            if (!nanoKey) {
+              await refundTokensBestEffort();
+              return json(res, 500, { error: "Missing NANO_BANANA_API_KEY of GEMINI_API_KEY" });
+            }
+            const nanoModel = getNanoBananaModel() || GEMINI_IMAGE_DEFAULT_MODEL;
+            const result = await geminiGenerateImageViaRest({
+              apiKey: nanoKey,
+              model: nanoModel,
+              prompt,
+            });
+            const usageTokens = Number(result?.usage?.totalTokens || 0);
+            const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
+            void recordUsageEvent({
+              userId: user.id,
+              provider: "gemini",
+              model: nanoModel,
+              modelLabel: "Maak een afbeelding",
+              tokens: actualTokens,
+              tokensPerEur,
+              costEur: requestCostEur,
+            });
+            return json(res, 200, {
+              text: result?.text || "Hier is je afbeelding.",
+              image_data: result.imageData,
+              sources: [],
+            });
+          } catch (err) {
+            await refundTokensBestEffort();
+            const safe = sanitizeProviderErrorMessage(err?.message || "");
+            const wrapped = new Error("gemini_failed");
+            wrapped.statusCode = 502;
+            wrapped.publicMessage = safe ? `Gemini afbeelding mislukt: ${safe}` : "Gemini afbeelding mislukt.";
+            wrapped.cause = err;
+            throw wrapped;
+          }
+        }
+
+        if (inferredProvider !== "openai") {
+          await refundTokensBestEffort();
+          return json(res, 400, { error: "Afbeeldingen maken wordt nu ondersteund voor ChatGPT en Gemini." });
+        }
       }
 
       const openaiModel = resolvedOpenAIModel || resolveOpenAIModel(requestedModel);
