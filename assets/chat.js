@@ -1109,7 +1109,7 @@
         }
         const showOpenAiExtras = isEnhancedOpenAiMode();
         const showDeepResearchTool = selectedModel === "chatgpt52" || selectedModel === "gemini3";
-        const showImageTool = selectedModel === "chatgpt52" || selectedModel === "gemini3";
+        const showImageTool = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "grok4";
         const showCanvasTool = selectedModel === "chatgpt52" || selectedModel === "gemini3";
         if (actionGenerateImage) actionGenerateImage.style.display = showImageTool ? "flex" : "none";
         if (actionThinking) actionThinking.style.display = showOpenAiExtras ? "flex" : "none";
@@ -5297,7 +5297,7 @@
 	        if (!value && !hasImages) return;
 	        if (typeof content === "string" && !content.trim()) return;
         const canvasCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3";
-        const imageCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3";
+        const imageCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "grok4";
         const deepResearchCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3";
         let toolModeForRequest = "none";
         if (activeToolMode === "canvas") {

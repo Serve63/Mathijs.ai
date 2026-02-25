@@ -49,6 +49,10 @@ function getGrokApiKey() {
   return pickEnv(["GROK_API_KEY", "XAI_API_KEY", "grok_api_key", "xai_api_key"]);
 }
 
+function getGrokImageModel() {
+  return pickEnv(["GROK_IMAGE_MODEL", "XAI_IMAGE_MODEL", "grok_image_model", "xai_image_model"]);
+}
+
 function getClaudeApiKey() {
   return pickEnv(["CLAUDE_API_KEY", "ANTHROPIC_API_KEY", "claude_api_key"]);
 }
@@ -98,6 +102,7 @@ module.exports = {
   getNanoBananaApiKey,
   getNanoBananaModel,
   getGrokApiKey,
+  getGrokImageModel,
   getClaudeApiKey,
   getSupabaseServiceRoleKey,
   getSupabaseUrl,

@@ -9,6 +9,7 @@ const {
   getNanoBananaApiKey,
   getNanoBananaModel,
   getGrokApiKey,
+  getGrokImageModel,
   getClaudeApiKey,
   getSupabaseServiceRoleKey,
 } = require("./_lib/env");
@@ -37,6 +38,7 @@ const GEMINI_ALLOWED_MODELS = [
 // Grok model IDs - xAI API expects grok-4-0709 for Grok 4 (grok-4 is invalid/400)
 const GROK_DEFAULT_MODEL = "grok-4-0709";
 const GROK_ALLOWED_MODELS = ["grok-4-0709", "grok-4", "grok-4-code", "grok-beta", "grok-2", "grok-3", "grok-3-mini"];
+const GROK_IMAGE_DEFAULT_MODEL = "grok-imagine-image";
 
 // Claude (Anthropic) model IDs - Opus 4.6, Sonnet 4.6, Haiku 4.5
 const CLAUDE_DEFAULT_MODEL = "claude-sonnet-4-6";
@@ -1486,6 +1488,75 @@ async function runGrokChat({ apiKey, model, messages, webSearch = false, thinkin
   }
 }
 
+function extractGrokImageData(payload) {
+  const first = Array.isArray(payload?.data) ? payload.data[0] : null;
+  const b64 = first?.b64_json || first?.base64 || first?.image_base64 || "";
+  if (typeof b64 === "string" && b64.trim()) {
+    return `data:image/png;base64,${b64.trim()}`;
+  }
+  const url = first?.url || first?.image_url || "";
+  if (typeof url === "string" && url.trim()) return url.trim();
+  return "";
+}
+
+function extractImageUsage(payload) {
+  const usage = payload?.usage || {};
+  const totalTokens = Number(usage?.total_tokens ?? usage?.totalTokens ?? usage?.tokens ?? 0);
+  return {
+    totalTokens: Number.isFinite(totalTokens) ? totalTokens : 0,
+  };
+}
+
+async function runGrokImageGeneration({ apiKey, prompt, model }) {
+  const url = "https://api.x.ai/v1/images/generations";
+  const modelCandidates = Array.from(
+    new Set([model || getGrokImageModel() || GROK_IMAGE_DEFAULT_MODEL, GROK_IMAGE_DEFAULT_MODEL, "grok-2-image"].filter(Boolean))
+  );
+  const formatCandidates = [{ response_format: "b64_json" }, { image_format: "base64" }, {}];
+  let lastError = null;
+
+  for (const candidateModel of modelCandidates) {
+    for (const formatOptions of formatCandidates) {
+      const body = {
+        model: candidateModel,
+        prompt,
+        n: 1,
+        size: "1024x1024",
+        ...formatOptions,
+      };
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(body),
+      });
+      const payload = await resp.json().catch(() => ({}));
+      if (resp.ok) {
+        const imageData = extractGrokImageData(payload);
+        if (!imageData) {
+          lastError = new Error("Grok gaf geen afbeelding terug.");
+          continue;
+        }
+        return {
+          imageData,
+          text: "Hier is je afbeelding.",
+          usage: extractImageUsage(payload),
+          modelUsed: candidateModel,
+        };
+      }
+      const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+      const err = new Error(sanitizeProviderErrorMessage(msg));
+      err.status = resp.status;
+      err.payload = payload;
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error("grok_image_failed");
+}
+
 function dataUrlToBase64(dataUrl) {
   if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:")) return null;
   const comma = dataUrl.indexOf(",");
@@ -1981,6 +2052,45 @@ module.exports = async function handler(req, res) {
           console.warn(`[grok] API key format may be incorrect (starts with '${keyPrefix}', expected 'xai-')`);
           console.warn(`[grok] Key length: ${apiKey.length}, first 10 chars: ${apiKey.substring(0, 10)}...`);
         }
+        if (effectiveToolMode === "image_generation") {
+          const prompt = getLatestUserText(normalizedMessages);
+          if (!prompt) {
+            await refundTokensBestEffort();
+            return json(res, 400, { error: "Geef eerst een beschrijving voor de afbeelding." });
+          }
+          try {
+            const result = await runGrokImageGeneration({
+              apiKey,
+              prompt,
+              model: getGrokImageModel() || GROK_IMAGE_DEFAULT_MODEL,
+            });
+            const usageTokens = Number(result?.usage?.totalTokens || 0);
+            const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
+            const usedModel = result?.modelUsed || getGrokImageModel() || GROK_IMAGE_DEFAULT_MODEL;
+            void recordUsageEvent({
+              userId: user.id,
+              provider: "grok",
+              model: usedModel,
+              modelLabel: "Maak een afbeelding",
+              tokens: actualTokens,
+              tokensPerEur,
+              costEur: requestCostEur,
+            });
+            return json(res, 200, {
+              text: result?.text || "Hier is je afbeelding.",
+              image_data: result.imageData,
+              sources: [],
+            });
+          } catch (err) {
+            await refundTokensBestEffort();
+            const safe = sanitizeProviderErrorMessage(err?.message || "");
+            const wrapped = new Error("grok_failed");
+            wrapped.statusCode = 502;
+            wrapped.publicMessage = safe ? `Grok afbeelding mislukt: ${safe}` : "Grok afbeelding mislukt.";
+            wrapped.cause = err;
+            throw wrapped;
+          }
+        }
         console.log(`[grok] Using model: ${grokModel}, messages: ${normalizedMessages.length}, key length: ${apiKey.length}`);
         const result = await runGrokChat({
           apiKey,
@@ -2083,7 +2193,7 @@ module.exports = async function handler(req, res) {
 
         if (inferredProvider !== "openai") {
           await refundTokensBestEffort();
-          return json(res, 400, { error: "Afbeeldingen maken wordt nu ondersteund voor ChatGPT en Gemini." });
+          return json(res, 400, { error: "Afbeeldingen maken wordt nu ondersteund voor ChatGPT, Gemini en Grok." });
         }
       }
 
