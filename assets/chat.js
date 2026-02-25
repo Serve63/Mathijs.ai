@@ -511,6 +511,54 @@
         return html.join("");
       };
 
+      const getCanvasEditorMarkdown = () => {
+        if (!canvasEditor) return "";
+        const blocks = [];
+        const nodes = Array.from(canvasEditor.childNodes || []);
+        nodes.forEach((node) => {
+          if (!node) return;
+          if (node.nodeType === Node.TEXT_NODE) {
+            const text = String(node.textContent || "").trim();
+            if (text) blocks.push(text);
+            return;
+          }
+          if (!(node instanceof HTMLElement)) return;
+          const text = String(node.textContent || "").trim();
+          if (!text) return;
+          const tag = node.tagName.toUpperCase();
+          if (tag === "H1") {
+            blocks.push(`# ${text}`);
+            return;
+          }
+          if (tag === "H2") {
+            blocks.push(`## ${text}`);
+            return;
+          }
+          if (tag === "H3") {
+            blocks.push(`### ${text}`);
+            return;
+          }
+          blocks.push(text);
+        });
+        return blocks.join("\n\n").trim();
+      };
+
+      const setCanvasEditorHtmlFromMarkdown = (markdown) => {
+        if (!canvasEditor) return;
+        canvasEditor.innerHTML = renderCanvasMarkdown(markdown || "");
+      };
+
+      const revealCanvasBlocks = async () => {
+        if (!canvasEditor) return;
+        const children = Array.from(canvasEditor.children || []);
+        if (!children.length) return;
+        children.forEach((el) => el.classList.add("canvas-editor__block"));
+        for (let i = 0; i < children.length; i += 1) {
+          children[i].classList.add("is-visible");
+          await new Promise((resolve) => setTimeout(resolve, 34));
+        }
+      };
+
       const copyTextToClipboard = async (text) => {
         const value = String(text || "");
         try {
@@ -671,7 +719,10 @@
           downloadBtn.className = "canvas-card__btn";
           downloadBtn.textContent = "Download";
           downloadBtn.addEventListener("click", () => {
-            downloadBlob(`${(doc.title || "canvas").replace(/[^\w\-]+/g, "-").toLowerCase()}.md`, "text/markdown;charset=utf-8", doc.content || "");
+            openCanvasEditor(doc.id);
+            requestAnimationFrame(() => {
+              canvasDownloadMenu?.classList.add("is-open");
+            });
           });
           actions.appendChild(copyBtn);
           actions.appendChild(openBtn);
@@ -706,11 +757,15 @@
         if (canvasHistoryVisible) renderCanvasHistory();
       };
 
-      const setCanvasEditorContent = (text, { pushUndo = false } = {}) => {
+      const setCanvasEditorContent = async (text, { pushUndo = false, animate = false } = {}) => {
         if (!canvasEditor) return;
-        const previous = canvasEditor.value;
-        canvasEditor.value = String(text || "");
-        if (pushUndo && previous !== canvasEditor.value) {
+        const previous = getCanvasEditorMarkdown();
+        const next = String(text || "");
+        setCanvasEditorHtmlFromMarkdown(next);
+        if (animate) {
+          await revealCanvasBlocks();
+        }
+        if (pushUndo && previous !== next) {
           canvasUndoStack.push(previous);
           if (canvasUndoStack.length > 120) canvasUndoStack.shift();
           canvasRedoStack = [];
@@ -726,6 +781,7 @@
         activeCanvasId = doc.id;
         canvasModal.classList.add("is-open");
         canvasModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("canvas-open");
         document.body.style.overflow = "hidden";
         canvasUndoStack = [];
         canvasRedoStack = [];
@@ -750,10 +806,11 @@
           clearTimeout(canvasSaveTimer);
           canvasSaveTimer = null;
         }
-        const currentValue = canvasEditor?.value || "";
+        const currentValue = getCanvasEditorMarkdown();
         persistCanvasEdit(currentValue, "edit");
         canvasModal.classList.remove("is-open");
         canvasModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("canvas-open");
         canvasHistory?.classList.remove("is-open");
         canvasMoreMenu?.classList.remove("is-open");
         canvasDownloadMenu?.classList.remove("is-open");
@@ -793,6 +850,10 @@
         if (canvasRewriteIndicator) {
           canvasRewriteIndicator.classList.toggle("is-active", canvasRewriteInFlight);
         }
+        if (canvasEditor) {
+          canvasEditor.classList.toggle("is-rewriting", canvasRewriteInFlight);
+          canvasEditor.setAttribute("contenteditable", canvasRewriteInFlight ? "false" : "true");
+        }
         if (canvasRewriteLabel) {
           canvasRewriteLabel.textContent = labelText;
         }
@@ -828,14 +889,14 @@
           {
             role: "developer",
             content:
-              "Je herschrijft alleen de aangeleverde Nederlandse tekst. Gebruik altijd duidelijke koppen in Markdown: exact 1 H1-titel (#), daarna meerdere H2-secties (##). Behoud feiten en boodschap. Geef alleen de herschreven tekst zonder uitleg.",
+              "Je herschrijft alleen de aangeleverde Nederlandse tekst. Gebruik altijd duidelijke koppen in Markdown: exact 1 H1-titel (#), daarna meerdere H2-secties (##), optioneel H3. Behoud feiten en boodschap. Pas stijl strikt toe op gevraagd leesniveau of lengte. Geef alleen de herschreven tekst zonder uitleg.",
           },
           {
             role: "user",
             content:
               kind === "reading"
-                ? `Pas het leesniveau aan naar "${value}".\n\nTekst:\n${canvasEditor.value}`
-                : `Pas de lengte aan naar "${value}" (langst/langer/korter/kortst).\n\nTekst:\n${canvasEditor.value}`,
+                ? `Herschrijf naar leesniveau "${value}". Zorg dat woordkeuze, zinslengte en uitlegdiepte precies bij dit niveau passen.\n\nTekst:\n${getCanvasEditorMarkdown()}`
+                : `Herschrijf met lengte-instelling "${value}" (Langst=uitgebreid, Langer=merkbaar langer, Korter=merkbaar compacter, Kortst=zeer compact). Behoud structuur en kern.\n\nTekst:\n${getCanvasEditorMarkdown()}`,
           },
         ];
         setCanvasRewriteState(true, kind === "reading" ? "Leesniveau wordt herschreven" : "Lengte wordt herschreven");
@@ -863,7 +924,7 @@
           }
           const rewritten = String(payload?.text || "").trim();
           if (!rewritten) return;
-          setCanvasEditorContent(rewritten, { pushUndo: true });
+          await setCanvasEditorContent(rewritten, { pushUndo: true, animate: true });
           persistCanvasEdit(rewritten, kind);
         } finally {
           setCanvasRewriteState(false);
@@ -2055,11 +2116,11 @@
       canvasEditor?.addEventListener("input", () => {
         if (canvasSaveTimer) clearTimeout(canvasSaveTimer);
         canvasSaveTimer = setTimeout(() => {
-          persistCanvasEdit(canvasEditor.value, "edit");
+          persistCanvasEdit(getCanvasEditorMarkdown(), "edit");
         }, 450);
       });
       canvasCopy?.addEventListener("click", async () => {
-        await copyTextToClipboard(canvasEditor?.value || "");
+        await copyTextToClipboard(getCanvasEditorMarkdown());
       });
       canvasShare?.addEventListener("click", async () => {
         const doc = getActiveCanvasDoc();
@@ -2067,7 +2128,7 @@
         const draft = {
           ...doc,
           title: (canvasTitleInput?.value || doc.title || "Canvas").trim(),
-          content: canvasEditor?.value || doc.content || "",
+          content: getCanvasEditorMarkdown() || doc.content || "",
           updatedAt: new Date().toISOString(),
         };
         const links = buildCanvasShareLinks(draft);
@@ -2099,12 +2160,27 @@
           const html = `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Calibri,Arial,sans-serif;padding:28px;color:#111}h1{font-size:28px;font-weight:700;margin:0 0 16px}h2{font-size:20px;font-weight:700;margin:18px 0 10px}h3{font-size:17px;font-weight:700;margin:14px 0 8px}p{line-height:1.6;margin:0 0 10px}</style></head><body><h1>${escapeCanvasHtml(doc.title)}</h1>${renderCanvasMarkdown(doc.content)}</body></html>`;
           downloadBlob(`${safeName}.doc`, "application/msword", html);
         } else if (format === "pdf") {
-          const printWindow = window.open("", "_blank", "noopener,noreferrer,width=900,height=700");
+          const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeCanvasHtml(doc.title)}</title><style>body{font-family:Arial,sans-serif;padding:48px;color:#111}h1{font-size:34px;font-weight:800;margin:0 0 24px}h2{font-size:24px;font-weight:700;margin:22px 0 10px}h3{font-size:20px;font-weight:700;margin:18px 0 8px}p{line-height:1.7;margin:0 0 14px}</style></head><body><h1>${escapeCanvasHtml(doc.title)}</h1>${renderCanvasMarkdown(doc.content)}</body></html>`;
+          const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const printWindow = window.open(url, "_blank", "noopener,noreferrer");
           if (printWindow) {
-            printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeCanvasHtml(doc.title)}</title><style>body{font-family:Arial,sans-serif;padding:48px;color:#111}h1{font-size:34px;font-weight:800;margin:0 0 24px}h2{font-size:24px;font-weight:700;margin:22px 0 10px}h3{font-size:20px;font-weight:700;margin:18px 0 8px}p{line-height:1.7;margin:0 0 14px}</style></head><body><h1>${escapeCanvasHtml(doc.title)}</h1>${renderCanvasMarkdown(doc.content)}</body></html>`);
-            printWindow.document.close();
-            printWindow.focus();
-            printWindow.print();
+            const triggerPrint = () => {
+              try {
+                printWindow.focus();
+                printWindow.print();
+              } catch {
+                // ignore
+              }
+            };
+            printWindow.addEventListener("load", triggerPrint, { once: true });
+            setTimeout(triggerPrint, 650);
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
+          } else {
+            downloadBlob(`${safeName}.html`, "text/html;charset=utf-8", html);
+            if (window.siteUI?.toast) {
+              window.siteUI.toast("Popup geblokkeerd. HTML gedownload; open en kies Print > Opslaan als PDF.", { type: "info" });
+            }
           }
         }
         canvasDownloadMenu?.classList.remove("is-open");
@@ -2122,19 +2198,19 @@
       });
       canvasUndo?.addEventListener("click", () => {
         if (!canvasUndoStack.length) return;
-        const current = canvasEditor?.value || "";
+        const current = getCanvasEditorMarkdown();
         const previous = canvasUndoStack.pop();
         canvasRedoStack.push(current);
         setCanvasEditorContent(previous || "");
-        persistCanvasEdit(canvasEditor.value, "undo");
+        persistCanvasEdit(getCanvasEditorMarkdown(), "undo");
       });
       canvasRedo?.addEventListener("click", () => {
         if (!canvasRedoStack.length) return;
-        const current = canvasEditor?.value || "";
+        const current = getCanvasEditorMarkdown();
         const next = canvasRedoStack.pop();
         canvasUndoStack.push(current);
         setCanvasEditorContent(next || "");
-        persistCanvasEdit(canvasEditor.value, "redo");
+        persistCanvasEdit(getCanvasEditorMarkdown(), "redo");
       });
       canvasAssistToggle?.addEventListener("click", () => {
         canvasAssistRail?.classList.toggle("is-open");
