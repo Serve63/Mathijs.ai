@@ -1462,39 +1462,84 @@ module.exports = async function handler(req, res) {
 
     try {
       if (inferredProvider === "gemini") {
-        const geminiModel = resolvedGeminiModel || resolveGeminiModel(requestedModel);
-        const apiKey = getGeminiApiKey();
-        console.log(`[gemini] key ${apiKey ? "present" : "missing"}`);
-        if (!apiKey) {
-          await refundTokensBestEffort();
-          return json(res, 500, { error: "Missing GEMINI_API_KEY" });
+        if (effectiveToolMode === "image_generation") {
+          const prompt = latestUserText;
+          if (!prompt) {
+            await refundTokensBestEffort();
+            return json(res, 400, { error: "Geef eerst een beschrijving voor de afbeelding." });
+          }
+          try {
+            const nanoKey = getNanoBananaApiKey() || getGeminiApiKey();
+            if (!nanoKey) {
+              await refundTokensBestEffort();
+              return json(res, 500, { error: "Missing NANO_BANANA_API_KEY of GEMINI_API_KEY" });
+            }
+            const nanoModel = getNanoBananaModel() || GEMINI_IMAGE_DEFAULT_MODEL;
+            const result = await geminiGenerateImageViaRest({
+              apiKey: nanoKey,
+              model: nanoModel,
+              prompt,
+            });
+            const usageTokens = Number(result?.usage?.totalTokens || 0);
+            const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
+            void recordUsageEvent({
+              userId: user.id,
+              provider: "gemini",
+              model: nanoModel,
+              modelLabel: "Maak een afbeelding",
+              tokens: actualTokens,
+              tokensPerEur,
+              costEur: requestCostEur,
+            });
+            return json(res, 200, {
+              text: result?.text || "Hier is je afbeelding.",
+              image_data: result.imageData,
+              sources: [],
+            });
+          } catch (err) {
+            await refundTokensBestEffort();
+            const safe = sanitizeProviderErrorMessage(err?.message || "");
+            const wrapped = new Error("gemini_failed");
+            wrapped.statusCode = 502;
+            wrapped.publicMessage = safe ? `Gemini afbeelding mislukt: ${safe}` : "Gemini afbeelding mislukt.";
+            wrapped.cause = err;
+            throw wrapped;
+          }
+        } else {
+          const geminiModel = resolvedGeminiModel || resolveGeminiModel(requestedModel);
+          const apiKey = getGeminiApiKey();
+          console.log(`[gemini] key ${apiKey ? "present" : "missing"}`);
+          if (!apiKey) {
+            await refundTokensBestEffort();
+            return json(res, 500, { error: "Missing GEMINI_API_KEY" });
+          }
+          // Validate API key format (should start with AIza)
+          if (!apiKey.startsWith("AIza")) {
+            console.error(`[gemini] Invalid API key format (should start with AIza)`);
+            await refundTokensBestEffort();
+            return json(res, 500, { error: "Invalid GEMINI_API_KEY format. API key should start with 'AIza'" });
+          }
+          console.log(`[gemini] Using model: ${geminiModel}, messages: ${normalizedMessages.length}`);
+          const result = await runGeminiChat({
+            apiKey,
+            model: geminiModel,
+            messages: normalizedMessages,
+            webSearch: webSearchEnabled,
+          });
+          const usageTokens = Number(result?.usage?.totalTokens || 0);
+          const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
+          const usedModel = result?.modelUsed || geminiModel;
+          void recordUsageEvent({
+            userId: user.id,
+            provider: "gemini",
+            model: usedModel,
+            modelLabel: modelLabel || modelKey || requestedModel || usedModel,
+            tokens: actualTokens,
+            tokensPerEur,
+            costEur: requestCostEur,
+          });
+          return json(res, 200, { text: result?.text || "" });
         }
-        // Validate API key format (should start with AIza)
-        if (!apiKey.startsWith("AIza")) {
-          console.error(`[gemini] Invalid API key format (should start with AIza)`);
-          await refundTokensBestEffort();
-          return json(res, 500, { error: "Invalid GEMINI_API_KEY format. API key should start with 'AIza'" });
-        }
-        console.log(`[gemini] Using model: ${geminiModel}, messages: ${normalizedMessages.length}`);
-        const result = await runGeminiChat({
-          apiKey,
-          model: geminiModel,
-          messages: normalizedMessages,
-          webSearch: webSearchEnabled,
-        });
-        const usageTokens = Number(result?.usage?.totalTokens || 0);
-        const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
-        const usedModel = result?.modelUsed || geminiModel;
-        void recordUsageEvent({
-          userId: user.id,
-          provider: "gemini",
-          model: usedModel,
-          modelLabel: modelLabel || modelKey || requestedModel || usedModel,
-          tokens: actualTokens,
-          tokensPerEur,
-          costEur: requestCostEur,
-        });
-        return json(res, 200, { text: result?.text || "" });
       }
 
       if (inferredProvider === "grok") {
