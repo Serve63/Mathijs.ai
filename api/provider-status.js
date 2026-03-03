@@ -1,6 +1,13 @@
 const { getBearerToken, json } = require("./_lib/security");
 const { getUserFromAccessToken } = require("./_lib/supabase");
-const { getOpenAIApiKey, getGeminiApiKey, getNanoBananaApiKey, getGrokApiKey, getClaudeApiKey } = require("./_lib/env");
+const {
+  getOpenAIApiKey,
+  getGeminiApiKey,
+  getNanoBananaApiKey,
+  getGrokApiKey,
+  getClaudeApiKey,
+  getDeepSeekApiKey,
+} = require("./_lib/env");
 
 module.exports = async function handler(req, res) {
   try {
@@ -19,8 +26,9 @@ module.exports = async function handler(req, res) {
     const gemini = Boolean(getGeminiApiKey() || getNanoBananaApiKey());
     const grok = Boolean(getGrokApiKey());
     const claude = Boolean(getClaudeApiKey());
+    const deepseek = Boolean(getDeepSeekApiKey());
 
-    return json(res, 200, { openai, gemini, grok, claude });
+    return json(res, 200, { openai, gemini, grok, claude, deepseek });
   } catch (error) {
     console.error("provider-status failed", error);
     return json(res, 500, { error: "Er ging iets mis. Probeer opnieuw." });

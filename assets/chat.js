@@ -1108,7 +1108,7 @@
           toggleWebSearch.style.display = "flex";
         }
         const showOpenAiExtras = isEnhancedOpenAiMode();
-        const showDeepResearchTool = selectedModel === "chatgpt52" || selectedModel === "gemini3";
+        const showDeepResearchTool = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "deepseekv2";
         const showImageTool = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "grok4";
         const showCanvasTool = selectedModel === "chatgpt52" || selectedModel === "gemini3";
         if (actionGenerateImage) actionGenerateImage.style.display = showImageTool ? "flex" : "none";
@@ -1200,6 +1200,9 @@
       const GROK_MODEL_LABEL_MAP = {
         "Grok 4": "grok-4-0709",
       };
+      const DEEPSEEK_MODEL_LABEL_MAP = {
+        "DeepSeek V2": "deepseek-chat",
+      };
       const CLAUDE_MODEL_LABEL_MAP = {
         "Opus 4.6": "claude-opus-4-6",
         "Sonnet 4.6": "claude-sonnet-4-6",
@@ -1223,6 +1226,11 @@
         return GEMINI_MODEL_LABEL_MAP[selectedModelLabel] || "gemini-1.5-flash";
       };
       const getSelectedGrokModel = () => GROK_MODEL_LABEL_MAP[selectedModelLabel] || null;
+      const getSelectedDeepSeekModel = (mode = selectedThinkingMode) => {
+        const normalizedMode = String(mode || "").trim().toLowerCase();
+        if (normalizedMode === "diepdenken") return "deepseek-reasoner";
+        return DEEPSEEK_MODEL_LABEL_MAP[selectedModelLabel] || "deepseek-chat";
+      };
       const getSelectedClaudeModel = () => CLAUDE_MODEL_LABEL_MAP[selectedModelLabel] || null;
 		      let selectedModel = "chatgpt52";
 		      let selectedModelLabel = "GPT-5 mini";
@@ -1455,7 +1463,8 @@
           (provider === "openai" && status.openai === true) ||
           (provider === "gemini" && status.gemini === true) ||
           (provider === "grok" && status.grok === true) ||
-          (provider === "anthropic" && status.claude === true);
+          (provider === "anthropic" && status.claude === true) ||
+          (provider === "deepseek" && status.deepseek === true);
         const statusLabel = connected ? "Verbonden" : "Niet gekoppeld";
         setStatus(statusLabel, "idle");
 
@@ -1467,6 +1476,8 @@
             message = `${categoryLabel} ${value} is nu verbonden via Grok.`;
           } else if (provider === "anthropic") {
             message = `${categoryLabel} ${value} is nu verbonden via Claude.`;
+          } else if (provider === "deepseek") {
+            message = `${categoryLabel} ${value} is nu verbonden via DeepSeek.`;
           } else {
             message = `${categoryLabel} ${value} is nu verbonden via OpenAI.`;
           }
@@ -1476,6 +1487,8 @@
           message = `${categoryLabel} ${value} is nog niet gekoppeld. Voeg GROK_API_KEY toe om Grok te gebruiken.`;
         } else if (provider === "anthropic") {
           message = `${categoryLabel} ${value} is nog niet gekoppeld. Voeg CLAUDE_API_KEY toe om Claude te gebruiken.`;
+        } else if (provider === "deepseek") {
+          message = `${categoryLabel} ${value} is nog niet gekoppeld. Voeg DEEPSEEK_API_KEY toe om DeepSeek te gebruiken.`;
         }
 
         if (!silent) {
@@ -3813,7 +3826,13 @@
           role,
           message_text: content,
         };
-        if (provider === "gemini" || provider === "openai" || provider === "grok" || provider === "anthropic") {
+        if (
+          provider === "gemini" ||
+          provider === "openai" ||
+          provider === "grok" ||
+          provider === "anthropic" ||
+          provider === "deepseek"
+        ) {
           payload.provider = provider;
         }
         try {
@@ -3892,7 +3911,7 @@
       };
 
       const PROVIDER_STATUS_TTL_MS = 120000;
-      let providerStatusCache = { openai: null, gemini: null, grok: null, claude: null, fetchedAt: 0 };
+      let providerStatusCache = { openai: null, gemini: null, grok: null, claude: null, deepseek: null, fetchedAt: 0 };
       let providerStatusInFlight = null;
       const refreshProviderStatus = async ({ force = false } = {}) => {
         const now = Date.now();
@@ -3900,7 +3919,8 @@
           providerStatusCache.openai !== null ||
           providerStatusCache.gemini !== null ||
           providerStatusCache.grok !== null ||
-          providerStatusCache.claude !== null;
+          providerStatusCache.claude !== null ||
+          providerStatusCache.deepseek !== null;
         const isFresh = hasCache && now - providerStatusCache.fetchedAt < PROVIDER_STATUS_TTL_MS;
         if (!force && isFresh) {
           return providerStatusCache;
@@ -3917,6 +3937,7 @@
                 gemini: payload?.gemini === true,
                 grok: payload?.grok === true,
                 claude: payload?.claude === true,
+                deepseek: payload?.deepseek === true,
                 fetchedAt: Date.now(),
               };
             }
@@ -5268,6 +5289,8 @@
                 ? "Claude (Anthropic)"
                 : provider === "grok"
                   ? "Grok"
+                  : provider === "deepseek"
+                    ? "DeepSeek"
                   : "een AI-model";
         const baseSystemMessage = "Je bent een behulpzame AI-assistent in de AI-leeromgeving van Mathijs.ai. Je helpt ondernemers kiezen en toepassen wanneer ze welk model gebruiken.";
         const providerInfo = `\n\nBelangrijk: Je wordt momenteel uitgevoerd via ${providerName}. Wanneer gebruikers vragen welke tool, API of model er gebruikt wordt, moet je duidelijk aangeven dat je ${providerName} gebruikt.`;
@@ -5298,7 +5321,7 @@
 	        if (typeof content === "string" && !content.trim()) return;
         const canvasCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3";
         const imageCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "grok4";
-        const deepResearchCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3";
+        const deepResearchCapableModel = selectedModel === "chatgpt52" || selectedModel === "gemini3" || selectedModel === "deepseekv2";
         let toolModeForRequest = "none";
         if (activeToolMode === "canvas") {
           toolModeForRequest = canvasCapableModel ? "canvas" : "none";
@@ -5337,7 +5360,18 @@
         let status = await refreshProviderStatus();
         // Als de gekozen provider nog niet als verbonden staat, één keer verse status ophalen
         // (eerste ophaal kan zijn mislukt of vóór login gedaan)
-        const providerKey = provider === "openai" ? "openai" : provider === "gemini" ? "gemini" : provider === "grok" ? "grok" : provider === "anthropic" ? "claude" : null;
+        const providerKey =
+          provider === "openai"
+            ? "openai"
+            : provider === "gemini"
+              ? "gemini"
+              : provider === "grok"
+                ? "grok"
+                : provider === "anthropic"
+                  ? "claude"
+                  : provider === "deepseek"
+                    ? "deepseek"
+                    : null;
         if (providerKey && status[providerKey] !== true) {
           const freshStatus = await refreshProviderStatus({ force: true });
           if (freshStatus && typeof freshStatus === "object") status = freshStatus;
@@ -5359,16 +5393,21 @@
           appendMessage("Claude is niet gekoppeld. Voeg CLAUDE_API_KEY toe om te chatten.", "assistant", { persist: false });
           return;
         }
-        if (provider !== "openai" && provider !== "gemini" && provider !== "grok" && provider !== "anthropic") {
-          appendMessage("Provider nog niet gekoppeld. Kies ChatGPT, Gemini, Grok of Claude om te chatten.", "assistant", { persist: false });
+        if (provider === "deepseek" && status.deepseek !== true) {
+          appendMessage("DeepSeek is niet gekoppeld. Voeg DEEPSEEK_API_KEY toe om te chatten.", "assistant", { persist: false });
+          return;
+        }
+        if (provider !== "openai" && provider !== "gemini" && provider !== "grok" && provider !== "anthropic" && provider !== "deepseek") {
+          appendMessage("Provider nog niet gekoppeld. Kies ChatGPT, Gemini, Grok, Claude of DeepSeek om te chatten.", "assistant", { persist: false });
           return;
         }
 
         const openaiModel = provider === "openai" ? getSelectedOpenAIModel() : null;
         const geminiModel = provider === "gemini" ? getSelectedGeminiModel() : null;
         const grokModel = provider === "grok" ? getSelectedGrokModel() : null;
+        const deepseekModel = provider === "deepseek" ? getSelectedDeepSeekModel() : null;
         const claudeModel = provider === "anthropic" ? getSelectedClaudeModel() : null;
-        const selectedApiModel = openaiModel || geminiModel || grokModel || claudeModel;
+        const selectedApiModel = openaiModel || geminiModel || grokModel || deepseekModel || claudeModel;
         if (!selectedApiModel) {
           appendMessage("Ongeldig model geselecteerd. Kies opnieuw.", "assistant", { persist: false });
           return;

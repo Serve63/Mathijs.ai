@@ -57,6 +57,10 @@ function getClaudeApiKey() {
   return pickEnv(["CLAUDE_API_KEY", "ANTHROPIC_API_KEY", "claude_api_key"]);
 }
 
+function getDeepSeekApiKey() {
+  return pickEnv(["DEEPSEEK_API_KEY", "DEEPSEEK_KEY", "deepseek_api_key"]);
+}
+
 function getSupabaseServiceRoleKey() {
   return pickEnv([
     "SUPABASE_SERVICE_ROLE_KEY",
@@ -104,6 +108,7 @@ module.exports = {
   getGrokApiKey,
   getGrokImageModel,
   getClaudeApiKey,
+  getDeepSeekApiKey,
   getSupabaseServiceRoleKey,
   getSupabaseUrl,
   getSupabaseAnonKey,

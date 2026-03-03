@@ -11,6 +11,7 @@ const {
   getGrokApiKey,
   getGrokImageModel,
   getClaudeApiKey,
+  getDeepSeekApiKey,
   getSupabaseServiceRoleKey,
 } = require("./_lib/env");
 const { adminRestFetch } = require("./_lib/supabaseAdmin");
@@ -51,6 +52,13 @@ const CLAUDE_ALLOWED_MODELS = [
   "claude-sonnet-4-5-20250929",
   "claude-haiku-4-5",
   "claude-haiku-4-5-20251001",
+];
+
+const DEEPSEEK_DEFAULT_MODEL = "deepseek-chat";
+const DEEPSEEK_REASONING_MODEL = "deepseek-reasoner";
+const DEEPSEEK_ALLOWED_MODELS = [
+  "deepseek-chat",
+  "deepseek-reasoner",
 ];
 
 const MAX_MESSAGES = 30;
@@ -157,6 +165,10 @@ const CLAUDE_MODEL_TOKEN_COSTS = {
   "claude-sonnet-4-5-20250929": 3,
   "claude-haiku-4-5": 1,
   "claude-haiku-4-5-20251001": 1,
+};
+const DEEPSEEK_MODEL_TOKEN_COSTS = {
+  "deepseek-chat": 1,
+  "deepseek-reasoner": 2,
 };
 
 function getTokensPerEur() {
@@ -456,6 +468,24 @@ function resolveClaudeModel(requested) {
   return CLAUDE_DEFAULT_MODEL;
 }
 
+function resolveDeepSeekModel(requested) {
+  if (typeof requested !== "string" || !requested.trim()) {
+    return DEEPSEEK_DEFAULT_MODEL;
+  }
+  const normalized = requested.trim().toLowerCase();
+  const modelMap = {
+    "deepseek-v2": "deepseek-chat",
+    "deepseek-v2-chat": "deepseek-chat",
+    "deepseek-r1": "deepseek-reasoner",
+  };
+  const mapped = modelMap[normalized] || normalized;
+  if (!DEEPSEEK_ALLOWED_MODELS.includes(mapped)) {
+    console.warn(`Niet toegestane/ongekende DeepSeek model requested: ${normalized}. Valt terug op ${DEEPSEEK_DEFAULT_MODEL}`);
+    return DEEPSEEK_DEFAULT_MODEL;
+  }
+  return mapped;
+}
+
 function normalizeModelKey(value) {
   if (typeof value !== "string") return "";
   return value.trim().toLowerCase();
@@ -499,6 +529,11 @@ function resolveTokensRequired({ modelKey, modelLabel, provider, requestedModel,
   if (provider === "anthropic" || provider === "claude") {
     const claudeModel = resolvedModel || resolveClaudeModel(requestedModel);
     if (CLAUDE_MODEL_TOKEN_COSTS[claudeModel]) return CLAUDE_MODEL_TOKEN_COSTS[claudeModel];
+  }
+
+  if (provider === "deepseek") {
+    const deepSeekModel = resolvedModel || resolveDeepSeekModel(requestedModel);
+    if (DEEPSEEK_MODEL_TOKEN_COSTS[deepSeekModel]) return DEEPSEEK_MODEL_TOKEN_COSTS[deepSeekModel];
   }
 
   return TOKENS_PER_CHAT_DEFAULT;
@@ -1391,6 +1426,214 @@ function buildGrokModeCandidates({ model, thinkingMode }) {
   return [base];
 }
 
+function extractDeepSeekText(payload) {
+  const choices = Array.isArray(payload?.choices) ? payload.choices : [];
+  if (!choices.length) return "";
+  const message = choices[0]?.message;
+  if (!message) return "";
+  if (typeof message.content === "string") return message.content;
+  if (Array.isArray(message.content)) {
+    return message.content
+      .map((part) => (part && typeof part.text === "string" ? part.text : ""))
+      .filter(Boolean)
+      .join("\n");
+  }
+  return "";
+}
+
+function extractDeepSeekUsage(payload) {
+  const usage = payload?.usage || {};
+  const inputTokens = Number(usage?.prompt_tokens ?? usage?.promptTokens ?? 0);
+  const outputTokens = Number(usage?.completion_tokens ?? usage?.completionTokens ?? 0);
+  let totalTokens = Number(usage?.total_tokens ?? usage?.totalTokens ?? 0);
+  if (!Number.isFinite(totalTokens) || totalTokens <= 0) {
+    const summed = (Number.isFinite(inputTokens) ? inputTokens : 0) + (Number.isFinite(outputTokens) ? outputTokens : 0);
+    if (summed > 0) totalTokens = summed;
+  }
+  return {
+    inputTokens: Number.isFinite(inputTokens) ? inputTokens : 0,
+    outputTokens: Number.isFinite(outputTokens) ? outputTokens : 0,
+    totalTokens: Number.isFinite(totalTokens) ? totalTokens : 0,
+  };
+}
+
+function flattenDuckDuckGoTopics(items, out = []) {
+  if (!Array.isArray(items)) return out;
+  items.forEach((item) => {
+    if (!item || typeof item !== "object") return;
+    if (Array.isArray(item.Topics)) {
+      flattenDuckDuckGoTopics(item.Topics, out);
+      return;
+    }
+    const url = typeof item.FirstURL === "string" ? item.FirstURL.trim() : "";
+    const text = typeof item.Text === "string" ? item.Text.trim() : "";
+    if (url) out.push({ url, title: text || url, snippet: text || "" });
+  });
+  return out;
+}
+
+async function fetchSmartSearchSources(query, maxResults = 6) {
+  const q = typeof query === "string" ? query.trim() : "";
+  if (!q) return [];
+  const limit = Math.max(1, Math.min(10, Number(maxResults) || 6));
+  const seen = new Set();
+  const sources = [];
+  const pushSource = (entry) => {
+    const rawUrl = typeof entry?.url === "string" ? entry.url.trim() : "";
+    if (!rawUrl || seen.has(rawUrl) || sources.length >= limit) return;
+    seen.add(rawUrl);
+    sources.push({
+      url: rawUrl,
+      title: typeof entry?.title === "string" ? entry.title.trim() : "",
+      snippet: typeof entry?.snippet === "string" ? entry.snippet.trim() : "",
+    });
+  };
+
+  try {
+    const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1&skip_disambig=1`;
+    const ddgResp = await fetch(ddgUrl, { headers: { Accept: "application/json" } });
+    const ddgPayload = await ddgResp.json().catch(() => ({}));
+    if (ddgResp.ok) {
+      if (ddgPayload?.AbstractURL) {
+        pushSource({
+          url: ddgPayload.AbstractURL,
+          title: ddgPayload.Heading || ddgPayload.AbstractSource || ddgPayload.AbstractURL,
+          snippet: ddgPayload.AbstractText || "",
+        });
+      }
+      flattenDuckDuckGoTopics(ddgPayload?.RelatedTopics).forEach(pushSource);
+    }
+  } catch (_) {
+    // ignore search-source failures and continue
+  }
+
+  if (sources.length < limit) {
+    try {
+      const wikiUrl =
+        `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(q)}` +
+        `&limit=${limit}&namespace=0&format=json`;
+      const wikiResp = await fetch(wikiUrl, { headers: { Accept: "application/json" } });
+      const wikiPayload = await wikiResp.json().catch(() => []);
+      if (wikiResp.ok && Array.isArray(wikiPayload)) {
+        const titles = Array.isArray(wikiPayload[1]) ? wikiPayload[1] : [];
+        const snippets = Array.isArray(wikiPayload[2]) ? wikiPayload[2] : [];
+        const urls = Array.isArray(wikiPayload[3]) ? wikiPayload[3] : [];
+        urls.forEach((url, idx) => {
+          pushSource({
+            url,
+            title: titles[idx] || url,
+            snippet: snippets[idx] || "",
+          });
+        });
+      }
+    } catch (_) {
+      // ignore search-source failures and continue
+    }
+  }
+
+  return sources.slice(0, limit);
+}
+
+function buildDeepSeekModeCandidates({ model, thinkingMode }) {
+  const mode = normalizeThinkingMode(thinkingMode);
+  const requested = resolveDeepSeekModel(model || DEEPSEEK_DEFAULT_MODEL);
+  const prefersReasoning =
+    mode === "diepdenken" ||
+    mode === "denken" ||
+    mode === "thinking" ||
+    mode === "expert" ||
+    mode === "heavy" ||
+    mode === "pro" ||
+    mode === "extended_thinking";
+  const firstModel = prefersReasoning ? DEEPSEEK_REASONING_MODEL : requested;
+  return Array.from(new Set([firstModel, requested, DEEPSEEK_DEFAULT_MODEL]));
+}
+
+async function runDeepSeekChat({
+  apiKey,
+  model,
+  messages,
+  webSearch = false,
+  thinkingMode = "instantly",
+  toolMode = "none",
+}) {
+  try {
+    const baseMessages = [];
+    messages.forEach((msg) => {
+      if (!msg) return;
+      const content = typeof msg.content === "string" ? msg.content : normalizeContent(msg.content);
+      if (!content) return;
+      const role = msg.role === "developer" ? "system" : msg.role;
+      if (role !== "system" && role !== "user" && role !== "assistant") return;
+      baseMessages.push({ role, content });
+    });
+    if (!baseMessages.length) {
+      throw new Error("DeepSeek: geen geldige berichten.");
+    }
+
+    const latestUserText = getLatestUserText(messages);
+    const sources = webSearch ? await fetchSmartSearchSources(latestUserText, 6) : [];
+    const searchContext = sources.length
+      ? `Actuele webresultaten:\n${sources
+          .map((source, idx) => {
+            const title = source.title || source.url;
+            const snippet = source.snippet ? ` - ${source.snippet}` : "";
+            return `${idx + 1}. ${title} (${source.url})${snippet}`;
+          })
+          .join("\n")}`
+      : "";
+    const modeInstruction = buildModeInstruction({ toolMode, thinkingMode });
+    if (modeInstruction || searchContext) {
+      const systemText = [modeInstruction, searchContext].filter(Boolean).join("\n\n").trim();
+      if (systemText) {
+        baseMessages.unshift({ role: "system", content: systemText });
+      }
+    }
+
+    const modeCandidates = buildDeepSeekModeCandidates({ model, thinkingMode });
+    let payload = null;
+    let lastError = null;
+    for (const candidateModel of modeCandidates) {
+      const resp = await fetch("https://api.deepseek.com/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: candidateModel,
+          messages: baseMessages,
+          temperature: 0.3,
+          stream: false,
+        }),
+      });
+      payload = await resp.json().catch(() => ({}));
+      if (resp.ok) {
+        return {
+          text: extractDeepSeekText(payload),
+          usage: extractDeepSeekUsage(payload),
+          modelUsed: candidateModel,
+          sources,
+        };
+      }
+      const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+      const err = new Error(sanitizeProviderErrorMessage(msg));
+      err.status = resp.status;
+      err.payload = payload;
+      lastError = err;
+    }
+    if (lastError) throw lastError;
+    throw new Error("DeepSeek gaf geen bruikbare response terug.");
+  } catch (err) {
+    const safe = sanitizeProviderErrorMessage(err?.message || "");
+    const wrapped = new Error("deepseek_failed");
+    wrapped.statusCode = 502;
+    wrapped.publicMessage = safe ? `DeepSeek request mislukte: ${safe}` : "DeepSeek request mislukte.";
+    wrapped.cause = err;
+    throw wrapped;
+  }
+}
+
 async function runGrokChat({ apiKey, model, messages, webSearch = false, thinkingMode = "instantly" }) {
   try {
     // Grok API uses standard chat completions format (similar to OpenAI)
@@ -1819,6 +2062,8 @@ module.exports = async function handler(req, res) {
           ? "grok"
           : typeof model === "string" && model.trim().startsWith("claude-")
             ? "anthropic"
+            : typeof model === "string" && model.trim().startsWith("deepseek-")
+              ? "deepseek"
             : "openai");
 
     const requestedModel = typeof model === "string" ? model : "";
@@ -1836,17 +2081,19 @@ module.exports = async function handler(req, res) {
       (inferredProvider === "openai" ||
         inferredProvider === "gemini" ||
         inferredProvider === "grok" ||
-        inferredProvider === "anthropic");
+        inferredProvider === "anthropic" ||
+        inferredProvider === "deepseek");
     const resolvedOpenAIModel = inferredProvider === "openai" ? resolveOpenAIModel(requestedModel) : null;
     const resolvedGeminiModel = inferredProvider === "gemini" ? resolveGeminiModel(requestedModel) : null;
     const resolvedGrokModel = inferredProvider === "grok" ? resolveGrokModel(requestedModel) : null;
     const resolvedClaudeModel = inferredProvider === "anthropic" ? resolveClaudeModel(requestedModel) : null;
+    const resolvedDeepSeekModel = inferredProvider === "deepseek" ? resolveDeepSeekModel(requestedModel) : null;
     const tokensRequiredRaw = resolveTokensRequired({
       modelKey,
       modelLabel,
       provider: inferredProvider,
       requestedModel,
-      resolvedModel: resolvedOpenAIModel || resolvedGeminiModel || resolvedGrokModel || resolvedClaudeModel,
+      resolvedModel: resolvedOpenAIModel || resolvedGeminiModel || resolvedGrokModel || resolvedClaudeModel || resolvedDeepSeekModel,
     });
     const tokensRequired = Math.max(
       1,
@@ -2165,6 +2412,41 @@ module.exports = async function handler(req, res) {
         return json(res, 200, { text: result?.text || "" });
       }
 
+      if (inferredProvider === "deepseek") {
+        const deepSeekModel = resolvedDeepSeekModel || resolveDeepSeekModel(requestedModel);
+        const apiKey = getDeepSeekApiKey();
+        console.log(`[deepseek] key ${apiKey ? "present" : "missing"}, model: ${deepSeekModel}`);
+        if (!apiKey) {
+          await refundTokensBestEffort();
+          return json(res, 500, { error: "Missing DEEPSEEK_API_KEY" });
+        }
+        if (effectiveToolMode === "image_generation") {
+          await refundTokensBestEffort();
+          return json(res, 400, { error: "Afbeeldingen maken wordt nu ondersteund voor ChatGPT, Gemini en Grok." });
+        }
+        const result = await runDeepSeekChat({
+          apiKey,
+          model: deepSeekModel,
+          messages: normalizedMessages,
+          webSearch: webSearchEnabled,
+          thinkingMode,
+          toolMode: effectiveToolMode,
+        });
+        const usageTokens = Number(result?.usage?.totalTokens || 0);
+        const actualTokens = Number.isFinite(usageTokens) && usageTokens > 0 ? usageTokens : tokensRequired;
+        const usedModel = result?.modelUsed || deepSeekModel;
+        void recordUsageEvent({
+          userId: user.id,
+          provider: "deepseek",
+          model: usedModel,
+          modelLabel: modelLabel || modelKey || requestedModel || usedModel,
+          tokens: actualTokens,
+          tokensPerEur,
+          costEur: requestCostEur,
+        });
+        return json(res, 200, { text: result?.text || "", sources: result?.sources || [] });
+      }
+
       if (inferredProvider === "anthropic") {
         const claudeModel = resolvedClaudeModel || resolveClaudeModel(requestedModel);
         const apiKey = getClaudeApiKey();
@@ -2401,6 +2683,7 @@ module.exports = async function handler(req, res) {
       gemini_failed: "Gemini kon geen antwoord geven. Probeer opnieuw.",
       grok_failed: "Grok kon geen antwoord geven. Probeer opnieuw.",
       openai_failed: "OpenAI kon geen antwoord geven. Probeer opnieuw.",
+      deepseek_failed: "DeepSeek kon geen antwoord geven. Probeer opnieuw.",
       claude_failed: "Claude kon geen antwoord geven. Probeer opnieuw.",
       supabase_auth_admin_failed: "Tokenbeheer faalde door Supabase. Controleer SUPABASE_SERVICE_ROLE_KEY.",
       token_init_failed: "Tokens konden niet worden geïnitialiseerd. Controleer SUPABASE_SERVICE_ROLE_KEY.",
