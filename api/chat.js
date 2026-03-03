@@ -1426,6 +1426,11 @@ function buildGrokModeCandidates({ model, thinkingMode }) {
   return [base];
 }
 
+function buildGrokModelCandidates(model) {
+  const requested = typeof model === "string" && model.trim() ? model.trim() : GROK_DEFAULT_MODEL;
+  return Array.from(new Set([requested, "grok-4", "grok-4-0709", "grok-3", "grok-2"]));
+}
+
 function extractDeepSeekText(payload) {
   const choices = Array.isArray(payload?.choices) ? payload.choices : [];
   if (!choices.length) return "";
@@ -1594,7 +1599,7 @@ async function runDeepSeekChat({
     let payload = null;
     let lastError = null;
     for (const candidateModel of modeCandidates) {
-      const resp = await fetch("https://api.deepseek.com/chat/completions", {
+      const resp = await fetch("https://api.deepseek.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1652,68 +1657,71 @@ async function runGrokChat({ apiKey, model, messages, webSearch = false, thinkin
     let payload = null;
     let lastError = null;
     for (const useWebSearch of searchModes) {
-      const modeCandidates = buildGrokModeCandidates({ model, thinkingMode });
-      for (const modeCandidate of modeCandidates) {
-        const body = {
-          ...modeCandidate,
-          messages: grokMessages,
-        };
-        if (useWebSearch) {
-          body.tools = [{ type: "web_search" }];
-        }
-
-        const resp = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify(body),
-        });
-
-        payload = await resp.json().catch(() => ({}));
-        if (resp.ok) {
-          lastError = null;
-          return {
-            text: extractGrokText(payload),
-            usage: extractGrokUsage(payload),
-            modelUsed: body.model || model,
+      const modelCandidates = buildGrokModelCandidates(model);
+      for (const candidateModel of modelCandidates) {
+        const modeCandidates = buildGrokModeCandidates({ model: candidateModel, thinkingMode });
+        for (const modeCandidate of modeCandidates) {
+          const body = {
+            ...modeCandidate,
+            messages: grokMessages,
           };
-        }
-
-        const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
-        const errorType = payload?.error?.type || payload?.type || "";
-        const effortValue =
-          typeof modeCandidate.reasoning_effort === "string" ? modeCandidate.reasoning_effort : "none";
-        console.error(
-          `[grok] API error (model: ${body.model || model}, effort: ${effortValue}, status: ${resp.status}):`,
-          msg
-        );
-        console.error(`[grok] Error type: ${errorType}`);
-        if (payload?.error) {
-          console.error(`[grok] Full error payload:`, JSON.stringify(payload.error, null, 2));
-        }
-
-        // Provide more specific error messages for common issues
-        let errorMessage = msg;
-        if (resp.status === 403) {
-          if (errorType === "insufficient_quota" || msg.includes("quota")) {
-            errorMessage = "403 Forbidden: API quota is opgebruikt of facturering is niet geactiveerd. Activeer facturering op docs.x.ai.";
-          } else if (errorType === "invalid_api_key" || msg.includes("invalid") || msg.includes("key")) {
-            errorMessage = "403 Forbidden: API key is ongeldig. Controleer of GROK_API_KEY correct is ingesteld.";
-          } else {
-            errorMessage = "403 Forbidden: API key heeft geen toegang tot de Grok API. Controleer of GROK_API_KEY correct is ingesteld en toegang heeft tot Grok-4.";
+          if (useWebSearch) {
+            body.tools = [{ type: "web_search" }];
           }
-        } else if (resp.status === 401) {
-          errorMessage = "401 Unauthorized: API key ontbreekt of is ongeldig. Controleer GROK_API_KEY.";
-        } else if (resp.status === 400) {
-          errorMessage = `400 Bad Request: ${msg}. Controleer of het model '${body.model || model}' beschikbaar is.`;
-        }
 
-        const err = new Error(errorMessage);
-        err.status = resp.status;
-        err.payload = payload;
-        lastError = err;
+          const resp = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify(body),
+          });
+
+          payload = await resp.json().catch(() => ({}));
+          if (resp.ok) {
+            lastError = null;
+            return {
+              text: extractGrokText(payload),
+              usage: extractGrokUsage(payload),
+              modelUsed: body.model || model,
+            };
+          }
+
+          const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+          const errorType = payload?.error?.type || payload?.type || "";
+          const effortValue =
+            typeof modeCandidate.reasoning_effort === "string" ? modeCandidate.reasoning_effort : "none";
+          console.error(
+            `[grok] API error (model: ${body.model || model}, effort: ${effortValue}, status: ${resp.status}):`,
+            msg
+          );
+          console.error(`[grok] Error type: ${errorType}`);
+          if (payload?.error) {
+            console.error(`[grok] Full error payload:`, JSON.stringify(payload.error, null, 2));
+          }
+
+          // Provide more specific error messages for common issues
+          let errorMessage = msg;
+          if (resp.status === 403) {
+            if (errorType === "insufficient_quota" || msg.includes("quota")) {
+              errorMessage = "403 Forbidden: API quota is opgebruikt of facturering is niet geactiveerd. Activeer facturering op docs.x.ai.";
+            } else if (errorType === "invalid_api_key" || msg.includes("invalid") || msg.includes("key")) {
+              errorMessage = "403 Forbidden: API key is ongeldig. Controleer of GROK_API_KEY correct is ingesteld.";
+            } else {
+              errorMessage = "403 Forbidden: API key heeft geen toegang tot de Grok API. Controleer of GROK_API_KEY correct is ingesteld en toegang heeft tot Grok-4.";
+            }
+          } else if (resp.status === 401) {
+            errorMessage = "401 Unauthorized: API key ontbreekt of is ongeldig. Controleer GROK_API_KEY.";
+          } else if (resp.status === 400) {
+            errorMessage = `400 Bad Request: ${msg}. Controleer of het model '${body.model || model}' beschikbaar is.`;
+          }
+
+          const err = new Error(errorMessage);
+          err.status = resp.status;
+          err.payload = payload;
+          lastError = err;
+        }
       }
     }
     if (lastError) {
@@ -1932,6 +1940,18 @@ function buildClaudeModeCandidates({ model, thinkingMode }) {
   ];
 }
 
+function buildClaudeModelCandidates(model) {
+  const requested = typeof model === "string" && model.trim() ? model.trim() : CLAUDE_DEFAULT_MODEL;
+  const lower = requested.toLowerCase();
+  if (lower.includes("opus")) {
+    return Array.from(new Set([requested, "claude-opus-4-6", "claude-opus-4-5", "claude-opus-4-5-20251101"]));
+  }
+  if (lower.includes("haiku")) {
+    return Array.from(new Set([requested, "claude-haiku-4-5", "claude-haiku-4-5-20251001"]));
+  }
+  return Array.from(new Set([requested, "claude-sonnet-4-6", "claude-sonnet-4-5", "claude-sonnet-4-5-20250929"]));
+}
+
 async function runClaudeChat({ apiKey, model, messages, webSearch = false, thinkingMode = "instantly" }) {
   try {
     const { system, messages: claudeMessages } = buildClaudeRequest(messages);
@@ -1943,43 +1963,46 @@ async function runClaudeChat({ apiKey, model, messages, webSearch = false, think
     let payload = null;
     let lastError = null;
     for (const useWebSearch of searchModes) {
-      const modeCandidates = buildClaudeModeCandidates({ model, thinkingMode });
-      for (const modeCandidate of modeCandidates) {
-        const requestBody = {
-          ...modeCandidate,
-          messages: claudeMessages,
-        };
-        if (system) requestBody.system = system;
-        if (useWebSearch) {
-          requestBody.tools = [{ type: "web_search_20250305", name: "web_search" }];
-        } else {
-          delete requestBody.tools;
-        }
-
-        const resp = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": apiKey,
-            "anthropic-version": "2023-06-01",
-            ...(useWebSearch ? { "anthropic-beta": "web-search-2025-03-05" } : {}),
-          },
-          body: JSON.stringify(requestBody),
-        });
-
-        payload = await resp.json().catch(() => ({}));
-        if (resp.ok) {
-          return {
-            text: extractClaudeText(payload),
-            usage: extractClaudeUsage(payload),
-            modelUsed: model,
+      const modelCandidates = buildClaudeModelCandidates(model);
+      for (const candidateModel of modelCandidates) {
+        const modeCandidates = buildClaudeModeCandidates({ model: candidateModel, thinkingMode });
+        for (const modeCandidate of modeCandidates) {
+          const requestBody = {
+            ...modeCandidate,
+            messages: claudeMessages,
           };
+          if (system) requestBody.system = system;
+          if (useWebSearch) {
+            requestBody.tools = [{ type: "web_search_20250305", name: "web_search" }];
+          } else {
+            delete requestBody.tools;
+          }
+
+          const resp = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": apiKey,
+              "anthropic-version": "2023-06-01",
+              ...(useWebSearch ? { "anthropic-beta": "web-search-2025-03-05" } : {}),
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          payload = await resp.json().catch(() => ({}));
+          if (resp.ok) {
+            return {
+              text: extractClaudeText(payload),
+              usage: extractClaudeUsage(payload),
+              modelUsed: candidateModel,
+            };
+          }
+          const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
+          const err = new Error(sanitizeProviderErrorMessage(msg));
+          err.status = resp.status;
+          err.payload = payload;
+          lastError = err;
         }
-        const msg = payload?.error?.message || payload?.message || `${resp.status} ${resp.statusText}`;
-        const err = new Error(sanitizeProviderErrorMessage(msg));
-        err.status = resp.status;
-        err.payload = payload;
-        lastError = err;
       }
     }
     if (lastError) {

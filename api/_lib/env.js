@@ -46,7 +46,7 @@ function getNanoBananaModel() {
 }
 
 function getGrokApiKey() {
-  return pickEnv(["GROK_API_KEY", "XAI_API_KEY", "grok_api_key", "xai_api_key"]);
+  return pickEnv(["GROK_API_KEY", "XAI_API_KEY", "GROK_KEY", "XAI_KEY", "grok_api_key", "xai_api_key"]);
 }
 
 function getGrokImageModel() {
@@ -54,11 +54,24 @@ function getGrokImageModel() {
 }
 
 function getClaudeApiKey() {
-  return pickEnv(["CLAUDE_API_KEY", "ANTHROPIC_API_KEY", "claude_api_key"]);
+  return pickEnv([
+    "CLAUDE_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "ANTHROPIC_KEY",
+    "ANTHROPIC_TOKEN",
+    "claude_api_key",
+    "anthropic_api_key",
+  ]);
 }
 
 function getDeepSeekApiKey() {
-  return pickEnv(["DEEPSEEK_API_KEY", "DEEPSEEK_KEY", "deepseek_api_key"]);
+  return pickEnv([
+    "DEEPSEEK_API_KEY",
+    "DEEPSEEK_KEY",
+    "DEEP_SEEK_API_KEY",
+    "DEEPSEEK_TOKEN",
+    "deepseek_api_key",
+  ]);
 }
 
 function getSupabaseServiceRoleKey() {
