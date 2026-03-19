@@ -38,7 +38,7 @@ const GEMINI_ALLOWED_MODELS = [
 
 // Grok model IDs - xAI API expects grok-4-0709 for Grok 4 (grok-4 is invalid/400)
 const GROK_DEFAULT_MODEL = "grok-4-0709";
-const GROK_ALLOWED_MODELS = ["grok-4-0709", "grok-4", "grok-4-code", "grok-beta", "grok-2", "grok-3", "grok-3-mini"];
+const GROK_ALLOWED_MODELS = ["grok-4-0709", "grok-4", "grok-beta", "grok-2", "grok-3", "grok-3-mini"];
 const GROK_IMAGE_DEFAULT_MODEL = "grok-imagine-image";
 
 // Claude (Anthropic) model IDs - Opus 4.6, Sonnet 4.6, Haiku 4.5
@@ -150,7 +150,6 @@ const GEMINI_MODEL_TOKEN_COSTS = {
 const GROK_MODEL_TOKEN_COSTS = {
   "grok-4": 3,
   "grok-4-0709": 3,
-  "grok-4-code": 3,
   "grok-beta": 3,
   "grok-2": 3,
   "grok-3": 3,
@@ -1430,7 +1429,7 @@ function buildGrokModelCandidates(model) {
   const requested = typeof model === "string" && model.trim() ? model.trim() : GROK_DEFAULT_MODEL;
   const lower = requested.toLowerCase();
   if (lower.includes("grok-4")) {
-    return Array.from(new Set([requested, "grok-4-0709", "grok-4", "grok-4-code"]));
+    return Array.from(new Set([requested, "grok-4-0709", "grok-4", "grok-3", "grok-3-mini"]));
   }
   if (lower.includes("grok-3")) {
     return Array.from(new Set([requested, "grok-3", "grok-3-mini"]));
