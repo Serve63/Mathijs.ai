@@ -1,7 +1,7 @@
 # Mathijs.ai
 
 ## Config quick notes
-- OpenAI key: `OPEN_AI_KEY` (primair), met fallback `OPENAI_API_KEY` of `open_ai_key`.
+- OpenAI key: `OPEN_AI_KEY` (primair), met fallback `OPENAI_API_KEY`, `OPENAI_KEY` of `open_ai_key`.
 - Supabase service role: `SUPABASE_SERVICE_ROLE_KEY` (init tokens vereist).
 - Supabase URL/anon: `SUPABASE_URL`/`SUPABASE_ANON_KEY` of `NEXT_PUBLIC_...` fallbacks.
 - Default chat model: `gpt-4o`; allowed list: `gpt-4o`, `gpt-4o-mini`.

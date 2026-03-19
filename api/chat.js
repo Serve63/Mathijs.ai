@@ -1428,7 +1428,17 @@ function buildGrokModeCandidates({ model, thinkingMode }) {
 
 function buildGrokModelCandidates(model) {
   const requested = typeof model === "string" && model.trim() ? model.trim() : GROK_DEFAULT_MODEL;
-  return Array.from(new Set([requested, "grok-4", "grok-4-0709", "grok-3", "grok-2"]));
+  const lower = requested.toLowerCase();
+  if (lower.includes("grok-4")) {
+    return Array.from(new Set([requested, "grok-4-0709", "grok-4", "grok-4-code"]));
+  }
+  if (lower.includes("grok-3")) {
+    return Array.from(new Set([requested, "grok-3", "grok-3-mini"]));
+  }
+  if (lower.includes("grok-2")) {
+    return [requested];
+  }
+  return Array.from(new Set([requested, GROK_DEFAULT_MODEL, "grok-4"]));
 }
 
 function extractDeepSeekText(payload) {

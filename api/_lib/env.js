@@ -5,14 +5,17 @@ function pickEnv(names = []) {
   for (const name of names) {
     const value = process.env[name];
     if (typeof value === "string" && value.trim()) {
-      const trimmed = value.trim();
+      let trimmed = value.trim();
       if (trimmed.length >= 2) {
         const first = trimmed[0];
         const last = trimmed[trimmed.length - 1];
         if ((first === "\"" && last === "\"") || (first === "'" && last === "'")) {
-          return trimmed.slice(1, -1);
+          trimmed = trimmed.slice(1, -1).trim();
         }
       }
+      trimmed = trimmed.replace(/^bearer\s+/i, "").trim();
+      trimmed = trimmed.replace(/^token\s+/i, "").trim();
+      if (!trimmed) continue;
       return trimmed;
     }
   }
@@ -20,7 +23,7 @@ function pickEnv(names = []) {
 }
 
 function getOpenAIApiKey() {
-  return pickEnv(["OPEN_AI_KEY", "OPENAI_API_KEY", "open_ai_key"]);
+  return pickEnv(["OPEN_AI_KEY", "OPENAI_API_KEY", "OPENAI_KEY", "open_ai_key", "openai_api_key"]);
 }
 
 function getOpenAICostsKey() {
